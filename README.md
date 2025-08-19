@@ -77,7 +77,7 @@ Numbers were obtained on an Apple M3 MacBook running macOS 15.6 with 64-bit Open
 ## Why use object storage and open formats?
 
 * **No vendor lock-in** ensures that metrics data is always accessible without any vendor lock-in.
-* **Cheap scale** Object storage systems such as S3 are cheaper than block storage. (e.g. on us-east-1 S3
+* **Cheap at scale** Object storage systems such as S3 are cheaper than block storage. (e.g. on us-east-1 S3
   is $0.023/GB, whereas EBS is $0.08/GB along with IOPS pricing)
 * **Separation of concerns** Partitioning data into hot and cold-tier helps keeps dashboards realtime while retaining
   historical for any further analysis.
