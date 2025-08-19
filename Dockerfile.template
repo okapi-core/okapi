@@ -1,0 +1,11 @@
+FROM eclipse-temurin:21
+ARG PORT
+ARG PROJECT
+ARG PROFILE=prod
+
+ENV JAVA_OPTS="-jar"
+WORKDIR /app
+COPY ./okapi-${PROJECT}/target/okapi-${PROJECT}-0.0.1-SNAPSHOT.jar app.jar
+EXPOSE ${PORT}
+ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD []

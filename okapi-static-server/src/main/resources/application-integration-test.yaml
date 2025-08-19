@@ -1,0 +1,7 @@
+server:
+  port: 8001
+
+apiEndpoint: http://localhost:8080
+cookies:
+  secureOnly: true
+  httpOnly: true

@@ -1,0 +1,30 @@
+HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### VS Code ###
+.vscode/
+
+## Lucene test files ##
+**/*.cfe
+**/*.cfs
+**/*.si
+**/write.lock
+**/segments_*

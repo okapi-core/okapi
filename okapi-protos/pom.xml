@@ -1,0 +1,50 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.okapi</groupId>
+        <artifactId>okapi</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+    <artifactId>okapi-protos</artifactId>
+    <name>Protobuf definitions</name>
+    <url>http://maven.apache.org</url>
+
+    <dependencies>
+        <!-- Transitive runtime for generated classes -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.xolstice.maven.plugins</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <configuration>
+                    <protocArtifact>
+                        com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}
+                    </protocArtifact>
+                    <outputDirectory>
+                        ${project.build.directory}/generated-sources/protobuf/java
+                    </outputDirectory>
+                    <attachProtoSources>true</attachProtoSources>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

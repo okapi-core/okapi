@@ -1,0 +1,21 @@
+syntax = "proto3";
+package org.okapi.wal;
+
+message MetricEvent {string tenantId = 1; string name = 2; repeated uint64 ts = 3; repeated float vals = 4; map<string, string> tags = 5;}
+message MetricEventBatch {repeated MetricEvent events = 1;}
+
+message Lsn {
+  int64 n = 1;
+}
+
+message Crc32 {
+  int64 crc = 1;
+}
+
+message WalRecord {
+  reserved 1 to 9;
+
+  oneof body {
+    MetricEventBatch event = 10;
+  }
+}

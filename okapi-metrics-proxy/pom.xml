@@ -1,0 +1,62 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.okapi</groupId>
+        <artifactId>okapi</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+    <artifactId>okapi-metrics-proxy</artifactId>
+    <name>okapi-metrics-proxy</name>
+    <url>http://maven.apache.org</url>
+    <dependencies>
+        <dependency>
+            <groupId>org.okapi</groupId>
+            <artifactId>okapi-core</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.okapi</groupId>
+            <artifactId>okapi-rest</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.okapi</groupId>
+            <artifactId>okapi-pojos</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>auth</artifactId>
+        </dependency>
+
+        <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>dynamodb</artifactId>
+        </dependency>
+
+        <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>dynamodb-enhanced</artifactId>
+        </dependency>
+
+
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>auth</artifactId>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
