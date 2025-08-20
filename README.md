@@ -24,7 +24,7 @@ node )
 
 ## Benchmark Report
 
-Benchmarks were run on **bare-metal JVM (Java 22, NVMe disk)**.
+Benchmarks were run on **bare-metal JVM (Java 22, Apple Fabric disk)**.
 
 | Metric                      | Value                                          |
 |-----------------------------|------------------------------------------------|
