@@ -36,6 +36,7 @@ import org.okapi.metrics.service.self.IsolatedNodeCreator;
 import org.okapi.metrics.service.self.NodeCreator;
 import org.okapi.metrics.service.self.ZkNodeCreator;
 import org.okapi.metrics.sharding.*;
+import org.okapi.metrics.stats.*;
 import org.okapi.profiles.ENV_TYPE;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -161,10 +162,19 @@ public class OkapiMetricsConsumerConfig {
   }
 
   @Bean
+  // todo: make this pluggable
   public ShardMap shardMap(@Autowired Clock clock, @Value("${admissionWindowHrs}") int admissionHrs)
       throws Exception {
-    return new ShardMap(clock, admissionHrs);
-  }
+    StatisticsRestorer<Statistics> statsRestorer = new RolledupStatsRestorer();
+    var statsSupplier = new KllStatSupplier();
+    var seriesRestorer = new RolledUpSeriesRestorer( statsRestorer, statsSupplier);
+    return new ShardMap(
+        clock,
+        admissionHrs,
+        statsSupplier,
+        statsRestorer,
+        seriesRestorer);
+    }
 
   @Bean
   public ShardsAndSeriesAssignerFactory shardsAndSeriesAssignerFactory() {

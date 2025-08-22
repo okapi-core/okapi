@@ -6,7 +6,7 @@ import org.okapi.metrics.CondensedReading;
 import org.okapi.metrics.io.OkapiIo;
 import org.okapi.metrics.io.StreamReadingException;
 import org.okapi.metrics.stats.KllSketchRestorer;
-import org.okapi.metrics.stats.Statistics;
+import org.okapi.metrics.stats.RolledUpStatistics;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayInputStream;
@@ -64,7 +64,7 @@ public class HourlyCheckpointScanner {
     return readBlock(sc, minOff, (int) nSecBytes);
   }
 
-  public Statistics hourly(ByteRangeScanner sc, String metricPath, Map<String, List<Long>> md)
+  public RolledUpStatistics hourly(ByteRangeScanner sc, String metricPath, Map<String, List<Long>> md)
       throws StreamReadingException, IOException, ExecutionException {
     var offs = md.get(metricPath);
     var hrOff = offs.get(2);
@@ -72,7 +72,7 @@ public class HourlyCheckpointScanner {
     var nb = (int) (endOff - hrOff);
     var bis = new ByteArrayInputStream(sc.getRange(hrOff, nb));
     var b = OkapiIo.readBytes(bis);
-    return Statistics.deserialize(b, new KllSketchRestorer());
+    return RolledUpStatistics.deserialize(b, new KllSketchRestorer());
   }
 
   protected CondensedReading readBlock(ByteRangeScanner sc, long from, int nb)
@@ -81,12 +81,12 @@ public class HourlyCheckpointScanner {
     var bis = new ByteArrayInputStream(block);
     var nPts = OkapiIo.readInt(bis);
     var secs = new ArrayList<Integer>();
-    var vals = new ArrayList<Statistics>();
+    var vals = new ArrayList<RolledUpStatistics>();
     for (int i = 0; i < nPts; i++) {
       var s = OkapiIo.readInt(bis);
       secs.add(s);
       var b = OkapiIo.readBytes(bis);
-      var stat = Statistics.deserialize(b, new KllSketchRestorer());
+      var stat = RolledUpStatistics.deserialize(b, new KllSketchRestorer());
       vals.add(stat);
     }
     return new CondensedReading(secs, vals);

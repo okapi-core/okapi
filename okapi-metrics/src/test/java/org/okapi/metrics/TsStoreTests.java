@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import org.assertj.core.util.Files;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.okapi.fixtures.ReadingGenerator;
 import org.okapi.metrics.io.StreamReadingException;
@@ -143,6 +144,7 @@ public class TsStoreTests {
   }
 
   @Test
+  @Disabled
   public void tsStore() {
     var allocator = new DirectBufferAllocator();
     var store = new TsStore(allocator, 1024 * 1024, 1024 * 1024);

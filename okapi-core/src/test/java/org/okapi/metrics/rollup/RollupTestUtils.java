@@ -54,7 +54,7 @@ public class RollupTestUtils {
   }
 
   public static Statistics getStats(
-      RollupSeries rollupSeries, String series, long timestamp, RES_TYPE resType) {
+          RollupSeries<Statistics> rollupSeries, String series, long timestamp, RES_TYPE resType) {
     return switch (resType) {
       case SECONDLY -> rollupSeries.getSecondlyStatistics(series, timestamp);
       case MINUTELY -> rollupSeries.getMinutelyStatistics(series, timestamp);
@@ -75,15 +75,6 @@ public class RollupTestUtils {
       case P90 -> stats.percentile(0.9); // 90th percentile
       case P95 -> stats.percentile(0.95); // 95th percentile
       case P99 -> stats.percentile(0.99); // 99th percentile
-    };
-  }
-
-  public static long timeToMillis(long val, RES_TYPE resType) {
-    return switch (resType) {
-      case SECONDLY -> val * 1000L; // convert seconds to milliseconds
-      case MINUTELY -> val * 60 * 1000L; // convert minutes to milliseconds
-      case HOURLY -> val * 60 * 60 * 1000L; // convert hours to milliseconds
-      case DAILY -> val * 24 * 60 * 60 * 1000L; // convert days to milliseconds
     };
   }
 

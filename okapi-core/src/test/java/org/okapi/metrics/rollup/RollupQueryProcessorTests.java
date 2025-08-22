@@ -7,6 +7,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,12 +18,18 @@ import org.okapi.metrics.common.MetricsContext;
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
 import org.okapi.metrics.query.QueryRecords;
+import org.okapi.metrics.stats.*;
 
 public class RollupQueryProcessorTests {
+  // resources to create a series
+  Supplier<RollupSeries<Statistics>> seriesSupplier;
+  StatisticsRestorer<Statistics> statsRestorer;
+  Supplier<Statistics> statisticsSupplier;
+  RollupSeriesRestorer<Statistics> restorer;
 
   ReadingGenerator generator;
   ReadingGenerator generator2;
-  RollupSeries rollupSeries;
+  RollupSeries<Statistics> rollupSeries;
   RollupQueryProcessor queryProcessor;
   long series1Start;
   long series2Start;
@@ -35,7 +42,11 @@ public class RollupQueryProcessorTests {
     ctx = new MetricsContext("test");
     generator = new ReadingGenerator(Duration.of(10, ChronoUnit.MILLIS), 20);
     generator.populateRandom(100.f, 110.f);
-    rollupSeries = new RollupSeries();
+    statsRestorer = new RolledupStatsRestorer();
+    statisticsSupplier = new KllStatSupplier();
+    restorer = new RolledUpSeriesRestorer(statsRestorer, statisticsSupplier);
+    seriesSupplier = () -> new RollupSeries<>(statsRestorer, statisticsSupplier);
+    rollupSeries = seriesSupplier.get();
     rollupSeries.writeBatch(
         ctx,
         "test_series",
@@ -121,7 +132,7 @@ public class RollupQueryProcessorTests {
 
     var ts2 = Arrays.asList(time, time + 1000, time + 3000);
     var vals2 = Arrays.asList(4.0f, 5.0f, 6.0f);
-    var rollupSeries = new RollupSeries();
+    var rollupSeries = seriesSupplier.get();
     rollupSeries.writeBatch(
         ctx, "test_series_1", OkapiLists.toLongArray(ts1), OkapiLists.toFloatArray(vals1));
     rollupSeries.writeBatch(
@@ -149,7 +160,7 @@ public class RollupQueryProcessorTests {
     var t0 = System.currentTimeMillis();
     var ts = Arrays.asList(t0, t0 + 2000, t0 + 3000, t0 + 5000);
     var values = Arrays.asList(1.0f, 2.0f, 3.0f, 4.0f);
-    var rollupSeries = new RollupSeries();
+    var rollupSeries = seriesSupplier.get();
     rollupSeries.writeBatch(
         ctx, "test_series_1", OkapiLists.toLongArray(ts), OkapiLists.toFloatArray(values));
     var queryProcessor = new RollupQueryProcessor();
@@ -171,7 +182,7 @@ public class RollupQueryProcessorTests {
     var t0 = System.currentTimeMillis();
     var ts = Arrays.asList(t0, t0 + 2000, t0 + 3000, t0 + 5000);
     var values = Arrays.asList(1.0f, 2.0f, 3.0f, 4.0f);
-    var rollupSeries = new RollupSeries();
+    var rollupSeries = seriesSupplier.get();
     rollupSeries.writeBatch(
         ctx, "test_series_1", OkapiLists.toLongArray(ts), OkapiLists.toFloatArray(values));
     var queryProcessor = new RollupQueryProcessor();

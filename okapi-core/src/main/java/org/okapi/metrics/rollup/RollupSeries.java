@@ -6,10 +6,8 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import org.apache.datasketches.kll.KllFloatsSketch;
-import org.okapi.clock.Clock;
-import org.okapi.clock.SystemClock;
 import org.okapi.metrics.OutsideWindowException;
 import org.okapi.metrics.common.MetricsContext;
 import org.okapi.metrics.io.OkapiIo;
@@ -18,27 +16,34 @@ import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
 import org.okapi.metrics.stats.KllSketchRestorer;
 import org.okapi.metrics.stats.Statistics;
+import org.okapi.metrics.stats.StatisticsRestorer;
 
-public class RollupSeries {
+public class RollupSeries<T extends Statistics> {
 
+  // todo: KVCache as a simple way to get TP out.
+  // todo: refactor the code, run integ test, check everything is fine.
+  // todo: integrate LMDB, RocksDB page swapper
+  // todo: add fixed memory buffer
+  // todo: add "forward-while-resharding" logic as a stretch goal
+  // todo: de-couple restoration from initiation -> also use checksums to avoid reading corrupted shit.
+  // todo: add write TPS per tenant, cardinality limits are implied
+  // todo: KllSketch lightweight estimator -> add a linear formula to do this quickly
+  // todo: refactor magic number end checks or add CRC32 checksums to deal with snapshots
   public static final String MAGIC_NUMBER = "RollupSeriesStart";
   public static final String MAGIC_NUMBER_END = "RollupSeriesEnd";
   public static final Long ADMISSION_WINDOW = Duration.of(24, ChronoUnit.HOURS).toMillis();
 
-  private final Map<String, Statistics> stats;
-  private Clock clock;
+  private final Map<String, T> stats;
+  private final StatisticsRestorer<T> restorer;
+  private final Supplier<T> newStatsSupplier;
 
-  public RollupSeries() {
-    this.stats = new ConcurrentHashMap<>(20_000);
-    this.clock = new SystemClock();
+  public RollupSeries(StatisticsRestorer<T> restorer, Supplier<T> newStatsSupplier) {
+    this.stats = new ConcurrentHashMap<>(2_000);
+    this.restorer = restorer;
+    this.newStatsSupplier = newStatsSupplier;
   }
 
-  public RollupSeries(Clock clock) {
-    this();
-    this.clock = clock;
-  }
-
-  protected Optional<Statistics> getStats(String k) {
+  protected Optional<T> getStats(String k) {
     return Optional.ofNullable(stats.get(k));
   }
 
@@ -46,11 +51,9 @@ public class RollupSeries {
     return Collections.unmodifiableSet(stats.keySet()); // live, weakly-consistent
   }
 
-  protected void put(String k, Statistics s) {
+  protected void put(String k, T s) {
     stats.put(k, s);
   }
-
-  // -------------------- Write path --------------------
 
   public void writeBatch(MetricsContext ctx, String timeSeries, long[] ts, float[] vals)
       throws OutsideWindowException {
@@ -64,13 +67,12 @@ public class RollupSeries {
     final var minKey = minutelyShard(timeSeries, ts);
     final var hrKey = hourlyShard(timeSeries, ts);
 
-    // todo: for now we're using heap memory to store KLLStats which adds to memory pressure, this should be replaced with off-heap memory instead
     final var sec =
-        stats.computeIfAbsent(secKey, k -> new Statistics(KllFloatsSketch.newHeapInstance(200)));
+        stats.computeIfAbsent(secKey, k -> newStatsSupplier.get());
     final var min =
-        stats.computeIfAbsent(minKey, k -> new Statistics(KllFloatsSketch.newHeapInstance(200)));
+        stats.computeIfAbsent(minKey, k -> newStatsSupplier.get());
     final var hr =
-        stats.computeIfAbsent(hrKey, k -> new Statistics(KllFloatsSketch.newHeapInstance(200)));
+        stats.computeIfAbsent(hrKey, k -> newStatsSupplier.get());
 
     sec.update(ctx, val);
     min.update(ctx, val);
@@ -112,7 +114,7 @@ public class RollupSeries {
     return c;
   }
 
-  protected float aggregate(Statistics stat, AGG_TYPE agg) {
+  protected float aggregate(T stat, AGG_TYPE agg) {
     return switch (agg) {
       case AVG -> stat.avg();
       case COUNT -> stat.getCount();
@@ -155,7 +157,7 @@ public class RollupSeries {
 
   public void checkpoint(OutputStream os) throws IOException {
     // Snapshot entries to keep count consistent with what we write
-    final var snapshot = new ArrayList<Map.Entry<String, Statistics>>(stats.size());
+    final var snapshot = new ArrayList<Map.Entry<String, T>>(stats.size());
     stats.forEach(
         (k, v) -> {
           if (v != null) snapshot.add(Map.entry(k, v));
@@ -197,32 +199,12 @@ public class RollupSeries {
     int n = OkapiIo.readInt(is);
     for (int i = 0; i < n; i++) {
       var k = OkapiIo.readString(is);
-      var st = Statistics.deserialize(OkapiIo.readBytes(is), new KllSketchRestorer());
+      var st = restorer.deserialize(OkapiIo.readBytes(is), new KllSketchRestorer());
       stats.put(k, st);
     }
     OkapiIo.checkMagicNumber(is, MAGIC_NUMBER_END);
   }
 
-  public static RollupSeries restore(Path checkpointPath)
-      throws IOException, StreamReadingException {
-    try (var fis = new FileInputStream(checkpointPath.toFile())) {
-      return restore(fis);
-    }
-  }
-
-  public static RollupSeries restore(FileInputStream fis)
-      throws IOException, StreamReadingException {
-    var series = new RollupSeries();
-    series.loadCheckpoint(fis);
-    return series;
-  }
-
-  public static RollupSeries restore(DataInputStream dis)
-      throws IOException, StreamReadingException {
-    var series = new RollupSeries();
-    series.loadCheckpoint(dis);
-    return series;
-  }
 
   // -------------------- Utilities --------------------
 
@@ -264,15 +246,15 @@ public class RollupSeries {
     };
   }
 
-  protected Statistics getSecondlyStatistics(String timeSeries, long ts) {
+  protected T getSecondlyStatistics(String timeSeries, long ts) {
     return stats.get(secondlyShard(timeSeries, ts));
   }
 
-  protected Statistics getMinutelyStatistics(String timeSeries, long ts) {
+  protected T getMinutelyStatistics(String timeSeries, long ts) {
     return stats.get(minutelyShard(timeSeries, ts));
   }
 
-  protected Statistics getHourlyStatistics(String timeSeries, long ts) {
+  protected T getHourlyStatistics(String timeSeries, long ts) {
     return stats.get(hourlyShard(timeSeries, ts));
   }
 

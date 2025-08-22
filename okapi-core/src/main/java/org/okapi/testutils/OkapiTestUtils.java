@@ -1,10 +1,10 @@
 package org.okapi.testutils;
 
-import com.google.common.base.Preconditions;
+import java.util.*;
 import org.okapi.metrics.rollup.RollupSeries;
 import org.okapi.metrics.stats.KllSketchRestorer;
+import org.okapi.metrics.stats.RolledUpStatistics;
 import org.okapi.metrics.stats.Statistics;
-import java.util.*;
 
 public class OkapiTestUtils {
 
@@ -115,25 +115,16 @@ public class OkapiTestUtils {
     }
   }
 
-  public static boolean checkMatchesReferenceFuzzy(RollupSeries ref, RollupSeries series2) {
+  public static boolean checkMatchesReferenceFuzzy(RollupSeries<Statistics> ref, RollupSeries<Statistics> series2) {
     for (var key : series2.getKeys()) {
-      var statsA = Statistics.deserialize(ref.getSerializedStats(key), new KllSketchRestorer());
-      var statsB = Statistics.deserialize(series2.getSerializedStats(key), new KllSketchRestorer());
+      var statsA = RolledUpStatistics.deserialize(ref.getSerializedStats(key), new KllSketchRestorer());
+      var statsB = RolledUpStatistics.deserialize(series2.getSerializedStats(key), new KllSketchRestorer());
       assertStatsEquals(statsA, statsB);
     }
     return true;
   }
 
-  public static void checkMatchesReference(RollupSeries ref, RollupSeries target) {
-    Preconditions.checkNotNull(ref, "Reference is null.");
-    for (var k : target.getKeys()) {
-      var fromRef = ref.getSerializedStats(k);
-      assert OkapiTestUtils.bytesAreEqual(fromRef, target.getSerializedStats(k))
-          : "Bytes don't match";
-    }
-  }
-
-  public static boolean checkEquals(RollupSeries series1, RollupSeries series2) {
+  public static boolean checkEquals(RollupSeries<Statistics> series1, RollupSeries<Statistics> series2) {
     if (series1.getKeys().size() != series2.getKeys().size()) {
       return false;
     }

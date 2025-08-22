@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.okapi.constants.Constants.N_SHARDS;
 
 import com.google.gson.Gson;
+import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -11,6 +12,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.List;
 import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,6 +32,9 @@ import org.okapi.metrics.sharding.HeartBeatChecker;
 import org.okapi.metrics.sharding.LeaderJobs;
 import org.okapi.metrics.sharding.LeaderJobsImpl;
 import org.okapi.metrics.sharding.fakes.FixedAssignerFactory;
+import org.okapi.metrics.stats.KllStatSupplier;
+import org.okapi.metrics.stats.RolledUpSeriesRestorer;
+import org.okapi.metrics.stats.RolledupStatsRestorer;
 import org.okapi.wal.*;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -44,8 +49,7 @@ public class TestResourceFactory {
   Duration checkpointDuration = Duration.of(1, ChronoUnit.HOURS);
   @Getter String dataBucket = "okapi-test-data-bucket";
   Path snapshotDir;
-  @Setter
-  int admissionWindowHrs = 1;
+  @Setter @Getter int admissionWindowHrs = 1;
 
   public TestResourceFactory() {
     this.singletons = new HashMap<>();
@@ -161,11 +165,17 @@ public class TestResourceFactory {
   }
 
   public ShardMap shardMap(Node node) {
+    var statsSupplier = new KllStatSupplier();
+    var statsRestorer = new RolledupStatsRestorer();
     return makeSingleton(
         node,
         ShardMap.class,
         () -> {
-          return new ShardMap(clock(node));
+          return new ShardMap(
+              clock(node),
+              admissionWindowHrs,
+              statsSupplier, statsRestorer,
+              new RolledUpSeriesRestorer(statsRestorer, statsSupplier));
         });
   }
 

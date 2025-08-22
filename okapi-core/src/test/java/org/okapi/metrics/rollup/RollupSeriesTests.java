@@ -3,31 +3,46 @@ package org.okapi.metrics.rollup;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.okapi.collections.OkapiLists;
-import org.okapi.fixtures.ReadingGenerator;
-import org.okapi.metrics.OutsideWindowException;
-import org.okapi.metrics.common.MetricsContext;
-import org.okapi.metrics.io.StreamReadingException;
-import org.okapi.metrics.rollup.RollupSeries;
-import org.okapi.testutils.OkapiTestUtils;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.okapi.collections.OkapiLists;
+import org.okapi.fixtures.ReadingGenerator;
+import org.okapi.metrics.OutsideWindowException;
+import org.okapi.metrics.common.MetricsContext;
+import org.okapi.metrics.io.StreamReadingException;
+import org.okapi.metrics.stats.*;
+import org.okapi.testutils.OkapiTestUtils;
 
+// if none break try adding a uncompressed buffer or adaptive statistics
 public class RollupSeriesTests {
 
+  Supplier<RollupSeries<Statistics>> seriesSupplier;
+  StatisticsRestorer<Statistics> statsRestorer;
+  Supplier<Statistics> statisticsSupplier;
+  RollupSeriesRestorer<Statistics> restorer;
+  @BeforeEach
+  public void setupSeries(){
+    statsRestorer= new RolledupStatsRestorer();
+    statisticsSupplier = new KllStatSupplier();
+    restorer = new RolledUpSeriesRestorer(statsRestorer, statisticsSupplier);
+    seriesSupplier = () -> new RollupSeries<>(statsRestorer, statisticsSupplier);
+  }
+  
   @Test
   public void testRollupSeries() throws IOException, StreamReadingException {
-    var series = new RollupSeries();
+    var series = seriesSupplier.get();
     var ts = System.currentTimeMillis();
     var ctx = new MetricsContext("test");
     series.write(ctx, "series1", ts, 100.0f);
@@ -35,7 +50,8 @@ public class RollupSeriesTests {
     series.write(ctx, "series2", ts, 200.0f);
     var checkpointPath = Files.createTempFile("rollup", ".checkpoint");
     series.checkpoint(checkpointPath);
-    var restored = RollupSeries.restore(checkpointPath);
+    var restorer = new RolledUpSeriesRestorer(statsRestorer, statisticsSupplier);
+    var restored = restorer.restore(checkpointPath);
     assert restored != null;
 
     var keys = restored.getKeys();
@@ -50,16 +66,17 @@ public class RollupSeriesTests {
 
   @Test
   public void testRollupSeriesWithMultipleWrites() throws IOException, StreamReadingException {
-    var series = new RollupSeries();
     var ctx = new MetricsContext("test");
     var ts = System.currentTimeMillis();
+    var series = seriesSupplier.get();
     for (int i = 0; i < 10; i++) {
       series.write(ctx, "series1", ts + i, 100.0f + i);
       series.write(ctx, "series2", ts + i, 200.0f + i);
     }
     var checkpointPath = Files.createTempFile("rollup", ".checkpoint");
     series.checkpoint(checkpointPath);
-    var restored = RollupSeries.restore(checkpointPath);
+    var restorer = new RolledUpSeriesRestorer(statsRestorer, statisticsSupplier);
+    var restored = restorer.restore(checkpointPath);
     OkapiTestUtils.checkEquals(restored, series);
   }
 
@@ -72,9 +89,7 @@ public class RollupSeriesTests {
     readings.populateRandom(500.f, 540.f);
     var ts = readings.getTimestamps();
     var vals = readings.getValues();
-    var totalInMillions = ((ts.size() + 0.0) / 1000_000L);
-    System.out.println("Total timestamps in millions: " + totalInMillions);
-    var series = new RollupSeries();
+    var series = seriesSupplier.get();
     for (int i = 0; i < ts.size(); i++) {
       series.write(ctx, "series1", ts.get(i), vals.get(i));
     }
@@ -83,8 +98,7 @@ public class RollupSeriesTests {
     series.checkpoint(checkpointPath);
     var fileSize = Files.size(checkpointPath);
     assertTrue(fileSize > 0, "Checkpoint file should not be empty");
-    System.out.println("Checkpoint file size: " + (0. + fileSize) / (1024L * 1024L) + " MBs");
-    var restored = RollupSeries.restore(checkpointPath);
+    var restored = restorer.restore(checkpointPath);
     OkapiTestUtils.checkEquals(series, restored);
   }
 
@@ -95,7 +109,7 @@ public class RollupSeriesTests {
 
     var gen2 = new ReadingGenerator(Duration.of(100, ChronoUnit.MILLIS), 5);
     var data2 = gen2.populateRandom(0.1f, 100.f);
-    var series = new RollupSeries();
+    var series = seriesSupplier.get();
     write(series, "series-A", data.getTimestamps(), data.getValues());
     write(series, "series-B", data2.getTimestamps(), data2.getValues());
 
@@ -103,7 +117,7 @@ public class RollupSeriesTests {
     try (var fos = new FileOutputStream(tempFile.toFile())) {
       series.writeMetric("series-A", fos);
     }
-    var restored = RollupSeries.restore(tempFile);
+    var restored = restorer.restore(tempFile);
     for(var k : series.keys()){
       if(k.startsWith("series-A")){
         Assertions.assertTrue(OkapiTestUtils.bytesAreEqual(series.getStats(k).get().serialize(), restored.getStats(k).get().serialize()));

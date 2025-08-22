@@ -8,6 +8,8 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Supplier;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.okapi.clock.SystemClock;
@@ -15,6 +17,7 @@ import org.okapi.metrics.ShardMap;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssigner;
 import org.okapi.metrics.service.ServiceController;
 import org.okapi.metrics.service.runnables.WalBasedMetricsWriter;
+import org.okapi.metrics.stats.*;
 import org.okapi.wal.ManualLsnWalFramer;
 import org.okapi.wal.PersistedLsnStore;
 import org.okapi.wal.SpilloverWalWriter;
@@ -22,8 +25,20 @@ import org.okapi.wal.WalAllocator;
 import org.okapi.wal.WalStreamerImpl;
 
 public class MetricsConsumerIntegrationIT {
+  StatisticsRestorer<Statistics> statsRestorer;
+  Supplier<Statistics> statisticsSupplier;
+  RollupSeriesRestorer<Statistics> restorer;
+  Supplier<ShardMap> shardMapSupplier;
 
   @TempDir Path walRoot;
+
+  @BeforeEach
+  public void setupSeries() {
+    statsRestorer = new RolledupStatsRestorer();
+    statisticsSupplier = new KllStatSupplier();
+    restorer = new RolledUpSeriesRestorer(statsRestorer, statisticsSupplier);
+    shardMapSupplier = () -> new ShardMap(new SystemClock(), 1, statisticsSupplier, statsRestorer, restorer);
+  }
 
   @Test
   void startup_recovery_ingest_snapshot_restart_replay() throws Exception {
@@ -84,7 +99,7 @@ public class MetricsConsumerIntegrationIT {
     // Build runnable WITHOUT creating a writer yet (avoid taking write.lock prematurely)
     WalBasedMetricsWriter consumer =
         WalBasedMetricsWriter.builder()
-            .shardMap(new ShardMap(new SystemClock()))
+            .shardMap(shardMapSupplier.get())
             .serviceController(svc)
             .self("self")
             .shardsAndSeriesAssigner(assigner)
@@ -145,7 +160,7 @@ public class MetricsConsumerIntegrationIT {
     // ====== SECOND BOOT (simulated restart) ======
     WalBasedMetricsWriter consumer2 =
         WalBasedMetricsWriter.builder()
-            .shardMap(new ShardMap(new SystemClock()))
+            .shardMap(shardMapSupplier.get())
             .serviceController(svc)
             .self("self")
             .shardsAndSeriesAssigner(assigner)

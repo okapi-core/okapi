@@ -9,6 +9,7 @@ import org.okapi.metrics.*;
 import org.okapi.metrics.common.FleetMetadata;
 import org.okapi.metrics.common.pojo.Node;
 import org.okapi.metrics.rollup.FrozenMetricsUploader;
+import org.okapi.metrics.stats.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -20,6 +21,8 @@ import software.amazon.awssdk.services.s3.S3Client;
 @ActiveProfiles("test")
 public class MetricsProxyTestConfig {
 
+  public static final int DEFAULT_ADMISSION_WINDOW = 24;
+
   @Bean
   public CheckpointUploaderDownloader checkpointUploaderDownloader(
       @Autowired S3Client s3, @Value("${dataBucket}") String databucket, @Autowired Clock clock) {
@@ -28,7 +31,11 @@ public class MetricsProxyTestConfig {
 
   @Bean
   public ShardMap shardMap() {
-    return new ShardMap(new SystemClock());
+    StatisticsRestorer<Statistics> statsRestorer = new RolledupStatsRestorer();
+    var statsSupplier = new KllStatSupplier();
+    var seriesRestorer = new RolledUpSeriesRestorer(statsRestorer, statsSupplier);
+    return new ShardMap(
+        new SystemClock(), DEFAULT_ADMISSION_WINDOW, statsSupplier, statsRestorer, seriesRestorer);
   }
 
   @Bean

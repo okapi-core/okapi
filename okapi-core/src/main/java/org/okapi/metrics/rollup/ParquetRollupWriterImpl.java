@@ -19,7 +19,7 @@ import org.okapi.metrics.avro.MetricRow;
 import org.okapi.metrics.common.MetricsPathParser;
 import org.okapi.metrics.stats.Statistics;
 
-public class ParquetRollupWriterImpl implements ParquetRollupWriter {
+public class ParquetRollupWriterImpl<T extends  Statistics> implements ParquetRollupWriter<T> {
   private boolean opened = false;
   private ParquetWriter<GenericRecord> writer;
   private String tenantId;
@@ -50,7 +50,7 @@ public class ParquetRollupWriterImpl implements ParquetRollupWriter {
   }
 
   @Override
-  public void consume(RollupSeries series, long hr) throws IOException {
+  public void consume(RollupSeries<T> series, long hr) throws IOException {
     var metricPaths = series.listMetricPaths();
     var startTime = hr * 3600 * 1000L;
     for (var path : metricPaths) {
@@ -127,26 +127,26 @@ public class ParquetRollupWriterImpl implements ParquetRollupWriter {
             Collectors.toMap(e -> (CharSequence) e.getKey(), e -> (CharSequence) e.getValue()));
   }
 
-  private static MetricRow toRow(
+  private static <T extends  Statistics> MetricRow toRow(
       long quantizedTime,
       String name,
       Map<String, String> tags,
-      Statistics statistics2,
+      T rolledUpStatistics2,
       AggregationType aggregationType) {
     var rowBuilder =
         MetricRow.newBuilder()
             .setMetric(name)
             .setTags(toAvroTags(tags))
-            .setSum(statistics2.getSum())
-            .setCount((int) statistics2.getCount())
-            .setMin(statistics2.min())
-            .setMax(statistics2.max())
-            .setP25(statistics2.percentile(0.25))
-            .setP50(statistics2.percentile(0.50))
-            .setP75(statistics2.percentile(0.75))
-            .setP90(statistics2.percentile(0.90))
-            .setP99(statistics2.percentile(0.99))
-            .setStddev(computeStddev(statistics2));
+            .setSum(rolledUpStatistics2.getSum())
+            .setCount((int) rolledUpStatistics2.getCount())
+            .setMin(rolledUpStatistics2.min())
+            .setMax(rolledUpStatistics2.max())
+            .setP25(rolledUpStatistics2.percentile(0.25))
+            .setP50(rolledUpStatistics2.percentile(0.50))
+            .setP75(rolledUpStatistics2.percentile(0.75))
+            .setP90(rolledUpStatistics2.percentile(0.90))
+            .setP99(rolledUpStatistics2.percentile(0.99))
+            .setStddev(computeStddev(rolledUpStatistics2));
 
     rowBuilder.setTimestamp(quantizedTime);
     rowBuilder.setAggType(aggregationType);

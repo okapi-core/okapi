@@ -13,11 +13,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public class StatisticsTest {
+public class RolledUpStatisticsTest {
 
   @Test
   public void testSerializeSanity() {
-    var stats = new Statistics(KllFloatsSketch.newHeapInstance(8));
+    var stats = new RolledUpStatistics(KllFloatsSketch.newHeapInstance(8));
     var metricsContext = new MetricsContext("trace");
     stats.update(metricsContext, 1.0f);
     stats.update(metricsContext, 2.0f);
@@ -25,7 +25,7 @@ public class StatisticsTest {
     stats.update(metricsContext, new float[] {4.0f, 5.0f});
     var bytes = stats.serialize();
     assert bytes.length > 0 : "Serialized bytes should not be empty";
-    var restoredStats = Statistics.deserialize(bytes, new KllSketchRestorer());
+    var restoredStats = RolledUpStatistics.deserialize(bytes, new KllSketchRestorer());
     assert restoredStats != null : "Restored statistics should not be null";
     var percentiles = new float[] {0.5f, 0.75f, 0.9f, 0.99f};
     for (float percentile : percentiles) {
@@ -42,14 +42,14 @@ public class StatisticsTest {
   @MethodSource("fuzzyTestDataConfigs")
   public void testSerializeFuzzy(float base, float scale, int count) {
     var gen = OkapiTestUtils.genRandom(base, scale, count);
-    var stats = new Statistics(KllFloatsSketch.newHeapInstance(8));
+    var stats = new RolledUpStatistics(KllFloatsSketch.newHeapInstance(8));
     var ctx = new MetricsContext("trace");
     for (float f : gen) {
       stats.update(ctx, f);
     }
     var serialized = stats.serialize();
     assert serialized.length > 0 : "Serialized bytes should not be empty";
-    var restoredStats = Statistics.deserialize(serialized, new KllSketchRestorer());
+    var restoredStats = RolledUpStatistics.deserialize(serialized, new KllSketchRestorer());
     assert restoredStats.getCount() == stats.getCount() : "Count does not match";
     assert restoredStats.getSum() == stats.getSum() : "Sum does not match";
     var percentiles = new float[] {0.5f, 0.75f, 0.9f, 0.99f};

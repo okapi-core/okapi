@@ -9,14 +9,17 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.okapi.clock.Clock;
-import org.okapi.clock.SystemClock;
 import org.okapi.metrics.common.MetricsContext;
 import org.okapi.metrics.io.OkapiIo;
 import org.okapi.metrics.io.StreamReadingException;
 import org.okapi.metrics.rollup.RollupSeries;
+import org.okapi.metrics.stats.RollupSeriesRestorer;
+import org.okapi.metrics.stats.Statistics;
+import org.okapi.metrics.stats.StatisticsRestorer;
 
 /**
  * Shard registry for in-memory rollup series. No global locks: - ConcurrentHashMap for shard
@@ -32,37 +35,39 @@ public class ShardMap {
   private final AtomicLong lsnCounter = new AtomicLong(0L);
 
   // Registry is atomically swappable on restore / targeted load
-  private volatile Map<Integer, RollupSeries> shardMap;
+  private volatile Map<Integer, RollupSeries<Statistics>> shardMap;
 
   @Getter private Integer nsh;
 
   private final Clock clock;
   private final long admissionWindowMillis;
+  private final Supplier<Statistics> newStatsSupplier;
+  private final StatisticsRestorer<Statistics> statsRestorer;
+  private final RollupSeriesRestorer<Statistics> restorer;
 
   // -------- Constructors --------
 
-  public ShardMap(Clock clock, int admissionWindowHrs) {
+  public ShardMap(Clock clock, int admissionWindowHrs,
+                  Supplier<Statistics> newStatsSupplier,
+                  StatisticsRestorer<Statistics> statsRestorer,
+                  RollupSeriesRestorer<Statistics> seriesRestorer
+                  ) {
     this.clock = clock;
     Preconditions.checkArgument(
         admissionWindowHrs >= 1, "Admission window should atleast be an hour long.");
     this.admissionWindowMillis = TimeUnit.HOURS.toMillis(admissionWindowHrs);
     this.shardMap = new ConcurrentHashMap<>(500);
     this.nsh = N_SHARDS;
-  }
-
-  public ShardMap(Clock clock) {
-    this(clock, 1);
-  }
-
-  public ShardMap() {
-    this(new SystemClock(), 1);
+    this.newStatsSupplier = newStatsSupplier;
+    this.statsRestorer = statsRestorer;
+    this.restorer = seriesRestorer;
   }
 
   // -------- Basic ops --------
 
   /** Lazy create; safe under concurrency. */
-  public RollupSeries get(int shardId) {
-    return shardMap.computeIfAbsent(shardId, id -> new RollupSeries(clock));
+  public RollupSeries<Statistics> get(int shardId) {
+    return shardMap.computeIfAbsent(shardId, id -> new RollupSeries<>(statsRestorer, newStatsSupplier));
   }
 
   /** Weakly consistent view is fine. */
@@ -90,7 +95,7 @@ public class ShardMap {
   /** Weakly consistent snapshot of current shards. */
   public void snapshot(OutputStream os) throws IOException {
     // Take a shallow snapshot of entries to keep count/header consistent without locks
-    var entries = new ArrayList<Map.Entry<Integer, RollupSeries>>(shardMap.size());
+    var entries = new ArrayList<Map.Entry<Integer, RollupSeries<Statistics>>>(shardMap.size());
     shardMap.forEach((k, v) -> entries.add(Map.entry(k, v)));
 
     // Header
@@ -107,8 +112,8 @@ public class ShardMap {
 
   /** Atomic replace a single shard from a checkpoint file. */
   public void loadShard(int shard, Path checkpoint) throws StreamReadingException, IOException {
-    var series = RollupSeries.restore(checkpoint);
-    var newMap = new ConcurrentHashMap<Integer, RollupSeries>(Math.max(16, shardMap.size() + 1));
+    var series = restorer.restore(checkpoint);
+    var newMap = new ConcurrentHashMap<Integer, RollupSeries<Statistics>>(Math.max(16, shardMap.size() + 1));
     newMap.putAll(shardMap);
     newMap.put(shard, series);
     this.shardMap = newMap; // atomic publish
@@ -126,10 +131,10 @@ public class ShardMap {
 
       // Payload
       int shardCount = OkapiIo.readInt(dis);
-      var newMap = new ConcurrentHashMap<Integer, RollupSeries>(Math.max(16, shardCount * 2));
+      var newMap = new ConcurrentHashMap<Integer, RollupSeries<Statistics>>(Math.max(16, shardCount * 2));
       for (int i = 0; i < shardCount; i++) {
         int shardId = OkapiIo.readInt(dis);
-        RollupSeries series = RollupSeries.restore(dis);
+        var series = restorer.restore(dis);
         newMap.put(shardId, series);
       }
 

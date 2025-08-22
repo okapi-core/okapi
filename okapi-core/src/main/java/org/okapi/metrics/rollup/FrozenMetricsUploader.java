@@ -24,7 +24,7 @@ public class FrozenMetricsUploader {
   Clock clock;
   long admissionWindowHrs;
 
-  public void writeCheckpoint(String forTenant, RollupSeries series, Path fp, long hr)
+  public void writeCheckpoint(String forTenant, RollupSeries<Statistics> series, Path fp, long hr)
       throws IOException {
     var metricPaths = series.listMetricPaths();
     var startTime = hr * 3600 * 1000L;

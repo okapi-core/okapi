@@ -13,14 +13,18 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.okapi.clock.SystemClock;
 import org.okapi.metrics.OutsideWindowException;
 import org.okapi.metrics.ShardMap;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssigner;
+import org.okapi.metrics.rollup.RollupSeries;
 import org.okapi.metrics.service.ServiceController;
+import org.okapi.metrics.stats.*;
 import org.okapi.wal.ManualLsnWalFramer;
 import org.okapi.wal.SpilloverWalWriter;
 import org.okapi.wal.Wal.Lsn;
@@ -31,7 +35,23 @@ class WalBasedMetricsWriterOnRequestArriveTest {
 
   @TempDir Path walRoot;
 
+  Supplier<ShardMap> shardMapSupplier;
+  Supplier<RollupSeries<Statistics>> seriesSupplier;
+  StatisticsRestorer<Statistics> statsRestorer;
+  Supplier<Statistics> statisticsSupplier;
+  RollupSeriesRestorer<Statistics> restorer;
+
   private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+  @BeforeEach
+  void setup() {
+    statsRestorer = new RolledupStatsRestorer();
+    statisticsSupplier = new KllStatSupplier();
+    restorer = new RolledUpSeriesRestorer(statsRestorer, statisticsSupplier);
+    seriesSupplier = () -> new RollupSeries<>(statsRestorer, statisticsSupplier);
+    shardMapSupplier =
+        () -> new ShardMap(new SystemClock(), 1, statisticsSupplier, statsRestorer, restorer);
+  }
 
   @AfterEach
   void tearDown() {
@@ -137,7 +157,7 @@ class WalBasedMetricsWriterOnRequestArriveTest {
 
     // Use a fixed clock so we can craft an out-of-window timestamp precisely
     long fixedNow = 10_000_000_000L; // arbitrary ms
-    ShardMap shardMap = new ShardMap(new SystemClock());
+    ShardMap shardMap = shardMapSupplier.get();
 
     WalBasedMetricsWriter runnable = buildRunnableWithShardMap(walRoot, svc, assigner, shardMap);
 
@@ -222,7 +242,7 @@ class WalBasedMetricsWriterOnRequestArriveTest {
     // Build runnable without writer, then attach writer with listener=runnable
     WalBasedMetricsWriter runnable =
         WalBasedMetricsWriter.builder()
-            .shardMap(new ShardMap(new SystemClock()))
+            .shardMap(shardMapSupplier.get())
             .serviceController(svc)
             .self("self")
             .shardsAndSeriesAssigner(assigner)

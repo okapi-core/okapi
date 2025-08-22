@@ -5,6 +5,7 @@ import static org.okapi.constants.Constants.N_SHARDS;
 
 import com.okapi.rest.metrics.SubmitMetricsRequestInternal;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ import org.okapi.metrics.common.pojo.TWO_PHASE_STATE;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssigner;
 import org.okapi.metrics.rollup.RollupSeries;
 import org.okapi.metrics.sharding.fakes.FixedShardsAndSeriesAssigner;
+import org.okapi.metrics.stats.*;
 import org.okapi.testutils.OkapiTestUtils;
 
 @Slf4j
@@ -34,6 +36,11 @@ public class MetricsHandlerImplTests {
   Node testNode1;
   Node testNode2;
   Node testNode3;
+  // series related methods
+  Supplier<RollupSeries<Statistics>> seriesSupplier;
+  StatisticsRestorer<Statistics> statsRestorer;
+  Supplier<Statistics> statisticsSupplier;
+  RollupSeriesRestorer<Statistics> restorer;
 
   @BeforeEach
   public void setup() {
@@ -41,10 +48,18 @@ public class MetricsHandlerImplTests {
     testNode1 = testResourceFactory.makeNode(TEST_NODE_1);
     testNode2 = testResourceFactory.makeNode(TEST_NODE_2);
     testNode3 = testResourceFactory.makeNode(TEST_NODE_3);
+    // series related stuff
+    statsRestorer = new RolledupStatsRestorer();
+    statisticsSupplier = new KllStatSupplier();
+    restorer = new RolledUpSeriesRestorer(statsRestorer, statisticsSupplier);
+    seriesSupplier = () -> new RollupSeries<>(statsRestorer, statisticsSupplier);
   }
 
   public void checkDistribution(
-      RollupSeries ref, ShardsAndSeriesAssigner assigner, List<Node> nodes, int nShards) {
+      RollupSeries<Statistics> ref,
+      ShardsAndSeriesAssigner assigner,
+      List<Node> nodes,
+      int nShards) {
     for (var node : nodes) {
       // for this node should be empty
       // find all shards that belong to this node
@@ -139,7 +154,7 @@ public class MetricsHandlerImplTests {
         leader, requests, seriesToShardMap, oldDistribution, newDistribution, oldNodes, newNodes);
     var newNodeIds = newNodes.stream().map(node -> node.id()).toList();
     var newAssigner = new FixedShardsAndSeriesAssigner(seriesToShardMap, newDistribution);
-    var merged = new RollupSeries(testResourceFactory.clock(leader));
+    var merged = seriesSupplier.get();
     merge(merged, requests);
 
     testResourceFactory.serviceRegistry(leader).safelyUpdateNodes(newNodeIds);
@@ -183,7 +198,7 @@ public class MetricsHandlerImplTests {
     var newNodeIds = newNodes.stream().map(node -> node.id()).toList();
     var newAssigner = new FixedShardsAndSeriesAssigner(seriesToShardMap, newShardToNodeMap);
     var oldAssigner = new FixedShardsAndSeriesAssigner(seriesToShardMap, oldShardToNodeMap);
-    var reference = new RollupSeries(testResourceFactory.clock(leader));
+    var reference = seriesSupplier.get();
     // setup shard assignments
     testResourceFactory
         .shardsAndSeriesAssigner()

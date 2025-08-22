@@ -9,4 +9,11 @@
     <artifactId>okapi-metric-rocks</artifactId>
     <name>Archetype - okapi-metric-rocks</name>
     <url>http://maven.apache.org</url>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.rocksdb</groupId>
+            <artifactId>rocksdbjni</artifactId>
+        </dependency>
+    </dependencies>
 </project>

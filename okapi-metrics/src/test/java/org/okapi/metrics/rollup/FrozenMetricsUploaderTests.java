@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -32,12 +33,9 @@ import org.okapi.metrics.s3.S3Prefixes;
 import org.okapi.metrics.scanning.ArrayBackedBrs;
 import org.okapi.metrics.scanning.HourlyCheckpointScanner;
 import org.okapi.metrics.scanning.MmapBrs;
+import org.okapi.metrics.stats.*;
 import org.okapi.testutils.OkapiTestUtils;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-
-// todo: some issue with resetting the clock -> replay and check.
-// todo: add tests to check integrity of Parquet export.
-// todo: start the server and check WRITE performance with a locust script.
 
 public class FrozenMetricsUploaderTests {
   public static String TENANT_ID;
@@ -49,6 +47,11 @@ public class FrozenMetricsUploaderTests {
   Duration oneHr = Duration.of(1, ChronoUnit.HOURS);
   Node node;
 
+  Supplier<RollupSeries<Statistics>> seriesSupplier;
+  StatisticsRestorer<Statistics> statsRestorer;
+  Supplier<Statistics> statisticsSupplier;
+  RollupSeriesRestorer<Statistics> restorer;
+
   @BeforeEach
   public void setup() {
     testResourceFactory = new TestResourceFactory();
@@ -59,12 +62,16 @@ public class FrozenMetricsUploaderTests {
             "test-node-" + UUID.randomUUID().toString(),
             "localhost",
             NodeState.METRICS_CONSUMPTION_START);
+    statsRestorer= new RolledupStatsRestorer();
+    statisticsSupplier = new KllStatSupplier();
+    restorer = new RolledUpSeriesRestorer(statsRestorer, statisticsSupplier);
+    seriesSupplier = () -> new RollupSeries<>(statsRestorer, statisticsSupplier);
   }
 
   @Test
   public void testHourlyWithOneSeries() throws Exception {
     var checkpointWriter = testResourceFactory.hourlyCheckpointWriter(node);
-    var series = new RollupSeries(testResourceFactory.clock(node));
+    var series = seriesSupplier.get();
     series.writeBatch(
         new MetricsContext("ctx"),
         tenantize("series"),
@@ -117,7 +124,7 @@ public class FrozenMetricsUploaderTests {
       throws Exception {
     var checkpointWriter = testResourceFactory.hourlyCheckpointWriter(node);
     int n = names.size();
-    var series = new RollupSeries(clock);
+    var series = seriesSupplier.get();
     for (int i = 0; i < n; i++) {
       series.writeBatch(new MetricsContext("ctx"), tenantize(names.get(i)), ts.get(i), vals.get(i));
     }
