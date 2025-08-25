@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -15,7 +16,7 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.framework.recipes.locks.InterProcessLock;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.okapi.beans.BeanIds;
+import org.okapi.beans.Configurations;
 import org.okapi.clock.Clock;
 import org.okapi.clock.SystemClock;
 import org.okapi.fake.FakeClock;
@@ -28,8 +29,11 @@ import org.okapi.metrics.common.pojo.Node;
 import org.okapi.metrics.common.sharding.ConsistentHashedAssignerFactory;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssignerFactory;
 import org.okapi.metrics.coordinator.CentralCoordinator;
+import org.okapi.metrics.rocks.RocksPathSupplier;
 import org.okapi.metrics.rollup.FrozenMetricsUploader;
 import org.okapi.metrics.rollup.RollupQueryProcessor;
+import org.okapi.metrics.rollup.RollupSeries;
+import org.okapi.metrics.rollup.WriteBackSettings;
 import org.okapi.metrics.service.*;
 import org.okapi.metrics.service.runnables.*;
 import org.okapi.metrics.service.self.IsolatedNodeCreator;
@@ -39,6 +43,7 @@ import org.okapi.metrics.sharding.*;
 import org.okapi.metrics.stats.*;
 import org.okapi.profiles.ENV_TYPE;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -72,7 +77,7 @@ public class OkapiMetricsConsumerConfig {
       matchIfMissing = false)
   public S3Client amazonS3v2(
       @Autowired ENV_TYPE ENV_TYPE,
-      @Value(BeanIds.VALUE_REGION) String region,
+      @Value(Configurations.VAL_REGION) String region,
       @Autowired AwsCredentialsProvider credentialsProviderV2) {
 
     return switch (ENV_TYPE) {
@@ -161,20 +166,56 @@ public class OkapiMetricsConsumerConfig {
     };
   }
 
-  @Bean
-  // todo: make this pluggable
-  public ShardMap shardMap(@Autowired Clock clock, @Value("${admissionWindowHrs}") int admissionHrs)
-      throws Exception {
+  @Bean(name = Configurations.BEAN_ROCKS_MESSAGE_BOX)
+  public SharedMessageBox<WriteBackRequest> messageBox(@Value("${rocksBacklog}") int rocksBacklog) {
+    return new SharedMessageBox<>(rocksBacklog);
+  }
+
+  @Bean(name = Configurations.BEAN_SERIES_SUPPLIER)
+  public Function<Integer, RollupSeries<Statistics>> seriesSupplier(
+      @Qualifier(Configurations.BEAN_ROCKS_MESSAGE_BOX)
+          SharedMessageBox<WriteBackRequest> writeBackRequestSharedMessageBox) {
     StatisticsRestorer<Statistics> statsRestorer = new RolledupStatsRestorer();
     var statsSupplier = new KllStatSupplier();
-    var seriesRestorer = new RolledUpSeriesRestorer( statsRestorer, statsSupplier);
+    return (shard) -> new RollupSeries<>(statsRestorer, statsSupplier, shard);
+  }
+
+  @Bean
+  public RocksPathSupplier rocksPathSupplier(@Value(Configurations.VAL_ROCKS_DIR) String rocksDir) {
+    return new RocksPathSupplier(Path.of(rocksDir));
+  }
+
+  @Bean
+  public RocksDbStatsWriter rocksDbStatsWriter(
+      @Qualifier(Configurations.BEAN_ROCKS_MESSAGE_BOX)
+          SharedMessageBox<WriteBackRequest> requestSharedMessageBox,
+      @Autowired RocksPathSupplier rocksPathSupplier)
+      throws IOException {
+    StatisticsRestorer<Statistics> statsRestorer = new RolledupStatsRestorer();
+    Merger<Statistics> statisticsMerger = new RolledupMergerStrategy();
+    return new RocksDbStatsWriter(
+        requestSharedMessageBox, statsRestorer, statisticsMerger, rocksPathSupplier);
+  }
+
+  @Bean
+  public ShardMap shardMap(
+      @Autowired Clock clock,
+      @Qualifier(Configurations.BEAN_SERIES_SUPPLIER)
+          Function<Integer, RollupSeries<Statistics>> seriesFunction,
+      @Qualifier(Configurations.BEAN_ROCKS_MESSAGE_BOX)
+          SharedMessageBox<WriteBackRequest> requestSharedMessageBox,
+      @Qualifier(Configurations.BEAN_SHARED_EXECUTOR) ScheduledExecutorService service,
+      @Value(Configurations.VAL_WRITE_BACK_WIN_MILLIS) long writeBackMillis,
+      @Value(Configurations.VAL_ADMISSION_WINDOW_HRS) int admissionHrs)
+      throws Exception {
     return new ShardMap(
         clock,
         admissionHrs,
-        statsSupplier,
-        statsRestorer,
-        seriesRestorer);
-    }
+        seriesFunction,
+        requestSharedMessageBox,
+        service,
+        new WriteBackSettings(Duration.of(writeBackMillis, ChronoUnit.MILLIS), clock));
+  }
 
   @Bean
   public ShardsAndSeriesAssignerFactory shardsAndSeriesAssignerFactory() {
@@ -226,7 +267,7 @@ public class OkapiMetricsConsumerConfig {
     return resource;
   }
 
-  @Bean
+  @Bean(name = Configurations.BEAN_SHARED_EXECUTOR)
   public ScheduledExecutorService scheduledExecutorService(
       @Value("${backgroundThreads}") int backgroundThreads) {
     return Executors.newScheduledThreadPool(backgroundThreads);
@@ -424,11 +465,8 @@ public class OkapiMetricsConsumerConfig {
   public MetricsWriter metricsWriter(
       @Autowired ShardMap shardMap,
       @Autowired ServiceController serviceController,
-      @Autowired Node node,
-      @Autowired ScheduledExecutorService scheduledExecutorService,
-      @Autowired Checkpointer checkpointer) {
-    return new PeriodicSnapshotWriter(
-        shardMap, serviceController, node.id(), scheduledExecutorService, checkpointer);
+      @Autowired Node node) {
+    return new RocksMetricsWriter(shardMap, serviceController, node.id());
   }
 
   @Bean

@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.apache.hadoop.conf.Configuration;
@@ -47,7 +48,7 @@ public class FrozenMetricsUploaderTests {
   Duration oneHr = Duration.of(1, ChronoUnit.HOURS);
   Node node;
 
-  Supplier<RollupSeries<Statistics>> seriesSupplier;
+  Function<Integer, RollupSeries<Statistics>> seriesSupplier;
   StatisticsRestorer<Statistics> statsRestorer;
   Supplier<Statistics> statisticsSupplier;
   RollupSeriesRestorer<Statistics> restorer;
@@ -62,16 +63,16 @@ public class FrozenMetricsUploaderTests {
             "test-node-" + UUID.randomUUID().toString(),
             "localhost",
             NodeState.METRICS_CONSUMPTION_START);
-    statsRestorer= new RolledupStatsRestorer();
+    statsRestorer = new RolledupStatsRestorer();
     statisticsSupplier = new KllStatSupplier();
-    restorer = new RolledUpSeriesRestorer(statsRestorer, statisticsSupplier);
-    seriesSupplier = () -> new RollupSeries<>(statsRestorer, statisticsSupplier);
+    seriesSupplier = new RollupSeriesFn();
+    restorer = new RolledUpSeriesRestorer(seriesSupplier);
   }
 
   @Test
   public void testHourlyWithOneSeries() throws Exception {
     var checkpointWriter = testResourceFactory.hourlyCheckpointWriter(node);
-    var series = seriesSupplier.get();
+    var series = seriesSupplier.apply(0);
     series.writeBatch(
         new MetricsContext("ctx"),
         tenantize("series"),
@@ -92,27 +93,27 @@ public class FrozenMetricsUploaderTests {
     assertEquals(Arrays.asList(1, 2, 3), secondly.getTs());
     assertTrue(
         OkapiTestUtils.bytesAreEqual(
-            series.getSerializedStats(RollupSeries.secondlyShard(tenantize("series"), 1000)),
+            series.getSerializedStats(HashFns.secondlyBucket(tenantize("series"), 1000)),
             secondly.getVals().get(0).serialize()));
     assertTrue(
         OkapiTestUtils.bytesAreEqual(
-            series.getSerializedStats(RollupSeries.secondlyShard(tenantize("series"), 2000)),
+            series.getSerializedStats(HashFns.secondlyBucket(tenantize("series"), 2000)),
             secondly.getVals().get(1).serialize()));
     assertTrue(
         OkapiTestUtils.bytesAreEqual(
-            series.getSerializedStats(RollupSeries.secondlyShard(tenantize("series"), 3000)),
+            series.getSerializedStats(HashFns.secondlyBucket(tenantize("series"), 3000)),
             secondly.getVals().get(2).serialize()));
 
     var minutely = scanner.minutely(fileRange, tenantize("series"), md);
     assertEquals(1, minutely.getTs().size());
     var expectedMinVal =
-        series.getSerializedStats(RollupSeries.minutelyShard(tenantize("series"), 1000));
+        series.getSerializedStats(HashFns.minutelyBucket(tenantize("series"), 1000));
     var gotMinVal = minutely.getVals().get(0).serialize();
     assertTrue(OkapiTestUtils.bytesAreEqual(expectedMinVal, gotMinVal));
 
     var hourly = scanner.hourly(fileRange, tenantize("series"), md);
     var expectedHourlyVal =
-        series.getSerializedStats(RollupSeries.hourlyShard(tenantize("series"), 1000));
+        series.getSerializedStats(HashFns.hourlyBucket(tenantize("series"), 1000));
     var gotHrVal = hourly.serialize();
     assertTrue(OkapiTestUtils.bytesAreEqual(expectedHourlyVal, gotHrVal));
   }
@@ -124,7 +125,7 @@ public class FrozenMetricsUploaderTests {
       throws Exception {
     var checkpointWriter = testResourceFactory.hourlyCheckpointWriter(node);
     int n = names.size();
-    var series = seriesSupplier.get();
+    var series = seriesSupplier.apply(0);
     for (int i = 0; i < n; i++) {
       series.writeBatch(new MetricsContext("ctx"), tenantize(names.get(i)), ts.get(i), vals.get(i));
     }
@@ -148,7 +149,7 @@ public class FrozenMetricsUploaderTests {
         assertEquals(expectedSecondly, secondly.getTs());
         for (int j = 0; j < expectedSecondly.size(); j++) {
           var atMillis = start + expectedSecondly.get(j) * 1000;
-          var shard = RollupSeries.secondlyShard(name, atMillis);
+          var shard = HashFns.secondlyBucket(name, atMillis);
           var val = series.getSerializedStats(shard);
           var got = secondly.getVals().get(j).serialize();
           assertTrue(OkapiTestUtils.bytesAreEqual(val, got));
@@ -160,7 +161,7 @@ public class FrozenMetricsUploaderTests {
         assertEquals(expectedMinutely, minutely.getTs());
         for (int j = 0; j < expectedMinutely.size(); j++) {
           var atMillis = start + expectedMinutely.get(j) * 1000 * 60;
-          var shard = RollupSeries.minutelyShard(name, atMillis);
+          var shard = HashFns.minutelyBucket(name, atMillis);
           var val = series.getSerializedStats(shard);
           var got = minutely.getVals().get(j).serialize();
           assertTrue(OkapiTestUtils.bytesAreEqual(val, got));
@@ -168,14 +169,14 @@ public class FrozenMetricsUploaderTests {
       }
       {
         var hourly = scanner.hourly(fileRange, name, md);
-        var key = RollupSeries.hourlyShard(name, start);
+        var key = HashFns.hourlyBucket(name, start);
         var expectedHourly = series.getSerializedStats(key);
         assertTrue(OkapiTestUtils.bytesAreEqual(expectedHourly, hourly.serialize()));
       }
     }
   }
 
-  public void setup_withSingleShard(Duration writeStart) throws OutsideWindowException {
+  public void setup_withSingleShard(Duration writeStart) throws OutsideWindowException, StatisticsFrozenException, InterruptedException {
     var shardMap = testResourceFactory.shardMap(node);
     testResourceFactory.clock(node).setTime(now - writeStart.toMillis());
     var st = testResourceFactory.clock(node).currentTimeMillis();
@@ -230,7 +231,7 @@ public class FrozenMetricsUploaderTests {
         shardMap
             .get(0)
             .getStats(
-                RollupSeries.secondlyShard(
+                HashFns.secondlyBucket(
                     tenantize("series-1"), now + oneMin.toMillis() - admissionWindow.toMillis()));
 
     //
@@ -271,14 +272,14 @@ public class FrozenMetricsUploaderTests {
             .shardMap(node)
             .get(0)
             .getSerializedStats(
-                RollupSeries.secondlyShard(
+                HashFns.secondlyBucket(
                     tenantize("series-1"), now + oneMin.toMillis() - admissionWindow.toMillis()));
     var expectedSecondly2 =
         testResourceFactory
             .shardMap(node)
             .get(0)
             .getSerializedStats(
-                RollupSeries.secondlyShard(
+                HashFns.secondlyBucket(
                     tenantize("series-1"),
                     now + 2 * oneMin.toMillis() - admissionWindow.toMillis()));
     assertTrue(
@@ -295,14 +296,14 @@ public class FrozenMetricsUploaderTests {
             .shardMap(node)
             .get(0)
             .getSerializedStats(
-                RollupSeries.minutelyShard(
+                HashFns.minutelyBucket(
                     tenantize("series-1"), now + oneMin.toMillis() - admissionWindow.toMillis()));
     var expectedMinutely2 =
         testResourceFactory
             .shardMap(node)
             .get(0)
             .getSerializedStats(
-                RollupSeries.minutelyShard(
+                HashFns.minutelyBucket(
                     tenantize("series-1"),
                     now + 2 * oneMin.toMillis() - admissionWindow.toMillis()));
     assertTrue(
@@ -316,7 +317,7 @@ public class FrozenMetricsUploaderTests {
             .shardMap(node)
             .get(0)
             .getSerializedStats(
-                RollupSeries.hourlyShard(tenantize("series-1"), now - admissionWindow.toMillis()));
+                HashFns.hourlyBucket(tenantize("series-1"), now - admissionWindow.toMillis()));
     var hourly = hourlyScanner.hourly(brs, tenantize("series-1"), md);
     assertTrue(OkapiTestUtils.bytesAreEqual(expectedHourly, hourly.serialize()));
 

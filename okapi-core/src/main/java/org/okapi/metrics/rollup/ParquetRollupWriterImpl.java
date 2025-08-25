@@ -59,7 +59,7 @@ public class ParquetRollupWriterImpl<T extends  Statistics> implements ParquetRo
       if (parsed.isEmpty()) continue;
       if (tenantId.isEmpty() || !tenantId.get().equals(this.tenantId)) continue;
       var hourlyKey =
-          RollupSeries.hourlyShard(
+          HashFns.hourlyBucket(
               path, startTime); // take the start time and increase by a second to avoid boundary
       // effects
       var hourlyStat = series.getStats(hourlyKey);
@@ -72,7 +72,7 @@ public class ParquetRollupWriterImpl<T extends  Statistics> implements ParquetRo
       {
         var secondStart = hr * 3600L;
         for (int i = 0; i < 3600; i++) {
-          var key = RollupSeries.secondlyShard(path, 1000L * (secondStart + i));
+          var key = HashFns.secondlyBucket(path, 1000L * (secondStart + i));
           var stat = series.getStats(key);
           if (stat.isEmpty()) continue;
           var quantizedSecond = (secondStart + i) * 1000L;
@@ -89,7 +89,7 @@ public class ParquetRollupWriterImpl<T extends  Statistics> implements ParquetRo
       {
         var minuteStart = hr * 60L;
         for (int i = 0; i < 60; i++) {
-          var key = RollupSeries.minutelyShard(path, 1000L * 60 * (minuteStart + i));
+          var key = HashFns.minutelyBucket(path, 1000L * 60 * (minuteStart + i));
           var stat = series.getStats(key);
           if (stat.isEmpty()) continue;
           var quantizedMinute = (minuteStart + i) * 60 * 1000L;
@@ -104,7 +104,7 @@ public class ParquetRollupWriterImpl<T extends  Statistics> implements ParquetRo
         }
         {
           var quantizedHr = hr * 3600 * 1000L;
-          var key = RollupSeries.hourlyShard(path, quantizedHr);
+          var key = HashFns.hourlyBucket(path, quantizedHr);
           var stat = series.getStats(key);
           if (stat.isEmpty()) continue;
           var row =

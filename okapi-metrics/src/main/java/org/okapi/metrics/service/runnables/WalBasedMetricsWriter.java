@@ -21,6 +21,7 @@ import org.okapi.metrics.OutsideWindowException;
 import org.okapi.metrics.ShardMap;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssigner;
 import org.okapi.metrics.service.ServiceController;
+import org.okapi.metrics.stats.StatisticsFrozenException;
 import org.okapi.metrics.wal.MetricsWalStreamConsumer;
 import org.okapi.wal.*;
 import org.okapi.wal.Wal.MetricEvent;
@@ -114,7 +115,7 @@ public class WalBasedMetricsWriter implements WalCommitListener, MetricsWriter {
 
   @Override
   public void onRequestArrive(SubmitMetricsRequestInternal request)
-      throws BadRequestException, OutsideWindowException, InterruptedException {
+      throws BadRequestException, OutsideWindowException, InterruptedException, StatisticsFrozenException {
     if (request == null) {
       throw new BadRequestException("Request is null.");
     }

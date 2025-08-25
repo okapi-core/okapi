@@ -2,9 +2,6 @@ package org.okapi.metrics.stats;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.okapi.testutils.OkapiTestUtils;
-import org.okapi.metrics.common.MetricsContext;
-
 import java.util.stream.Stream;
 import org.apache.datasketches.kll.KllFloatsSketch;
 import org.apache.datasketches.memory.Memory;
@@ -12,11 +9,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.okapi.metrics.common.MetricsContext;
+import org.okapi.testutils.OkapiTestUtils;
 
 public class RolledUpStatisticsTest {
 
   @Test
-  public void testSerializeSanity() {
+  public void testSerializeSanity() throws StatisticsFrozenException {
     var stats = new RolledUpStatistics(KllFloatsSketch.newHeapInstance(8));
     var metricsContext = new MetricsContext("trace");
     stats.update(metricsContext, 1.0f);
@@ -40,7 +39,7 @@ public class RolledUpStatisticsTest {
 
   @ParameterizedTest
   @MethodSource("fuzzyTestDataConfigs")
-  public void testSerializeFuzzy(float base, float scale, int count) {
+  public void testSerializeFuzzy(float base, float scale, int count) throws StatisticsFrozenException {
     var gen = OkapiTestUtils.genRandom(base, scale, count);
     var stats = new RolledUpStatistics(KllFloatsSketch.newHeapInstance(8));
     var ctx = new MetricsContext("trace");

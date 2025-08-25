@@ -20,8 +20,7 @@ import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
 import org.okapi.metrics.rollup.FrozenMetricsUploader;
 import org.okapi.metrics.rollup.RollupSeries;
-import org.okapi.metrics.stats.KllStatSupplier;
-import org.okapi.metrics.stats.RolledupStatsRestorer;
+import org.okapi.metrics.stats.RollupSeriesFn;
 import org.okapi.metrics.stats.Statistics;
 import org.okapi.metricsproxy.MetricsProxyConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +31,7 @@ import org.springframework.test.context.ContextConfiguration;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ContextConfiguration(classes = {MetricsProxyConfiguration.class, MetricsProxyTestConfig.class})
 @ActiveProfiles("test")
-// todo: this is because S3ByteRange scanner is buggy -> check why
+// todo: this is a problem when S3 files are mutable or are first created, cached metadata can be out-of-sync with actual metadata.
 @Disabled
 public class ScanQueryProcessorTests {
   String tenantId = "queryProcessorTenant";
@@ -46,8 +45,10 @@ public class ScanQueryProcessorTests {
   public void testLoads() {}
 
   public RollupSeries<Statistics> getSeries(){
-    return  new RollupSeries<>(new RolledupStatsRestorer(), new KllStatSupplier());
+    var seriesFn = new RollupSeriesFn();
+    return seriesFn.apply(0);
   }
+  
   @Test
   public void testHourlyProcessing_singleShard() throws Exception {
     var series = getSeries();

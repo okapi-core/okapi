@@ -5,6 +5,7 @@ import static org.okapi.constants.Constants.N_SHARDS;
 
 import com.okapi.rest.metrics.SubmitMetricsRequestInternal;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -37,7 +38,7 @@ public class MetricsHandlerImplTests {
   Node testNode2;
   Node testNode3;
   // series related methods
-  Supplier<RollupSeries<Statistics>> seriesSupplier;
+  Function<Integer, RollupSeries<Statistics>> seriesSupplier;
   StatisticsRestorer<Statistics> statsRestorer;
   Supplier<Statistics> statisticsSupplier;
   RollupSeriesRestorer<Statistics> restorer;
@@ -51,8 +52,8 @@ public class MetricsHandlerImplTests {
     // series related stuff
     statsRestorer = new RolledupStatsRestorer();
     statisticsSupplier = new KllStatSupplier();
-    restorer = new RolledUpSeriesRestorer(statsRestorer, statisticsSupplier);
-    seriesSupplier = () -> new RollupSeries<>(statsRestorer, statisticsSupplier);
+    seriesSupplier = new RollupSeriesFn();
+    restorer = new RolledUpSeriesRestorer(seriesSupplier);
   }
 
   public void checkDistribution(
@@ -154,7 +155,7 @@ public class MetricsHandlerImplTests {
         leader, requests, seriesToShardMap, oldDistribution, newDistribution, oldNodes, newNodes);
     var newNodeIds = newNodes.stream().map(node -> node.id()).toList();
     var newAssigner = new FixedShardsAndSeriesAssigner(seriesToShardMap, newDistribution);
-    var merged = seriesSupplier.get();
+    var merged = seriesSupplier.apply(-1);
     merge(merged, requests);
 
     testResourceFactory.serviceRegistry(leader).safelyUpdateNodes(newNodeIds);
@@ -198,7 +199,7 @@ public class MetricsHandlerImplTests {
     var newNodeIds = newNodes.stream().map(node -> node.id()).toList();
     var newAssigner = new FixedShardsAndSeriesAssigner(seriesToShardMap, newShardToNodeMap);
     var oldAssigner = new FixedShardsAndSeriesAssigner(seriesToShardMap, oldShardToNodeMap);
-    var reference = seriesSupplier.get();
+    var reference = seriesSupplier.apply(-1);
     // setup shard assignments
     testResourceFactory
         .shardsAndSeriesAssigner()
@@ -220,7 +221,7 @@ public class MetricsHandlerImplTests {
   }
 
   public static void merge(RollupSeries merged, List<SubmitMetricsRequestInternal> requests)
-      throws OutsideWindowException {
+      throws OutsideWindowException, StatisticsFrozenException, InterruptedException {
     for (var r : requests) {
       var path = MetricPaths.convertToPath(r);
       merged.writeBatch(new MetricsContext("test"), path, r.getTs(), r.getValues());

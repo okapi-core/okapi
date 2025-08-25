@@ -1,8 +1,7 @@
 package org.okapi.metrics.query;
 
-import org.okapi.metrics.rollup.RollupSeries;
-
 import java.time.Duration;
+import org.okapi.metrics.rollup.TsReader;
 
 public interface QueryProcessor {
   public enum TRANSFORM {
@@ -10,21 +9,24 @@ public interface QueryProcessor {
     SIGMOID
   }
 
-  QueryRecords.QueryResult scan(RollupSeries rollupSeries, QueryRecords.Slice slice);
+  QueryRecords.QueryResult scan(TsReader reader, QueryRecords.Slice slice);
 
-  QueryRecords.QueryResult scale(RollupSeries rollupSeries,QueryRecords.Slice slice, float scaleFactor);
+  QueryRecords.QueryResult scale(TsReader reader, QueryRecords.Slice slice, float scaleFactor);
 
-  QueryRecords.QueryResult sum(RollupSeries rollupSeries,QueryRecords.Slice left, QueryRecords.Slice right);
+  QueryRecords.QueryResult sum(TsReader reader, QueryRecords.Slice left, QueryRecords.Slice right);
 
-  float count(RollupSeries rollupSeries,QueryRecords.Slice slice);
+  float count(TsReader reader, QueryRecords.Slice slice);
 
-  QueryRecords.QueryResult transform(RollupSeries rollupSeries,QueryRecords.Slice slice, TRANSFORM transform);
+  QueryRecords.QueryResult transform(
+      TsReader reader, QueryRecords.Slice slice, TRANSFORM transform);
 
-  QueryRecords.QueryResult movingAverage(RollupSeries rollupSeries,QueryRecords.Slice slice, Duration windowSize);
+  QueryRecords.QueryResult movingAverage(
+      TsReader reader, QueryRecords.Slice slice, Duration windowSize);
 
-  QueryRecords.QueryResult movingSum(RollupSeries rollupSeries,QueryRecords.Slice slice, Duration windowSize);
+  QueryRecords.QueryResult movingSum(
+      TsReader reader, QueryRecords.Slice slice, Duration windowSize);
 
-  QueryRecords.QueryResult firstDerivative(RollupSeries rollupSeries,QueryRecords.Slice slice);
+  QueryRecords.QueryResult firstDerivative(TsReader reader, QueryRecords.Slice slice);
 
-  QueryRecords.QueryResult aggregateSum(RollupSeries rollupSeries, QueryRecords.Slice slice);
+  QueryRecords.QueryResult aggregateSum(TsReader reader, QueryRecords.Slice slice);
 }

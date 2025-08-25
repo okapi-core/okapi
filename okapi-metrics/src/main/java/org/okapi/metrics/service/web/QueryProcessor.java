@@ -2,7 +2,14 @@ package org.okapi.metrics.service.web;
 
 import static org.okapi.validation.OkapiChecks.checkArgument;
 
-import org.okapi.clock.Clock;
+import com.okapi.rest.metrics.*;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
 import org.okapi.exceptions.BadRequestException;
 import org.okapi.metrics.ShardMap;
 import org.okapi.metrics.common.MetricPaths;
@@ -10,15 +17,9 @@ import org.okapi.metrics.common.MetricsPathParser;
 import org.okapi.metrics.common.ServiceRegistry;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssignerFactory;
 import org.okapi.metrics.query.QueryRecords;
+import org.okapi.metrics.rollup.RocksReaderSupplier;
 import org.okapi.metrics.rollup.RollupQueryProcessor;
 import org.okapi.metrics.search.MetricsSearcher;
-import com.okapi.rest.metrics.*;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -26,12 +27,11 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 public class QueryProcessor {
   public static final long _1_HR = Duration.of(1, ChronoUnit.HOURS).toMillis();
-  public static final long _24_HR = 24 * _1_HR;
   @Autowired ShardMap shardMap;
-  @Autowired Clock clock;
   @Autowired ShardsAndSeriesAssignerFactory shardsAndSeriesAssignerFactory;
   @Autowired RollupQueryProcessor rollupQueryProcessor;
   @Autowired ServiceRegistry serviceRegistry;
+  @Autowired RocksReaderSupplier rocksReaderSupplier;
 
   public GetMetricsResponse getMetricsResponse(GetMetricsRequestInternal request) throws Exception {
     var nodes = serviceRegistry.listActiveNodes();
@@ -42,10 +42,21 @@ public class QueryProcessor {
     var assigner = shardsAndSeriesAssignerFactory.makeAssigner(shardMap.getNsh(), nodes.get());
     var path = MetricPaths.convertToPath(request);
     var shard = assigner.getShard(path);
-    var series = shardMap.get(shard);
+    var rocksReader = rocksReaderSupplier.apply(shard);
+    if (rocksReader.isEmpty()) {
+      return GetMetricsResponse.builder()
+          .name(request.getMetricName())
+          .resolution(request.getResolution())
+          .aggregation(request.getAggregation())
+          .tenant(request.getTenantId())
+          .tags(request.getTags())
+          .values(Collections.emptyList())
+          .times(Collections.emptyList())
+          .build();
+    }
     var result =
         rollupQueryProcessor.scan(
-            series,
+            rocksReader.get(),
             new QueryRecords.Slice(
                 path,
                 request.getStart(),

@@ -12,7 +12,8 @@ import java.util.function.BiFunction;
 
 public class RollupQueryProcessor implements QueryProcessor {
   @Override
-  public QueryRecords.QueryResult scan(RollupSeries rollupSeries, QueryRecords.Slice slice) {
+  public QueryRecords.QueryResult scan(
+      TsReader rollupSeries, QueryRecords.Slice slice) {
     var scanResult =
         rollupSeries.scan(
             slice.series(), slice.from(), slice.to(), slice.aggregation(), slice.resolution());
@@ -21,7 +22,8 @@ public class RollupQueryProcessor implements QueryProcessor {
   }
 
   @Override
-  public QueryRecords.QueryResult scale(RollupSeries rollupSeries,QueryRecords.Slice slice, float scaleFactor) {
+  public QueryRecords.QueryResult scale(
+      TsReader rollupSeries, QueryRecords.Slice slice, float scaleFactor) {
     var scaledResult =
         rollupSeries.scan(
             slice.series(), slice.from(), slice.to(), slice.aggregation(), slice.resolution());
@@ -32,7 +34,8 @@ public class RollupQueryProcessor implements QueryProcessor {
   }
 
   @Override
-  public QueryRecords.QueryResult sum(RollupSeries rollupSeries,QueryRecords.Slice left, QueryRecords.Slice right) {
+  public QueryRecords.QueryResult sum(
+      TsReader rollupSeries, QueryRecords.Slice left, QueryRecords.Slice right) {
     var scanLeft =
         rollupSeries.scan(
             left.series(), left.from(), left.to(), left.aggregation(), left.resolution());
@@ -79,13 +82,15 @@ public class RollupQueryProcessor implements QueryProcessor {
   }
 
   @Override
-  public float count(RollupSeries rollupSeries,QueryRecords.Slice slice) {
+  public float count(TsReader rollupSeries, QueryRecords.Slice slice) {
     return rollupSeries.count(slice.series(), slice.from(), slice.to(), slice.resolution());
   }
 
   @Override
-  public QueryRecords.QueryResult transform(RollupSeries rollupSeries,
-      QueryRecords.Slice slice, QueryProcessor.TRANSFORM transform) {
+  public QueryRecords.QueryResult transform(
+      TsReader rollupSeries,
+      QueryRecords.Slice slice,
+      QueryProcessor.TRANSFORM transform) {
     var scaledResult =
         rollupSeries.scan(
             slice.series(), slice.from(), slice.to(), slice.aggregation(), slice.resolution());
@@ -93,24 +98,23 @@ public class RollupQueryProcessor implements QueryProcessor {
     var values = scaledResult.getValues();
     values.replaceAll(
         (s) -> {
-          switch (transform) {
-            case LOG:
-              return (float) Math.log(s);
-            case SIGMOID:
-              return (float) (1 / (1 + Math.exp(-s)));
-            default:
-              throw new IllegalArgumentException("Unknown transform: " + transform);
-          }
+          return switch (transform) {
+            case LOG -> (float) Math.log(s);
+            case SIGMOID -> (float) (1 / (1 + Math.exp(-s)));
+            default -> throw new IllegalArgumentException("Unknown transform: " + transform);
+          };
         });
     return new QueryRecords.QueryResult(scaledResult.getSeriesName(), ts, values);
   }
 
   @Override
-  public QueryRecords.QueryResult movingAverage(RollupSeries rollupSeries,QueryRecords.Slice slice, Duration windowSize) {
+  public QueryRecords.QueryResult movingAverage(
+      TsReader rollupSeries, QueryRecords.Slice slice, Duration windowSize) {
     return movingWindowTransform(rollupSeries, slice, windowSize, (sum, count) -> sum / count);
   }
 
-  protected QueryRecords.QueryResult movingWindowTransform(RollupSeries rollupSeries,
+  protected QueryRecords.QueryResult movingWindowTransform(
+      TsReader rollupSeries,
       QueryRecords.Slice slice,
       Duration windowSize,
       BiFunction<Float, Integer, Float> valueComputeFn) {
@@ -118,8 +122,9 @@ public class RollupQueryProcessor implements QueryProcessor {
         rollupSeries.scan(
             slice.series(), slice.from(), slice.to(), slice.aggregation(), slice.resolution());
     var timestamps = scanResult.getTimestamps();
-    if(timestamps.isEmpty()){
-      return new QueryRecords.QueryResult(slice.series(), Collections.emptyList(), Collections.emptyList());
+    if (timestamps.isEmpty()) {
+      return new QueryRecords.QueryResult(
+          slice.series(), Collections.emptyList(), Collections.emptyList());
     }
     var values = scanResult.getValues();
     var st = discretizeAndBack(slice.from(), slice.resolution());
@@ -127,7 +132,8 @@ public class RollupQueryProcessor implements QueryProcessor {
     var inc = getIncrement(slice.resolution());
     var resultTs = new ArrayList<Long>();
     var resultVals = new ArrayList<Float>();
-    // winStart and winEnd are indices in timestamps array such that they represent the largest window of size <= windowSize
+    // winStart and winEnd are indices in timestamps array such that they represent the largest
+    // window of size <= windowSize
     // and the timestamp at winEnd is the largest timestamp that is <= ts
     var winStart = 0;
     var winEnd = 0;
@@ -157,12 +163,14 @@ public class RollupQueryProcessor implements QueryProcessor {
   }
 
   @Override
-  public QueryRecords.QueryResult movingSum(RollupSeries rollupSeries, QueryRecords.Slice slice, Duration windowSize) {
+  public QueryRecords.QueryResult movingSum(
+      TsReader rollupSeries, QueryRecords.Slice slice, Duration windowSize) {
     return movingWindowTransform(rollupSeries, slice, windowSize, (sum, count) -> sum);
   }
 
   @Override
-  public QueryRecords.QueryResult firstDerivative(RollupSeries rollupSeries,QueryRecords.Slice slice) {
+  public QueryRecords.QueryResult firstDerivative(
+      TsReader rollupSeries, QueryRecords.Slice slice) {
     var scaledResult =
         rollupSeries.scan(
             slice.series(), slice.from(), slice.to(), slice.aggregation(), slice.resolution());
@@ -182,10 +190,11 @@ public class RollupQueryProcessor implements QueryProcessor {
   }
 
   @Override
-  public QueryRecords.QueryResult aggregateSum(RollupSeries rollupSeries,QueryRecords.Slice slice) {
+  public QueryRecords.QueryResult aggregateSum(
+      TsReader rollupSeries, QueryRecords.Slice slice) {
     var windowSize = slice.from() - slice.to();
-    return movingWindowTransform(rollupSeries,
-        slice, Duration.of(windowSize, ChronoUnit.MILLIS), (sum, count) -> sum);
+    return movingWindowTransform(
+        rollupSeries, slice, Duration.of(windowSize, ChronoUnit.MILLIS), (sum, count) -> sum);
   }
 
   private static long getIncrement(RES_TYPE resType) {

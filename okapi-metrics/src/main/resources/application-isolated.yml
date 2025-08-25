@@ -22,7 +22,7 @@ checkpoint:
   gapMillis: 3600000
   dir: ${user.home}/.okapi/periodic-checkpoints
 
-backgroundThreads: 10
+backgroundThreads: 3
 
 zk:
   connectionString: localhost:2181
@@ -33,3 +33,5 @@ zk:
 
 dataBucket: okapi-test-data-bucket
 remoteCkptDelaySeconds: 500
+rocksBacklog: 1000
+rocksDir: ${user.home}/.okapi/rocks-dbs

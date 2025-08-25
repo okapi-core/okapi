@@ -7,6 +7,10 @@ import java.util.function.Supplier;
 public class KllStatSupplier implements Supplier<Statistics> {
     @Override
     public Statistics get() {
-        return new RolledUpStatistics(KllFloatsSketch.newHeapInstance(200));
+        return new RolledUpStatistics(kllSketch());
+    }
+
+    public static KllFloatsSketch kllSketch(){
+        return KllFloatsSketch.newHeapInstance(200);
     }
 }

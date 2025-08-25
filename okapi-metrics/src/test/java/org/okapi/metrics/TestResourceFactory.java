@@ -22,8 +22,9 @@ import org.okapi.metrics.common.ServiceRegistry;
 import org.okapi.metrics.common.ServiceRegistryImpl;
 import org.okapi.metrics.common.ZkPaths;
 import org.okapi.metrics.common.pojo.*;
-import org.okapi.metrics.rollup.FrozenMetricsUploader;
-import org.okapi.metrics.rollup.RollupQueryProcessor;
+import org.okapi.metrics.rocks.RocksPathSupplier;
+import org.okapi.metrics.rocks.RocksStore;
+import org.okapi.metrics.rollup.*;
 import org.okapi.metrics.service.*;
 import org.okapi.metrics.service.fakes.*;
 import org.okapi.metrics.service.runnables.*;
@@ -32,9 +33,10 @@ import org.okapi.metrics.sharding.HeartBeatChecker;
 import org.okapi.metrics.sharding.LeaderJobs;
 import org.okapi.metrics.sharding.LeaderJobsImpl;
 import org.okapi.metrics.sharding.fakes.FixedAssignerFactory;
-import org.okapi.metrics.stats.KllStatSupplier;
-import org.okapi.metrics.stats.RolledUpSeriesRestorer;
 import org.okapi.metrics.stats.RolledupStatsRestorer;
+import org.okapi.metrics.stats.RollupSeriesFn;
+import org.okapi.metrics.stats.Statistics;
+import org.okapi.metrics.stats.StatisticsRestorer;
 import org.okapi.wal.*;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -50,11 +52,13 @@ public class TestResourceFactory {
   @Getter String dataBucket = "okapi-test-data-bucket";
   Path snapshotDir;
   @Setter @Getter int admissionWindowHrs = 1;
+  Path rocksRoot;
 
   public TestResourceFactory() {
     this.singletons = new HashMap<>();
     try {
-      snapshotDir = Files.createTempDirectory("snapshot-direcotry");
+      snapshotDir = Files.createTempDirectory("snapshot-directory");
+      rocksRoot = Files.createTempDirectory("rocks-root");
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -164,19 +168,27 @@ public class TestResourceFactory {
                 scheduledExecutorService(node), leaderJobs(node), consumerController(node)));
   }
 
+  public SharedMessageBox<WriteBackRequest> messageBox(Node node) {
+    return makeSingleton(
+        SharedMessageBox.class,
+        () -> {
+          return new SharedMessageBox<WriteBackRequest>(1000);
+        });
+  }
+
   public ShardMap shardMap(Node node) {
-    var statsSupplier = new KllStatSupplier();
-    var statsRestorer = new RolledupStatsRestorer();
+    var seriesSupplier = new RollupSeriesFn();
     return makeSingleton(
         node,
         ShardMap.class,
-        () -> {
-          return new ShardMap(
-              clock(node),
-              admissionWindowHrs,
-              statsSupplier, statsRestorer,
-              new RolledUpSeriesRestorer(statsRestorer, statsSupplier));
-        });
+        () ->
+            new ShardMap(
+                clock(node),
+                admissionWindowHrs,
+                seriesSupplier,
+                messageBox(node),
+                scheduledExecutorService(node),
+                new WriteBackSettings(Duration.of(100, ChronoUnit.MILLIS), clock(node))));
   }
 
   public <T> T makeSingleton(Node node, String specifier, Supplier<T> objSupplier) {
@@ -358,6 +370,35 @@ public class TestResourceFactory {
     return makeSingleton(node, RollupQueryProcessor.class, RollupQueryProcessor::new);
   }
 
+  public RocksPathSupplier rocksPathSupplier(Node node) {
+    return makeSingleton(
+        RocksPathSupplier.class,
+        () -> {
+          var root = rocksRoot.resolve(node.id());
+          return new RocksPathSupplier(root);
+        });
+  }
+
+  public RocksStore rocksStore(Node node) {
+    return makeSingleton(
+        RocksStore.class,
+        () -> {
+          try {
+            return new RocksStore();
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        });
+  }
+
+  public StatisticsRestorer<Statistics> unMarshaller() {
+    return new RolledupStatsRestorer();
+  }
+
+  public RocksReaderSupplier rocksReaderSupplier(Node node) {
+    return new RocksReaderSupplier(rocksPathSupplier(node), unMarshaller(), rocksStore(node));
+  }
+
   public QueryProcessor queryProcessor(Node node) {
     return makeSingleton(
         node,
@@ -365,10 +406,10 @@ public class TestResourceFactory {
         () ->
             new QueryProcessor(
                 shardMap(node),
-                clock(node),
                 shardsAndSeriesAssigner(),
                 rollupQueryProcessor(node),
-                serviceRegistry(node)));
+                serviceRegistry(node),
+                rocksReaderSupplier(node)));
   }
 
   public Path snapshotDir(Node node) {

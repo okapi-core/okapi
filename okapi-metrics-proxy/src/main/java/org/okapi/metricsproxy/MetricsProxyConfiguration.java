@@ -16,7 +16,7 @@ import org.apache.curator.framework.recipes.locks.InterProcessLock;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.okapi.auth.*;
-import org.okapi.beans.BeanIds;
+import org.okapi.beans.Configurations;
 import org.okapi.clock.Clock;
 import org.okapi.clock.SystemClock;
 import org.okapi.data.dao.*;
@@ -208,7 +208,7 @@ public class MetricsProxyConfiguration {
   @Bean
   public S3Client amazonS3v2(
       @Autowired ENV_TYPE ENV_TYPE,
-      @Value(BeanIds.VALUE_REGION) String region,
+      @Value(Configurations.VAL_REGION) String region,
       @Autowired AwsCredentialsProvider credentialsProviderV2) {
 
     return switch (ENV_TYPE) {
@@ -331,7 +331,7 @@ public class MetricsProxyConfiguration {
       @Autowired ServiceRegistry serviceRegistry,
       @Autowired OkHttpClient okHttpClient,
       @Value("${orgId}") String orgId,
-      @Value(BeanIds.VALUE_CLUSTER_ID) String clusterId) {
+      @Value(Configurations.VAL_CLUSTER_ID) String clusterId) {
     return new ClusterManager(
         authorizationChecker, serviceRegistry, okHttpClient, orgId, new Gson(), clusterId);
   }

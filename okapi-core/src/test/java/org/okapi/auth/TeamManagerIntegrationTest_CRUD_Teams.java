@@ -6,12 +6,15 @@ import com.okapi.rest.org.UpdateTeamRequest;
 import com.okapi.rest.team.CreateTeamRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.okapi.exceptions.BadRequestException;
 import org.okapi.exceptions.UnAuthorizedException;
 import org.okapi.fixtures.Deduplicator;
 import org.okapi.fixtures.SingletonFactory;
 import org.okapi.metrics.IdCreationFailedException;
 
+@Execution(ExecutionMode.CONCURRENT)
 public class TeamManagerIntegrationTest_CRUD_Teams {
 
   static Class<TeamManagerIntegrationTest_CRUD_Teams> thisClass =

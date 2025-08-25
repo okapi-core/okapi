@@ -1,34 +1,33 @@
 package org.okapi.metrics.rollup;
 
+import static com.google.api.client.util.Preconditions.checkNotNull;
+
 import java.io.*;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import org.okapi.metrics.OutsideWindowException;
+import lombok.extern.slf4j.Slf4j;
+import org.okapi.clock.Clock;
+import org.okapi.exceptions.ExceptionUtils;
+import org.okapi.metrics.SharedMessageBox;
+import org.okapi.metrics.WriteBackRequest;
 import org.okapi.metrics.common.MetricsContext;
+import org.okapi.metrics.constants.ReaderIds;
 import org.okapi.metrics.io.OkapiIo;
 import org.okapi.metrics.io.StreamReadingException;
-import org.okapi.metrics.pojos.AGG_TYPE;
-import org.okapi.metrics.pojos.RES_TYPE;
-import org.okapi.metrics.stats.KllSketchRestorer;
 import org.okapi.metrics.stats.Statistics;
+import org.okapi.metrics.stats.StatisticsFrozenException;
 import org.okapi.metrics.stats.StatisticsRestorer;
 
+@Slf4j
 public class RollupSeries<T extends Statistics> {
 
-  // todo: KVCache as a simple way to get TP out.
-  // todo: refactor the code, run integ test, check everything is fine.
-  // todo: integrate LMDB, RocksDB page swapper
-  // todo: add fixed memory buffer
-  // todo: add "forward-while-resharding" logic as a stretch goal
-  // todo: de-couple restoration from initiation -> also use checksums to avoid reading corrupted shit.
-  // todo: add write TPS per tenant, cardinality limits are implied
-  // todo: KllSketch lightweight estimator -> add a linear formula to do this quickly
-  // todo: refactor magic number end checks or add CRC32 checksums to deal with snapshots
   public static final String MAGIC_NUMBER = "RollupSeriesStart";
   public static final String MAGIC_NUMBER_END = "RollupSeriesEnd";
   public static final Long ADMISSION_WINDOW = Duration.of(24, ChronoUnit.HOURS).toMillis();
@@ -36,11 +35,27 @@ public class RollupSeries<T extends Statistics> {
   private final Map<String, T> stats;
   private final StatisticsRestorer<T> restorer;
   private final Supplier<T> newStatsSupplier;
+  private final Map<String, Long> createTime;
+  int shard;
+  ScheduledExecutorService scheduledExecutorService;
+  SharedMessageBox<WriteBackRequest> messageBox;
 
-  public RollupSeries(StatisticsRestorer<T> restorer, Supplier<T> newStatsSupplier) {
+  public RollupSeries(StatisticsRestorer<T> restorer, Supplier<T> newStatsSupplier, int shard) {
     this.stats = new ConcurrentHashMap<>(2_000);
     this.restorer = restorer;
     this.newStatsSupplier = newStatsSupplier;
+    this.shard = shard;
+    this.createTime = new ConcurrentHashMap<>();
+  }
+
+  public void startFreezing(
+      SharedMessageBox<WriteBackRequest> messageBox,
+      ScheduledExecutorService scheduler,
+      WriteBackSettings writeBackSettings) {
+    this.messageBox = checkNotNull(messageBox);
+    this.scheduledExecutorService = checkNotNull(scheduler);
+    checkNotNull(writeBackSettings);
+    startFreezer(writeBackSettings.getClock(), writeBackSettings.getHotWindow());
   }
 
   protected Optional<T> getStats(String k) {
@@ -56,98 +71,75 @@ public class RollupSeries<T extends Statistics> {
   }
 
   public void writeBatch(MetricsContext ctx, String timeSeries, long[] ts, float[] vals)
-      throws OutsideWindowException {
+      throws InterruptedException, StatisticsFrozenException {
     for (int i = 0; i < ts.length; i++) {
       write(ctx, timeSeries, ts[i], vals[i]);
     }
   }
 
-  public void write(MetricsContext ctx, String timeSeries, long ts, float val) {
-    final var secKey = secondlyShard(timeSeries, ts);
-    final var minKey = minutelyShard(timeSeries, ts);
-    final var hrKey = hourlyShard(timeSeries, ts);
+  public void write(MetricsContext ctx, String timeSeries, long ts, float val)
+      throws InterruptedException, StatisticsFrozenException {
+    final var secKey = HashFns.secondlyBucket(timeSeries, ts);
+    final var minKey = HashFns.minutelyBucket(timeSeries, ts);
+    final var hrKey = HashFns.hourlyBucket(timeSeries, ts);
 
-    final var sec =
-        stats.computeIfAbsent(secKey, k -> newStatsSupplier.get());
-    final var min =
-        stats.computeIfAbsent(minKey, k -> newStatsSupplier.get());
-    final var hr =
-        stats.computeIfAbsent(hrKey, k -> newStatsSupplier.get());
-
-    sec.update(ctx, val);
-    min.update(ctx, val);
-    hr.update(ctx, val);
+    retryUpdate(() -> stats.computeIfAbsent(secKey, this::makeNew), ctx, val);
+    retryUpdate(() -> stats.computeIfAbsent(minKey, this::makeNew), ctx, val);
+    retryUpdate(() -> stats.computeIfAbsent(hrKey, this::makeNew), ctx, val);
   }
 
-  // -------------------- Read / aggregation --------------------
-
-  public ScanResult scan(
-      String timeSeries, long startTs, long endTs, AGG_TYPE agg, RES_TYPE resType) {
-    final var timestamps = new ArrayList<Long>();
-    final var values = new ArrayList<Float>();
-
-    final long startQ = quantize(startTs, resType);
-    final long endQ = quantize(endTs, resType);
-
-    for (long q = startQ; q <= endQ; q++) {
-      final long unqTs = unQuantize(q, resType);
-      final var key = shard(timeSeries, unqTs, resType);
-      final var st = stats.get(key);
-      if (st == null) continue;
-
-      timestamps.add(unqTs);
-      values.add(aggregate(st, agg));
+  private void retryUpdate(
+      Supplier<Statistics> statisticsSupplier, MetricsContext context, float val) {
+    var retries = 3;
+    for (int i = 0; i < retries; i++) {
+      try {
+        statisticsSupplier.get().update(context, val);
+        break;
+      } catch (StatisticsFrozenException e) {
+        log.debug("Frozen stats, retrying.");
+      }
     }
-    return new ScanResult(timeSeries, timestamps, values);
   }
 
-  public float count(String timeSeries, long startTs, long endTs, RES_TYPE resType) {
-    float c = 0f;
-    final long startQ = quantize(startTs, resType);
-    final long endQ = quantize(endTs, resType);
-    for (long q = startQ; q <= endQ; q++) {
-      final long unqTs = unQuantize(q, resType);
-      final var key = shard(timeSeries, unqTs, resType); // use :s/:m/:h
-      final var st = stats.get(key);
-      if (st != null) c += st.getCount();
+  public T makeNew(String k) {
+    var stats = newStatsSupplier.get();
+    createTime.put(k, System.currentTimeMillis());
+    return stats;
+  }
+
+  public void startFreezer(Clock clock, Duration period) {
+    scheduledExecutorService.scheduleAtFixedRate(
+        () -> {
+          try {
+            freezeAndShip(clock, period);
+          } catch (InterruptedException e) {
+            log.error("Shipping stopped.");
+          } catch (Exception t) {
+            log.error("This execution got an exception {}", ExceptionUtils.debugFriendlyMsg(t));
+          }
+        },
+        0,
+        period.toMillis(),
+        TimeUnit.MILLISECONDS);
+  }
+
+  public void freezeAndShip(Clock clock, Duration hotWindow) throws InterruptedException {
+    var keys = createTime.keySet();
+    for (var key : keys) {
+      var hasExpired = clock.currentTimeMillis() - createTime.get(key) >= hotWindow.toMillis();
+      if (hasExpired) {
+        var stat = stats.get(key);
+        stat.freeze();
+        log.debug("Writing to box.");
+        this.messageBox.push(
+            new WriteBackRequest(MetricsContext.createContext("test"), shard, key, stat),
+            ReaderIds.MSG_FREEZER);
+        // cleanup
+        stats.remove(key);
+        createTime.remove(key);
+      }
     }
-    return c;
   }
-
-  protected float aggregate(T stat, AGG_TYPE agg) {
-    return switch (agg) {
-      case AVG -> stat.avg();
-      case COUNT -> stat.getCount();
-      case SUM -> stat.getSum();
-      case MIN -> stat.min();
-      case MAX -> stat.max();
-      case P50 -> stat.percentile(0.50);
-      case P75 -> stat.percentile(0.75);
-      case P90 -> stat.percentile(0.90);
-      case P95 -> stat.percentile(0.95);
-      case P99 -> stat.percentile(0.99);
-    };
-  }
-
-  protected static long quantize(long ts, RES_TYPE resType) {
-    return switch (resType) {
-      case SECONDLY -> ts / 1000;
-      case MINUTELY -> ts / 1000 / 60;
-      case HOURLY -> ts / 1000 / 3600;
-      case DAILY -> ts / 1000 / 3600 / 24;
-    };
-  }
-
-  protected static long unQuantize(long ts, RES_TYPE resType) {
-    return switch (resType) {
-      case SECONDLY -> ts * 1000;
-      case MINUTELY -> ts * 1000 * 60;
-      case HOURLY -> ts * 1000 * 3600;
-      case DAILY -> ts * 1000 * 3600 * 24;
-    };
-  }
-
-  // -------------------- Checkpoint / restore --------------------
 
   public void checkpoint(Path checkpointPath) throws IOException {
     try (var fos = new FileOutputStream(checkpointPath.toFile())) {
@@ -199,14 +191,11 @@ public class RollupSeries<T extends Statistics> {
     int n = OkapiIo.readInt(is);
     for (int i = 0; i < n; i++) {
       var k = OkapiIo.readString(is);
-      var st = restorer.deserialize(OkapiIo.readBytes(is), new KllSketchRestorer());
+      var st = restorer.deserialize(OkapiIo.readBytes(is));
       stats.put(k, st);
     }
     OkapiIo.checkMagicNumber(is, MAGIC_NUMBER_END);
   }
-
-
-  // -------------------- Utilities --------------------
 
   public Set<String> listMetricPaths() {
     var out = new HashSet<String>();
@@ -225,37 +214,16 @@ public class RollupSeries<T extends Statistics> {
     checkpoint(subset, os);
   }
 
-  public static String hourlyShard(String timeSeries, long ts) {
-    return timeSeries + ":h:" + (ts / 1000 / 3600);
-  }
-
-  public static String minutelyShard(String timeSeries, long ts) {
-    return timeSeries + ":m:" + (ts / 1000 / 60);
-  }
-
-  public static String secondlyShard(String timeSeries, long ts) {
-    return timeSeries + ":s:" + (ts / 1000);
-  }
-
-  public static String shard(String timeSeries, long t, RES_TYPE resType) {
-    return switch (resType) {
-      case SECONDLY -> secondlyShard(timeSeries, t);
-      case MINUTELY -> minutelyShard(timeSeries, t);
-      case HOURLY -> hourlyShard(timeSeries, t);
-      case DAILY -> throw new IllegalArgumentException("DAILY not supported");
-    };
-  }
-
   protected T getSecondlyStatistics(String timeSeries, long ts) {
-    return stats.get(secondlyShard(timeSeries, ts));
+    return stats.get(HashFns.secondlyBucket(timeSeries, ts));
   }
 
   protected T getMinutelyStatistics(String timeSeries, long ts) {
-    return stats.get(minutelyShard(timeSeries, ts));
+    return stats.get(HashFns.minutelyBucket(timeSeries, ts));
   }
 
   protected T getHourlyStatistics(String timeSeries, long ts) {
-    return stats.get(hourlyShard(timeSeries, ts));
+    return stats.get(HashFns.hourlyBucket(timeSeries, ts));
   }
 
   public byte[] getSerializedStats(String key) {

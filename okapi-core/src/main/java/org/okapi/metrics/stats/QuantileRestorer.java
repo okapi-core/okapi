@@ -1,7 +1,7 @@
 package org.okapi.metrics.stats;
 
-import org.apache.datasketches.quantilescommon.QuantilesFloatsAPI;
+import org.apache.datasketches.kll.KllFloatsSketch;
 
 public interface QuantileRestorer {
-    QuantilesFloatsAPI restoreQuantiles(byte[] bytes) throws Exception;
+    KllFloatsSketch restoreQuantiles(byte[] bytes) throws Exception;
 }

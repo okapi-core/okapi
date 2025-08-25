@@ -7,9 +7,10 @@ import java.io.*;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.okapi.clock.Clock;
@@ -17,9 +18,8 @@ import org.okapi.metrics.common.MetricsContext;
 import org.okapi.metrics.io.OkapiIo;
 import org.okapi.metrics.io.StreamReadingException;
 import org.okapi.metrics.rollup.RollupSeries;
-import org.okapi.metrics.stats.RollupSeriesRestorer;
-import org.okapi.metrics.stats.Statistics;
-import org.okapi.metrics.stats.StatisticsRestorer;
+import org.okapi.metrics.rollup.WriteBackSettings;
+import org.okapi.metrics.stats.*;
 
 /**
  * Shard registry for in-memory rollup series. No global locks: - ConcurrentHashMap for shard
@@ -41,33 +41,39 @@ public class ShardMap {
 
   private final Clock clock;
   private final long admissionWindowMillis;
-  private final Supplier<Statistics> newStatsSupplier;
-  private final StatisticsRestorer<Statistics> statsRestorer;
-  private final RollupSeriesRestorer<Statistics> restorer;
+  private final Function<Integer, RollupSeries<Statistics>> seriesSupplier;
+  SharedMessageBox<WriteBackRequest> messageBox;
+  ScheduledExecutorService scheduledExecutorService;
+  WriteBackSettings writeBackSettings;
 
-  // -------- Constructors --------
-
-  public ShardMap(Clock clock, int admissionWindowHrs,
-                  Supplier<Statistics> newStatsSupplier,
-                  StatisticsRestorer<Statistics> statsRestorer,
-                  RollupSeriesRestorer<Statistics> seriesRestorer
-                  ) {
+  public ShardMap(
+      Clock clock,
+      int admissionWindowHrs,
+      Function<Integer, RollupSeries<Statistics>> seriesSupplier,
+      SharedMessageBox<WriteBackRequest> messageBox,
+      ScheduledExecutorService scheduledExecutorService,
+      WriteBackSettings writeBackSettings) {
     this.clock = clock;
     Preconditions.checkArgument(
         admissionWindowHrs >= 1, "Admission window should atleast be an hour long.");
     this.admissionWindowMillis = TimeUnit.HOURS.toMillis(admissionWindowHrs);
     this.shardMap = new ConcurrentHashMap<>(500);
     this.nsh = N_SHARDS;
-    this.newStatsSupplier = newStatsSupplier;
-    this.statsRestorer = statsRestorer;
-    this.restorer = seriesRestorer;
+    this.seriesSupplier = seriesSupplier;
+    this.messageBox = messageBox;
+    this.scheduledExecutorService = scheduledExecutorService;
+    this.writeBackSettings = writeBackSettings;
   }
-
-  // -------- Basic ops --------
 
   /** Lazy create; safe under concurrency. */
   public RollupSeries<Statistics> get(int shardId) {
-    return shardMap.computeIfAbsent(shardId, id -> new RollupSeries<>(statsRestorer, newStatsSupplier));
+    return shardMap.computeIfAbsent(
+        shardId,
+        (sh) -> {
+          var newSeries = seriesSupplier.apply(sh);
+          newSeries.startFreezing(messageBox, scheduledExecutorService, this.writeBackSettings);
+          return newSeries;
+        });
   }
 
   /** Weakly consistent view is fine. */
@@ -82,20 +88,17 @@ public class ShardMap {
     this.shardMap = new ConcurrentHashMap<>(Math.max(16, shards * 2));
   }
 
-  // -------- Snapshot / Restore --------
-
   /** Periodic snapshot with weak consistency; fsync for durability. */
   public void snapshot(Path checkpointPath) throws IOException {
     try (var fos = new FileOutputStream(checkpointPath.toFile())) {
       snapshot(fos);
-      fos.getChannel().force(true); // fsync
     }
   }
 
   /** Weakly consistent snapshot of current shards. */
   public void snapshot(OutputStream os) throws IOException {
     // Take a shallow snapshot of entries to keep count/header consistent without locks
-    var entries = new ArrayList<Map.Entry<Integer, RollupSeries<Statistics>>>(shardMap.size());
+    var entries = new ArrayList<Map.Entry<Integer, RollupSeries<Statistics>>>();
     shardMap.forEach((k, v) -> entries.add(Map.entry(k, v)));
 
     // Header
@@ -112,8 +115,12 @@ public class ShardMap {
 
   /** Atomic replace a single shard from a checkpoint file. */
   public void loadShard(int shard, Path checkpoint) throws StreamReadingException, IOException {
-    var series = restorer.restore(checkpoint);
-    var newMap = new ConcurrentHashMap<Integer, RollupSeries<Statistics>>(Math.max(16, shardMap.size() + 1));
+    var series = seriesSupplier.apply(shard);
+    try (var fis = new FileInputStream(checkpoint.toFile())) {
+      series.loadCheckpoint(fis);
+    }
+    var newMap =
+        new ConcurrentHashMap<Integer, RollupSeries<Statistics>>(Math.max(16, shardMap.size() + 1));
     newMap.putAll(shardMap);
     newMap.put(shard, series);
     this.shardMap = newMap; // atomic publish
@@ -131,10 +138,12 @@ public class ShardMap {
 
       // Payload
       int shardCount = OkapiIo.readInt(dis);
-      var newMap = new ConcurrentHashMap<Integer, RollupSeries<Statistics>>(Math.max(16, shardCount * 2));
+      var newMap =
+          new ConcurrentHashMap<Integer, RollupSeries<Statistics>>(Math.max(16, shardCount * 2));
       for (int i = 0; i < shardCount; i++) {
         int shardId = OkapiIo.readInt(dis);
-        var series = restorer.restore(dis);
+        var series = seriesSupplier.apply(shardId);
+        series.loadCheckpoint(fis);
         newMap.put(shardId, series);
       }
 
@@ -144,14 +153,12 @@ public class ShardMap {
     }
   }
 
-  // -------- Apply path --------
-
   /**
    * Atomically applies a batch to the given shard and returns the assigned LSN (monotonic,
    * 1-based). Throws OutsideWindowException if any timestamp is older than the admission window.
    */
   public long apply(int shardId, MetricsContext ctx, String path, long[] ts, float[] vals)
-      throws OutsideWindowException {
+      throws OutsideWindowException, StatisticsFrozenException, InterruptedException {
     if (ts == null || vals == null) {
       throw new IllegalArgumentException("ts/vals cannot be null");
     }
@@ -172,10 +179,11 @@ public class ShardMap {
     }
 
     // Fast write path
-    get(shardId).writeBatch(ctx, path, ts, vals);
+    var series = get(shardId);
+    series.writeBatch(ctx, path, ts, vals);
 
     // On success, advance LSN
-    return lsnCounter.incrementAndGet();
+    return 0;
   }
 
   /** Set the LSN watermark (used after WAL recovery replay). */

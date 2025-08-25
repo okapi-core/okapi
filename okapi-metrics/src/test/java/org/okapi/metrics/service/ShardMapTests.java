@@ -7,7 +7,6 @@ public class ShardMapTests {
 
   @Test
   public void testWriteSucceedsIfInShardRange(){
-
   }
 
   @Test

@@ -6,6 +6,7 @@ import org.okapi.exceptions.BadRequestException;
 import org.okapi.metrics.OutsideWindowException;
 import org.okapi.metrics.service.runnables.MetricsWriter;
 import org.okapi.metrics.service.web.QueryProcessor;
+import org.okapi.metrics.stats.StatisticsFrozenException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +20,7 @@ public class MetricsController {
   @PostMapping("")
   public SubmitMetricsResponse submit(
       @Valid @RequestBody SubmitMetricsRequestInternal submitMetricsBatchRequest)
-      throws BadRequestException, OutsideWindowException, InterruptedException {
+      throws BadRequestException, OutsideWindowException, InterruptedException, StatisticsFrozenException {
     metricsWriter.onRequestArrive(submitMetricsBatchRequest);
     return new SubmitMetricsResponse("OK");
   }

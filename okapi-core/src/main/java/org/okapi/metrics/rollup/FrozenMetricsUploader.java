@@ -36,7 +36,7 @@ public class FrozenMetricsUploader {
         var tenantId = MetricsPathParser.tenantId(metricPath);
         if (tenantId.isEmpty() || !tenantId.get().equals(forTenant)) continue;
         var hourlyKey =
-            RollupSeries.hourlyShard(
+            HashFns.hourlyBucket(
                 metricPath,
                 startTime); // take the start time and increase by a second to avoid boundary
         // effects
@@ -53,7 +53,7 @@ public class FrozenMetricsUploader {
           List<Integer> seconds = new ArrayList<>();
           List<Statistics> statistics = new ArrayList<>();
           for (int i = 0; i < 3600; i++) {
-            var key = RollupSeries.secondlyShard(metricPath, 1000L * (secondStart + i));
+            var key = HashFns.secondlyBucket(metricPath, 1000L * (secondStart + i));
             var stats = series.getStats(key);
             if (stats.isEmpty()) {
               continue;
@@ -76,7 +76,7 @@ public class FrozenMetricsUploader {
           List<Integer> mins = new ArrayList<>();
           List<Statistics> minStats = new ArrayList<>();
           for (int i = 0; i < 60; i++) {
-            var key = RollupSeries.minutelyShard(metricPath, 60 * 1000L * (minuteStart + i));
+            var key = HashFns.minutelyBucket(metricPath, 60 * 1000L * (minuteStart + i));
             var stats = series.getStats(key);
             if (stats.isEmpty()) {
               continue;
@@ -95,7 +95,7 @@ public class FrozenMetricsUploader {
         // write hourly data
         var hourlyOffset = off;
         {
-          var key = RollupSeries.hourlyShard(metricPath, 3600 * 1000L * (hr));
+          var key = HashFns.hourlyBucket(metricPath, 3600 * 1000L * (hr));
           var stats = series.getStats(key).get();
           off += OkapiIo.writeBytes(fos, stats.serialize());
         }

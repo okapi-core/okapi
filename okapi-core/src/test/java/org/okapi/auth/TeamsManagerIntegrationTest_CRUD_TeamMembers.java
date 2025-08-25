@@ -13,6 +13,8 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.okapi.data.dao.TeamsDao;
 import org.okapi.data.dao.UsersDao;
 import org.okapi.data.dto.UserRoleRelationDto;
@@ -23,6 +25,7 @@ import org.okapi.fixtures.Deduplicator;
 import org.okapi.fixtures.SingletonFactory;
 import org.okapi.metrics.IdCreationFailedException;
 
+@Execution(ExecutionMode.CONCURRENT)
 public class TeamsManagerIntegrationTest_CRUD_TeamMembers {
   static Class<TeamsManagerIntegrationTest_CRUD_TeamMembers> thisClass =
       TeamsManagerIntegrationTest_CRUD_TeamMembers.class;

@@ -2,14 +2,6 @@ package org.okapi.metrics.web;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.okapi.collections.OkapiLists;
-import org.okapi.exceptions.BadRequestException;
-import org.okapi.fixtures.ReadingGenerator;
-import org.okapi.metrics.OutsideWindowException;
-import org.okapi.metrics.common.MetricsContext;
-import org.okapi.metrics.common.pojo.Node;
-import org.okapi.metrics.common.pojo.NodeState;
-import org.okapi.metrics.TestResourceFactory;
 import com.okapi.rest.metrics.MetricsPathSpecifier;
 import com.okapi.rest.metrics.SearchMetricsRequestInternal;
 import java.time.Duration;
@@ -17,6 +9,15 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.okapi.collections.OkapiLists;
+import org.okapi.exceptions.BadRequestException;
+import org.okapi.fixtures.ReadingGenerator;
+import org.okapi.metrics.OutsideWindowException;
+import org.okapi.metrics.TestResourceFactory;
+import org.okapi.metrics.common.MetricsContext;
+import org.okapi.metrics.common.pojo.Node;
+import org.okapi.metrics.common.pojo.NodeState;
+import org.okapi.metrics.stats.StatisticsFrozenException;
 
 public class QueryProcessorTest {
 
@@ -29,7 +30,11 @@ public class QueryProcessorTest {
   }
 
   @Test
-  public void testMetricsSearch_single_shard() throws OutsideWindowException, BadRequestException {
+  public void testMetricsSearch_single_shard()
+      throws OutsideWindowException,
+          BadRequestException,
+          StatisticsFrozenException,
+          InterruptedException {
     // setup
     var shardMap = resourceFactory.shardMap(node);
     var readingGenerator = new ReadingGenerator(Duration.of(200, ChronoUnit.MILLIS), 120);
@@ -82,7 +87,11 @@ public class QueryProcessorTest {
   }
 
   @Test
-  public void tesMetricsSearch_multi_shard() throws OutsideWindowException, BadRequestException {
+  public void tesMetricsSearch_multi_shard()
+      throws OutsideWindowException,
+          BadRequestException,
+          StatisticsFrozenException,
+          InterruptedException {
     // setup
     var shardMap = resourceFactory.shardMap(node);
     var readingGenerator = new ReadingGenerator(Duration.of(200, ChronoUnit.MILLIS), 120);

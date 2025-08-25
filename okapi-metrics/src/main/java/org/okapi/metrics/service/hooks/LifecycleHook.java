@@ -1,9 +1,12 @@
 package org.okapi.metrics.service.hooks;
 
+import java.util.concurrent.ScheduledExecutorService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.okapi.metrics.RocksDbStatsWriter;
 import org.okapi.metrics.common.pojo.Node;
 import org.okapi.metrics.coordinator.CentralCoordinator;
+import org.okapi.metrics.rocks.RocksStore;
 import org.okapi.metrics.service.*;
 import org.okapi.metrics.service.runnables.BackgroundJobs;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +26,11 @@ public class LifecycleHook implements SmartLifecycle {
   @Autowired Node node;
   @Autowired MetricsHandlerImpl metricsHandler;
 
+  @Autowired ScheduledExecutorService scheduledExecutorService;
+
+  @Autowired RocksDbStatsWriter rocksDbStatsWriter;
+  @Autowired RocksStore rocksStore;
+
   void startHandler() throws Exception {
     metricsHandler.onStart();
   }
@@ -37,6 +45,7 @@ public class LifecycleHook implements SmartLifecycle {
   public void start() {
     doCoordinatorStuff();
     startHandler();
+    rocksDbStatsWriter.startWriting(scheduledExecutorService, rocksStore);
     backgroundJobs.trigger();
     isRunning = true;
   }

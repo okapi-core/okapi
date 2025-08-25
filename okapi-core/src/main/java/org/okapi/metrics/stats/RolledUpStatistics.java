@@ -1,12 +1,12 @@
 package org.okapi.metrics.stats;
 
 import com.google.common.primitives.Ints;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import lombok.Getter;
+import org.apache.datasketches.kll.KllFloatsSketch;
 import org.okapi.metrics.common.MetricsContext;
 import org.okapi.metrics.pojos.AGG_TYPE;
-import org.apache.datasketches.quantilescommon.QuantilesFloatsAPI;
-
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class RolledUpStatistics implements Statistics {
   private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
@@ -14,13 +14,21 @@ public class RolledUpStatistics implements Statistics {
   @Getter private float sum;
   @Getter private float count;
   @Getter private float sumOfDeviationsSquared; // variance accumulator (optional)
-  @Getter private QuantilesFloatsAPI floatsQuantiles;
+  private KllFloatsSketch floatsQuantiles;
+  private final AtomicBoolean frozen = new AtomicBoolean(false);
 
-  public RolledUpStatistics(QuantilesFloatsAPI floatsQuantiles) {
+  public RolledUpStatistics(KllFloatsSketch floatsQuantiles) {
     this.sum = 0f;
     this.count = 0f;
     this.sumOfDeviationsSquared = 0f;
     this.floatsQuantiles = floatsQuantiles;
+  }
+
+  protected RolledUpStatistics(float sum, float count, KllFloatsSketch quantilesFloatsAPI) {
+    this.sum = sum;
+    this.count = count;
+    this.floatsQuantiles = quantilesFloatsAPI;
+    this.frozen.set(true);
   }
 
   public static RolledUpStatistics deserialize(byte[] bytes, QuantileRestorer quantileRestorer) {
@@ -38,7 +46,7 @@ public class RolledUpStatistics implements Statistics {
     var quantileBytes = new byte[bytes.length - 8];
     System.arraycopy(bytes, 8, quantileBytes, 0, quantileBytes.length);
 
-    QuantilesFloatsAPI quantiles;
+    KllFloatsSketch quantiles;
     try {
       quantiles = quantileRestorer.restoreQuantiles(quantileBytes);
     } catch (Exception e) {
@@ -53,7 +61,12 @@ public class RolledUpStatistics implements Statistics {
   }
 
   @Override
-  public void update(MetricsContext ctx, float f) {
+  public void update(MetricsContext ctx, float f) throws StatisticsFrozenException {
+
+    if (this.frozen.get()) {
+      throw new StatisticsFrozenException();
+    }
+
     lock.writeLock().lock();
     try {
       sum += f;
@@ -68,7 +81,11 @@ public class RolledUpStatistics implements Statistics {
   }
 
   @Override
-  public void update(MetricsContext ctx, float[] arr) {
+  public void update(MetricsContext ctx, float[] arr) throws StatisticsFrozenException {
+    if (this.frozen.get()) {
+      throw new StatisticsFrozenException();
+    }
+
     lock.writeLock().lock();
     try {
       for (int i = 0; i < arr.length; i++) {
@@ -98,47 +115,27 @@ public class RolledUpStatistics implements Statistics {
 
   @Override
   public float percentile(double quantile) {
-    lock.readLock().lock();
-    try {
-      return floatsQuantiles.getQuantile(quantile);
-    } finally {
-      lock.readLock().unlock();
-    }
+    return floatsQuantiles.getQuantile(quantile);
   }
 
   @Override
   public float avg() {
-    lock.readLock().lock();
-    try {
-      return count == 0f ? 0f : (sum / count);
-    } finally {
-      lock.readLock().unlock();
-    }
+    return count == 0f ? 0f : (sum / count);
   }
 
   @Override
   public float min() {
-    lock.readLock().lock();
-    try {
-      return floatsQuantiles.getQuantile(0.0);
-    } finally {
-      lock.readLock().unlock();
-    }
+    return floatsQuantiles.getQuantile(0.0);
   }
 
   @Override
   public float max() {
-    lock.readLock().lock();
-    try {
-      return floatsQuantiles.getQuantile(1.0);
-    } finally {
-      lock.readLock().unlock();
-    }
+    return floatsQuantiles.getQuantile(1.0);
   }
 
   @Override
   public byte[] serialize() {
-    // todo: without this, KLLSketch flags get messed which makes serialization non-deterministic. Remove.
+    // todo: without this, KLLSketch flags get messed which makes serialization non-deterministic.
     min();
     lock.readLock().lock();
     try {
@@ -175,5 +172,23 @@ public class RolledUpStatistics implements Statistics {
     } finally {
       lock.readLock().unlock();
     }
+  }
+
+  @Override
+  public boolean freeze() {
+    lock.writeLock().lock();
+    frozen.set(true);
+    lock.writeLock().unlock();
+    return frozen.get();
+  }
+
+  @Override
+  public long bufferSize() {
+    var kllBufferSize = this.floatsQuantiles.getSerializedSizeBytes();
+    return kllBufferSize + 4 * 3; // sum, count, deviation squared.
+  }
+
+  protected KllFloatsSketch getSketch(){
+    return this.floatsQuantiles;
   }
 }

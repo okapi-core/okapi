@@ -10,49 +10,35 @@ import java.nio.file.Files;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import org.assertj.core.util.Sets;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.okapi.clock.Clock;
 import org.okapi.exceptions.BadRequestException;
-import org.okapi.metrics.OutsideWindowException;
-import org.okapi.metrics.ShardMap;
-import org.okapi.metrics.TestResourceFactory;
+import org.okapi.metrics.*;
 import org.okapi.metrics.common.MetricsContext;
 import org.okapi.metrics.common.pojo.Node;
 import org.okapi.metrics.common.pojo.NodeState;
 import org.okapi.metrics.io.StreamReadingException;
-import org.okapi.metrics.rollup.RollupSeries;
 import org.okapi.metrics.sharding.fakes.FixedShardsAndSeriesAssigner;
 import org.okapi.metrics.stats.*;
 
 public class PeriodicSnapshotWriterTests {
   TestResourceFactory testResourceFactory;
   Node testNode = new Node("id-1", "localhost:3000", NodeState.METRICS_CONSUMPTION_START);
-
-  Supplier<RollupSeries<Statistics>> seriesSupplier;
-  StatisticsRestorer<Statistics> statsRestorer;
-  Supplier<Statistics> statisticsSupplier;
-  RollupSeriesRestorer<Statistics> restorer;
-  Function<Clock, ShardMap> shardMapSupplier;
+  Node dummyNode = new Node("dummy-node", "localhost:3000", NodeState.METRICS_CONSUMPTION_START);
 
   @BeforeEach
   public void setup() {
     testResourceFactory = new TestResourceFactory();
-    statsRestorer= new RolledupStatsRestorer();
-    statisticsSupplier = new KllStatSupplier();
-    restorer = new RolledUpSeriesRestorer(statsRestorer, statisticsSupplier);
-    seriesSupplier = () -> new RollupSeries<>(statsRestorer, statisticsSupplier);
-    shardMapSupplier = (cl) -> new ShardMap(cl,
-            testResourceFactory.getAdmissionWindowHrs(),
-            statisticsSupplier, statsRestorer, restorer);
   }
 
   @Test
   public void testWriteSnapshotAfterMetricArrives()
-      throws StreamReadingException, IOException, OutsideWindowException, BadRequestException, InterruptedException {
+      throws StreamReadingException,
+          IOException,
+          OutsideWindowException,
+          BadRequestException,
+          InterruptedException {
     var assigner =
         new FixedShardsAndSeriesAssigner()
             .assignSeries("tenant-A:latency{key1=value1}", 0)
@@ -81,12 +67,12 @@ public class PeriodicSnapshotWriterTests {
         .atMost(Duration.of(1, ChronoUnit.SECONDS))
         .until(
             () -> {
-              if(!Files.exists(snapshotPath)) return false;
+              if (!Files.exists(snapshotPath)) return false;
               var size = Files.size(snapshotPath);
               return size > 0;
             });
 
-    var map = shardMapSupplier.apply(testResourceFactory.clock(testNode));
+    var map = testResourceFactory.shardMap(dummyNode);
     map.reset(snapshotPath);
 
     // sanity check: metrics were written out.
@@ -96,7 +82,12 @@ public class PeriodicSnapshotWriterTests {
   }
 
   @Test
-  public void testPeriodicWriterInit() throws OutsideWindowException, IOException, StreamReadingException {
+  public void testPeriodicWriterInit()
+      throws OutsideWindowException,
+          IOException,
+          StreamReadingException,
+          StatisticsFrozenException,
+          InterruptedException {
     var assigner = new FixedShardsAndSeriesAssigner();
     testResourceFactory
         .shardsAndSeriesAssigner()
@@ -105,22 +96,24 @@ public class PeriodicSnapshotWriterTests {
     var writer = testResourceFactory.periodicSnapshotWriter(testNode);
     var snapshotDir = testResourceFactory.checkpointer(testNode).getSnapshotPath();
     var clock = testResourceFactory.clock(testNode);
-    var shardMap = shardMapSupplier.apply(testResourceFactory.clock(testNode));
+    var shardMap = testResourceFactory.shardMap(testNode);
     var t = clock.currentTimeMillis();
-    shardMap.get(0).writeBatch(MetricsContext.createContext("test-id"), "tenant-A:latency{service=app}",
-            new long[]{t, t + 1000, t + 2000},
-            new float[]{0.1f, 0.2f, 0.1f}
-            );
+    shardMap
+        .get(0)
+        .writeBatch(
+            MetricsContext.createContext("test-id"),
+            "tenant-A:latency{service=app}",
+            new long[] {t, t + 1000, t + 2000},
+            new float[] {0.1f, 0.2f, 0.1f});
     shardMap.snapshot(snapshotDir);
     assertFalse(writer.isReady());
     writer.init();
     writer.setShardsAndSeriesAssigner(assigner);
     assertTrue(writer.isReady());
 
-    var loadedMap = testResourceFactory.shardMap(testNode);
+    var loadedMap = testResourceFactory.shardMap(dummyNode);
     var metrics = loadedMap.get(0).listMetricPaths();
     assertFalse(metrics.isEmpty());
     assertTrue(metrics.contains("tenant-A:latency{service=app}"));
   }
-
 }

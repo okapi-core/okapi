@@ -9,20 +9,26 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.okapi.clock.Clock;
 import org.okapi.clock.SystemClock;
 import org.okapi.metrics.OutsideWindowException;
 import org.okapi.metrics.ShardMap;
+import org.okapi.metrics.SharedMessageBox;
+import org.okapi.metrics.WriteBackRequest;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssigner;
 import org.okapi.metrics.rollup.RollupSeries;
+import org.okapi.metrics.rollup.WriteBackSettings;
 import org.okapi.metrics.service.ServiceController;
 import org.okapi.metrics.stats.*;
 import org.okapi.wal.ManualLsnWalFramer;
@@ -36,21 +42,34 @@ class WalBasedMetricsWriterOnRequestArriveTest {
   @TempDir Path walRoot;
 
   Supplier<ShardMap> shardMapSupplier;
-  Supplier<RollupSeries<Statistics>> seriesSupplier;
+  Function<Integer, RollupSeries<Statistics>> seriesFunction;
   StatisticsRestorer<Statistics> statsRestorer;
   Supplier<Statistics> statisticsSupplier;
   RollupSeriesRestorer<Statistics> restorer;
 
   private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+  private final SharedMessageBox<WriteBackRequest> requestSharedMessageBox =
+      new SharedMessageBox<>(1000);
+  Clock clock;
+  WriteBackSettings writeBackSettings;
 
   @BeforeEach
   void setup() {
     statsRestorer = new RolledupStatsRestorer();
     statisticsSupplier = new KllStatSupplier();
-    restorer = new RolledUpSeriesRestorer(statsRestorer, statisticsSupplier);
-    seriesSupplier = () -> new RollupSeries<>(statsRestorer, statisticsSupplier);
+    seriesFunction = new RollupSeriesFn();
+    restorer = new RolledUpSeriesRestorer(seriesFunction);
+    clock = new SystemClock();
+    writeBackSettings = new WriteBackSettings(Duration.of(1, ChronoUnit.SECONDS), clock);
     shardMapSupplier =
-        () -> new ShardMap(new SystemClock(), 1, statisticsSupplier, statsRestorer, restorer);
+        () ->
+            new ShardMap(
+                new SystemClock(),
+                1,
+                seriesFunction,
+                requestSharedMessageBox,
+                scheduler,
+                writeBackSettings);
   }
 
   @AfterEach

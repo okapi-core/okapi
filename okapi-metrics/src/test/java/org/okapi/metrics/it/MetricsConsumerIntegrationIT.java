@@ -5,16 +5,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.okapi.rest.metrics.SubmitMetricsRequestInternal;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.okapi.clock.SystemClock;
 import org.okapi.metrics.ShardMap;
+import org.okapi.metrics.SharedMessageBox;
+import org.okapi.metrics.WriteBackRequest;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssigner;
+import org.okapi.metrics.rollup.RollupSeries;
+import org.okapi.metrics.rollup.WriteBackSettings;
 import org.okapi.metrics.service.ServiceController;
 import org.okapi.metrics.service.runnables.WalBasedMetricsWriter;
 import org.okapi.metrics.stats.*;
@@ -29,6 +35,10 @@ public class MetricsConsumerIntegrationIT {
   Supplier<Statistics> statisticsSupplier;
   RollupSeriesRestorer<Statistics> restorer;
   Supplier<ShardMap> shardMapSupplier;
+  Function<Integer, RollupSeries<Statistics>> seriesFunction;
+  ScheduledExecutorService scheduledExecutorService;
+  SharedMessageBox<WriteBackRequest> writeBackRequestSharedMessageBox;
+  WriteBackSettings writeBackSettings;
 
   @TempDir Path walRoot;
 
@@ -36,8 +46,18 @@ public class MetricsConsumerIntegrationIT {
   public void setupSeries() {
     statsRestorer = new RolledupStatsRestorer();
     statisticsSupplier = new KllStatSupplier();
-    restorer = new RolledUpSeriesRestorer(statsRestorer, statisticsSupplier);
-    shardMapSupplier = () -> new ShardMap(new SystemClock(), 1, statisticsSupplier, statsRestorer, restorer);
+    seriesFunction = new RollupSeriesFn();
+    writeBackSettings =
+        new WriteBackSettings(Duration.of(1, ChronoUnit.SECONDS), new SystemClock());
+    shardMapSupplier =
+        () ->
+            new ShardMap(
+                new SystemClock(),
+                1,
+                seriesFunction,
+                writeBackRequestSharedMessageBox,
+                scheduledExecutorService,
+                writeBackSettings);
   }
 
   @Test

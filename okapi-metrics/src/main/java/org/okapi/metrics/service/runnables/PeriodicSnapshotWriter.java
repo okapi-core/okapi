@@ -16,6 +16,7 @@ import org.okapi.metrics.ShardMap;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssigner;
 import org.okapi.metrics.io.StreamReadingException;
 import org.okapi.metrics.service.ServiceController;
+import org.okapi.metrics.stats.StatisticsFrozenException;
 
 public class PeriodicSnapshotWriter implements MetricsWriter {
 
@@ -82,6 +83,10 @@ public class PeriodicSnapshotWriter implements MetricsWriter {
       shardMap.apply(shard, ctx, path, request.getTs(), request.getValues());
     } catch (OutsideWindowException e) {
       throw new BadRequestException();
+    } catch (StatisticsFrozenException e) {
+        throw new RuntimeException(e);
+    } catch (InterruptedException e) {
+        throw new RuntimeException(e);
     }
   }
 

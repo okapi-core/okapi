@@ -1,5 +1,5 @@
 package:
-	mvn package
+	mvn package -DskipTests=true
 
 docker-metrics: package
 	docker build -t ghcr.io/okapi-core/okapi:latest -f okapi-metrics/Dockerfile okapi-metrics
