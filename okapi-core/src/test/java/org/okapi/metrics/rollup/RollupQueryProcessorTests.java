@@ -68,6 +68,7 @@ public class RollupQueryProcessorTests {
 
   // setup consumer
   RocksDbStatsWriter rocksDbStatsWriter;
+  WriteBackSettings writeBackSettings;
 
   @BeforeEach
   public void setUp() throws StatisticsFrozenException, InterruptedException, IOException {
@@ -83,11 +84,10 @@ public class RollupQueryProcessorTests {
     scheduledExecutorService = Executors.newScheduledThreadPool(2);
     messageBox = new SharedMessageBox<>(1000);
 
+    writeBackSettings =
+        new WriteBackSettings(Duration.of(100, ChronoUnit.MILLIS), new SystemClock());
     // start freezer
-    rollupSeries.startFreezing(
-        messageBox,
-        scheduledExecutorService,
-        new WriteBackSettings(Duration.of(100, ChronoUnit.MILLIS), new SystemClock()));
+    rollupSeries.startFreezing(messageBox, scheduledExecutorService, writeBackSettings);
 
     // start writer
     rocksStore = new RocksStore();
@@ -95,7 +95,7 @@ public class RollupQueryProcessorTests {
     rocksDbStatsWriter =
         new RocksDbStatsWriter(
             messageBox, statsRestorer, new RolledupMergerStrategy(), rocksPathSupplier);
-    rocksDbStatsWriter.startWriting(scheduledExecutorService, rocksStore);
+    rocksDbStatsWriter.startWriting(scheduledExecutorService, rocksStore, writeBackSettings);
     // test-dataset 1
     rollupSeries.writeBatch(
         ctx,

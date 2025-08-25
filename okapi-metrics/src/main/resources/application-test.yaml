@@ -36,5 +36,7 @@ zk:
 
 dataBucket: okapi-test-data-bucket
 remoteCkptDelaySeconds: 500
-rocksBacklog: 1000
+rocksBacklog: 100000
 rocksDir: ${user.home}/.okapi/rocks-dbs
+writeBack:
+  millis: 1000

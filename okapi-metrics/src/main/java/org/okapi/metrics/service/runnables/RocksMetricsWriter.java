@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.ReadWriteLock;
+import lombok.extern.slf4j.Slf4j;
 import org.okapi.exceptions.BadRequestException;
 import org.okapi.metrics.OutsideWindowException;
 import org.okapi.metrics.ShardMap;
@@ -18,8 +18,8 @@ import org.okapi.metrics.io.StreamReadingException;
 import org.okapi.metrics.service.ServiceController;
 import org.okapi.metrics.stats.StatisticsFrozenException;
 import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
 
+@Slf4j
 public class RocksMetricsWriter implements MetricsWriter {
 
   ShardsAndSeriesAssigner shardsAndSeriesAssigner;
@@ -29,7 +29,6 @@ public class RocksMetricsWriter implements MetricsWriter {
   String self;
 
   Map<Path, RocksDB> dbCache;
-  ReadWriteLock rocksCreatorLock;
 
   public RocksMetricsWriter(ShardMap shardMap, ServiceController serviceController, String self) {
     this.shardMap = shardMap;
@@ -37,22 +36,6 @@ public class RocksMetricsWriter implements MetricsWriter {
     this.self = self;
     this.dbCache = new HashMap<>();
     isReady.set(true);
-  }
-
-  public RocksDB lazyOpen(Path path) {
-    if (dbCache.containsKey(path)) {
-      return dbCache.get(path);
-    }
-    this.rocksCreatorLock.writeLock().lock();
-    try {
-      final RocksDB db = org.rocksdb.RocksDB.open(path.toString());
-      dbCache.put(path, db);
-      return db;
-    } catch (RocksDBException e) {
-      throw new RuntimeException(e);
-    } finally {
-      this.rocksCreatorLock.writeLock().unlock();
-    }
   }
 
   @Override

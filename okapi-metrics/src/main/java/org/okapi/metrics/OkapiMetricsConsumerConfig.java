@@ -30,10 +30,8 @@ import org.okapi.metrics.common.sharding.ConsistentHashedAssignerFactory;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssignerFactory;
 import org.okapi.metrics.coordinator.CentralCoordinator;
 import org.okapi.metrics.rocks.RocksPathSupplier;
-import org.okapi.metrics.rollup.FrozenMetricsUploader;
-import org.okapi.metrics.rollup.RollupQueryProcessor;
-import org.okapi.metrics.rollup.RollupSeries;
-import org.okapi.metrics.rollup.WriteBackSettings;
+import org.okapi.metrics.rocks.RocksStore;
+import org.okapi.metrics.rollup.*;
 import org.okapi.metrics.service.*;
 import org.okapi.metrics.service.runnables.*;
 import org.okapi.metrics.service.self.IsolatedNodeCreator;
@@ -183,6 +181,25 @@ public class OkapiMetricsConsumerConfig {
   @Bean
   public RocksPathSupplier rocksPathSupplier(@Value(Configurations.VAL_ROCKS_DIR) String rocksDir) {
     return new RocksPathSupplier(Path.of(rocksDir));
+  }
+
+  @Bean
+  public WriteBackSettings writeBackSettings(
+      @Value(Configurations.VAL_WRITE_BACK_WIN_MILLIS) long writeBackMillis,
+      @Autowired Clock clock) {
+    return new WriteBackSettings(Duration.of(writeBackMillis, ChronoUnit.MILLIS), clock);
+  }
+
+  @Bean
+  public RocksReaderSupplier rocksReaderSupplier(
+      @Autowired RocksPathSupplier rocksPathSupplier, @Autowired RocksStore rocksStore) {
+    var restorer = new RolledupStatsRestorer();
+    return new RocksReaderSupplier(rocksPathSupplier, restorer, rocksStore);
+  }
+
+  @Bean
+  public RocksStore rocksStore() throws IOException {
+    return new RocksStore();
   }
 
   @Bean

@@ -48,6 +48,7 @@ public class RolledupStatisticsTest {
   ScheduledExecutorService sch;
   RocksStore rocksStore;
   RocksReaderSupplier rocksReaderSupplier;
+  WriteBackSettings writeBackSettings;
 
   @BeforeEach
   public void setupSeries() throws IOException {
@@ -55,13 +56,14 @@ public class RolledupStatisticsTest {
     statsRestorer = new RolledupStatsRestorer();
     statisticsSupplier = new KllStatSupplier();
     rocksPathSupplier = new RocksPathSupplier(rocksDir);
-    messageBox = new SharedMessageBox<>(1000);
+    messageBox = new SharedMessageBox<>(10000);
     sch = Executors.newScheduledThreadPool(2);
     statsWriter =
         new RocksDbStatsWriter(
             messageBox, statsRestorer, new RolledupMergerStrategy(), rocksPathSupplier);
     rocksStore = new RocksStore();
-    statsWriter.startWriting(sch, rocksStore);
+    writeBackSettings = new WriteBackSettings(Duration.of(100, ChronoUnit.MILLIS), new SystemClock());
+    statsWriter.startWriting(sch, rocksStore, writeBackSettings);
     rocksReaderSupplier = new RocksReaderSupplier(rocksPathSupplier, statsRestorer, rocksStore);
   }
 
@@ -80,8 +82,6 @@ public class RolledupStatisticsTest {
       rollupStatistics.write(ctx, "SeriesA", ts.get(i), vals.get(i));
     }
     // connect rollupStatistics to a shared message box
-    var writeBackSettings =
-        new WriteBackSettings(Duration.of(100, ChronoUnit.MILLIS), new SystemClock());
     rollupStatistics.startFreezing(messageBox, sch, writeBackSettings);
     await()
         .atMost(Duration.of(2, ChronoUnit.SECONDS))

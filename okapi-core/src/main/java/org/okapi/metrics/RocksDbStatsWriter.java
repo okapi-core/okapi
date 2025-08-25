@@ -18,6 +18,7 @@ import org.okapi.metrics.constants.ReaderIds;
 import org.okapi.metrics.rocks.RocksDbWriter;
 import org.okapi.metrics.rocks.RocksPathSupplier;
 import org.okapi.metrics.rocks.RocksStore;
+import org.okapi.metrics.rollup.WriteBackSettings;
 import org.okapi.metrics.stats.Statistics;
 import org.okapi.metrics.stats.StatisticsRestorer;
 
@@ -50,14 +51,18 @@ public class RocksDbStatsWriter implements Closeable {
   }
 
   public void startWriting(
-      ScheduledExecutorService scheduledExecutorService, RocksStore rocksStore) {
+      ScheduledExecutorService scheduledExecutorService,
+      RocksStore rocksStore,
+      WriteBackSettings writeBackSettings) {
     log.info("Started writing to rocksDB.");
     Preconditions.checkNotNull(scheduledExecutorService);
     Preconditions.checkNotNull(rocksStore);
+    Preconditions.checkNotNull(writeBackSettings);
     this.scheduledExecutorService = scheduledExecutorService;
     this.rocksStore = rocksStore;
     this.scheduledWritesFuture =
-        this.scheduledExecutorService.scheduleAtFixedRate(this::once, 0, 1, TimeUnit.SECONDS);
+        this.scheduledExecutorService.scheduleAtFixedRate(
+            this::once, 0, writeBackSettings.getHotWindow().toMillis(), TimeUnit.MILLISECONDS);
   }
 
   public void once() {
@@ -70,7 +75,6 @@ public class RocksDbStatsWriter implements Closeable {
         groups.put(req.getKey(), req);
       }
 
-      log.info("Writing {} keys to db", groups.size());
       for (var v : groups.values()) {
         var path = rocksPathSupplier.apply(v.getShard());
         RocksDbWriter writer;

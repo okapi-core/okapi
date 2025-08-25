@@ -96,7 +96,7 @@ public class RollupSeries<T extends Statistics> {
         statisticsSupplier.get().update(context, val);
         break;
       } catch (StatisticsFrozenException e) {
-        log.debug("Frozen stats, retrying.");
+        log.info("Frozen stats, retrying.");
       }
     }
   }
