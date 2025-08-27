@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.TreeMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -82,7 +83,9 @@ public class RollupQueryProcessorTests {
     // connect the series to a rocks-db instance;
     scheduledExecutorService = Executors.newScheduledThreadPool(2);
     messageBox = new SharedMessageBox<>(1000);
-    pathRegistry = new PathRegistryImpl(hourlyRoot, shardPkgRoot, parquetRoot, shardAssetsRoot);
+    pathRegistry =
+        new PathRegistryImpl(
+            hourlyRoot, shardPkgRoot, parquetRoot, shardAssetsRoot, new ReentrantReadWriteLock());
 
     writeBackSettings =
         new WriteBackSettings(Duration.of(100, ChronoUnit.MILLIS), new SystemClock());

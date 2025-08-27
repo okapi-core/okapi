@@ -1,18 +1,18 @@
 package org.okapi.metrics.rocks;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 
-public class RocksStore implements Closeable {
+public class RocksStore {
 
   Map<Path, RocksDB> dbCache;
   ReadWriteLock readWriteLock;
@@ -57,10 +57,10 @@ public class RocksStore implements Closeable {
     return rocks.map(RocksDbReader::new);
   }
 
-  @Override
   public void close() throws IOException {
-    for (var rocks : this.dbCache.values()) {
-      rocks.close();
+    for (var entry : this.dbCache.entrySet()) {
+      entry.getValue().close();
     }
+    this.dbCache = new ConcurrentHashMap<>();
   }
 }

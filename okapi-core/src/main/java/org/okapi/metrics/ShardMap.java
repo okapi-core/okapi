@@ -59,7 +59,7 @@ public class ShardMap {
     this.pathSet = pathSet;
   }
 
-  public RollupSeries<Statistics> get(int shardId) {
+  protected RollupSeries<Statistics> get(int shardId) {
     return shardMap.computeIfAbsent(
         shardId,
         (sh) -> {
@@ -97,6 +97,7 @@ public class ShardMap {
         }
       }
     }
+
     var series = get(shardId);
     pathSet.add(shardId, path);
     series.writeBatch(ctx, path, ts, vals);
@@ -109,5 +110,11 @@ public class ShardMap {
     var series = get(shardId);
     pathSet.add(shardId, path);
     series.writeBatch(ctx, path, ts, vals);
+  }
+
+  public void flushAll() throws InterruptedException {
+    for (var series : shardMap.values()) {
+      series.flush();
+    }
   }
 }

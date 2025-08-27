@@ -65,6 +65,15 @@ public class FirstMatchReader implements TsReader {
     return Optional.empty();
   }
 
+  @Override
+  public Optional<Statistics> getStat(String key) {
+    for (var reader : readers) {
+      var stat = reader.getStat(key);
+      if (stat.isPresent()) return stat;
+    }
+    return Optional.empty();
+  }
+
   public static TsReader getFirstMatchReader(
       PathRegistry pathRegistry,
       RocksStore store,

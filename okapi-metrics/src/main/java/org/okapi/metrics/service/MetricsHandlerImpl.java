@@ -3,6 +3,9 @@ package org.okapi.metrics.service;
 import static org.okapi.constants.Constants.N_SHARDS;
 
 import java.nio.file.Files;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
@@ -13,15 +16,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.okapi.metrics.CheckpointUploaderDownloader;
 import org.okapi.metrics.PathRegistry;
 import org.okapi.metrics.ShardMap;
+import org.okapi.metrics.async.Await;
 import org.okapi.metrics.common.ServiceRegistry;
 import org.okapi.metrics.common.pojo.NodeState;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssignerFactory;
-import org.okapi.metrics.rocks.TarPackager;
+import org.okapi.metrics.rocks.RocksStore;
 import org.okapi.metrics.service.runnables.*;
+import org.okapi.metrics.sharding.ShardPkgManager;
 
 @AllArgsConstructor
 @Slf4j
 public class MetricsHandlerImpl implements MetricsHandler, Shardable {
+  public static final Duration POLL_DURATION = Duration.of(100, ChronoUnit.MILLIS);
+  public static final Duration MAX_WAIT = Duration.of(60, ChronoUnit.SECONDS);
+
   ServiceRegistry serviceRegistry;
   PathRegistry pathRegistry;
   CheckpointUploaderDownloader checkpointUploader;
@@ -38,6 +46,10 @@ public class MetricsHandlerImpl implements MetricsHandler, Shardable {
 
   // map from dataset to shards
   ShardMap shardMap;
+  ShardPkgManager shardPkgManager;
+
+  // Rocks store to close when moving shards
+  RocksStore rocksStore;
 
   @Override
   public void onStart() throws Exception {
@@ -69,19 +81,42 @@ public class MetricsHandlerImpl implements MetricsHandler, Shardable {
      * node holds.
      */
     if (myState(NodeState.SHARD_CHECKPOINTS_UPLOADED)) return;
+    /** pause the consumer */
     serviceController.pauseConsumer();
+
+    /** flush shardMap so that all pending writes are written out */
+    shardMap.flushAll();
+
+    /** wait for messages to be written out to rocksDB */
+    Await.waitFor(
+        () -> {
+          return serviceController.isBoxEmpty();
+        },
+        POLL_DURATION,
+        MAX_WAIT);
+    /** close the store to prevent any stale instances */
+    rocksStore.close();
+
     var self = serviceRegistry.getSelf();
     var newClusterConfig = serviceRegistry.clusterChangeOp().get();
-    var newAssignment = shardsAndSeriesAssignerFactory.makeAssigner(N_SHARDS, newClusterConfig.nodes());
-    var notMyShards = IntStream.range(0, N_SHARDS)
-            .filter(i -> !newAssignment.getNode(i).equals(self.id())).toArray();
-    for(var shard: notMyShards){
+    var oldConfig = serviceRegistry.oldClusterConfig().get();
+    var oldAssignment = shardsAndSeriesAssignerFactory.makeAssigner(N_SHARDS, oldConfig.nodes());
+    var wereMyShards =
+        IntStream.range(0, N_SHARDS)
+            .filter(i -> Objects.equals(oldAssignment.getNode(i), self.id()))
+            .toArray();
+    var newAssignment =
+        shardsAndSeriesAssignerFactory.makeAssigner(N_SHARDS, newClusterConfig.nodes());
+    var notMyShards =
+        Arrays.stream(wereMyShards)
+            .filter(i -> !Objects.equals(newAssignment.getNode(i), self.id()))
+            .toArray();
+    for (var shard : notMyShards) {
       var rocksPath = pathRegistry.rocksPath(shard);
-      if(!Files.exists(rocksPath)){
+      if (!Files.exists(rocksPath)) {
         continue;
       }
-      var packagePath = pathRegistry.shardPackagePath(shard);
-      TarPackager.packageDir(rocksPath, packagePath);
+      var packagePath = shardPkgManager.packageShard(shard);
       checkpointUploader.uploadShardCheckpoint(packagePath, newClusterConfig.opId(), shard);
     }
     serviceRegistry.setSelfState(NodeState.SHARD_CHECKPOINTS_UPLOADED);
@@ -121,6 +156,7 @@ public class MetricsHandlerImpl implements MetricsHandler, Shardable {
       var downloadPath = pathRegistry.shardPackagePath(shard);
       checkpointUploader.downloadShardCheckpoint(scaleOp.opId(), shard, downloadPath);
       if (!Files.exists(downloadPath) || Files.size(downloadPath) == 0) continue;
+      shardPkgManager.unpackShard(downloadPath, shard);
     }
     afterShardMoveCommit();
     serviceRegistry.setSelfState(NodeState.SHARD_CHECKPOINTS_APPLIED);
@@ -130,10 +166,12 @@ public class MetricsHandlerImpl implements MetricsHandler, Shardable {
   public void afterShardMoveCommit() throws Exception {
     var nShards = N_SHARDS;
     var nodes = serviceRegistry.latestClusterConfig().nodes();
+
     if (nodes.isEmpty()) {
       throw new IllegalStateException(
           "List of nodes is empty. Possibly cluster is being scaled while being resharded.");
     }
+
     var assigner = shardsAndSeriesAssignerFactory.makeAssigner(nShards, nodes);
     metricsWriter.setShardsAndSeriesAssigner(assigner);
     serviceController.resumeConsumer();

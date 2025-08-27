@@ -63,6 +63,11 @@ public class RocksTsReader implements TsReader {
   }
 
   @Override
+  public Optional<Statistics> getStat(String key) {
+    return readBucket(key);
+  }
+
+  @Override
   public ScanResult scan(
       String timeSeries, long startTs, long endTs, AGG_TYPE agg, RES_TYPE resType) {
     final var timestamps = new ArrayList<Long>();

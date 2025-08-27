@@ -127,6 +127,7 @@ public class LeaderJobsImpl implements LeaderJobs {
   }
 
   public boolean allNodesHaveState(List<String> nodes, NodeState state) throws Exception {
+    log.info("Checking state of participants {}", nodes);
     int count = 0;
     for (var node : nodes) {
       count += (state == serviceRegistry.getNode(node).state()) ? 1 : 0;

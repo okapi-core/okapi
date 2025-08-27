@@ -2,12 +2,15 @@ package org.okapi.metrics.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.okapi.constants.Constants.N_SHARDS;
+import static org.okapi.metrics.GlobalTestConfig.okapiWait;
 
 import com.okapi.rest.metrics.SubmitMetricsRequestInternal;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,19 +18,22 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.okapi.exceptions.BadRequestException;
-import org.okapi.metrics.OutsideWindowException;
 import org.okapi.metrics.TestResourceFactory;
+import org.okapi.metrics.async.Await;
 import org.okapi.metrics.common.MetricPaths;
 import org.okapi.metrics.common.MetricsContext;
 import org.okapi.metrics.common.pojo.Node;
 import org.okapi.metrics.common.pojo.NodeState;
 import org.okapi.metrics.common.pojo.TWO_PHASE_STATE;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssigner;
+import org.okapi.metrics.rollup.HashFns;
+import org.okapi.metrics.rollup.RocksTsReader;
 import org.okapi.metrics.rollup.RollupSeries;
 import org.okapi.metrics.sharding.fakes.FixedShardsAndSeriesAssigner;
 import org.okapi.metrics.stats.*;
 import org.okapi.testutils.OkapiTestUtils;
 
+/** todo: this is very complicated test, it needs refactoring so that the test fix */
 @Slf4j
 public class MetricsHandlerImplTests {
   TestResourceFactory testResourceFactory;
@@ -43,6 +49,8 @@ public class MetricsHandlerImplTests {
   Supplier<Statistics> statisticsSupplier;
   RollupSeriesRestorer<Statistics> restorer;
 
+  static final long hrStart = (System.currentTimeMillis() / 3600_000L) * 3600_000L;
+
   @BeforeEach
   public void setup() {
     testResourceFactory = new TestResourceFactory();
@@ -54,43 +62,50 @@ public class MetricsHandlerImplTests {
     statisticsSupplier = new KllStatSupplier();
     seriesSupplier = new RollupSeriesFn();
     restorer = new RolledUpSeriesRestorer(seriesSupplier);
+
+    // use a real clock for all tests
+    testResourceFactory.setUseRealClock(true);
+  }
+
+  public RocksTsReader getReaderBlocking(int shard, Node node) throws IOException {
+    // check against a reader
+    var pathRegistry = testResourceFactory.pathRegistry(node);
+    okapiWait().until(() -> testResourceFactory.messageBox(node).isEmpty());
+    log.info("Waiting for reader for shard: {} on node: {}", shard, node.id());
+    okapiWait()
+        .until(
+            () ->
+                testResourceFactory
+                    .rocksStore(node)
+                    .rocksReader(pathRegistry.rocksPath(shard))
+                    .isPresent());
+    var rocksReader =
+        testResourceFactory.rocksStore(node).rocksReader(pathRegistry.rocksPath(shard)).get();
+    return new RocksTsReader(rocksReader, testResourceFactory.unMarshaller());
   }
 
   public void checkDistribution(
-      RollupSeries<Statistics> ref,
-      ShardsAndSeriesAssigner assigner,
-      List<Node> nodes,
-      int nShards) {
-    for (var node : nodes) {
-      // for this node should be empty
-      // find all shards that belong to this node
-      var shardsOfThisNode =
-          IntStream.range(0, nShards)
-              .filter(sh -> Objects.equals(assigner.getNode(sh), node.id()))
-              .toArray();
-      var shardsNotOfThisNode =
-          IntStream.range(0, nShards)
-              .filter(sh -> !Objects.equals(assigner.getNode(sh), node.id()))
-              .toArray();
-      var shardMap = testResourceFactory.shardMap(node);
-      // INV: shards which are for this node: have same values as reference. Shards which are not
-      // should be empty
-      // INV: shards belonging to this node should have all metricpaths as per old distribution.
-      for (var shard : shardsOfThisNode) {
-        var expectedMetricPathsInShard =
-            ref.listMetricPaths().stream()
-                .filter(path -> assigner.getShard(path) == shard)
-                .toList();
-        assertEquals(
-            Set.copyOf(expectedMetricPathsInShard),
-            Set.copyOf(shardMap.get(shard).listMetricPaths()),
-            "Expected paths differ for node: " + node.id());
-        OkapiTestUtils.checkMatchesReferenceFuzzy(ref, shardMap.get(shard));
-      }
-
-      for (var shard : shardsNotOfThisNode) {
-        shardMap.get(shard).getKeys().isEmpty();
-      }
+      RollupSeries<Statistics> ref, ShardsAndSeriesAssigner assigner, List<Node> nodes, int nShards)
+      throws IOException, InterruptedException {
+    // \A key \in ref: shard = getShard(key); node = getNode(shard); reader = getReader(node,
+    // shard); assertEquals(ref.getValue(key), reader.getValue(key));
+    var unmarshaller = new RolledupStatsRestorer();
+    for (var key : ref.getKeys()) {
+      var hashedValue = HashFns.invertKey(key);
+      var series = hashedValue.get().timeSeries();
+      var shard = assigner.getShard(series);
+      var node = assigner.getNode(shard);
+      var registered = testResourceFactory.getNode(node).get();
+      var reader = getReaderBlocking(shard, registered);
+      // do a blocking wait until the stats have been persisted
+      Await.waitFor(
+          () -> reader.getStat(key).isPresent(),
+          Duration.of(100, ChronoUnit.MILLIS),
+          Duration.of(10, ChronoUnit.SECONDS));
+      var storedValue = reader.getStat(key).get();
+      var expected = ref.getSerializedStats(key);
+      var expectedRestored = unmarshaller.deserialize(expected);
+      OkapiTestUtils.assertStatsEquals(expectedRestored, storedValue);
     }
   }
 
@@ -108,7 +123,7 @@ public class MetricsHandlerImplTests {
                     "series-A",
                     Map.of("key1", "value1"),
                     new float[] {1.0f, 2.0f, 3.0f},
-                    new long[] {1000, 2000, 3000})),
+                    absoluteTime(new long[] {1000, 2000, 3000}))),
             Map.of("tenant:series-A{key1=value1}", 0),
             Map.of(0, testNode1.id()),
             Map.of(0, testNode2.id()),
@@ -123,19 +138,27 @@ public class MetricsHandlerImplTests {
                     "series-A",
                     Map.of("key1", "value1"),
                     new float[] {1.0f, 2.0f, 3.0f},
-                    new long[] {1000, 2000, 3000}),
+                    absoluteTime(new long[] {1000, 2000, 3000})),
                 new SubmitMetricsRequestInternal(
                     "tenant",
                     "series-B",
                     Map.of("key1", "value1"),
                     new float[] {1.0f, 2.0f, 3.0f},
-                    new long[] {3000, 4000, 5000})),
+                    absoluteTime(new long[] {3000, 4000, 5000}))),
             // shard distribution
             Map.of("tenant:series-A{key1=value1}", 0, "tenant:series-B{key1=value1}", 1),
             Map.of(0, testNode1.id(), 1, testNode2.id()),
             Map.of(0, testNode2.id(), 1, testNode3.id()),
             Arrays.asList(testNode1, testNode2),
             Arrays.asList(testNode1, testNode2, testNode3)));
+  }
+
+  public static long[] absoluteTime(long[] relativeTime) {
+    var absoluteTimes = new long[relativeTime.length];
+    for (int i = 0; i < absoluteTimes.length; i++) {
+      absoluteTimes[i] = hrStart + relativeTime[i];
+    }
+    return absoluteTimes;
   }
 
   @ParameterizedTest
@@ -151,7 +174,7 @@ public class MetricsHandlerImplTests {
       throws Exception {
 
     // initialize each node with its own distribution
-    setupScaleUpTestData(
+    setupShardMoveTestData(
         leader, requests, seriesToShardMap, oldDistribution, newDistribution, oldNodes, newNodes);
     var newNodeIds = newNodes.stream().map(node -> node.id()).toList();
     var newAssigner = new FixedShardsAndSeriesAssigner(seriesToShardMap, newDistribution);
@@ -159,16 +182,20 @@ public class MetricsHandlerImplTests {
     merge(merged, requests);
 
     testResourceFactory.serviceRegistry(leader).safelyUpdateNodes(newNodeIds);
+
     for (var node : newNodes) {
       testResourceFactory.metricsHandler(node).onShardMovePrepare();
     }
+
     for (var node : newNodes) {
       var nodeState = testResourceFactory.serviceRegistry(node).getSelf().state();
       assertEquals(NodeState.SHARD_CHECKPOINTS_UPLOADED, nodeState);
     }
+
     for (var node : newNodes) {
       testResourceFactory.metricsHandler(node).onShardMoveCommit();
     }
+
     for (var node : newNodes) {
       var nodeState = testResourceFactory.serviceRegistry(node).getSelf().state();
       assertEquals(NodeState.SHARD_CHECKPOINTS_APPLIED, nodeState);
@@ -177,7 +204,7 @@ public class MetricsHandlerImplTests {
     checkDistribution(merged, newAssigner, newNodes, N_SHARDS);
   }
 
-  public void setupScaleUpTestData(
+  public void setupShardMoveTestData(
       Node leader,
       List<SubmitMetricsRequestInternal> requests,
       Map<String, Integer> seriesToShardMap,
@@ -210,18 +237,21 @@ public class MetricsHandlerImplTests {
 
     merge(reference, requests);
     // start and wait until all requests are consumed
-    for (var node : newNodes) {}
     for (var node : newNodes) {
       testResourceFactory.metricsHandler(node).onStart();
     }
     // buffer all requests
     writeAll(oldNodes, requests, oldAssigner);
+    for (var node : oldNodes) {
+      testResourceFactory.startWriter(node);
+    }
     // check distribution wrt to shard to node assignment
     checkDistribution(reference, oldAssigner, newNodes, N_SHARDS);
   }
 
-  public static void merge(RollupSeries merged, List<SubmitMetricsRequestInternal> requests)
-      throws OutsideWindowException, StatisticsFrozenException, InterruptedException {
+  public static void merge(
+      RollupSeries<Statistics> merged, List<SubmitMetricsRequestInternal> requests)
+      throws StatisticsFrozenException, InterruptedException {
     for (var r : requests) {
       var path = MetricPaths.convertToPath(r);
       merged.writeBatch(new MetricsContext("test"), path, r.getTs(), r.getValues());
@@ -237,7 +267,7 @@ public class MetricsHandlerImplTests {
 
   public void writeAll(
       List<Node> nodes, List<SubmitMetricsRequestInternal> reqs, ShardsAndSeriesAssigner assigner)
-      throws OutsideWindowException, BadRequestException, InterruptedException, StatisticsFrozenException {
+      throws BadRequestException {
     for (var r : reqs) {
       var node = route(r, nodes, assigner);
       testResourceFactory.rocksWriter(node).onRequestArrive(r);

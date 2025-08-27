@@ -1,12 +1,14 @@
 package org.okapi.metrics.sharding.fakes;
 
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssigner;
 import lombok.AllArgsConstructor;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @AllArgsConstructor
 @NoArgsConstructor
 public class FixedShardsAndSeriesAssigner implements ShardsAndSeriesAssigner {
@@ -33,11 +35,16 @@ public class FixedShardsAndSeriesAssigner implements ShardsAndSeriesAssigner {
 
   @Override
   public String getNode(int shardId) {
-    return shardToNodeMap.get(shardId);
+    var node = shardToNodeMap.get(shardId);
+    return  node;
   }
 
   @Override
   public int getShard(String metricPath) {
+    var shard = seriesToShardMap.get(metricPath);
+    if (shard == null) {
+      log.error("This method will crash, since shard for path {} is null.", shard);
+    }
     return seriesToShardMap.get(metricPath);
   }
 }

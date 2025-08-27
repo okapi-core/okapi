@@ -227,6 +227,10 @@
             <artifactId>re2j</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+        </dependency>
 
     </dependencies>
 

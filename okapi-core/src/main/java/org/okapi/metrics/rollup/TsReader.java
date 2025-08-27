@@ -1,10 +1,9 @@
 package org.okapi.metrics.rollup;
 
+import java.util.Optional;
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
 import org.okapi.metrics.stats.Statistics;
-
-import java.util.Optional;
 
 public interface TsReader {
   ScanResult scan(String series, long from, long to, AGG_TYPE aggregation, RES_TYPE resolution);
@@ -24,4 +23,5 @@ public interface TsReader {
   Optional<Statistics> minutelyStats(String series, long when);
 
   Optional<Statistics> hourlyStats(String series, long when);
+  Optional<Statistics> getStat(String key);
 }

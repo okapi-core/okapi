@@ -1,6 +1,8 @@
 package org.okapi.metrics.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.okapi.metrics.SharedMessageBox;
+import org.okapi.metrics.WriteBackRequest;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -11,12 +13,14 @@ public class ServiceControllerImpl implements ServiceController {
   AtomicBoolean processRunning;
   CountDownLatch consumerStopped;
   String id;
+  SharedMessageBox<WriteBackRequest> messageBox;
 
-  public ServiceControllerImpl(String id) {
+  public ServiceControllerImpl(String id, SharedMessageBox<WriteBackRequest> messageBox) {
     canConsume = new AtomicBoolean(true);
     processRunning = new AtomicBoolean(true);
     consumerStopped = new CountDownLatch(0);
     this.id = id;
+    this.messageBox = messageBox;
   }
 
   @Override
@@ -51,5 +55,10 @@ public class ServiceControllerImpl implements ServiceController {
   @Override
   public boolean isProcessRunning() {
     return processRunning.get();
+  }
+
+  @Override
+  public boolean isBoxEmpty() {
+    return this.messageBox.isEmpty();
   }
 }

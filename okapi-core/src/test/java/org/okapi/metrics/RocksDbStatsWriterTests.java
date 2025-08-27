@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +45,9 @@ public class RocksDbStatsWriterTests {
         new WriteBackSettings(Duration.of(100, ChronoUnit.MILLIS), new SystemClock());
     messageBox = new SharedMessageBox<>(10);
     restorer = new RolledupStatsRestorer();
-    pathRegistry = new PathRegistryImpl(hourlyRoot, shardPkgRoot, parquetRoot, shardAssetsRoot);
+    pathRegistry =
+        new PathRegistryImpl(
+            hourlyRoot, shardPkgRoot, parquetRoot, shardAssetsRoot, new ReentrantReadWriteLock());
     rocksDbStatsWriter =
         new RocksDbStatsWriter(
             messageBox,

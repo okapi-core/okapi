@@ -5,6 +5,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
@@ -30,8 +31,6 @@ import org.okapi.metrics.common.sharding.ConsistentHashedAssignerFactory;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssignerFactory;
 import org.okapi.metrics.coordinator.CentralCoordinator;
 import org.okapi.metrics.paths.PathSet;
-import org.okapi.metrics.paths.PersistedSetWalPathSupplier;
-import org.okapi.metrics.paths.PersistedSetWalPathSupplierImpl;
 import org.okapi.metrics.rocks.RocksStore;
 import org.okapi.metrics.rollup.*;
 import org.okapi.metrics.service.*;
@@ -111,8 +110,11 @@ public class OkapiMetricsConsumerConfig {
   }
 
   @Bean
-  public ServiceController consumerController(@Value("${node.user_defined_id}") String id) {
-    return new ServiceControllerImpl(id);
+  public ServiceController consumerController(
+      @Value("${node.user_defined_id}") String id,
+      @Qualifier(Configurations.BEAN_ROCKS_MESSAGE_BOX)
+          SharedMessageBox<WriteBackRequest> messageBox) {
+    return new ServiceControllerImpl(id, messageBox);
   }
 
   @Bean
@@ -210,14 +212,8 @@ public class OkapiMetricsConsumerConfig {
   }
 
   @Bean
-  public PersistedSetWalPathSupplier persistedSetWalPathSupplier(
-      @Value(Configurations.VAL_PATH_SET_WAL) String pathSetWal) {
-    return new PersistedSetWalPathSupplierImpl(Path.of(pathSetWal));
-  }
-
-  @Bean
-  public PathSet pathSet(@Autowired PersistedSetWalPathSupplier walPathSupplier) {
-    return new PathSet(walPathSupplier);
+  public PathSet pathSet(@Autowired PathRegistry pathRegistry) {
+    return new PathSet(pathRegistry, Collections.emptySet());
   }
 
   @Bean
@@ -507,8 +503,14 @@ public class OkapiMetricsConsumerConfig {
   public MetricsWriter metricsWriter(
       @Autowired ShardMap shardMap,
       @Autowired ServiceController serviceController,
-      @Autowired Node node) {
-    return new RocksMetricsWriter(shardMap, serviceController, node.id());
+      @Autowired Node node,
+      @Autowired PathSet pathSet) {
+    return new RocksMetricsWriter(shardMap, serviceController, node.id(), pathSet);
+  }
+
+  @Bean
+  public ShardPkgManager shardPkgManager(@Autowired PathRegistry pathRegistry) {
+    return new ShardPkgManager(pathRegistry);
   }
 
   @Bean
@@ -523,7 +525,9 @@ public class OkapiMetricsConsumerConfig {
       @Autowired CheckpointUploader hourlyCheckpointUploaderRunnable,
       @Autowired ScheduledExecutorService scheduledExecutorService,
       @Autowired ShardsAndSeriesAssignerFactory shardsAndSeriesAssignerFactory,
-      @Autowired ShardMap shardMap) {
+      @Autowired ShardMap shardMap,
+      @Autowired ShardPkgManager shardPkgManager,
+      @Autowired RocksStore rocksStore) {
     return new MetricsHandlerImpl(
         serviceRegistry,
         pathRegistry,
@@ -535,6 +539,8 @@ public class OkapiMetricsConsumerConfig {
         hourlyCheckpointUploaderRunnable,
         scheduledExecutorService,
         shardsAndSeriesAssignerFactory,
-        shardMap);
+        shardMap,
+        shardPkgManager,
+        rocksStore);
   }
 }

@@ -6,24 +6,29 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
-import org.okapi.constants.Constants;
 import org.okapi.ds.FileBackedSet;
+import org.okapi.metrics.PathRegistry;
 
 @Slf4j
 public class PathSet {
-  private final PersistedSetWalPathSupplier walPathSupplier;
   private final Map<Integer, FileBackedSet> fileBackedSetMap;
   private final Multimap<String, Integer> reverse;
+  private final PathRegistry pathRegistry;
+  private Set<Integer> shards;
 
-  public PathSet(PersistedSetWalPathSupplier walPathSupplier) {
+  public PathSet(PathRegistry pathRegistry, Set<Integer> shards) {
     this.fileBackedSetMap = new ConcurrentHashMap<>();
     this.reverse = ArrayListMultimap.create();
-    IntStream.range(0, Constants.N_SHARDS)
-        .forEach(
+    this.pathRegistry = pathRegistry;
+    setShards(shards);
+  }
+
+  public void setShards(Set<Integer> shards) {
+    this.shards = shards;
+    this.shards.forEach(
             shard -> {
-              var path = walPathSupplier.apply(shard);
+              var path = pathRegistry.pathSetWal(shard);
               if (!Files.exists(path)) return;
               try {
                 fileBackedSetMap.put(shard, new FileBackedSet(path));
@@ -38,7 +43,6 @@ public class PathSet {
         reverse.put(path, key);
       }
     }
-    this.walPathSupplier = walPathSupplier;
   }
 
   public FileBackedSet get(Integer shard) {
@@ -46,7 +50,7 @@ public class PathSet {
         this.fileBackedSetMap.computeIfAbsent(
             shard,
             (sh) -> {
-              var path = walPathSupplier.apply(sh);
+              var path = pathRegistry.pathSetWal(sh);
               try {
                 return new FileBackedSet(path);
               } catch (IOException e) {
@@ -76,7 +80,11 @@ public class PathSet {
   }
 
   public Set<String> pathsInShard(int shard) {
-    return this.fileBackedSetMap.get(shard).list();
+    var set = this.fileBackedSetMap.get(shard);
+    if (set == null) {
+      return Collections.emptySet();
+    }
+    return set.list();
   }
 
   public Collection<Integer> shardsForPath(String path) {

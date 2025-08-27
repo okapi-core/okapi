@@ -4,9 +4,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.Lists;
 import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,23 +19,39 @@ public class PathRegistryImpl implements PathRegistry {
   Path parquetRoot;
   Path shardAssetsRoot;
 
-  public PathRegistryImpl(Path hourlyCheckpointRoot, Path shardPackageRoot,
-                          Path parquetRoot, Path shardAssetsRoot) {
+  ReadWriteLock readWriteLock;
+
+  public PathRegistryImpl(
+      Path hourlyCheckpointRoot, Path shardPackageRoot, Path parquetRoot, Path shardAssetsRoot, ReadWriteLock readWriteLock) {
+    /**
+     * Ignore the passed lock its just for show
+     */
+    this.readWriteLock = new ReentrantReadWriteLock();
     Lists.newArrayList(hourlyCheckpointRoot, shardPackageRoot, parquetRoot, shardAssetsRoot)
         .forEach(
             dir -> {
               try {
-                Files.createDirectories(dir);
-              } catch (FileAlreadyExistsException fileAlreadyExistsException) {
+                createDir(dir);
+              } catch (IOException ioe) {
                 log.info("Directory {} already exists, moving on.", dir);
-              } catch (IOException e) {
-                throw new RuntimeException(e);
               }
             });
     this.hourlyCheckpointRoot = checkNotNull(hourlyCheckpointRoot);
     this.shardPackageRoot = checkNotNull(shardPackageRoot);
     this.parquetRoot = checkNotNull(parquetRoot);
     this.shardAssetsRoot = checkNotNull(shardAssetsRoot);
+  }
+
+  public void createDir(Path dir) throws IOException {
+    if (Files.exists(dir)) return;
+    readWriteLock.writeLock().lock();
+    try {
+      if (!Files.exists(dir)) {
+        Files.createDirectories(dir);
+      }
+    } finally {
+      readWriteLock.writeLock().unlock();
+    }
   }
 
   @Override
@@ -56,11 +73,27 @@ public class PathRegistryImpl implements PathRegistry {
 
   @Override
   public Path rocksPath(Integer shard) {
-    return shardAssetsRoot.resolve(Integer.toString(shard)).resolve("rocks");
+    return shardAssetsPath(shard).resolve("rocks");
+  }
+
+  @Override
+  public Path shardAssetsPath(Integer shard) {
+    var path = shardAssetsRoot.resolve(Integer.toString(shard));
+    try {
+      createDir(path);
+    } catch (IOException ioe) {
+      throw new RuntimeException(ioe);
+    }
+    return path;
   }
 
   @Override
   public Path pathSetWal(Integer shard) {
-    return shardAssetsRoot.resolve(Integer.toString(shard)).resolve("pathSet.wal");
+    return shardAssetsPath(shard).resolve("pathSet.wal");
+  }
+
+  @Override
+  public Path shardAssetsRoot() {
+    return shardAssetsRoot;
   }
 }

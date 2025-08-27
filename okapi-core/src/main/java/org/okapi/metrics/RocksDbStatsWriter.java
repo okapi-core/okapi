@@ -71,13 +71,13 @@ public class RocksDbStatsWriter implements Closeable {
     while (!writes.isEmpty()) {
       var sink = new ArrayList<WriteBackRequest>();
       writes.drain(sink, ReaderIds.MSG_STATS_WRITER);
-      log.info("Writing {} keys", sink.size());
       var groups = ArrayListMultimap.<String, WriteBackRequest>create();
 
       for (var req : sink) {
         groups.put(req.getKey(), req);
       }
 
+      log.info("Writing {} keys.", groups.size());
       for (var v : groups.values()) {
         var path = pathRegistry.rocksPath(v.getShard());
         RocksDbWriter writer;
@@ -101,6 +101,8 @@ public class RocksDbStatsWriter implements Closeable {
           log.error("writing failed with exception {}", ExceptionUtils.debugFriendlyMsg(e));
         }
       }
+
+      log.info("Wrote {} keys.", groups.size());
     }
   }
 

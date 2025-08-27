@@ -7,4 +7,5 @@ public interface ServiceController {
     boolean startProcess();
     void stopProcess();
     boolean isProcessRunning();
+    boolean isBoxEmpty();
 }

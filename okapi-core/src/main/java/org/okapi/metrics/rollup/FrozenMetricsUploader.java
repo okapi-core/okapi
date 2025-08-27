@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.okapi.clock.Clock;
 import org.okapi.metrics.CheckpointUploaderDownloader;
 import org.okapi.metrics.NodeStateRegistry;
@@ -17,6 +18,7 @@ import org.okapi.metrics.rocks.RocksStore;
 import org.okapi.metrics.stats.RolledupStatsRestorer;
 import org.okapi.metrics.stats.Statistics;
 
+@Slf4j
 @AllArgsConstructor
 public class FrozenMetricsUploader {
 
@@ -162,6 +164,10 @@ public class FrozenMetricsUploader {
   public void uploadHourlyCheckpoint() throws Exception {
     var lastCheckpointed = nodeStateRegistry.getLastCheckpointedHour();
     var targetHour = clock.currentTimeMillis() / 1000 / 3600 - admissionWindowHrs;
+    var alreadyCheckpointed = lastCheckpointed.isPresent() && lastCheckpointed.get() == targetHour;
+    if(alreadyCheckpointed){
+      log.info("Nothing do to.");
+    }
     if (lastCheckpointed.isPresent()) {
       targetHour = Math.min(1 + lastCheckpointed.get(), targetHour);
     }

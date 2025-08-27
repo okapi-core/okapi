@@ -1,5 +1,6 @@
 package org.okapi.metrics;
 
+import lombok.extern.slf4j.Slf4j;
 import org.okapi.metrics.common.FleetMetadata;
 
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+@Slf4j
 public class InMemoryFleetMetadata implements FleetMetadata {
   ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
   Map<String, byte[]> dataStore = new HashMap<>();
@@ -24,7 +26,7 @@ public class InMemoryFleetMetadata implements FleetMetadata {
   @Override
   public void create(String path) {
     createParentsIfNeeded(path);
-    dataStore.put(path, new byte[0]);
+    setData(path, new byte[0]);
   }
 
   @Override
@@ -35,13 +37,17 @@ public class InMemoryFleetMetadata implements FleetMetadata {
     for (int i = 1; i < parts.length; i++) {
       currentPath.append("/").append(parts[i]);
       if (!dataStore.containsKey(currentPath.toString())) {
-        dataStore.put(currentPath.toString(), new byte[0]);
+        setData(currentPath.toString(), new byte[0]);
       }
     }
   }
 
   @Override
   public void setData(String path, byte[] data) {
+    if(data == null){
+      log.error("Setting data for path {} to null", path);
+      throw new RuntimeException();
+    }
     dataStore.put(path, data);
   }
 
@@ -74,7 +80,7 @@ public class InMemoryFleetMetadata implements FleetMetadata {
     readWriteLock.writeLock().lock();
     try {
       for (int i = 0; i < paths.size(); i++) {
-        dataStore.put(paths.get(i), data.get(i));
+        this.setData(paths.get(i), data.get(i));
       }
     } finally {
       readWriteLock.writeLock().unlock();

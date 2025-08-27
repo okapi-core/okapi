@@ -37,6 +37,7 @@ import org.okapi.metrics.scanning.MmapBrs;
 import org.okapi.metrics.stats.*;
 import org.okapi.testutils.OkapiTestUtils;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+//todo: this is a very unwieldy test, find a way to break it down.
 
 public class FrozenMetricsUploaderTests {
   public static String TENANT_ID;

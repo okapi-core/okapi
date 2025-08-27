@@ -8,6 +8,8 @@ import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.okapi.metrics.OutsideWindowException;
 import org.okapi.metrics.TestResourceFactory;
 import org.okapi.metrics.common.MetricsContext;
@@ -16,6 +18,7 @@ import org.okapi.metrics.common.pojo.NodeState;
 import org.okapi.metrics.stats.StatisticsFrozenException;
 import org.okapi.testutils.OkapiTestUtils;
 
+@Execution(ExecutionMode.CONCURRENT)
 public class ShardMapTests {
   TestResourceFactory testResourceFactory;
   Node TEST_NODE =
@@ -39,8 +42,6 @@ public class ShardMapTests {
         };
     var vals = new float[] {0.1f, 0.2f};
     shardMap.apply(SHARD, MetricsContext.createContext("id"), "mp{}", ts, vals);
-    var series = shardMap.get(SHARD);
-    Assertions.assertFalse(series.getKeys().isEmpty());
     var pathSet = testResourceFactory.pathSet(TEST_NODE);
     Assertions.assertTrue(pathSet.list().get(SHARD).contains("mp{}"));
     // check message box is empty

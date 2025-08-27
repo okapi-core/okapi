@@ -17,10 +17,6 @@ public class SharedMessageBox<T> {
     this.pending.put(request);
   }
 
-  public void pop(T request) {
-    this.pending.poll();
-  }
-
   public void drain(Collection<T> sink, String id) {
     this.pending.drainTo(sink);
   }

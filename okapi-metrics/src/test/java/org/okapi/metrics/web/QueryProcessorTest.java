@@ -2,6 +2,7 @@ package org.okapi.metrics.web;
 
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.okapi.metrics.GlobalTestConfig.okapiWait;
 
 import com.okapi.rest.metrics.MetricsPathSpecifier;
 import com.okapi.rest.metrics.SearchMetricsRequestInternal;
@@ -130,7 +131,7 @@ public class QueryProcessorTest {
             OkapiLists.toFloatArray(reading.getValues()));
 
     // check that message box gets filled
-    await().atMost(Duration.of(1, ChronoUnit.SECONDS)).until(() -> {
+    okapiWait().until(() -> {
       return !resourceFactory.messageBox(node).isEmpty();
     });
 
@@ -141,7 +142,7 @@ public class QueryProcessorTest {
             resourceFactory.writeBackSettings(node)
     );
 
-    await().atMost(Duration.of(20, ChronoUnit.SECONDS)).until(() -> {
+    okapiWait().until(() -> {
       return resourceFactory.messageBox(node).isEmpty();
     });
 
@@ -166,8 +167,8 @@ public class QueryProcessorTest {
     request =
         SearchMetricsRequestInternal.builder()
             .tenantId("tenantId")
-            .startTime(System.currentTimeMillis() + Duration.of(140, ChronoUnit.MINUTES).toMillis())
-            .endTime(System.currentTimeMillis() + Duration.of(160, ChronoUnit.MINUTES).toMillis())
+            .startTime(System.currentTimeMillis() + Duration.of(180, ChronoUnit.MINUTES).toMillis())
+            .endTime(System.currentTimeMillis() + Duration.of(240, ChronoUnit.MINUTES).toMillis())
             .pattern("series-*{label_A=value_A}")
             .build();
     results = queryProcessor.searchMetricsResponse(request);

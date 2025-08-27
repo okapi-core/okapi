@@ -1,6 +1,7 @@
 package org.okapi.metrics.paths;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -16,26 +17,27 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mockito;
+import org.okapi.metrics.PathRegistry;
 
 public class PathSetTests {
 
   @TempDir Path walRoot;
 
   Path wal;
-  PersistedSetWalPathSupplier pathSupplier;
+  PathRegistry pathRegistry;
   PathSet pathSet;
 
   @BeforeEach
   public void setup() {
     wal = walRoot.resolve("pathSet.wal");
-    pathSupplier =
-        new PersistedSetWalPathSupplier() {
-          @Override
-          public Path apply(Integer shard) {
-            return walRoot.resolve(Integer.toString(shard));
-          }
-        };
-    pathSet = new PathSet(pathSupplier);
+    pathRegistry = Mockito.mock(PathRegistry.class);
+    Mockito.when(pathRegistry.pathSetWal(any())).thenAnswer((invocation) -> {
+      var shard = (Integer)invocation.getArgument(0);
+      return walRoot.resolve(Integer.toString(shard));
+    });
+
+    pathSet = new PathSet(pathRegistry, Sets.newHashSet(0));
   }
 
   @Test
@@ -63,7 +65,7 @@ public class PathSetTests {
   @Test
   public void testPathSetReloadsFromDisk() throws IOException {
     pathSet.add(0, "path{}");
-    var reloaded = new PathSet(pathSupplier);
+    var reloaded = new PathSet(pathRegistry, Sets.newHashSet(0));
     var list = reloaded.list();
     assertTrue(list.containsKey(0));
     assertFalse(list.get(0).isEmpty());
@@ -92,7 +94,7 @@ public class PathSetTests {
 
     // check reload
     pathSet.sync();
-    var reload = new PathSet(pathSupplier);
+    var reload = new PathSet(pathRegistry, Sets.newHashSet(0));
 
     assertPathSetMatch(reload, paths);
   }

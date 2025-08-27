@@ -11,6 +11,8 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,8 +25,6 @@ import org.okapi.metrics.common.ServiceRegistryImpl;
 import org.okapi.metrics.common.ZkPaths;
 import org.okapi.metrics.common.pojo.*;
 import org.okapi.metrics.paths.PathSet;
-import org.okapi.metrics.paths.PersistedSetWalPathSupplier;
-import org.okapi.metrics.paths.PersistedSetWalPathSupplierImpl;
 import org.okapi.metrics.rocks.RocksStore;
 import org.okapi.metrics.rollup.*;
 import org.okapi.metrics.service.*;
@@ -34,6 +34,7 @@ import org.okapi.metrics.service.web.QueryProcessor;
 import org.okapi.metrics.sharding.HeartBeatChecker;
 import org.okapi.metrics.sharding.LeaderJobs;
 import org.okapi.metrics.sharding.LeaderJobsImpl;
+import org.okapi.metrics.sharding.ShardPkgManager;
 import org.okapi.metrics.sharding.fakes.FixedAssignerFactory;
 import org.okapi.metrics.stats.*;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -53,6 +54,7 @@ public class TestResourceFactory {
   Path rocksRoot;
   Path metricsPathSetWalRoot;
   @Setter boolean useRealClock;
+  Map<String, Node> registeredNodes;
 
   public TestResourceFactory() {
     this.singletons = new HashMap<>();
@@ -60,13 +62,10 @@ public class TestResourceFactory {
       snapshotDir = Files.createTempDirectory("snapshot-directory");
       rocksRoot = Files.createTempDirectory("rocks-root");
       metricsPathSetWalRoot = Files.createTempDirectory("metrics-paths-wal");
+      registeredNodes = new HashMap<>();
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  public TestResourceFactory(Duration checkpointDuration) {
-    this.checkpointDuration = checkpointDuration;
   }
 
   public WriteBackSettings writeBackSettings(Node node) {
@@ -122,10 +121,11 @@ public class TestResourceFactory {
         PathRegistry.class,
         () -> {
           try {
-            var shardPackageRoot = Files.createTempDirectory("checkPoints");
-            var hourlyCheckpointRoot = Files.createTempDirectory("hourlyCheckpointRoot");
-            var parquetRoot = Files.createTempDirectory("parquet");
-            var shardAssetsRoot = Files.createTempDirectory("shardAssets");
+            var shardPackageRoot = Files.createTempDirectory(node.id() + "-checkPoints");
+            var hourlyCheckpointRoot =
+                Files.createTempDirectory(node.id() + "-hourlyCheckpointRoot");
+            var parquetRoot = Files.createTempDirectory(node.id() + "-parquet");
+            var shardAssetsRoot = Files.createTempDirectory(node.id() + "-shardAssets");
             return PathRegistryImpl.builder()
                 .parquetRoot(parquetRoot)
                 .shardPackageRoot(shardPackageRoot)
@@ -165,11 +165,14 @@ public class TestResourceFactory {
 
   public ServiceControllerImpl serviceController(Node node) {
     return makeSingleton(
-        node, ServiceControllerImpl.class, () -> new ServiceControllerImpl(node.id()));
+        node,
+        ServiceControllerImpl.class,
+        () -> new ServiceControllerImpl(node.id(), messageBox(node)));
   }
 
-  public ImmediateScheduler scheduledExecutorService(Node node) {
-    return makeSingleton(node, ImmediateScheduler.class, () -> new ImmediateScheduler(10));
+  public ScheduledExecutorService scheduledExecutorService(Node node) {
+    return makeSingleton(
+        node, ScheduledExecutorService.class, () -> Executors.newScheduledThreadPool(10));
   }
 
   public HeartBeatReporterRunnable heartBeatReporterRunnable(Node node) {
@@ -192,29 +195,16 @@ public class TestResourceFactory {
 
   public SharedMessageBox<WriteBackRequest> messageBox(Node node) {
     return makeSingleton(
+        node,
         SharedMessageBox.class,
         () -> {
           return new SharedMessageBox<WriteBackRequest>(1000);
         });
   }
 
-  public PersistedSetWalPathSupplier persistedSetWalPathSupplier(Node node) throws IOException {
-    var walRoot = metricsPathSetWalRoot.resolve(node.id());
-    Files.createDirectories(walRoot);
-    return new PersistedSetWalPathSupplierImpl(walRoot);
-  }
-
   public PathSet pathSet(Node node) throws IOException {
     return makeSingleton(
-        node,
-        PathSet.class,
-        () -> {
-          try {
-            return new PathSet(persistedSetWalPathSupplier(node));
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        });
+        node, PathSet.class, () -> new PathSet(pathRegistry(node), Collections.emptySet()));
   }
 
   public ShardMap shardMap(Node node) {
@@ -248,7 +238,14 @@ public class TestResourceFactory {
     }
   }
 
+  public Optional<Node> getNode(String id) {
+    return Optional.ofNullable(this.registeredNodes.get(id));
+  }
+
   public <T> T makeSingleton(Node node, Class<T> clazz, Supplier<T> objSupplier) {
+    if (!registeredNodes.containsKey(node.id())) {
+      registeredNodes.put(node.id(), node);
+    }
     var key = node.id() + "/" + clazz.getSimpleName();
     if (singletons.containsKey(key)) {
       return (T) singletons.get(key);
@@ -338,7 +335,22 @@ public class TestResourceFactory {
   }
 
   public RocksMetricsWriter rocksWriter(Node node) {
-    return new RocksMetricsWriter(shardMap(node), serviceController(node), node.id());
+    return makeSingleton(
+        node,
+        RocksMetricsWriter.class,
+        () -> {
+          try {
+            return new RocksMetricsWriter(
+                shardMap(node), serviceController(node), node.id(), pathSet(node));
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        });
+  }
+
+  public ShardPkgManager shardPkgManager(Node node) {
+    return makeSingleton(
+        node, ShardPkgManager.class, () -> new ShardPkgManager(pathRegistry(node)));
   }
 
   public MetricsHandlerImpl metricsHandler(Node node) throws IOException {
@@ -357,7 +369,9 @@ public class TestResourceFactory {
               uploaderRunnable(node),
               scheduledExecutorService(node),
               shardsAndSeriesAssigner(),
-              shardMap(node));
+              shardMap(node),
+              shardPkgManager(node),
+              rocksStore(node));
         });
   }
 

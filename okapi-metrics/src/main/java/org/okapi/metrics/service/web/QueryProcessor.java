@@ -39,8 +39,7 @@ public class QueryProcessor {
   @Autowired RocksReaderSupplier rocksReaderSupplier;
   @Autowired PathSet pathSet;
   @Autowired RocksStore rocksStore;
-  @Autowired
-  PathRegistry pathRegistry;
+  @Autowired PathRegistry pathRegistry;
 
   public GetMetricsResponse getMetricsResponse(GetMetricsRequestInternal request) throws Exception {
     var nodes = serviceRegistry.listActiveNodes();

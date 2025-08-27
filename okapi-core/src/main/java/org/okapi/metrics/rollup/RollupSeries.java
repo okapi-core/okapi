@@ -5,13 +5,11 @@ import static com.google.api.client.util.Preconditions.checkNotNull;
 import java.io.*;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.okapi.clock.Clock;
 import org.okapi.exceptions.ExceptionUtils;
@@ -28,7 +26,6 @@ public class RollupSeries<T extends Statistics> {
 
   public static final String MAGIC_NUMBER = "RollupSeriesStart";
   public static final String MAGIC_NUMBER_END = "RollupSeriesEnd";
-  public static final Long ADMISSION_WINDOW = Duration.of(24, ChronoUnit.HOURS).toMillis();
 
   private final Map<String, T> stats;
   private final Supplier<T> newStatsSupplier;
@@ -52,14 +49,6 @@ public class RollupSeries<T extends Statistics> {
     this.scheduledExecutorService = checkNotNull(scheduler);
     checkNotNull(writeBackSettings);
     startFreezer(writeBackSettings.getClock(), writeBackSettings.getHotWindow());
-  }
-
-  protected Optional<T> getStats(String k) {
-    return Optional.ofNullable(stats.get(k));
-  }
-
-  protected Set<String> keys() {
-    return Collections.unmodifiableSet(stats.keySet()); // live, weakly-consistent
   }
 
   protected void put(String k, T s) {
@@ -119,20 +108,30 @@ public class RollupSeries<T extends Statistics> {
         TimeUnit.MILLISECONDS);
   }
 
+  public void popKey(String key) throws InterruptedException {
+    var stat = stats.get(key);
+    stat.freeze();
+    log.debug("Writing to box.");
+    this.messageBox.push(
+        new WriteBackRequest(MetricsContext.createContext("test"), shard, key, stat),
+        ReaderIds.MSG_FREEZER);
+    // cleanup
+    stats.remove(key);
+    createTime.remove(key);
+  }
+
+  public void flush() throws InterruptedException {
+    for(var key: stats.keySet()){
+      popKey(key);
+    }
+  }
+
   public void freezeAndShip(Clock clock, Duration hotWindow) throws InterruptedException {
     var keys = createTime.keySet();
     for (var key : keys) {
       var hasExpired = clock.currentTimeMillis() - createTime.get(key) >= hotWindow.toMillis();
       if (hasExpired) {
-        var stat = stats.get(key);
-        stat.freeze();
-        log.debug("Writing to box.");
-        this.messageBox.push(
-            new WriteBackRequest(MetricsContext.createContext("test"), shard, key, stat),
-            ReaderIds.MSG_FREEZER);
-        // cleanup
-        stats.remove(key);
-        createTime.remove(key);
+        popKey(key);
       }
     }
   }
@@ -160,39 +159,16 @@ public class RollupSeries<T extends Statistics> {
     OkapiIo.writeString(os, MAGIC_NUMBER_END);
   }
 
-  public void checkpoint(Set<String> keys, Path checkpointPath) throws IOException {
-    try (var fos = new FileOutputStream(checkpointPath.toFile())) {
-      checkpoint(keys, fos);
-    }
-  }
-
-  public void checkpoint(Set<String> keys, OutputStream os) throws IOException {
-    final var filtered =
-        keys.stream()
-            .map(k -> Map.entry(k, stats.get(k)))
-            .filter(e -> e.getValue() != null)
-            .collect(Collectors.toList());
-
-    OkapiIo.writeString(os, MAGIC_NUMBER);
-    OkapiIo.writeInt(os, filtered.size());
-    for (var e : filtered) {
-      OkapiIo.writeString(os, e.getKey());
-      OkapiIo.writeBytes(os, e.getValue().serialize());
-    }
-    OkapiIo.writeString(os, MAGIC_NUMBER_END);
-  }
-
   public Set<String> listMetricPaths() {
     var out = new HashSet<String>();
     for (var k : stats.keySet()) {
       var split = k.split(":");
-      if (split.length >= 2) {
-        out.add(split[0] + ":" + split[1]);
+      if (split.length == 4) {
+        out.add(split[2] + ":" + split[3]);
       }
     }
     return out;
   }
-
 
   public byte[] getSerializedStats(String key) {
     var st = stats.get(key);

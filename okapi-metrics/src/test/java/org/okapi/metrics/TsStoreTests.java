@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import org.assertj.core.util.Files;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.okapi.fixtures.ReadingGenerator;
 import org.okapi.metrics.io.StreamReadingException;
@@ -141,27 +140,6 @@ public class TsStoreTests {
       var end = System.currentTimeMillis();
       System.out.println("Checkpointing time took:  " + (end - start));
     }
-  }
-
-  @Test
-  @Disabled
-  public void tsStore() {
-    var allocator = new DirectBufferAllocator();
-    var store = new TsStore(allocator, 1024 * 1024, 1024 * 1024);
-    var generator = new ReadingGenerator(Duration.of(200, ChronoUnit.MILLIS), 23 * 60);
-    var reading = generator.populateRandom(500.f, 503.f);
-    var N = reading.getValues().size();
-    var times = reading.getTimestamps();
-    var values = reading.getValues();
-    var now = System.currentTimeMillis();
-    for (int card = 0; card < 2000; card++) {
-      for (int i = 0; i < N; i++) {
-        store.write("series-" + card, times.get(i), values.get(i));
-      }
-    }
-    var elapsed = System.currentTimeMillis() - now;
-    var tps = (200. * N) / (elapsed / 1000.f);
-    System.out.println("TPS: " + tps);
   }
 
   private TsStore checkpointAndRestore(TsStore store) throws IOException, StreamReadingException {
