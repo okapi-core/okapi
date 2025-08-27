@@ -13,12 +13,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Builder
 public class PathRegistryImpl implements PathRegistry {
-  Path checkpointUploaderRoot;
-  Path shardCheckpointRoot;
+  Path hourlyCheckpointRoot;
+  Path shardPackageRoot;
   Path parquetRoot;
+  Path shardAssetsRoot;
 
-  public PathRegistryImpl(Path checkpointUploaderRoot, Path shardCheckpointRoot, Path parquetRoot) {
-    Lists.newArrayList(checkpointUploaderRoot, shardCheckpointRoot, parquetRoot)
+  public PathRegistryImpl(Path hourlyCheckpointRoot, Path shardPackageRoot,
+                          Path parquetRoot, Path shardAssetsRoot) {
+    Lists.newArrayList(hourlyCheckpointRoot, shardPackageRoot, parquetRoot, shardAssetsRoot)
         .forEach(
             dir -> {
               try {
@@ -29,25 +31,36 @@ public class PathRegistryImpl implements PathRegistry {
                 throw new RuntimeException(e);
               }
             });
-    this.checkpointUploaderRoot = checkNotNull(checkpointUploaderRoot);
-    this.shardCheckpointRoot = checkNotNull(shardCheckpointRoot);
+    this.hourlyCheckpointRoot = checkNotNull(hourlyCheckpointRoot);
+    this.shardPackageRoot = checkNotNull(shardPackageRoot);
     this.parquetRoot = checkNotNull(parquetRoot);
+    this.shardAssetsRoot = checkNotNull(shardAssetsRoot);
   }
 
   @Override
-  public Path checkpointUploaderRoot(int shard, long hr, String tenantId) throws IOException {
-    var path = checkpointUploaderRoot.resolve("" + shard).resolve(tenantId + "-hr" + ".ckpt");
+  public Path hourlyCheckpointPath(long hr, String tenantId) throws IOException {
+    var path = hourlyCheckpointRoot.resolve(tenantId + "-hr" + ".ckpt");
     Files.createDirectories(path.getParent());
     return path;
   }
 
   @Override
-  public Path shardCheckpointPath(int shard) throws IOException {
-    return shardCheckpointRoot.resolve(shard + ".shard.ckpt");
+  public Path shardPackagePath(int shard) throws IOException {
+    return shardPackageRoot.resolve(shard + ".shard.ckpt");
   }
 
   @Override
   public Path parquetPath(long hr, String tenantId) {
     return parquetRoot.resolve(tenantId + "." + hr + ".parquet");
+  }
+
+  @Override
+  public Path rocksPath(Integer shard) {
+    return shardAssetsRoot.resolve(Integer.toString(shard)).resolve("rocks");
+  }
+
+  @Override
+  public Path pathSetWal(Integer shard) {
+    return shardAssetsRoot.resolve(Integer.toString(shard)).resolve("pathSet.wal");
   }
 }

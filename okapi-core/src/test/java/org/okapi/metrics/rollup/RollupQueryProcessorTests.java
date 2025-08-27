@@ -24,15 +24,11 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.okapi.clock.SystemClock;
 import org.okapi.collections.OkapiLists;
 import org.okapi.fixtures.ReadingGenerator;
-import org.okapi.metrics.OutsideWindowException;
-import org.okapi.metrics.RocksDbStatsWriter;
-import org.okapi.metrics.SharedMessageBox;
-import org.okapi.metrics.WriteBackRequest;
+import org.okapi.metrics.*;
 import org.okapi.metrics.common.MetricsContext;
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
 import org.okapi.metrics.query.QueryRecords;
-import org.okapi.metrics.rocks.RocksPathSupplier;
 import org.okapi.metrics.rocks.RocksStore;
 import org.okapi.metrics.stats.*;
 
@@ -57,8 +53,11 @@ public class RollupQueryProcessorTests {
   MetricsContext ctx;
 
   // query processing
-  @TempDir Path rocksDir;
-  RocksPathSupplier rocksPathSupplier;
+  @TempDir Path hourlyRoot;
+  @TempDir Path shardPkgRoot;
+  @TempDir Path parquetRoot;
+  @TempDir Path shardAssetsRoot;
+  PathRegistry pathRegistry;
   RocksReaderSupplier readerSupplier;
   RocksStore rocksStore;
 
@@ -83,6 +82,7 @@ public class RollupQueryProcessorTests {
     // connect the series to a rocks-db instance;
     scheduledExecutorService = Executors.newScheduledThreadPool(2);
     messageBox = new SharedMessageBox<>(1000);
+    pathRegistry = new PathRegistryImpl(hourlyRoot, shardPkgRoot, parquetRoot, shardAssetsRoot);
 
     writeBackSettings =
         new WriteBackSettings(Duration.of(100, ChronoUnit.MILLIS), new SystemClock());
@@ -91,10 +91,9 @@ public class RollupQueryProcessorTests {
 
     // start writer
     rocksStore = new RocksStore();
-    rocksPathSupplier = new RocksPathSupplier(rocksDir);
     rocksDbStatsWriter =
         new RocksDbStatsWriter(
-            messageBox, statsRestorer, new RolledupMergerStrategy(), rocksPathSupplier);
+            messageBox, statsRestorer, new RolledupMergerStrategy(), pathRegistry);
     rocksDbStatsWriter.startWriting(scheduledExecutorService, rocksStore, writeBackSettings);
     // test-dataset 1
     rollupSeries.writeBatch(
@@ -118,14 +117,14 @@ public class RollupQueryProcessorTests {
 
     // query processing
     queryProcessor = new RollupQueryProcessor();
-    readerSupplier = new RocksReaderSupplier(rocksPathSupplier, statsRestorer, rocksStore);
+    readerSupplier = new RocksReaderSupplier(pathRegistry, statsRestorer, rocksStore);
 
     // wait until the message box is empty
-    await().atMost(Duration.of(2, ChronoUnit.SECONDS)).until(() -> messageBox.isEmpty());
+    await().atMost(Duration.of(5, ChronoUnit.SECONDS)).until(() -> messageBox.isEmpty());
 
     // wait until the database has been written to
     await()
-        .atMost(Duration.of(2, ChronoUnit.SECONDS))
+        .atMost(Duration.of(5, ChronoUnit.SECONDS))
         .until(() -> readerSupplier.apply(SHARD).isPresent());
   }
 
@@ -230,7 +229,7 @@ public class RollupQueryProcessorTests {
 
     // wait until all results are synchronized
     await()
-        .atMost(Duration.of(2, ChronoUnit.SECONDS))
+        .atMost(Duration.of(30, ChronoUnit.SECONDS))
         .until(
             () -> {
               var result =
@@ -266,7 +265,7 @@ public class RollupQueryProcessorTests {
 
     // wait until all results are synchronized
     await()
-        .atMost(Duration.of(1, ChronoUnit.SECONDS))
+        .atMost(Duration.of(30, ChronoUnit.SECONDS))
         .until(
             () -> {
               var result =

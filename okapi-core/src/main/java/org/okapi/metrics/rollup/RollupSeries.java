@@ -20,10 +20,8 @@ import org.okapi.metrics.WriteBackRequest;
 import org.okapi.metrics.common.MetricsContext;
 import org.okapi.metrics.constants.ReaderIds;
 import org.okapi.metrics.io.OkapiIo;
-import org.okapi.metrics.io.StreamReadingException;
 import org.okapi.metrics.stats.Statistics;
 import org.okapi.metrics.stats.StatisticsFrozenException;
-import org.okapi.metrics.stats.StatisticsRestorer;
 
 @Slf4j
 public class RollupSeries<T extends Statistics> {
@@ -33,16 +31,14 @@ public class RollupSeries<T extends Statistics> {
   public static final Long ADMISSION_WINDOW = Duration.of(24, ChronoUnit.HOURS).toMillis();
 
   private final Map<String, T> stats;
-  private final StatisticsRestorer<T> restorer;
   private final Supplier<T> newStatsSupplier;
   private final Map<String, Long> createTime;
   int shard;
   ScheduledExecutorService scheduledExecutorService;
   SharedMessageBox<WriteBackRequest> messageBox;
 
-  public RollupSeries(StatisticsRestorer<T> restorer, Supplier<T> newStatsSupplier, int shard) {
+  public RollupSeries(Supplier<T> newStatsSupplier, int shard) {
     this.stats = new ConcurrentHashMap<>(2_000);
-    this.restorer = restorer;
     this.newStatsSupplier = newStatsSupplier;
     this.shard = shard;
     this.createTime = new ConcurrentHashMap<>();
@@ -186,17 +182,6 @@ public class RollupSeries<T extends Statistics> {
     OkapiIo.writeString(os, MAGIC_NUMBER_END);
   }
 
-  public void loadCheckpoint(InputStream is) throws StreamReadingException, IOException {
-    OkapiIo.checkMagicNumber(is, MAGIC_NUMBER);
-    int n = OkapiIo.readInt(is);
-    for (int i = 0; i < n; i++) {
-      var k = OkapiIo.readString(is);
-      var st = restorer.deserialize(OkapiIo.readBytes(is));
-      stats.put(k, st);
-    }
-    OkapiIo.checkMagicNumber(is, MAGIC_NUMBER_END);
-  }
-
   public Set<String> listMetricPaths() {
     var out = new HashSet<String>();
     for (var k : stats.keySet()) {
@@ -208,23 +193,6 @@ public class RollupSeries<T extends Statistics> {
     return out;
   }
 
-  public void writeMetric(String metric, OutputStream os) throws IOException {
-    var subset =
-        stats.keySet().stream().filter(k -> k.startsWith(metric)).collect(Collectors.toSet());
-    checkpoint(subset, os);
-  }
-
-  protected T getSecondlyStatistics(String timeSeries, long ts) {
-    return stats.get(HashFns.secondlyBucket(timeSeries, ts));
-  }
-
-  protected T getMinutelyStatistics(String timeSeries, long ts) {
-    return stats.get(HashFns.minutelyBucket(timeSeries, ts));
-  }
-
-  protected T getHourlyStatistics(String timeSeries, long ts) {
-    return stats.get(HashFns.hourlyBucket(timeSeries, ts));
-  }
 
   public byte[] getSerializedStats(String key) {
     var st = stats.get(key);

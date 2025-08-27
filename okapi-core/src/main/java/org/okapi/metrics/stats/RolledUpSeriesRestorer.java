@@ -20,7 +20,6 @@ public class RolledUpSeriesRestorer implements RollupSeriesRestorer<Statistics> 
   public RollupSeries<Statistics> restore(int shard, InputStream is)
       throws StreamReadingException, IOException {
     var series = seriesSupplier.apply(shard);
-    series.loadCheckpoint(is);
     return series;
   }
 

@@ -5,32 +5,32 @@ import static com.google.api.client.util.Preconditions.checkNotNull;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Function;
-import org.okapi.metrics.rocks.RocksPathSupplier;
+import org.okapi.metrics.PathRegistry;
 import org.okapi.metrics.rocks.RocksStore;
 import org.okapi.metrics.stats.Statistics;
 import org.okapi.metrics.stats.StatisticsRestorer;
 
-public class RocksReaderSupplier implements Function<Integer, Optional<RocksReader>> {
+public class RocksReaderSupplier implements Function<Integer, Optional<RocksTsReader>> {
 
-  RocksPathSupplier rocksPathSupplier;
+  PathRegistry pathRegistry;
   StatisticsRestorer<Statistics> unMarshaller;
   RocksStore rocksStore;
 
   public RocksReaderSupplier(
-      RocksPathSupplier rocksPathSupplier,
+          PathRegistry pathRegistry,
       StatisticsRestorer<Statistics> unMarshaller,
       RocksStore rocksStore) {
-    this.rocksPathSupplier = checkNotNull(rocksPathSupplier);
+    this.pathRegistry = checkNotNull(pathRegistry);
     this.unMarshaller = checkNotNull(unMarshaller);
     this.rocksStore = rocksStore;
   }
 
   @Override
-  public Optional<RocksReader> apply(Integer shard) {
-    var path = rocksPathSupplier.apply(shard);
+  public Optional<RocksTsReader> apply(Integer shard) {
+    var path = pathRegistry.rocksPath(shard);
     try {
       var optDb = this.rocksStore.rocksReader(path);
-      return optDb.map(rocksDB -> new RocksReader(rocksDB, unMarshaller));
+      return optDb.map(rocksDB -> new RocksTsReader(rocksDB, unMarshaller));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

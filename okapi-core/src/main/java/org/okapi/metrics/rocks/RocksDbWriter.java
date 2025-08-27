@@ -15,4 +15,8 @@ public class RocksDbWriter {
   public byte[] get(byte[] key) throws RocksDBException {
     return rocksDB.get(key);
   }
+
+  public void sync() throws RocksDBException {
+    rocksDB.flushWal(true);
+  }
 }

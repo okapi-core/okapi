@@ -55,7 +55,7 @@ public class RollupTestUtils {
   }
 
   public static Optional<Statistics> getStats(
-      RocksReader reader, String series, long timestamp, RES_TYPE resType) {
+          RocksTsReader reader, String series, long timestamp, RES_TYPE resType) {
 
     return switch (resType) {
       case SECONDLY -> reader.secondlyStats(series, timestamp);

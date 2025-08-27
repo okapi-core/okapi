@@ -3,23 +3,28 @@ package org.okapi.metrics.service.web;
 import static org.okapi.validation.OkapiChecks.checkArgument;
 
 import com.okapi.rest.metrics.*;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.stream.Collectors;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import org.okapi.exceptions.BadRequestException;
+import org.okapi.metrics.PathRegistry;
 import org.okapi.metrics.ShardMap;
 import org.okapi.metrics.common.MetricPaths;
-import org.okapi.metrics.common.MetricsPathParser;
 import org.okapi.metrics.common.ServiceRegistry;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssignerFactory;
+import org.okapi.metrics.paths.PathSet;
 import org.okapi.metrics.query.QueryRecords;
+import org.okapi.metrics.rocks.RocksStore;
+import org.okapi.metrics.rollup.HashFns;
 import org.okapi.metrics.rollup.RocksReaderSupplier;
 import org.okapi.metrics.rollup.RollupQueryProcessor;
 import org.okapi.metrics.search.MetricsSearcher;
+import org.rocksdb.RocksDBException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -32,6 +37,10 @@ public class QueryProcessor {
   @Autowired RollupQueryProcessor rollupQueryProcessor;
   @Autowired ServiceRegistry serviceRegistry;
   @Autowired RocksReaderSupplier rocksReaderSupplier;
+  @Autowired PathSet pathSet;
+  @Autowired RocksStore rocksStore;
+  @Autowired
+  PathRegistry pathRegistry;
 
   public GetMetricsResponse getMetricsResponse(GetMetricsRequestInternal request) throws Exception {
     var nodes = serviceRegistry.listActiveNodes();
@@ -75,41 +84,39 @@ public class QueryProcessor {
   }
 
   public SearchMetricsResponse searchMetricsResponse(
-      SearchMetricsRequestInternal searchMetricsRequest) throws BadRequestException {
+      SearchMetricsRequestInternal searchMetricsRequest)
+      throws BadRequestException, IOException, RocksDBException {
     checkArgument(searchMetricsRequest.getStartTime() > 0, BadRequestException::new);
     checkArgument(searchMetricsRequest.getEndTime() > 0, BadRequestException::new);
-    var nShards = shardMap.getNsh();
-    var candidates = new HashSet<String>();
+    var candidates = pathSet.list();
+    var results = new ArrayList<MetricsPathSpecifier>();
+    for (var entry : candidates.entrySet()) {
+      var shard = entry.getKey();
+      var paths = entry.getValue();
+      var matching =
+          new HashSet<>(
+              MetricsSearcher.searchMatchingMetrics(
+                  searchMetricsRequest.getTenantId(), paths, searchMetricsRequest.getPattern()));
+      var reader = rocksStore.rocksReader(pathRegistry.rocksPath(shard));
+      if (reader.isEmpty()) continue;
+      var discretizer = 3600_000;
+      var hrStart = discretizer * (searchMetricsRequest.getStartTime() / discretizer);
+      var hrEnd = discretizer * (searchMetricsRequest.getEndTime() / discretizer);
 
-    for (int shard = 0; shard < nShards; shard++) {
-      var series = shardMap.get(shard);
-      var keys = series.getKeys();
-      for (var key : keys) {
-        var parsed = MetricsPathParser.parseHashKey(key);
-        if (parsed.isEmpty()) continue;
-        if (!parsed.get().tenantId().equals(searchMetricsRequest.getTenantId())) continue;
-        if (!parsed.get().resolution().equals("s")) {
-          continue;
+      for (var match : matching) {
+        var lookups = new ArrayList<byte[]>();
+        for (var hr = hrStart; hr <= hrEnd; hr += discretizer) {
+          var path = MetricPaths.convertToPath(match.tenantId(), match.name(), match.tags());
+          var lookUpKey = HashFns.hourlyBucket(path, hr);
+          lookups.add(lookUpKey.getBytes());
         }
-        var secondsBucket = parsed.get().value();
-        var millis = secondsBucket * 1000;
-        if (millis > searchMetricsRequest.getEndTime()
-            || millis < searchMetricsRequest.getStartTime()) continue;
-        var metricPath =
-            MetricPaths.convertToPath(
-                parsed.get().tenantId(), parsed.get().name(), parsed.get().tags());
-        candidates.add(metricPath);
+        var hasAMatch = reader.get().getBatch(lookups).stream().anyMatch(Objects::nonNull);
+        if (hasAMatch) {
+          results.add(new MetricsPathSpecifier(match.name(), match.tags()));
+        }
       }
     }
 
-    var matching =
-        new HashSet<>(
-            MetricsSearcher.searchMatchingMetrics(
-                searchMetricsRequest.getTenantId(), candidates, searchMetricsRequest.getPattern()));
-    var results =
-        matching.stream()
-            .map(s -> MetricsPathSpecifier.builder().name(s.name()).tags(s.tags()).build())
-            .collect(Collectors.toSet());
-    return SearchMetricsResponse.builder().results(new ArrayList<>(results)).build();
+    return SearchMetricsResponse.builder().results(results).build();
   }
 }

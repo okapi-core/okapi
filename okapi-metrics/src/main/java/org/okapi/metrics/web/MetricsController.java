@@ -8,8 +8,11 @@ import org.okapi.metrics.OutsideWindowException;
 import org.okapi.metrics.service.runnables.MetricsWriter;
 import org.okapi.metrics.service.web.QueryProcessor;
 import org.okapi.metrics.stats.StatisticsFrozenException;
+import org.rocksdb.RocksDBException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
 
 @Slf4j
 @RestController
@@ -35,7 +38,7 @@ public class MetricsController {
 
   @PostMapping("/s")
   public SearchMetricsResponse search(@RequestBody @Valid SearchMetricsRequestInternal request)
-      throws BadRequestException {
+      throws BadRequestException, IOException, RocksDBException {
     return queryProcessor.searchMetricsResponse(request);
   }
 

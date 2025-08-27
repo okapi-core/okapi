@@ -71,9 +71,9 @@ public class MetricsConsumerTests {
         .set(N_SHARDS, Sets.newTreeSet(testNode.id(), testNode2.id()), shardAssigner);
     var handler1 = testResourceFactory.metricsHandler(farm.get(0));
     var handler2 = testResourceFactory.metricsHandler(farm.get(1));
-    var consumer1 = testResourceFactory.periodicSnapshotWriter(farm.get(0));
+    var consumer1 = testResourceFactory.rocksWriter(farm.get(0));
     consumer1.setShardsAndSeriesAssigner(shardAssigner);
-    var consumer2 = testResourceFactory.periodicSnapshotWriter(farm.get(1));
+    var consumer2 = testResourceFactory.rocksWriter(farm.get(1));
     consumer2.setShardsAndSeriesAssigner(shardAssigner);
     // start both handlers
     handler1.onStart();

@@ -5,16 +5,12 @@ public class S3Prefixes {
     return "okapi/shard-checkpoint/" + opId + "/" + shard;
   }
 
-  public static final String fullCheckpointPrefix(String node) {
-    return "okapi/full-checkpoint/" + node + "/" + System.currentTimeMillis() + "/checkpoint";
-  }
-
   public static final String hourlyPrefixRoot(long epoch, String tenantId) {
     return "okapi/" + tenantId + "/" + "hourly/" + epoch;
   }
 
   public static final String hourlyPrefix(String tenantId, long epoch, int shard) {
-    return hourlyPrefixRoot(epoch, tenantId) + "/" + shard + "/checkpoint.ckpt";
+    return hourlyPrefixRoot(epoch, tenantId) + "/" + shard  + "/checkpoint.ckpt";
   }
 
   public static final String parquetPrefix(String tenantId, long epoch) {

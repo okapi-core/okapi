@@ -8,6 +8,8 @@ public class Configurations {
     public static final String VAL_ADMISSION_WINDOW_HRS = "${admissionWindowHrs}";
     public static final String VAL_ROCKS_DIR = "${rocksDir}";
     public static final String VAL_WRITE_BACK_WIN_MILLIS = "${writeBack.millis}";
+    public static final String VAL_PATH_SET_WAL = "${pathSet.wal}";
+
 
     // beans
     public static final String BEAN_ROCKS_MESSAGE_BOX = "rocksMessageBox";

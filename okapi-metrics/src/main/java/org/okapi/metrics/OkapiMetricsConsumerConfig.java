@@ -29,7 +29,9 @@ import org.okapi.metrics.common.pojo.Node;
 import org.okapi.metrics.common.sharding.ConsistentHashedAssignerFactory;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssignerFactory;
 import org.okapi.metrics.coordinator.CentralCoordinator;
-import org.okapi.metrics.rocks.RocksPathSupplier;
+import org.okapi.metrics.paths.PathSet;
+import org.okapi.metrics.paths.PersistedSetWalPathSupplier;
+import org.okapi.metrics.paths.PersistedSetWalPathSupplierImpl;
 import org.okapi.metrics.rocks.RocksStore;
 import org.okapi.metrics.rollup.*;
 import org.okapi.metrics.service.*;
@@ -102,8 +104,8 @@ public class OkapiMetricsConsumerConfig {
       @Value("${dir.parquetRoot}") String parquetRoot)
       throws IOException {
     return PathRegistryImpl.builder()
-        .checkpointUploaderRoot(Path.of(checkpointDir))
-        .shardCheckpointRoot(Path.of(shardCheckpointRoot))
+        .hourlyCheckpointRoot(Path.of(checkpointDir))
+        .shardPackageRoot(Path.of(shardCheckpointRoot))
         .parquetRoot(Path.of(parquetRoot))
         .build();
   }
@@ -170,17 +172,10 @@ public class OkapiMetricsConsumerConfig {
   }
 
   @Bean(name = Configurations.BEAN_SERIES_SUPPLIER)
-  public Function<Integer, RollupSeries<Statistics>> seriesSupplier(
-      @Qualifier(Configurations.BEAN_ROCKS_MESSAGE_BOX)
-          SharedMessageBox<WriteBackRequest> writeBackRequestSharedMessageBox) {
+  public Function<Integer, RollupSeries<Statistics>> seriesSupplier() {
     StatisticsRestorer<Statistics> statsRestorer = new RolledupStatsRestorer();
     var statsSupplier = new KllStatSupplier();
-    return (shard) -> new RollupSeries<>(statsRestorer, statsSupplier, shard);
-  }
-
-  @Bean
-  public RocksPathSupplier rocksPathSupplier(@Value(Configurations.VAL_ROCKS_DIR) String rocksDir) {
-    return new RocksPathSupplier(Path.of(rocksDir));
+    return (shard) -> new RollupSeries<>(statsSupplier, shard);
   }
 
   @Bean
@@ -192,9 +187,9 @@ public class OkapiMetricsConsumerConfig {
 
   @Bean
   public RocksReaderSupplier rocksReaderSupplier(
-      @Autowired RocksPathSupplier rocksPathSupplier, @Autowired RocksStore rocksStore) {
+      @Autowired PathRegistry pathRegistry, @Autowired RocksStore rocksStore) {
     var restorer = new RolledupStatsRestorer();
-    return new RocksReaderSupplier(rocksPathSupplier, restorer, rocksStore);
+    return new RocksReaderSupplier(pathRegistry, restorer, rocksStore);
   }
 
   @Bean
@@ -206,12 +201,23 @@ public class OkapiMetricsConsumerConfig {
   public RocksDbStatsWriter rocksDbStatsWriter(
       @Qualifier(Configurations.BEAN_ROCKS_MESSAGE_BOX)
           SharedMessageBox<WriteBackRequest> requestSharedMessageBox,
-      @Autowired RocksPathSupplier rocksPathSupplier)
+      @Autowired PathRegistry pathRegistry)
       throws IOException {
     StatisticsRestorer<Statistics> statsRestorer = new RolledupStatsRestorer();
     Merger<Statistics> statisticsMerger = new RolledupMergerStrategy();
     return new RocksDbStatsWriter(
-        requestSharedMessageBox, statsRestorer, statisticsMerger, rocksPathSupplier);
+        requestSharedMessageBox, statsRestorer, statisticsMerger, pathRegistry);
+  }
+
+  @Bean
+  public PersistedSetWalPathSupplier persistedSetWalPathSupplier(
+      @Value(Configurations.VAL_PATH_SET_WAL) String pathSetWal) {
+    return new PersistedSetWalPathSupplierImpl(Path.of(pathSetWal));
+  }
+
+  @Bean
+  public PathSet pathSet(@Autowired PersistedSetWalPathSupplier walPathSupplier) {
+    return new PathSet(walPathSupplier);
   }
 
   @Bean
@@ -223,7 +229,8 @@ public class OkapiMetricsConsumerConfig {
           SharedMessageBox<WriteBackRequest> requestSharedMessageBox,
       @Qualifier(Configurations.BEAN_SHARED_EXECUTOR) ScheduledExecutorService service,
       @Value(Configurations.VAL_WRITE_BACK_WIN_MILLIS) long writeBackMillis,
-      @Value(Configurations.VAL_ADMISSION_WINDOW_HRS) int admissionHrs)
+      @Value(Configurations.VAL_ADMISSION_WINDOW_HRS) int admissionHrs,
+      @Autowired PathSet pathSet)
       throws Exception {
     return new ShardMap(
         clock,
@@ -231,7 +238,8 @@ public class OkapiMetricsConsumerConfig {
         seriesFunction,
         requestSharedMessageBox,
         service,
-        new WriteBackSettings(Duration.of(writeBackMillis, ChronoUnit.MILLIS), clock));
+        new WriteBackSettings(Duration.of(writeBackMillis, ChronoUnit.MILLIS), clock),
+        pathSet);
   }
 
   @Bean
@@ -420,15 +428,32 @@ public class OkapiMetricsConsumerConfig {
   }
 
   @Bean
+  public ParquetRollupWriter<Statistics> hourlyCheckpointWriter(
+      @Autowired PathRegistry pathRegistry,
+      @Autowired PathSet pathSet,
+      @Autowired RocksStore rocksStore) {
+    return new ParquetRollupWriterImpl<>(pathRegistry, pathSet, rocksStore);
+  }
+
+  @Bean
   public FrozenMetricsUploader hourlyCheckpointWriter(
-      @Autowired ShardMap shardMap,
       @Autowired CheckpointUploaderDownloader checkpointUploaderDownloader,
       @Autowired PathRegistry pathRegistry,
       @Autowired NodeStateRegistry nodeStateRegistry,
       @Autowired Clock clock,
-      @Value("${admissionWindowHrs}") long hrs) {
+      @Value("${admissionWindowHrs}") long hrs,
+      @Autowired PathSet pathSet,
+      @Autowired RocksStore rocksStore,
+      @Autowired ParquetRollupWriter<Statistics> parquetRollupWriter) {
     return new FrozenMetricsUploader(
-        shardMap, checkpointUploaderDownloader, pathRegistry, nodeStateRegistry, clock, hrs);
+        checkpointUploaderDownloader,
+        pathRegistry,
+        nodeStateRegistry,
+        clock,
+        hrs,
+        pathSet,
+        rocksStore,
+        parquetRollupWriter);
   }
 
   @Bean

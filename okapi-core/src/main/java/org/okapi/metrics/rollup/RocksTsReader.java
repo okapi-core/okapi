@@ -16,7 +16,7 @@ import org.rocksdb.RocksDBException;
 
 @Slf4j
 @AllArgsConstructor
-public class RocksReader implements TsReader {
+public class RocksTsReader implements TsReader {
   RocksDbReader rocksDB;
   StatisticsRestorer<Statistics> unMarshaller;
 

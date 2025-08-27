@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.okapi.exceptions.ExceptionUtils;
 import org.okapi.metrics.constants.ReaderIds;
 import org.okapi.metrics.rocks.RocksDbWriter;
-import org.okapi.metrics.rocks.RocksPathSupplier;
 import org.okapi.metrics.rocks.RocksStore;
 import org.okapi.metrics.rollup.WriteBackSettings;
 import org.okapi.metrics.stats.Statistics;
@@ -32,7 +31,7 @@ public class RocksDbStatsWriter implements Closeable {
   // used for scheduling writes
   ScheduledExecutorService scheduledExecutorService;
   RocksStore rocksStore;
-  RocksPathSupplier rocksPathSupplier;
+  PathRegistry pathRegistry;
 
   // cancelling existing writes
   ScheduledFuture<?> scheduledWritesFuture;
@@ -41,13 +40,17 @@ public class RocksDbStatsWriter implements Closeable {
       SharedMessageBox<WriteBackRequest> writes,
       StatisticsRestorer<Statistics> restorer,
       Merger<Statistics> merger,
-      RocksPathSupplier rocksPathSupplier)
+      PathRegistry pathRegistry)
       throws IOException {
     this.writes = checkNotNull(writes);
     this.rocksCreatorLock = new ReentrantReadWriteLock();
     this.restorer = checkNotNull(restorer);
     this.merger = checkNotNull(merger);
-    this.rocksPathSupplier = checkNotNull(rocksPathSupplier);
+    this.pathRegistry = checkNotNull(pathRegistry);
+  }
+
+  protected void setRocksStore(RocksStore store) {
+    this.rocksStore = checkNotNull(store);
   }
 
   public void startWriting(
@@ -56,10 +59,9 @@ public class RocksDbStatsWriter implements Closeable {
       WriteBackSettings writeBackSettings) {
     log.info("Started writing to rocksDB.");
     Preconditions.checkNotNull(scheduledExecutorService);
-    Preconditions.checkNotNull(rocksStore);
+    setRocksStore(rocksStore);
     Preconditions.checkNotNull(writeBackSettings);
     this.scheduledExecutorService = scheduledExecutorService;
-    this.rocksStore = rocksStore;
     this.scheduledWritesFuture =
         this.scheduledExecutorService.scheduleAtFixedRate(
             this::once, 0, writeBackSettings.getHotWindow().toMillis(), TimeUnit.MILLISECONDS);
@@ -69,6 +71,7 @@ public class RocksDbStatsWriter implements Closeable {
     while (!writes.isEmpty()) {
       var sink = new ArrayList<WriteBackRequest>();
       writes.drain(sink, ReaderIds.MSG_STATS_WRITER);
+      log.info("Writing {} keys", sink.size());
       var groups = ArrayListMultimap.<String, WriteBackRequest>create();
 
       for (var req : sink) {
@@ -76,13 +79,13 @@ public class RocksDbStatsWriter implements Closeable {
       }
 
       for (var v : groups.values()) {
-        var path = rocksPathSupplier.apply(v.getShard());
+        var path = pathRegistry.rocksPath(v.getShard());
         RocksDbWriter writer;
         try {
           writer = rocksStore.rocksWriter(path);
         } catch (IOException e) {
           log.info("Failed to obtain writer due to {}", ExceptionUtils.debugFriendlyMsg(e));
-          throw new RuntimeException(e);
+          return;
         }
         try {
           var key = v.getKey().getBytes();

@@ -1,9 +1,8 @@
 package org.okapi.metrics;
 
-import org.okapi.metrics.stats.RolledUpStatistics;
-import lombok.Value;
-
 import java.util.List;
+import lombok.Value;
+import org.okapi.metrics.stats.RolledUpStatistics;
 
 @Value
 public class CondensedReading {

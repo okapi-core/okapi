@@ -237,10 +237,10 @@ public class MetricsHandlerImplTests {
 
   public void writeAll(
       List<Node> nodes, List<SubmitMetricsRequestInternal> reqs, ShardsAndSeriesAssigner assigner)
-      throws OutsideWindowException, BadRequestException, InterruptedException {
+      throws OutsideWindowException, BadRequestException, InterruptedException, StatisticsFrozenException {
     for (var r : reqs) {
       var node = route(r, nodes, assigner);
-      testResourceFactory.periodicSnapshotWriter(node).onRequestArrive(r);
+      testResourceFactory.rocksWriter(node).onRequestArrive(r);
     }
   }
 }

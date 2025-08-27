@@ -9,38 +9,49 @@ import org.okapi.clock.Clock;
 import org.okapi.metrics.CheckpointUploaderDownloader;
 import org.okapi.metrics.NodeStateRegistry;
 import org.okapi.metrics.PathRegistry;
-import org.okapi.metrics.ShardMap;
+import org.okapi.metrics.common.MetricPaths;
 import org.okapi.metrics.common.MetricsPathParser;
 import org.okapi.metrics.io.OkapiIo;
+import org.okapi.metrics.paths.PathSet;
+import org.okapi.metrics.rocks.RocksStore;
+import org.okapi.metrics.stats.RolledupStatsRestorer;
 import org.okapi.metrics.stats.Statistics;
 
 @AllArgsConstructor
 public class FrozenMetricsUploader {
 
-  ShardMap shardMap;
   CheckpointUploaderDownloader checkpointUploaderDownloader;
   PathRegistry pathRegistry;
   NodeStateRegistry nodeStateRegistry;
   Clock clock;
   long admissionWindowHrs;
+  PathSet pathSet;
+  RocksStore rocksStore;
+  ParquetRollupWriter<Statistics> parquetWriter;
 
-  public void writeCheckpoint(String forTenant, RollupSeries<Statistics> series, Path fp, long hr)
-      throws IOException {
-    var metricPaths = series.listMetricPaths();
-    var startTime = hr * 3600 * 1000L;
+  public void writeCheckpoint(String tenant, Path fp, long hr) throws IOException {
+    var metricPaths = pathSet.list();
+    var eligiblePaths =
+        metricPaths.values().stream()
+            .flatMap(Set::stream)
+            .map(MetricsPathParser::parse)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .filter(path -> path.tenantId().equals(tenant))
+            .toList();
     var off = 0L;
     Map<String, Long[]> pathToOffset = new HashMap<>();
 
+    var startTime = hr * 3600 * 1000L;
     try (var fos = new FileOutputStream(fp.toFile())) {
-      for (var metricPath : metricPaths) {
-        var tenantId = MetricsPathParser.tenantId(metricPath);
-        if (tenantId.isEmpty() || !tenantId.get().equals(forTenant)) continue;
-        var hourlyKey =
-            HashFns.hourlyBucket(
-                metricPath,
-                startTime); // take the start time and increase by a second to avoid boundary
-        // effects
-        var hourlyStat = series.getStats(hourlyKey);
+      for (var path : eligiblePaths) {
+        var serializedPath = MetricPaths.convertToPath(path.tenantId(), path.name(), path.tags());
+        var shards = pathSet.shardsForPath(serializedPath);
+        if (shards.isEmpty()) continue;
+        var reader =
+            FirstMatchReader.getFirstMatchReader(
+                pathRegistry, rocksStore, RolledupStatsRestorer::new, shards);
+        var hourlyStat = reader.hourlyStats(serializedPath, startTime);
         if (hourlyStat.isEmpty()) {
           // this metric doesn't exist or there will be an hourly stat
           continue;
@@ -53,8 +64,8 @@ public class FrozenMetricsUploader {
           List<Integer> seconds = new ArrayList<>();
           List<Statistics> statistics = new ArrayList<>();
           for (int i = 0; i < 3600; i++) {
-            var key = HashFns.secondlyBucket(metricPath, 1000L * (secondStart + i));
-            var stats = series.getStats(key);
+            var roundedSecond = (1000L) * (secondStart + i);
+            var stats = reader.secondlyStats(serializedPath, roundedSecond);
             if (stats.isEmpty()) {
               continue;
             }
@@ -76,8 +87,8 @@ public class FrozenMetricsUploader {
           List<Integer> mins = new ArrayList<>();
           List<Statistics> minStats = new ArrayList<>();
           for (int i = 0; i < 60; i++) {
-            var key = HashFns.minutelyBucket(metricPath, 60 * 1000L * (minuteStart + i));
-            var stats = series.getStats(key);
+            var roundedMinute = 60 * 1000L * (minuteStart + i);
+            var stats = reader.minutelyStats(serializedPath, roundedMinute);
             if (stats.isEmpty()) {
               continue;
             }
@@ -95,13 +106,13 @@ public class FrozenMetricsUploader {
         // write hourly data
         var hourlyOffset = off;
         {
-          var key = HashFns.hourlyBucket(metricPath, 3600 * 1000L * (hr));
-          var stats = series.getStats(key).get();
-          off += OkapiIo.writeBytes(fos, stats.serialize());
+          var roundedHr = 3600 * 1000L * (hr);
+          var stats = reader.hourlyStats(serializedPath, roundedHr);
+          off += OkapiIo.writeBytes(fos, stats.get().serialize());
         }
 
         var offsets = new Long[] {secondlyOffset, minutelyOffset, hourlyOffset, off};
-        pathToOffset.put(metricPath, offsets);
+        pathToOffset.put(serializedPath, offsets);
       }
 
       if (pathToOffset.isEmpty()) {
@@ -111,8 +122,8 @@ public class FrozenMetricsUploader {
 
       var metadataOffset = off;
       {
-        off += OkapiIo.writeInt(fos, metricPaths.size());
-        for (var p : metricPaths) {
+        off += OkapiIo.writeInt(fos, pathToOffset.size());
+        for (var p : pathToOffset.keySet()) {
           off += OkapiIo.writeString(fos, p);
           for (var l : pathToOffset.get(p)) {
             off += OkapiIo.writeLong(fos, l);
@@ -125,34 +136,26 @@ public class FrozenMetricsUploader {
   }
 
   public void uploadHourlyCheckpoint(long hr) throws Exception {
-    var tenants = new HashSet<String>();
-
-    for (var shard : shardMap.shards()) {
-      var series = shardMap.get(shard);
-      var keys = series.getKeys();
-      for (var k : keys) {
-        var optionalTenantId = MetricsPathParser.tenantId(k);
-        optionalTenantId.ifPresent(tenants::add);
-      }
-    }
+    var tenants =
+        pathSet.list().values().stream()
+            .flatMap(Set::stream)
+            .map(MetricsPathParser::parse)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .map(MetricsPathParser.MetricsRecord::tenantId)
+            .toList();
 
     for (var tenant : tenants) {
-      var parquetWriter = new ParquetRollupWriterImpl();
       var parquetPath = pathRegistry.parquetPath(hr, tenant);
-      parquetWriter.open(tenant, parquetPath);
-      for (var shard : shardMap.shards()) {
-        var fp = pathRegistry.checkpointUploaderRoot(shard, hr, tenant);
-        var series = shardMap.get(shard);
-        writeCheckpoint(tenant, series, fp, hr);
-        checkpointUploaderDownloader.uploadHourlyCheckpoint(tenant, fp, hr, shard);
-        // write the parquet dump for all frozen metric paths
-        parquetWriter.consume(series, hr);
-      }
+      var fp = pathRegistry.hourlyCheckpointPath(hr, tenant);
+      // upload okapi checkpoint
+      writeCheckpoint(tenant, fp, hr);
+      checkpointUploaderDownloader.uploadHourlyCheckpoint(tenant, fp, hr);
 
-      parquetWriter.close();
+      // upload parquet checkpoint
+      parquetWriter.writeDump(tenant, hr);
       checkpointUploaderDownloader.uploadParquetDump(tenant, parquetPath, hr);
     }
-
     nodeStateRegistry.updateLastCheckPointedHour(hr);
   }
 

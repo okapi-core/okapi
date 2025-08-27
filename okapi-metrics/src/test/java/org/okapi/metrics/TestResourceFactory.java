@@ -1,10 +1,8 @@
 package org.okapi.metrics;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.okapi.constants.Constants.N_SHARDS;
 
 import com.google.gson.Gson;
-import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -16,13 +14,17 @@ import java.util.List;
 import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.Setter;
+import org.okapi.clock.Clock;
+import org.okapi.clock.SystemClock;
 import org.okapi.fake.FakeClock;
 import org.okapi.metrics.common.DefaultShardConfig;
 import org.okapi.metrics.common.ServiceRegistry;
 import org.okapi.metrics.common.ServiceRegistryImpl;
 import org.okapi.metrics.common.ZkPaths;
 import org.okapi.metrics.common.pojo.*;
-import org.okapi.metrics.rocks.RocksPathSupplier;
+import org.okapi.metrics.paths.PathSet;
+import org.okapi.metrics.paths.PersistedSetWalPathSupplier;
+import org.okapi.metrics.paths.PersistedSetWalPathSupplierImpl;
 import org.okapi.metrics.rocks.RocksStore;
 import org.okapi.metrics.rollup.*;
 import org.okapi.metrics.service.*;
@@ -33,11 +35,7 @@ import org.okapi.metrics.sharding.HeartBeatChecker;
 import org.okapi.metrics.sharding.LeaderJobs;
 import org.okapi.metrics.sharding.LeaderJobsImpl;
 import org.okapi.metrics.sharding.fakes.FixedAssignerFactory;
-import org.okapi.metrics.stats.RolledupStatsRestorer;
-import org.okapi.metrics.stats.RollupSeriesFn;
-import org.okapi.metrics.stats.Statistics;
-import org.okapi.metrics.stats.StatisticsRestorer;
-import org.okapi.wal.*;
+import org.okapi.metrics.stats.*;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -53,12 +51,15 @@ public class TestResourceFactory {
   Path snapshotDir;
   @Setter @Getter int admissionWindowHrs = 1;
   Path rocksRoot;
+  Path metricsPathSetWalRoot;
+  @Setter boolean useRealClock;
 
   public TestResourceFactory() {
     this.singletons = new HashMap<>();
     try {
       snapshotDir = Files.createTempDirectory("snapshot-directory");
       rocksRoot = Files.createTempDirectory("rocks-root");
+      metricsPathSetWalRoot = Files.createTempDirectory("metrics-paths-wal");
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -66,6 +67,13 @@ public class TestResourceFactory {
 
   public TestResourceFactory(Duration checkpointDuration) {
     this.checkpointDuration = checkpointDuration;
+  }
+
+  public WriteBackSettings writeBackSettings(Node node) {
+    return makeSingleton(
+        node,
+        WriteBackSettings.class,
+        () -> new WriteBackSettings(Duration.of(100, ChronoUnit.MILLIS), clock(node)));
   }
 
   public InMemoryFleetMetadata fleetMetadata() {
@@ -76,8 +84,16 @@ public class TestResourceFactory {
     return makeSingleton(node, FakeZkResources.class, FakeZkResources::new);
   }
 
-  public FakeClock clock(Node node) {
-    return makeSingleton(node, FakeClock.class, () -> new FakeClock(10));
+  public Clock clock(Node node) {
+    return makeSingleton(
+        node,
+        Clock.class,
+        () -> {
+          if (useRealClock) {
+            return new SystemClock();
+          }
+          return new FakeClock(10);
+        });
   }
 
   public ServiceRegistry serviceRegistry(Node node) {
@@ -106,10 +122,16 @@ public class TestResourceFactory {
         PathRegistry.class,
         () -> {
           try {
-            var shardRoot = Files.createTempDirectory("shardMap");
-            var hourlyRoot = Files.createTempDirectory("hourly");
+            var shardPackageRoot = Files.createTempDirectory("checkPoints");
+            var hourlyCheckpointRoot = Files.createTempDirectory("hourlyCheckpointRoot");
             var parquetRoot = Files.createTempDirectory("parquet");
-            return new PathRegistryImpl(shardRoot, hourlyRoot, parquetRoot);
+            var shardAssetsRoot = Files.createTempDirectory("shardAssets");
+            return PathRegistryImpl.builder()
+                .parquetRoot(parquetRoot)
+                .shardPackageRoot(shardPackageRoot)
+                .hourlyCheckpointRoot(hourlyCheckpointRoot)
+                .shardAssetsRoot(shardAssetsRoot)
+                .build();
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
@@ -141,13 +163,13 @@ public class TestResourceFactory {
         () -> new S3CheckpointUploaderDownloader(dataBucket, s3Client(), clock(node)));
   }
 
-  public ServiceControllerImpl consumerController(Node node) {
+  public ServiceControllerImpl serviceController(Node node) {
     return makeSingleton(
         node, ServiceControllerImpl.class, () -> new ServiceControllerImpl(node.id()));
   }
 
   public ImmediateScheduler scheduledExecutorService(Node node) {
-    return makeSingleton(node, ImmediateScheduler.class, () -> new ImmediateScheduler(1));
+    return makeSingleton(node, ImmediateScheduler.class, () -> new ImmediateScheduler(10));
   }
 
   public HeartBeatReporterRunnable heartBeatReporterRunnable(Node node) {
@@ -156,7 +178,7 @@ public class TestResourceFactory {
         HeartBeatReporterRunnable.class,
         () ->
             new HeartBeatReporterRunnable(
-                serviceRegistry(node), scheduledExecutorService(node), consumerController(node)));
+                serviceRegistry(node), scheduledExecutorService(node), serviceController(node)));
   }
 
   public LeaderResponsibilityRunnable leaderResponsibilityRunnable(Node node) {
@@ -165,7 +187,7 @@ public class TestResourceFactory {
         LeaderResponsibilityRunnable.class,
         () ->
             new LeaderResponsibilityRunnable(
-                scheduledExecutorService(node), leaderJobs(node), consumerController(node)));
+                scheduledExecutorService(node), leaderJobs(node), serviceController(node)));
   }
 
   public SharedMessageBox<WriteBackRequest> messageBox(Node node) {
@@ -176,19 +198,44 @@ public class TestResourceFactory {
         });
   }
 
+  public PersistedSetWalPathSupplier persistedSetWalPathSupplier(Node node) throws IOException {
+    var walRoot = metricsPathSetWalRoot.resolve(node.id());
+    Files.createDirectories(walRoot);
+    return new PersistedSetWalPathSupplierImpl(walRoot);
+  }
+
+  public PathSet pathSet(Node node) throws IOException {
+    return makeSingleton(
+        node,
+        PathSet.class,
+        () -> {
+          try {
+            return new PathSet(persistedSetWalPathSupplier(node));
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        });
+  }
+
   public ShardMap shardMap(Node node) {
     var seriesSupplier = new RollupSeriesFn();
     return makeSingleton(
         node,
         ShardMap.class,
-        () ->
-            new ShardMap(
+        () -> {
+          try {
+            return new ShardMap(
                 clock(node),
                 admissionWindowHrs,
                 seriesSupplier,
                 messageBox(node),
                 scheduledExecutorService(node),
-                new WriteBackSettings(Duration.of(100, ChronoUnit.MILLIS), clock(node))));
+                writeBackSettings(node),
+                pathSet(node));
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        });
   }
 
   public <T> T makeSingleton(Node node, String specifier, Supplier<T> objSupplier) {
@@ -230,18 +277,38 @@ public class TestResourceFactory {
         node, NodeStateRegistryImpl.class, () -> new NodeStateRegistryImpl(fleetMetadata(), node));
   }
 
+  public ParquetRollupWriter<Statistics> parquetRollupWriter(Node node) {
+    return makeSingleton(
+        ParquetRollupWriter.class,
+        () -> {
+          try {
+            return new ParquetRollupWriterImpl<Statistics>(
+                pathRegistry(node), pathSet(node), rocksStore(node));
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        });
+  }
+
   public FrozenMetricsUploader hourlyCheckpointWriter(Node node) {
     return makeSingleton(
         node,
         FrozenMetricsUploader.class,
-        () ->
-            new FrozenMetricsUploader(
-                shardMap(node),
+        () -> {
+          try {
+            return new FrozenMetricsUploader(
                 checkpointUploader(node),
                 pathRegistry(node),
                 nodeStateRegistry(node),
                 clock(node),
-                admissionWindowHrs));
+                admissionWindowHrs,
+                pathSet(node),
+                rocksStore(node),
+                parquetRollupWriter(node));
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        });
   }
 
   public CheckpointUploader uploaderRunnable(Node node) {
@@ -252,7 +319,7 @@ public class TestResourceFactory {
             new CheckpointUploader(
                 hourlyCheckpointWriter(node),
                 scheduledExecutorService(node),
-                consumerController(node),
+                serviceController(node),
                 checkpointDuration));
   }
 
@@ -270,77 +337,28 @@ public class TestResourceFactory {
         });
   }
 
-  public WalBasedMetricsWriter walBasedMetricsWriter(Node node) {
-    return makeSingleton(
-        node,
-        WalBasedMetricsWriter.class,
-        () -> {
-          try {
-            // Ensure the WAL root exists (walRoot(node) now returns a temp dir)
-            Path root = walRoot(node);
-            Files.createDirectories(root);
-
-            // Framer with explicit LSNs (ShardMap.apply() supplies the monotonic LSN)
-            var framer = new ManualLsnWalFramer(24);
-
-            // Build runnable first (without writer), so we can attach commit listener = runnable
-            WalBasedMetricsWriter runnable =
-                WalBasedMetricsWriter.builder()
-                    .shardMap(shardMap(node))
-                    .serviceController(consumerController(node))
-                    .self(node.id())
-                    // FixedAssignerFactory is assumed to implement ShardsAndSeriesAssigner in tests
-                    .shardsAndSeriesAssigner(
-                        shardsAndSeriesAssigner()
-                            .makeAssigner(N_SHARDS, Collections.singletonList(node.id())))
-                    .walRoot(root)
-                    .walWriter(null) // set after we construct it with listener=runnable
-                    .walFramer(framer)
-                    .walStreamer(new WalStreamerImpl())
-                    .scheduler(scheduledExecutorService(node))
-                    .snapshotDelay(checkpointDuration)
-                    .cleanerKeepLastK(1)
-                    .cleanerGrace(Duration.ZERO)
-                    .cleanerDryRun(false)
-                    .build();
-
-            // Create a writer bound to this runnable as commit listener, then inject it
-            // Create writer with commit listener=runnable, then attach via setter (no reflection)
-            var writer =
-                new SpilloverWalWriter(
-                    new org.okapi.wal.WalAllocator(root),
-                    framer,
-                    64 * 1024,
-                    runnable, // WalCommitListener
-                    SpilloverWalWriter.FsyncPolicy.MANUAL,
-                    0,
-                    null);
-
-            runnable.setWalWriter(writer);
-            return runnable;
-          } catch (Exception e) {
-            throw new RuntimeException(e);
-          }
-        });
+  public RocksMetricsWriter rocksWriter(Node node) {
+    return new RocksMetricsWriter(shardMap(node), serviceController(node), node.id());
   }
 
-  public MetricsHandlerImpl metricsHandler(Node node) {
+  public MetricsHandlerImpl metricsHandler(Node node) throws IOException {
     return makeSingleton(
         node,
         MetricsHandlerImpl.class,
-        () ->
-            new MetricsHandlerImpl(
-                serviceRegistry(node),
-                pathRegistry(node),
-                checkpointUploader(node),
-                consumerController(node),
-                periodicSnapshotWriter(node),
-                heartBeatReporterRunnable(node),
-                leaderResponsibilityRunnable(node),
-                uploaderRunnable(node),
-                scheduledExecutorService(node),
-                shardsAndSeriesAssigner(),
-                shardMap(node)));
+        () -> {
+          return new MetricsHandlerImpl(
+              serviceRegistry(node),
+              pathRegistry(node),
+              checkpointUploader(node),
+              serviceController(node),
+              rocksWriter(node),
+              heartBeatReporterRunnable(node),
+              leaderResponsibilityRunnable(node),
+              uploaderRunnable(node),
+              scheduledExecutorService(node),
+              shardsAndSeriesAssigner(),
+              shardMap(node));
+        });
   }
 
   public Node makeNode(String id) {
@@ -370,15 +388,6 @@ public class TestResourceFactory {
     return makeSingleton(node, RollupQueryProcessor.class, RollupQueryProcessor::new);
   }
 
-  public RocksPathSupplier rocksPathSupplier(Node node) {
-    return makeSingleton(
-        RocksPathSupplier.class,
-        () -> {
-          var root = rocksRoot.resolve(node.id());
-          return new RocksPathSupplier(root);
-        });
-  }
-
   public RocksStore rocksStore(Node node) {
     return makeSingleton(
         RocksStore.class,
@@ -396,65 +405,49 @@ public class TestResourceFactory {
   }
 
   public RocksReaderSupplier rocksReaderSupplier(Node node) {
-    return new RocksReaderSupplier(rocksPathSupplier(node), unMarshaller(), rocksStore(node));
+    return new RocksReaderSupplier(pathRegistry(node), unMarshaller(), rocksStore(node));
+  }
+
+  public RocksDbStatsWriter rocksDbStatsWriter(Node node) {
+    return makeSingleton(
+        node,
+        RocksDbStatsWriter.class,
+        () -> {
+          try {
+            return new RocksDbStatsWriter(
+                messageBox(node),
+                new RolledupStatsRestorer(),
+                new RolledupMergerStrategy(),
+                pathRegistry(node));
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        });
   }
 
   public QueryProcessor queryProcessor(Node node) {
     return makeSingleton(
         node,
         QueryProcessor.class,
-        () ->
-            new QueryProcessor(
+        () -> {
+          try {
+            return new QueryProcessor(
                 shardMap(node),
                 shardsAndSeriesAssigner(),
                 rollupQueryProcessor(node),
                 serviceRegistry(node),
-                rocksReaderSupplier(node)));
-  }
-
-  public Path snapshotDir(Node node) {
-    return makeSingleton(
-        node,
-        "SnapshotDir",
-        () -> {
-          var path = snapshotDir.resolve(node.id());
-          try {
-            Files.createDirectories(path);
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-          return path;
-        });
-  }
-
-  public Checkpointer checkpointer(Node node) {
-    return makeSingleton(
-        node,
-        Checkpointer.class,
-        () -> {
-          try {
-            return new Checkpointer(
-                shardMap(node),
-                scheduledExecutorService(node),
-                Duration.of(1, ChronoUnit.MINUTES),
-                snapshotDir(node),
-                clock(node));
+                rocksReaderSupplier(node),
+                pathSet(node),
+                rocksStore(node),
+                pathRegistry(node));
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
         });
   }
 
-  public PeriodicSnapshotWriter periodicSnapshotWriter(Node node) {
-    return makeSingleton(
-        node,
-        PeriodicSnapshotWriter.class,
-        () ->
-            new PeriodicSnapshotWriter(
-                shardMap(node),
-                consumerController(node),
-                node.id(),
-                scheduledExecutorService(node),
-                checkpointer(node)));
+  public void startWriter(Node node) {
+    var writer = this.rocksDbStatsWriter(node);
+    writer.startWriting(scheduledExecutorService(node), rocksStore(node), writeBackSettings(node));
   }
 }

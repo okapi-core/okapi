@@ -1,9 +1,11 @@
 package org.okapi.metrics.web;
 
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.okapi.rest.metrics.MetricsPathSpecifier;
 import com.okapi.rest.metrics.SearchMetricsRequestInternal;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
@@ -18,15 +20,19 @@ import org.okapi.metrics.common.MetricsContext;
 import org.okapi.metrics.common.pojo.Node;
 import org.okapi.metrics.common.pojo.NodeState;
 import org.okapi.metrics.stats.StatisticsFrozenException;
+import org.rocksdb.RocksDBException;
 
 public class QueryProcessorTest {
 
+  public static final Integer SHARD_0 = 0;
+  public static final Integer SHARD_1 = 1;
   TestResourceFactory resourceFactory;
   Node node = new Node("test-node", "localhost:123", NodeState.METRICS_CONSUMPTION_START);
 
   @BeforeEach
   public void setup() {
     resourceFactory = new TestResourceFactory();
+    resourceFactory.setUseRealClock(true);
   }
 
   @Test
@@ -34,19 +40,33 @@ public class QueryProcessorTest {
       throws OutsideWindowException,
           BadRequestException,
           StatisticsFrozenException,
-          InterruptedException {
+          InterruptedException, RocksDBException, IOException {
     // setup
     var shardMap = resourceFactory.shardMap(node);
     var readingGenerator = new ReadingGenerator(Duration.of(200, ChronoUnit.MILLIS), 120);
     var reading = readingGenerator.populateRandom(0.f, 100.f);
-    shardMap
-        .get(0)
-        .writeBatch(
+    shardMap.apply(SHARD_1,
             new MetricsContext("test"),
             "tenantId:series-A{label_A=value_A}",
             OkapiLists.toLongArray(reading.getTimestamps()),
             OkapiLists.toFloatArray(reading.getValues()));
     var queryProcessor = resourceFactory.queryProcessor(node);
+
+    // check that message box gets filled
+    await().atMost(Duration.of(1, ChronoUnit.SECONDS)).until(() -> {
+      return !resourceFactory.messageBox(node).isEmpty();
+    });
+
+    // start writing
+    resourceFactory.rocksDbStatsWriter(node).startWriting(
+            resourceFactory.scheduledExecutorService(node),
+            resourceFactory.rocksStore(node),
+            resourceFactory.writeBackSettings(node)
+            );
+
+    await().atMost(Duration.of(20, ChronoUnit.SECONDS)).until(() -> {
+      return resourceFactory.messageBox(node).isEmpty();
+    });
 
     // query that matches
     var request =
@@ -91,25 +111,40 @@ public class QueryProcessorTest {
       throws OutsideWindowException,
           BadRequestException,
           StatisticsFrozenException,
-          InterruptedException {
+          InterruptedException, RocksDBException, IOException {
     // setup
     var shardMap = resourceFactory.shardMap(node);
     var readingGenerator = new ReadingGenerator(Duration.of(200, ChronoUnit.MILLIS), 120);
     var reading = readingGenerator.populateRandom(0.f, 100.f);
     shardMap
-        .get(0)
-        .writeBatch(
+        .apply(SHARD_0,
             new MetricsContext("test"),
             "tenantId:series-A{label_A=value_A}",
             OkapiLists.toLongArray(reading.getTimestamps()),
             OkapiLists.toFloatArray(reading.getValues()));
     shardMap
-        .get(1)
-        .writeBatch(
+        .apply(SHARD_1,
             new MetricsContext("test"),
             "tenantId:series-B{label_A=value_A}",
             OkapiLists.toLongArray(reading.getTimestamps()),
             OkapiLists.toFloatArray(reading.getValues()));
+
+    // check that message box gets filled
+    await().atMost(Duration.of(1, ChronoUnit.SECONDS)).until(() -> {
+      return !resourceFactory.messageBox(node).isEmpty();
+    });
+
+    // start writing
+    resourceFactory.rocksDbStatsWriter(node).startWriting(
+            resourceFactory.scheduledExecutorService(node),
+            resourceFactory.rocksStore(node),
+            resourceFactory.writeBackSettings(node)
+    );
+
+    await().atMost(Duration.of(20, ChronoUnit.SECONDS)).until(() -> {
+      return resourceFactory.messageBox(node).isEmpty();
+    });
+
     var queryProcessor = resourceFactory.queryProcessor(node);
     var request =
         SearchMetricsRequestInternal.builder()
@@ -124,7 +159,6 @@ public class QueryProcessorTest {
     assertEquals(2, results.getResults().size());
     assertTrue(metricNames.contains("series-A"));
     assertTrue(metricNames.contains("series-B"));
-    // todo: make this thing only have 1 result not O(hash-keys)
     var tags = results.getResults().stream().map(MetricsPathSpecifier::getTags).toList();
     assertTrue(tags.contains(Map.of("label_A", "value_A")));
 

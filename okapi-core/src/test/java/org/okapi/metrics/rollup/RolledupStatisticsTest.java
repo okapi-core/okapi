@@ -23,26 +23,27 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.okapi.clock.SystemClock;
 import org.okapi.fixtures.ReadingGenerator;
-import org.okapi.metrics.RocksDbStatsWriter;
-import org.okapi.metrics.SharedMessageBox;
-import org.okapi.metrics.WriteBackRequest;
+import org.okapi.metrics.*;
 import org.okapi.metrics.common.MetricsContext;
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
 import org.okapi.metrics.query.QueryRecords;
-import org.okapi.metrics.rocks.RocksPathSupplier;
 import org.okapi.metrics.rocks.RocksStore;
 import org.okapi.metrics.stats.*;
+import org.rocksdb.RocksDBException;
 
 @Execution(ExecutionMode.CONCURRENT)
 public class RolledupStatisticsTest {
+  @TempDir Path hourlyDir;
+  @TempDir Path shardPackageDir;
+  @TempDir Path parquetDir;
+  @TempDir Path shardAssetsDir;
 
   public static final Integer SHARD = 0;
   StatisticsRestorer<Statistics> statsRestorer;
   Supplier<Statistics> statisticsSupplier;
   Function<Integer, RollupSeries<Statistics>> seriesFunction;
-  RocksPathSupplier rocksPathSupplier;
-  @TempDir Path rocksDir;
+  PathRegistry pathRegistry;
   SharedMessageBox<WriteBackRequest> messageBox;
   RocksDbStatsWriter statsWriter;
   ScheduledExecutorService sch;
@@ -55,23 +56,23 @@ public class RolledupStatisticsTest {
     seriesFunction = new RollupSeriesFn();
     statsRestorer = new RolledupStatsRestorer();
     statisticsSupplier = new KllStatSupplier();
-    rocksPathSupplier = new RocksPathSupplier(rocksDir);
+    pathRegistry = new PathRegistryImpl(hourlyDir, shardPackageDir, parquetDir, shardAssetsDir);
     messageBox = new SharedMessageBox<>(10000);
     sch = Executors.newScheduledThreadPool(2);
     statsWriter =
         new RocksDbStatsWriter(
-            messageBox, statsRestorer, new RolledupMergerStrategy(), rocksPathSupplier);
+            messageBox, statsRestorer, new RolledupMergerStrategy(), pathRegistry);
     rocksStore = new RocksStore();
-    writeBackSettings = new WriteBackSettings(Duration.of(100, ChronoUnit.MILLIS), new SystemClock());
+    writeBackSettings =
+        new WriteBackSettings(Duration.of(100, ChronoUnit.MILLIS), new SystemClock());
     statsWriter.startWriting(sch, rocksStore, writeBackSettings);
-    rocksReaderSupplier = new RocksReaderSupplier(rocksPathSupplier, statsRestorer, rocksStore);
+    rocksReaderSupplier = new RocksReaderSupplier(pathRegistry, statsRestorer, rocksStore);
   }
 
   @ParameterizedTest
   @ValueSource(ints = {1, 5, 10, 15, 30, 60, 120})
   public void testRollupCalculatesCorrectStats(int mins)
-      throws StatisticsFrozenException, InterruptedException, IOException {
-    // todo: take a break -> rework the failing tests.
+      throws StatisticsFrozenException, InterruptedException, IOException, RocksDBException {
     var ctx = new MetricsContext("test");
     var rollupStatistics = seriesFunction.apply(SHARD);
     var reading = new ReadingGenerator(Duration.of(10, ChronoUnit.MILLIS), mins);
@@ -91,8 +92,7 @@ public class RolledupStatisticsTest {
             });
 
     // setup query processing
-    var path = rocksPathSupplier.apply(SHARD);
-
+    var path = pathRegistry.rocksPath(SHARD);
     // wait for the path to be written out
     await()
         .atMost(Duration.of(1, ChronoUnit.SECONDS))
@@ -109,7 +109,7 @@ public class RolledupStatisticsTest {
           var expected = reduced.getValues().get(i);
           var time = reduced.getTimestamp().get(i);
           var val =
-              getStats(new RocksReader(reader.get(), statsRestorer), "SeriesA", time, resType);
+              getStats(new RocksTsReader(reader.get(), statsRestorer), "SeriesA", time, resType);
           // this is to speed up the test, if the first reading is not found, then we backoff until
           // a reading is obtained
           // this ensures that keys which are lazily synced are also available
@@ -121,14 +121,14 @@ public class RolledupStatisticsTest {
                 .until(
                     () -> {
                       return getStats(
-                              new RocksReader(reader.get(), statsRestorer),
+                              new RocksTsReader(reader.get(), statsRestorer),
                               "SeriesA",
                               time,
                               resType)
                           .isPresent();
                     });
           }
-          val = getStats(new RocksReader(reader.get(), statsRestorer), "SeriesA", time, resType);
+          val = getStats(new RocksTsReader(reader.get(), statsRestorer), "SeriesA", time, resType);
           assertTrue(val.isPresent());
           var actual = getStats(val.get(), reduction);
           assertTolerableError(expected, actual, reduction, resType);

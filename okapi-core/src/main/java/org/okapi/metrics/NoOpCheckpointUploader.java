@@ -8,7 +8,7 @@ import java.nio.file.Path;
 @Slf4j
 public class NoOpCheckpointUploader implements CheckpointUploaderDownloader {
   @Override
-  public void uploadHourlyCheckpoint(String tenantId, Path path, long epochHourBucket, int shard)
+  public void uploadHourlyCheckpoint(String tenantId, Path path, long epochHourBucket)
       throws Exception {
     log.info("Doing nothing.");
   }

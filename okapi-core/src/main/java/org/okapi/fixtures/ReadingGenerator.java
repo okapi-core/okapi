@@ -1,7 +1,6 @@
 package org.okapi.fixtures;
 
 import com.google.common.base.Preconditions;
-import org.okapi.metrics.pojos.RES_TYPE;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -9,6 +8,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.BinaryOperator;
 import lombok.Getter;
+import org.okapi.metrics.pojos.RES_TYPE;
 
 public class ReadingGenerator {
   @Getter List<Float> values = new ArrayList<>();
@@ -36,8 +36,7 @@ public class ReadingGenerator {
     this.gapFraction = gapFraction;
   }
 
-  public static ReadingGenerator create(
-      int minutes, float min, float max, double gapFraction) {
+  public static ReadingGenerator create(int minutes, float min, float max, double gapFraction) {
     var generator = new ReadingGenerator(ONE_HUNDRED_MILLIS, minutes, gapFraction);
     generator.populateRandom(min, max);
     return generator;
@@ -58,65 +57,6 @@ public class ReadingGenerator {
       var atMinute = now + (i * ONE_MIN.toMillis());
       for (int j = 0; j < metricsPerMin; j++) {
         values.add(val);
-        timestamps.add(atMinute);
-      }
-    }
-    return this;
-  }
-
-  // should generate values with average = val, but not necessarily the same
-  public ReadingGenerator populateWithAverage(float avg, float deviation) {
-    checkEmpty();
-    var metricsPerMin = getMetricsPerMin();
-    var half = metricsPerMin / 2;
-    var now = timeToNearestMin();
-    var isOdd = 2 * half < metricsPerMin;
-
-    var random = new Random();
-    for (int i = 0; i < minutes; i++) {
-      var atMinute = now + (i * tickerInterval.toMillis());
-      for (int j = 0; j < half; j++) {
-        var perturbation = random.nextFloat() * deviation;
-        values.add(avg + perturbation);
-        timestamps.add(atMinute);
-
-        values.add(avg - perturbation);
-        timestamps.add(atMinute);
-      }
-
-      if (isOdd) {
-        values.add(avg);
-        timestamps.add(atMinute);
-      }
-    }
-    return this;
-  }
-
-  public ReadingGenerator populateWithMin(float min, float deviation) {
-    checkEmpty();
-    var now = timeToNearestMin();
-    var random = new Random();
-    for (int i = 0; i < minutes; i++) {
-      var atMinute = now + (i * tickerInterval.toMillis());
-      for (int j = 0; j < getMetricsPerMin(); j++) {
-        var perturbation = (j == 0) ? 0 : random.nextFloat() * deviation;
-        values.add(min + perturbation);
-        timestamps.add(atMinute);
-      }
-    }
-    return this;
-  }
-
-  public ReadingGenerator populateWithMax(float max, float deviation) {
-    checkEmpty();
-    var now = timeToNearestMin();
-
-    var random = new Random();
-    for (int i = 0; i < minutes; i++) {
-      var atMinute = now + (i * tickerInterval.toMillis());
-      for (int j = 0; j < getMetricsPerMin(); j++) {
-        var perturbation = (j == 0) ? 0 : random.nextFloat() * deviation;
-        values.add(max - perturbation);
         timestamps.add(atMinute);
       }
     }

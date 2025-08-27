@@ -16,7 +16,6 @@ import org.okapi.metrics.ShardMap;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssigner;
 import org.okapi.metrics.io.StreamReadingException;
 import org.okapi.metrics.service.ServiceController;
-import org.okapi.metrics.stats.StatisticsFrozenException;
 import org.rocksdb.RocksDB;
 
 @Slf4j
@@ -39,11 +38,7 @@ public class RocksMetricsWriter implements MetricsWriter {
   }
 
   @Override
-  public void onRequestArrive(SubmitMetricsRequestInternal request)
-      throws BadRequestException,
-          OutsideWindowException,
-          InterruptedException,
-          StatisticsFrozenException {
+  public void onRequestArrive(SubmitMetricsRequestInternal request) throws BadRequestException {
     if (!isReady()) throw new IllegalStateException("Cannot accept writes until ready.");
     if (request == null) {
       throw new BadRequestException("Request is null.");

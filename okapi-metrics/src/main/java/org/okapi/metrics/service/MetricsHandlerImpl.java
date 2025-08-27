@@ -16,6 +16,7 @@ import org.okapi.metrics.ShardMap;
 import org.okapi.metrics.common.ServiceRegistry;
 import org.okapi.metrics.common.pojo.NodeState;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssignerFactory;
+import org.okapi.metrics.rocks.TarPackager;
 import org.okapi.metrics.service.runnables.*;
 
 @AllArgsConstructor
@@ -34,6 +35,8 @@ public class MetricsHandlerImpl implements MetricsHandler, Shardable {
 
   ScheduledExecutorService scheduler;
   ShardsAndSeriesAssignerFactory shardsAndSeriesAssignerFactory;
+
+  // map from dataset to shards
   ShardMap shardMap;
 
   @Override
@@ -67,14 +70,19 @@ public class MetricsHandlerImpl implements MetricsHandler, Shardable {
      */
     if (myState(NodeState.SHARD_CHECKPOINTS_UPLOADED)) return;
     serviceController.pauseConsumer();
+    var self = serviceRegistry.getSelf();
     var newClusterConfig = serviceRegistry.clusterChangeOp().get();
-    for (int i = 0; i < N_SHARDS; i++) {
-      var checkpointPath = pathRegistry.shardCheckpointPath(i);
-      var series = shardMap.get(i);
-      var metricPaths = series.listMetricPaths();
-      if (metricPaths.isEmpty()) continue;
-      series.checkpoint(checkpointPath);
-      checkpointUploader.uploadShardCheckpoint(checkpointPath, newClusterConfig.opId(), i);
+    var newAssignment = shardsAndSeriesAssignerFactory.makeAssigner(N_SHARDS, newClusterConfig.nodes());
+    var notMyShards = IntStream.range(0, N_SHARDS)
+            .filter(i -> !newAssignment.getNode(i).equals(self.id())).toArray();
+    for(var shard: notMyShards){
+      var rocksPath = pathRegistry.rocksPath(shard);
+      if(!Files.exists(rocksPath)){
+        continue;
+      }
+      var packagePath = pathRegistry.shardPackagePath(shard);
+      TarPackager.packageDir(rocksPath, packagePath);
+      checkpointUploader.uploadShardCheckpoint(packagePath, newClusterConfig.opId(), shard);
     }
     serviceRegistry.setSelfState(NodeState.SHARD_CHECKPOINTS_UPLOADED);
   }
@@ -86,23 +94,6 @@ public class MetricsHandlerImpl implements MetricsHandler, Shardable {
      * load old distribution
      */
     if (myState(NodeState.ROLLED_BACK)) return;
-    var self = serviceRegistry.getSelf();
-    var scaleOp = serviceRegistry.clusterChangeOp().get();
-    var oldNodesList = serviceRegistry.oldClusterConfig().get().nodes();
-    var nShards = N_SHARDS;
-    var oldAssignments = shardsAndSeriesAssignerFactory.makeAssigner(nShards, oldNodesList);
-    var myShards =
-        IntStream.range(0, nShards)
-            .filter(i -> oldAssignments.getNode(i).equals(self.id()))
-            .toArray();
-
-    shardMap.reset(nShards);
-    for (var shard : myShards) {
-      var downloadPath = pathRegistry.shardCheckpointPath(shard);
-      checkpointUploader.downloadShardCheckpoint(scaleOp.opId(), shard, downloadPath);
-      if (!Files.exists(downloadPath) || Files.size(downloadPath) == 0) continue;
-      shardMap.loadShard(shard, downloadPath);
-    }
     afterShardMoveRollback();
     serviceRegistry.setSelfState(NodeState.ROLLED_BACK);
   }
@@ -126,12 +117,10 @@ public class MetricsHandlerImpl implements MetricsHandler, Shardable {
             .filter(i -> Objects.equals(newNodes.getNode(i), self.id()))
             .toArray();
 
-    shardMap.reset(nShards);
     for (var shard : myShards) {
-      var downloadPath = pathRegistry.shardCheckpointPath(shard);
+      var downloadPath = pathRegistry.shardPackagePath(shard);
       checkpointUploader.downloadShardCheckpoint(scaleOp.opId(), shard, downloadPath);
       if (!Files.exists(downloadPath) || Files.size(downloadPath) == 0) continue;
-      shardMap.loadShard(shard, downloadPath);
     }
     afterShardMoveCommit();
     serviceRegistry.setSelfState(NodeState.SHARD_CHECKPOINTS_APPLIED);
@@ -152,7 +141,6 @@ public class MetricsHandlerImpl implements MetricsHandler, Shardable {
 
   @Override
   public void afterShardMoveRollback() throws Exception {
-    var nShards = N_SHARDS;
     var oldNodeConfig = serviceRegistry.oldClusterConfig();
     if (oldNodeConfig.isEmpty()) {
       throw new IllegalStateException(
@@ -160,7 +148,7 @@ public class MetricsHandlerImpl implements MetricsHandler, Shardable {
     }
 
     var assigner =
-        shardsAndSeriesAssignerFactory.makeAssigner(nShards, oldNodeConfig.get().nodes());
+        shardsAndSeriesAssignerFactory.makeAssigner(N_SHARDS, oldNodeConfig.get().nodes());
     metricsWriter.setShardsAndSeriesAssigner(assigner);
     serviceController.resumeConsumer();
   }

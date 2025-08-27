@@ -2,7 +2,6 @@ package org.okapi.metrics.rollup;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Duration;
@@ -11,7 +10,6 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
@@ -94,40 +92,6 @@ public class RollupSeriesTests {
     assertTrue(fileSize > 0, "Checkpoint file should not be empty");
     var restored = restorer.restore(0, checkpointPath);
     OkapiTestUtils.checkEquals(series, restored);
-  }
-
-  @Test
-  public void testRollupSeriesWriteToStream()
-      throws IOException,
-          StreamReadingException,
-          OutsideWindowException,
-          StatisticsFrozenException,
-          InterruptedException {
-    var gen = new ReadingGenerator(Duration.of(100, ChronoUnit.MILLIS), 5);
-    var data = gen.populateRandom(0.1f, 100.f);
-
-    var gen2 = new ReadingGenerator(Duration.of(100, ChronoUnit.MILLIS), 5);
-    var data2 = gen2.populateRandom(0.1f, 100.f);
-    var series = seriesFunction.apply(0);
-    write(series, "series-A", data.getTimestamps(), data.getValues());
-    write(series, "series-B", data2.getTimestamps(), data2.getValues());
-
-    var tempFile = Files.createTempFile("test", "ckpt");
-    try (var fos = new FileOutputStream(tempFile.toFile())) {
-      series.writeMetric("series-A", fos);
-    }
-    var restored = restorer.restore(0, tempFile);
-    for (var k : series.keys()) {
-      if (k.startsWith("series-A")) {
-        Assertions.assertTrue(
-            OkapiTestUtils.bytesAreEqual(
-                series.getStats(k).get().serialize(), restored.getStats(k).get().serialize()));
-      }
-    }
-
-    for (var k : restored.keys()) {
-      assertTrue(k.startsWith("series-A"));
-    }
   }
 
   public static Stream<Arguments> testRestoreFuzzyArgs() {

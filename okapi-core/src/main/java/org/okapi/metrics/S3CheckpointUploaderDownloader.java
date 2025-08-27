@@ -28,9 +28,9 @@ public class S3CheckpointUploaderDownloader implements CheckpointUploaderDownloa
   Clock clock;
 
   @Override
-  public void uploadHourlyCheckpoint(String tenantId, Path path, long epochHourBucket, int shard)
+  public void uploadHourlyCheckpoint(String tenantId, Path path, long epochHourBucket)
       throws Exception {
-    var prefix = hourlyPrefix(tenantId, epochHourBucket, shard);
+    var prefix = hourlyPrefix(tenantId, epochHourBucket, 0);
     var fileSize = Files.size(path);
     if (fileSize == 0) {
       return;

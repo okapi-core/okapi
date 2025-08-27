@@ -7,9 +7,8 @@ import java.util.function.Function;
 public class RollupSeriesFn implements Function<Integer, RollupSeries<Statistics>> {
     @Override
     public RollupSeries<Statistics> apply(Integer integer) {
-        var statsRestorer = new RolledupStatsRestorer();
         var statsSupplier = new KllStatSupplier();
-        var series = new RollupSeries<>(statsRestorer, statsSupplier, integer);
+        var series = new RollupSeries<>(statsSupplier, integer);
         return series;
     }
 }

@@ -1,6 +1,7 @@
 package org.okapi.testutils;
 
 import java.util.*;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.okapi.metrics.rollup.RollupSeries;
 import org.okapi.metrics.stats.KllSketchRestorer;
 import org.okapi.metrics.stats.RolledUpStatistics;
@@ -8,12 +9,15 @@ import org.okapi.metrics.stats.Statistics;
 
 public class OkapiTestUtils {
 
-  public static List<Float> genRandom(float base, float scale, int n) {
-    var l = new ArrayList<Float>();
+  public static List<Float> genRandom(float base, float scale, int n) { var l = new ArrayList<Float>();
     for (int i = 0; i < n; i++) {
       l.add(genSingle(base, scale));
     }
     return l;
+  }
+
+  public static String smallId(int n){
+    return RandomStringUtils.insecure().next(n, true, false);
   }
 
   public static float genSingle(float base, float scale) {
@@ -100,7 +104,7 @@ public class OkapiTestUtils {
   }
 
   public static void assertStatsEquals(Statistics A, Statistics B) {
-    assert A.getCount() == B.getCount();
+    assert A.getCount() == B.getCount(): "Expected equal counts but got " + A.getCount() + " and " + B.getCount();
     assert A.getSum() == B.getSum();
     assert A.avg() == B.avg();
     assert A.min() == B.min();
@@ -113,6 +117,10 @@ public class OkapiTestUtils {
           : String.format(
               "error should be less than 1percent but was %f . pA = %f, pB = %f", error, pA, pB);
     }
+  }
+
+  public <T> String dedup(Class<T> clazz, String id){
+    return clazz.getSimpleName() + "AND" + id;
   }
 
   public static boolean checkMatchesReferenceFuzzy(RollupSeries<Statistics> ref, RollupSeries<Statistics> series2) {
