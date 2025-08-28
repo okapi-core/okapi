@@ -27,22 +27,23 @@ public class PathRegistryImpl implements PathRegistry {
      * Ignore the passed lock its just for show
      */
     this.readWriteLock = new ReentrantReadWriteLock();
-    Lists.newArrayList(hourlyCheckpointRoot, shardPackageRoot, parquetRoot, shardAssetsRoot)
-        .forEach(
-            dir -> {
-              try {
-                createDir(dir);
-              } catch (IOException ioe) {
-                log.info("Directory {} already exists, moving on.", dir);
-              }
-            });
     this.hourlyCheckpointRoot = checkNotNull(hourlyCheckpointRoot);
     this.shardPackageRoot = checkNotNull(shardPackageRoot);
     this.parquetRoot = checkNotNull(parquetRoot);
     this.shardAssetsRoot = checkNotNull(shardAssetsRoot);
+    Lists.newArrayList(hourlyCheckpointRoot, shardPackageRoot, parquetRoot, shardAssetsRoot)
+            .forEach(
+                    dir -> {
+                      try {
+                        createDir(dir);
+                      } catch (IOException ioe) {
+                        log.info("Directory {} already exists, moving on.", dir);
+                      }
+                    });
   }
 
   public void createDir(Path dir) throws IOException {
+    checkNotNull(dir);
     if (Files.exists(dir)) return;
     readWriteLock.writeLock().lock();
     try {

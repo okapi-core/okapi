@@ -77,7 +77,7 @@ public class RocksDbStatsWriter implements Closeable {
         groups.put(req.getKey(), req);
       }
 
-      log.info("Writing {} keys.", groups.size());
+      log.debug("Writing {} keys.", groups.size());
       for (var v : groups.values()) {
         var path = pathRegistry.rocksPath(v.getShard());
         RocksDbWriter writer;
@@ -102,7 +102,7 @@ public class RocksDbStatsWriter implements Closeable {
         }
       }
 
-      log.info("Wrote {} keys.", groups.size());
+      log.debug("Wrote {} keys.", groups.size());
     }
   }
 

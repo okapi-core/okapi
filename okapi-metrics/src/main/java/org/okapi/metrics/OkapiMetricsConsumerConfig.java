@@ -100,12 +100,14 @@ public class OkapiMetricsConsumerConfig {
   public PathRegistry pathRegistry(
       @Value("${dir.checkpointDir}") String checkpointDir,
       @Value("${dir.shardCheckpointRoot}") String shardCheckpointRoot,
-      @Value("${dir.parquetRoot}") String parquetRoot)
+      @Value("${dir.parquetRoot}") String parquetRoot,
+      @Value("${dir.shardAssetsRoot}") String shardAssetsRoot)
       throws IOException {
     return PathRegistryImpl.builder()
         .hourlyCheckpointRoot(Path.of(checkpointDir))
         .shardPackageRoot(Path.of(shardCheckpointRoot))
         .parquetRoot(Path.of(parquetRoot))
+        .shardAssetsRoot(Path.of(shardAssetsRoot))
         .build();
   }
 
@@ -424,7 +426,7 @@ public class OkapiMetricsConsumerConfig {
   }
 
   @Bean
-  public ParquetRollupWriter<Statistics> hourlyCheckpointWriter(
+  public ParquetRollupWriter<Statistics> parquetRollupWriter(
       @Autowired PathRegistry pathRegistry,
       @Autowired PathSet pathSet,
       @Autowired RocksStore rocksStore) {
@@ -432,7 +434,7 @@ public class OkapiMetricsConsumerConfig {
   }
 
   @Bean
-  public FrozenMetricsUploader hourlyCheckpointWriter(
+  public FrozenMetricsUploader frozenMetricsUploader(
       @Autowired CheckpointUploaderDownloader checkpointUploaderDownloader,
       @Autowired PathRegistry pathRegistry,
       @Autowired NodeStateRegistry nodeStateRegistry,

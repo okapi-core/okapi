@@ -20,6 +20,7 @@ dir:
   checkpointDir: ${user.home}/.okapi/hourly-checkpoints
   shardCheckpointRoot: ${user.home}/.okapi/shard-checkpoints
   parquetRoot: ${user.home}/.okapi/parquet-checkpoints
+  shardAssetsRoot: ${user.home}/.okapi/shard-assets
 
 checkpoint:
   gapMillis: 3600000
