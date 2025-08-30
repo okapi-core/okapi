@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.okapi.Statistics;
 import org.okapi.clock.SystemClock;
 import org.okapi.collections.OkapiLists;
 import org.okapi.fixtures.ReadingGenerator;
@@ -38,15 +39,16 @@ public class RollupQueryProcessorTests {
   // fixed shard to use with this test
   public static final Integer SHARD = 0;
   // resources to create a series
-  StatisticsRestorer<Statistics> statsRestorer;
-  Supplier<Statistics> statisticsSupplier;
-  RollupSeriesRestorer<Statistics> restorer;
+  StatisticsRestorer<UpdatableStatistics> writableRestorer;
+  StatisticsRestorer<Statistics> readonlyRestorer;
+  Supplier<UpdatableStatistics> statisticsSupplier;
+  RollupSeriesRestorer<UpdatableStatistics> restorer;
 
   ReadingGenerator generator;
   ReadingGenerator generator2;
-  RollupSeries<Statistics> rollupSeries;
+  RollupSeries<UpdatableStatistics> rollupSeries;
   RollupQueryProcessor queryProcessor;
-  Function<Integer, RollupSeries<Statistics>> seriesFunction;
+  Function<Integer, RollupSeries<UpdatableStatistics>> seriesFunction;
   long series1Start;
   long series2Start;
   long series1End;
@@ -76,7 +78,8 @@ public class RollupQueryProcessorTests {
     ctx = new MetricsContext("test");
     generator = new ReadingGenerator(Duration.of(10, ChronoUnit.MILLIS), 20);
     generator.populateRandom(100.f, 110.f);
-    statsRestorer = new RolledupStatsRestorer();
+    writableRestorer = new WritableRestorer();
+    readonlyRestorer = new ReadonlyRestorer();
     statisticsSupplier = new KllStatSupplier();
     restorer = new RolledUpSeriesRestorer(seriesFunction);
     rollupSeries = seriesFunction.apply(SHARD);
@@ -96,7 +99,7 @@ public class RollupQueryProcessorTests {
     rocksStore = new RocksStore();
     rocksDbStatsWriter =
         new RocksDbStatsWriter(
-            messageBox, statsRestorer, new RolledupMergerStrategy(), pathRegistry);
+            messageBox, writableRestorer, new RolledupMergerStrategy(), pathRegistry);
     rocksDbStatsWriter.startWriting(scheduledExecutorService, rocksStore, writeBackSettings);
     // test-dataset 1
     rollupSeries.writeBatch(
@@ -120,7 +123,7 @@ public class RollupQueryProcessorTests {
 
     // query processing
     queryProcessor = new RollupQueryProcessor();
-    readerSupplier = new RocksReaderSupplier(pathRegistry, statsRestorer, rocksStore);
+    readerSupplier = new RocksReaderSupplier(pathRegistry, readonlyRestorer, rocksStore);
 
     // wait until the message box is empty
     await().atMost(Duration.of(5, ChronoUnit.SECONDS)).until(() -> messageBox.isEmpty());

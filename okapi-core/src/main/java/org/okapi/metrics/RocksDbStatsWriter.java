@@ -18,7 +18,7 @@ import org.okapi.metrics.constants.ReaderIds;
 import org.okapi.metrics.rocks.RocksDbWriter;
 import org.okapi.metrics.rocks.RocksStore;
 import org.okapi.metrics.rollup.WriteBackSettings;
-import org.okapi.metrics.stats.Statistics;
+import org.okapi.metrics.stats.UpdatableStatistics;
 import org.okapi.metrics.stats.StatisticsRestorer;
 
 @Slf4j
@@ -26,8 +26,8 @@ public class RocksDbStatsWriter implements Closeable {
 
   SharedMessageBox<WriteBackRequest> writes;
   ReadWriteLock rocksCreatorLock;
-  StatisticsRestorer<Statistics> restorer;
-  Merger<Statistics> merger;
+  StatisticsRestorer<UpdatableStatistics> restorer;
+  Merger<UpdatableStatistics> merger;
   // used for scheduling writes
   ScheduledExecutorService scheduledExecutorService;
   RocksStore rocksStore;
@@ -38,8 +38,8 @@ public class RocksDbStatsWriter implements Closeable {
 
   public RocksDbStatsWriter(
       SharedMessageBox<WriteBackRequest> writes,
-      StatisticsRestorer<Statistics> restorer,
-      Merger<Statistics> merger,
+      StatisticsRestorer<UpdatableStatistics> restorer,
+      Merger<UpdatableStatistics> merger,
       PathRegistry pathRegistry)
       throws IOException {
     this.writes = checkNotNull(writes);

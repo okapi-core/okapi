@@ -16,6 +16,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.Setter;
+import org.okapi.Statistics;
 import org.okapi.clock.Clock;
 import org.okapi.clock.SystemClock;
 import org.okapi.fake.FakeClock;
@@ -274,12 +275,12 @@ public class TestResourceFactory {
         node, NodeStateRegistryImpl.class, () -> new NodeStateRegistryImpl(fleetMetadata(), node));
   }
 
-  public ParquetRollupWriter<Statistics> parquetRollupWriter(Node node) {
+  public ParquetRollupWriter<UpdatableStatistics> parquetRollupWriter(Node node) {
     return makeSingleton(
         ParquetRollupWriter.class,
         () -> {
           try {
-            return new ParquetRollupWriterImpl<Statistics>(
+            return new ParquetRollupWriterImpl<UpdatableStatistics>(
                 pathRegistry(node), pathSet(node), rocksStore(node));
           } catch (IOException e) {
             throw new RuntimeException(e);
@@ -414,12 +415,15 @@ public class TestResourceFactory {
         });
   }
 
-  public StatisticsRestorer<Statistics> unMarshaller() {
-    return new RolledupStatsRestorer();
+  public StatisticsRestorer<UpdatableStatistics> writableUnmarshaller() {
+    return new WritableRestorer();
+  }
+  public StatisticsRestorer<Statistics> readableUnmarshaller() {
+    return new ReadonlyRestorer();
   }
 
   public RocksReaderSupplier rocksReaderSupplier(Node node) {
-    return new RocksReaderSupplier(pathRegistry(node), unMarshaller(), rocksStore(node));
+    return new RocksReaderSupplier(pathRegistry(node), readableUnmarshaller(), rocksStore(node));
   }
 
   public RocksDbStatsWriter rocksDbStatsWriter(Node node) {
@@ -430,7 +434,7 @@ public class TestResourceFactory {
           try {
             return new RocksDbStatsWriter(
                 messageBox(node),
-                new RolledupStatsRestorer(),
+                writableUnmarshaller(),
                 new RolledupMergerStrategy(),
                 pathRegistry(node));
           } catch (IOException e) {

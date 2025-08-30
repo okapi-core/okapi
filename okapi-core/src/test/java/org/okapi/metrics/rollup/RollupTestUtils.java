@@ -2,11 +2,11 @@ package org.okapi.metrics.rollup;
 
 import java.util.List;
 import java.util.Optional;
+import org.okapi.Statistics;
 import org.okapi.fixtures.ReadingGenerator;
 import org.okapi.fixtures.ReadingGeneratorReduction;
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
-import org.okapi.metrics.stats.Statistics;
 
 public class RollupTestUtils {
   public static void assertTolerableError(

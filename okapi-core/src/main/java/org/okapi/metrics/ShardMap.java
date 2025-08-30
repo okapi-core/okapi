@@ -28,11 +28,11 @@ import org.okapi.metrics.stats.*;
 public class ShardMap {
 
   // Registry is atomically swappable on restore / targeted load
-  private volatile Map<Integer, RollupSeries<Statistics>> shardMap;
+  private volatile Map<Integer, RollupSeries<UpdatableStatistics>> shardMap;
   @Getter private Integer nsh;
   private final Clock clock;
   private final long admissionWindowMillis;
-  private final Function<Integer, RollupSeries<Statistics>> seriesSupplier;
+  private final Function<Integer, RollupSeries<UpdatableStatistics>> seriesSupplier;
   SharedMessageBox<WriteBackRequest> messageBox;
   ScheduledExecutorService scheduledExecutorService;
   WriteBackSettings writeBackSettings;
@@ -41,7 +41,7 @@ public class ShardMap {
   public ShardMap(
       Clock clock,
       int admissionWindowHrs,
-      Function<Integer, RollupSeries<Statistics>> seriesSupplier,
+      Function<Integer, RollupSeries<UpdatableStatistics>> seriesSupplier,
       SharedMessageBox<WriteBackRequest> messageBox,
       ScheduledExecutorService scheduledExecutorService,
       WriteBackSettings writeBackSettings,
@@ -59,7 +59,7 @@ public class ShardMap {
     this.pathSet = pathSet;
   }
 
-  protected RollupSeries<Statistics> get(int shardId) {
+  protected RollupSeries<UpdatableStatistics> get(int shardId) {
     return shardMap.computeIfAbsent(
         shardId,
         (sh) -> {

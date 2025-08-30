@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.okapi.Statistics;
 import org.okapi.clock.SystemClock;
 import org.okapi.metrics.common.MetricsContext;
 import org.okapi.metrics.rocks.RocksStore;
@@ -31,11 +32,12 @@ public class RocksDbStatsWriterTests {
   WriteBackSettings writeBackSettings;
   SharedMessageBox<WriteBackRequest> messageBox;
   StatisticsRestorer<Statistics> restorer;
+  StatisticsRestorer<UpdatableStatistics> writableRestorer;
   PathRegistry pathRegistry;
   RocksDbStatsWriter rocksDbStatsWriter;
 
   // helpers
-  Supplier<Statistics> statsSupplier;
+  Supplier<UpdatableStatistics> statsSupplier;
 
   @BeforeEach
   public void setup() throws IOException {
@@ -44,14 +46,15 @@ public class RocksDbStatsWriterTests {
     writeBackSettings =
         new WriteBackSettings(Duration.of(100, ChronoUnit.MILLIS), new SystemClock());
     messageBox = new SharedMessageBox<>(10);
-    restorer = new RolledupStatsRestorer();
+    restorer = new ReadonlyRestorer();
+    writableRestorer = new WritableRestorer();
     pathRegistry =
         new PathRegistryImpl(
             hourlyRoot, shardPkgRoot, parquetRoot, shardAssetsRoot, new ReentrantReadWriteLock());
     rocksDbStatsWriter =
         new RocksDbStatsWriter(
             messageBox,
-                restorer,
+                writableRestorer,
                 new RolledupMergerStrategy(), pathRegistry);
     statsSupplier = new KllStatSupplier();
   }

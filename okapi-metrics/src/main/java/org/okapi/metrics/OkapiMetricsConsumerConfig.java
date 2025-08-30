@@ -176,8 +176,8 @@ public class OkapiMetricsConsumerConfig {
   }
 
   @Bean(name = Configurations.BEAN_SERIES_SUPPLIER)
-  public Function<Integer, RollupSeries<Statistics>> seriesSupplier() {
-    StatisticsRestorer<Statistics> statsRestorer = new RolledupStatsRestorer();
+  public Function<Integer, RollupSeries<UpdatableStatistics>> seriesSupplier() {
+    StatisticsRestorer<UpdatableStatistics> statsRestorer = new WritableRestorer();
     var statsSupplier = new KllStatSupplier();
     return (shard) -> new RollupSeries<>(statsSupplier, shard);
   }
@@ -192,7 +192,7 @@ public class OkapiMetricsConsumerConfig {
   @Bean
   public RocksReaderSupplier rocksReaderSupplier(
       @Autowired PathRegistry pathRegistry, @Autowired RocksStore rocksStore) {
-    var restorer = new RolledupStatsRestorer();
+    var restorer = new ReadonlyRestorer();
     return new RocksReaderSupplier(pathRegistry, restorer, rocksStore);
   }
 
@@ -207,8 +207,8 @@ public class OkapiMetricsConsumerConfig {
           SharedMessageBox<WriteBackRequest> requestSharedMessageBox,
       @Autowired PathRegistry pathRegistry)
       throws IOException {
-    StatisticsRestorer<Statistics> statsRestorer = new RolledupStatsRestorer();
-    Merger<Statistics> statisticsMerger = new RolledupMergerStrategy();
+    StatisticsRestorer<UpdatableStatistics> statsRestorer = new WritableRestorer();
+    Merger<UpdatableStatistics> statisticsMerger = new RolledupMergerStrategy();
     return new RocksDbStatsWriter(
         requestSharedMessageBox, statsRestorer, statisticsMerger, pathRegistry);
   }
@@ -222,7 +222,7 @@ public class OkapiMetricsConsumerConfig {
   public ShardMap shardMap(
       @Autowired Clock clock,
       @Qualifier(Configurations.BEAN_SERIES_SUPPLIER)
-          Function<Integer, RollupSeries<Statistics>> seriesFunction,
+          Function<Integer, RollupSeries<UpdatableStatistics>> seriesFunction,
       @Qualifier(Configurations.BEAN_ROCKS_MESSAGE_BOX)
           SharedMessageBox<WriteBackRequest> requestSharedMessageBox,
       @Qualifier(Configurations.BEAN_SHARED_EXECUTOR) ScheduledExecutorService service,
@@ -426,7 +426,7 @@ public class OkapiMetricsConsumerConfig {
   }
 
   @Bean
-  public ParquetRollupWriter<Statistics> parquetRollupWriter(
+  public ParquetRollupWriter<UpdatableStatistics> parquetRollupWriter(
       @Autowired PathRegistry pathRegistry,
       @Autowired PathSet pathSet,
       @Autowired RocksStore rocksStore) {
@@ -442,7 +442,7 @@ public class OkapiMetricsConsumerConfig {
       @Value("${admissionWindowHrs}") long hrs,
       @Autowired PathSet pathSet,
       @Autowired RocksStore rocksStore,
-      @Autowired ParquetRollupWriter<Statistics> parquetRollupWriter) {
+      @Autowired ParquetRollupWriter<UpdatableStatistics> parquetRollupWriter) {
     return new FrozenMetricsUploader(
         checkpointUploaderDownloader,
         pathRegistry,

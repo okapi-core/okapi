@@ -1,8 +1,8 @@
 package org.okapi.metrics.persistence;
 
-import org.okapi.metrics.stats.Statistics;
+import org.okapi.metrics.stats.UpdatableStatistics;
 
 public interface PersistentStore  {
-    Statistics get(String key);
-    void put(String key, Statistics statistics);
+    UpdatableStatistics get(String key);
+    void put(String key, UpdatableStatistics statistics);
 }

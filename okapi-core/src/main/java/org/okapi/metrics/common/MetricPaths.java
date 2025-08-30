@@ -16,9 +16,9 @@ public class MetricPaths {
     return convertToPath(request.getTenantId(), request.getMetricName(), request.getTags());
   }
 
-  public static String getMetricPath(String name, Map<String, String> tags) {
+  public static String getMetricPath(String universalMetricName, Map<String, String> tags) {
     var sb = new StringBuilder();
-    sb.append(name);
+    sb.append(universalMetricName);
     sb.append("{");
     for (var entry : tags.entrySet()) {
       sb.append(entry.getKey()).append("=").append(entry.getValue());
@@ -29,6 +29,10 @@ public class MetricPaths {
 
   public static String convertToPath(String tenantId, String metricName, Map<String, String> tags) {
     var universalMetricName = tenantId + ":" + metricName;
+    return getMetricPath(universalMetricName, tags);
+  }
+
+  public static String convertToPath(String universalMetricName, Map<String, String> tags) {
     return getMetricPath(universalMetricName, tags);
   }
 

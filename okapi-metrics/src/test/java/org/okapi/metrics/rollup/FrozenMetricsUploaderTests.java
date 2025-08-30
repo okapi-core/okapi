@@ -24,6 +24,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.okapi.Statistics;
 import org.okapi.metrics.TestResourceFactory;
 import org.okapi.metrics.avro.MetricRow;
 import org.okapi.metrics.common.MetricsContext;
@@ -49,10 +50,10 @@ public class FrozenMetricsUploaderTests {
   long hr = -1L;
   Node node;
 
-  Function<Integer, RollupSeries<Statistics>> seriesSupplier;
+  Function<Integer, RollupSeries<UpdatableStatistics>> seriesSupplier;
   StatisticsRestorer<Statistics> statsRestorer;
-  Supplier<Statistics> statisticsSupplier;
-  RollupSeriesRestorer<Statistics> restorer;
+  Supplier<UpdatableStatistics> statisticsSupplier;
+  RollupSeriesRestorer<UpdatableStatistics> restorer;
 
   // test artifacts
   public static final String PATH = "series{}";
@@ -72,7 +73,7 @@ public class FrozenMetricsUploaderTests {
             "test-node-" + UUID.randomUUID().toString(),
             "localhost",
             NodeState.METRICS_CONSUMPTION_START);
-    statsRestorer = new RolledupStatsRestorer();
+    statsRestorer = new ReadonlyRestorer();
     statisticsSupplier = new KllStatSupplier();
     seriesSupplier = new RollupSeriesFn();
     restorer = new RolledUpSeriesRestorer(seriesSupplier);
@@ -107,7 +108,7 @@ public class FrozenMetricsUploaderTests {
     // get a reader for shard 0
     var store = testResourceFactory.rocksStore(node);
     var dbPath = testResourceFactory.pathRegistry(node).rocksPath(0);
-    var reader = new RocksTsReader(store.rocksReader(dbPath).get(), new RolledupStatsRestorer());
+    var reader = new RocksTsReader(store.rocksReader(dbPath).get(), new ReadonlyRestorer());
 
     assertTrue(
         OkapiTestUtils.bytesAreEqual(
@@ -200,7 +201,7 @@ public class FrozenMetricsUploaderTests {
     // get a reader for reference
     var store = testResourceFactory.rocksStore(node);
     var dbPath = testResourceFactory.pathRegistry(node).rocksPath(0);
-    var reader = new RocksTsReader(store.rocksReader(dbPath).get(), new RolledupStatsRestorer());
+    var reader = new RocksTsReader(store.rocksReader(dbPath).get(), new ReadonlyRestorer());
 
     for (int i = 0; i < n; i++) {
       var name = tenantize(names.get(i));

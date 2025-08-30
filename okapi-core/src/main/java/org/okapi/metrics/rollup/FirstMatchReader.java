@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Supplier;
 import lombok.AllArgsConstructor;
+import org.okapi.Statistics;
 import org.okapi.metrics.PathRegistry;
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
 import org.okapi.metrics.rocks.RocksStore;
-import org.okapi.metrics.stats.Statistics;
 import org.okapi.metrics.stats.StatisticsRestorer;
 
 @AllArgsConstructor
@@ -27,6 +27,16 @@ public class FirstMatchReader implements TsReader {
         .seriesName(series)
         .values(Collections.emptyList())
         .build();
+  }
+
+  @Override
+  public Map<Long, Statistics> scan(
+      String series, long from, long to, RES_TYPE resolution) {
+    for (var reader : readers) {
+      var result = reader.scan(series, from, to, resolution);
+      if (!result.isEmpty()) return result;
+    }
+    return Collections.emptyMap();
   }
 
   @Override

@@ -18,11 +18,11 @@ import org.okapi.metrics.WriteBackRequest;
 import org.okapi.metrics.common.MetricsContext;
 import org.okapi.metrics.constants.ReaderIds;
 import org.okapi.metrics.io.OkapiIo;
-import org.okapi.metrics.stats.Statistics;
+import org.okapi.metrics.stats.UpdatableStatistics;
 import org.okapi.metrics.stats.StatisticsFrozenException;
 
 @Slf4j
-public class RollupSeries<T extends Statistics> {
+public class RollupSeries<T extends UpdatableStatistics> {
 
   public static final String MAGIC_NUMBER = "RollupSeriesStart";
   public static final String MAGIC_NUMBER_END = "RollupSeriesEnd";
@@ -74,7 +74,7 @@ public class RollupSeries<T extends Statistics> {
   }
 
   private void retryUpdate(
-      Supplier<Statistics> statisticsSupplier, MetricsContext context, float val) {
+          Supplier<UpdatableStatistics> statisticsSupplier, MetricsContext context, float val) {
     var retries = 3;
     for (int i = 0; i < retries; i++) {
       try {

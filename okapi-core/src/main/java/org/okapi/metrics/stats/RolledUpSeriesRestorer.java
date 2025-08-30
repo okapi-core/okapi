@@ -8,22 +8,22 @@ import java.util.function.Function;
 import org.okapi.metrics.io.StreamReadingException;
 import org.okapi.metrics.rollup.RollupSeries;
 
-public class RolledUpSeriesRestorer implements RollupSeriesRestorer<Statistics> {
+public class RolledUpSeriesRestorer implements RollupSeriesRestorer<UpdatableStatistics> {
 
-  private final Function<Integer, RollupSeries<Statistics>> seriesSupplier;
+  private final Function<Integer, RollupSeries<UpdatableStatistics>> seriesSupplier;
 
-  public RolledUpSeriesRestorer(Function<Integer, RollupSeries<Statistics>> seriesSupplier) {
+  public RolledUpSeriesRestorer(Function<Integer, RollupSeries<UpdatableStatistics>> seriesSupplier) {
     this.seriesSupplier = seriesSupplier;
   }
 
   @Override
-  public RollupSeries<Statistics> restore(int shard, InputStream is)
+  public RollupSeries<UpdatableStatistics> restore(int shard, InputStream is)
       throws StreamReadingException, IOException {
     var series = seriesSupplier.apply(shard);
     return series;
   }
 
-  public RollupSeries<Statistics> restore(int shard, Path checkpointPath)
+  public RollupSeries<UpdatableStatistics> restore(int shard, Path checkpointPath)
       throws IOException, StreamReadingException {
     try (var fis = new FileInputStream(checkpointPath.toFile())) {
       return restore(shard, fis);

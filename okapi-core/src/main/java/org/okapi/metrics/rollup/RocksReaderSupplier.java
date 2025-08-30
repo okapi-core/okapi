@@ -5,9 +5,9 @@ import static com.google.api.client.util.Preconditions.checkNotNull;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Function;
+import org.okapi.Statistics;
 import org.okapi.metrics.PathRegistry;
 import org.okapi.metrics.rocks.RocksStore;
-import org.okapi.metrics.stats.Statistics;
 import org.okapi.metrics.stats.StatisticsRestorer;
 
 public class RocksReaderSupplier implements Function<Integer, Optional<RocksTsReader>> {
@@ -17,11 +17,11 @@ public class RocksReaderSupplier implements Function<Integer, Optional<RocksTsRe
   RocksStore rocksStore;
 
   public RocksReaderSupplier(
-          PathRegistry pathRegistry,
-      StatisticsRestorer<Statistics> unMarshaller,
+      PathRegistry pathRegistry,
+      StatisticsRestorer<Statistics> restorer,
       RocksStore rocksStore) {
     this.pathRegistry = checkNotNull(pathRegistry);
-    this.unMarshaller = checkNotNull(unMarshaller);
+    this.unMarshaller = checkNotNull(restorer);
     this.rocksStore = rocksStore;
   }
 

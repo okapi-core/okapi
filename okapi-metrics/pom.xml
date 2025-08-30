@@ -80,9 +80,10 @@
         </dependency>
 
         <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-mapreduce-client-core</artifactId>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-mapreduce-client-core</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.okapi</groupId>
             <artifactId>okapi-core</artifactId>
@@ -107,6 +108,18 @@
         <dependency>
             <groupId>org.okapi</groupId>
             <artifactId>okapi-avros</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.okapi</groupId>
+            <artifactId>okapi-promql</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.okapi</groupId>
+            <artifactId>okapi-statistics</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>

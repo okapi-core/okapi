@@ -17,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.okapi.Statistics;
 import org.okapi.exceptions.BadRequestException;
 import org.okapi.metrics.TestResourceFactory;
 import org.okapi.metrics.async.Await;
@@ -44,10 +45,10 @@ public class MetricsHandlerImplTests {
   Node testNode2;
   Node testNode3;
   // series related methods
-  Function<Integer, RollupSeries<Statistics>> seriesSupplier;
+  Function<Integer, RollupSeries<UpdatableStatistics>> seriesSupplier;
   StatisticsRestorer<Statistics> statsRestorer;
-  Supplier<Statistics> statisticsSupplier;
-  RollupSeriesRestorer<Statistics> restorer;
+  Supplier<UpdatableStatistics> statisticsSupplier;
+  RollupSeriesRestorer<UpdatableStatistics> restorer;
 
   static final long hrStart = (System.currentTimeMillis() / 3600_000L) * 3600_000L;
 
@@ -58,7 +59,7 @@ public class MetricsHandlerImplTests {
     testNode2 = testResourceFactory.makeNode(TEST_NODE_2);
     testNode3 = testResourceFactory.makeNode(TEST_NODE_3);
     // series related stuff
-    statsRestorer = new RolledupStatsRestorer();
+    statsRestorer = new ReadonlyRestorer();
     statisticsSupplier = new KllStatSupplier();
     seriesSupplier = new RollupSeriesFn();
     restorer = new RolledUpSeriesRestorer(seriesSupplier);
@@ -81,15 +82,15 @@ public class MetricsHandlerImplTests {
                     .isPresent());
     var rocksReader =
         testResourceFactory.rocksStore(node).rocksReader(pathRegistry.rocksPath(shard)).get();
-    return new RocksTsReader(rocksReader, testResourceFactory.unMarshaller());
+    return new RocksTsReader(rocksReader, testResourceFactory.readableUnmarshaller());
   }
 
   public void checkDistribution(
-      RollupSeries<Statistics> ref, ShardsAndSeriesAssigner assigner, List<Node> nodes, int nShards)
+          RollupSeries<UpdatableStatistics> ref, ShardsAndSeriesAssigner assigner, List<Node> nodes, int nShards)
       throws IOException, InterruptedException {
     // \A key \in ref: shard = getShard(key); node = getNode(shard); reader = getReader(node,
     // shard); assertEquals(ref.getValue(key), reader.getValue(key));
-    var unmarshaller = new RolledupStatsRestorer();
+    var unmarshaller = new ReadonlyRestorer();
     for (var key : ref.getKeys()) {
       var hashedValue = HashFns.invertKey(key);
       var series = hashedValue.get().timeSeries();
@@ -250,7 +251,7 @@ public class MetricsHandlerImplTests {
   }
 
   public static void merge(
-      RollupSeries<Statistics> merged, List<SubmitMetricsRequestInternal> requests)
+          RollupSeries<UpdatableStatistics> merged, List<SubmitMetricsRequestInternal> requests)
       throws StatisticsFrozenException, InterruptedException {
     for (var r : requests) {
       var path = MetricPaths.convertToPath(r);

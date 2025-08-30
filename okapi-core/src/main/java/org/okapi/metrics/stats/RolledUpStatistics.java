@@ -8,7 +8,7 @@ import org.apache.datasketches.kll.KllFloatsSketch;
 import org.okapi.metrics.common.MetricsContext;
 import org.okapi.metrics.pojos.AGG_TYPE;
 
-public class RolledUpStatistics implements Statistics {
+public class RolledUpStatistics implements UpdatableStatistics {
   private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
   @Getter private float sum;
@@ -180,12 +180,6 @@ public class RolledUpStatistics implements Statistics {
     frozen.set(true);
     lock.writeLock().unlock();
     return frozen.get();
-  }
-
-  @Override
-  public long bufferSize() {
-    var kllBufferSize = this.floatsQuantiles.getSerializedSizeBytes();
-    return kllBufferSize + 4 * 3; // sum, count, deviation squared.
   }
 
   protected KllFloatsSketch getSketch(){

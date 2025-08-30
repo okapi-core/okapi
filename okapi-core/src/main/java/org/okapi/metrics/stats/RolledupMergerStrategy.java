@@ -2,10 +2,10 @@ package org.okapi.metrics.stats;
 
 import org.okapi.metrics.Merger;
 
-public class RolledupMergerStrategy implements Merger<Statistics> {
+public class RolledupMergerStrategy implements Merger<UpdatableStatistics> {
 
   @Override
-  public Statistics merge(Statistics A, Statistics B) {
+  public UpdatableStatistics merge(UpdatableStatistics A, UpdatableStatistics B) {
     var asRolledUpA = (RolledUpStatistics) A;
     var asRolledUpB = (RolledUpStatistics) B;
     var count = A.getCount() + B.getCount();

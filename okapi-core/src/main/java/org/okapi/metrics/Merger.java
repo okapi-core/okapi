@@ -1,8 +1,8 @@
 package org.okapi.metrics;
 
-import org.okapi.metrics.stats.Statistics;
+import org.okapi.metrics.stats.UpdatableStatistics;
 
-public interface Merger<T extends Statistics> {
+public interface Merger<T extends UpdatableStatistics> {
 
-  Statistics merge(T A, T B);
+  UpdatableStatistics merge(T A, T B);
 }

@@ -3,14 +3,16 @@ package org.okapi.metrics.rollup;
 import static org.okapi.metrics.rollup.HashFns.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.okapi.Statistics;
 import org.okapi.exceptions.ExceptionUtils;
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
 import org.okapi.metrics.rocks.RocksDbReader;
-import org.okapi.metrics.stats.Statistics;
 import org.okapi.metrics.stats.StatisticsRestorer;
 import org.rocksdb.RocksDBException;
 
@@ -90,6 +92,26 @@ public class RocksTsReader implements TsReader {
       }
     }
     return new ScanResult(timeSeries, timestamps, values);
+  }
+
+  @Override
+  public Map<Long, Statistics> scan(String series, long from, long to, RES_TYPE resolution) {
+    Map<Long, Statistics> readings = new HashMap<>();
+    final long startQ = quantize(from, resolution);
+    final long endQ = quantize(to, resolution);
+    for (long q = startQ; q <= endQ; q++) {
+      final long unqTs = unQuantize(q, resolution);
+      final var key = keyFn(series, unqTs, resolution);
+      try {
+        final var bytes = rocksDB.get(key.getBytes());
+        if (bytes == null) continue;
+        final var stats = unMarshaller.deserialize(bytes);
+        readings.put(unqTs, stats);
+      } catch (RocksDBException e) {
+        log.error("Could not read key from RocksDB due to {}", ExceptionUtils.debugFriendlyMsg(e));
+      }
+    }
+    return readings;
   }
 
   public static String keyFn(String timeSeries, long t, RES_TYPE resType) {

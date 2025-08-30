@@ -2,7 +2,7 @@ package org.okapi.metrics.persistence;
 
 import org.okapi.metrics.SharedMessageBox;
 import org.okapi.metrics.WriteBackRequest;
-import org.okapi.metrics.stats.Statistics;
+import org.okapi.metrics.stats.UpdatableStatistics;
 
 import java.nio.file.Path;
 
@@ -15,12 +15,12 @@ public class RocksPersistentStore implements PersistentStore {
     }
 
     @Override
-    public Statistics get(String key) {
+    public UpdatableStatistics get(String key) {
         throw new RuntimeException();
     }
 
     @Override
-    public void put(String key, Statistics statistics) {
+    public void put(String key, UpdatableStatistics statistics) {
 
     }
 }

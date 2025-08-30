@@ -17,6 +17,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.okapi.Statistics;
 import org.okapi.collections.OkapiLists;
 import org.okapi.fixtures.ReadingGenerator;
 import org.okapi.metrics.OutsideWindowException;
@@ -29,14 +30,14 @@ import org.okapi.testutils.OkapiTestUtils;
 public class RollupSeriesTests {
 
   StatisticsRestorer<Statistics> statsRestorer;
-  Supplier<Statistics> statisticsSupplier;
-  RollupSeriesRestorer<Statistics> restorer;
-  Function<Integer, RollupSeries<Statistics>> seriesFunction;
+  Supplier<UpdatableStatistics> statisticsSupplier;
+  RollupSeriesRestorer<UpdatableStatistics> restorer;
+  Function<Integer, RollupSeries<UpdatableStatistics>> seriesFunction;
 
   @BeforeEach
   public void setupSeries() {
     seriesFunction = new RollupSeriesFn();
-    statsRestorer = new RolledupStatsRestorer();
+    statsRestorer = new ReadonlyRestorer();
     statisticsSupplier = new KllStatSupplier();
     restorer = new RolledUpSeriesRestorer(seriesFunction);
   }

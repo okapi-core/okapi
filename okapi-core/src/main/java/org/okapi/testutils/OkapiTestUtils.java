@@ -2,11 +2,12 @@ package org.okapi.testutils;
 
 import java.util.*;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.okapi.Statistics;
 import org.okapi.metrics.rollup.RollupSeries;
 import org.okapi.metrics.rollup.TsReader;
 import org.okapi.metrics.stats.KllSketchRestorer;
 import org.okapi.metrics.stats.RolledUpStatistics;
-import org.okapi.metrics.stats.Statistics;
+import org.okapi.metrics.stats.UpdatableStatistics;
 
 public class OkapiTestUtils {
 
@@ -126,8 +127,8 @@ public class OkapiTestUtils {
     return clazz.getSimpleName() + "AND" + id;
   }
 
-  public static boolean checkMatchesReferenceFuzzy(RollupSeries<Statistics> ref, TsReader tsReader)
-      throws InterruptedException {
+  public static boolean checkMatchesReferenceFuzzy(
+      RollupSeries<UpdatableStatistics> ref, TsReader tsReader) throws InterruptedException {
     for (var key : ref.getKeys()) {
       var statsA =
           RolledUpStatistics.deserialize(ref.getSerializedStats(key), new KllSketchRestorer());
@@ -144,7 +145,7 @@ public class OkapiTestUtils {
   }
 
   public static boolean checkEquals(
-      RollupSeries<Statistics> series1, RollupSeries<Statistics> series2) {
+      RollupSeries<UpdatableStatistics> series1, RollupSeries<UpdatableStatistics> series2) {
     if (series1.getKeys().size() != series2.getKeys().size()) {
       return false;
     }

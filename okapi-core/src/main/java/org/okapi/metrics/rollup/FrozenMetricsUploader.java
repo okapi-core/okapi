@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.okapi.Statistics;
 import org.okapi.clock.Clock;
 import org.okapi.metrics.CheckpointUploaderDownloader;
 import org.okapi.metrics.NodeStateRegistry;
@@ -15,8 +16,8 @@ import org.okapi.metrics.common.MetricsPathParser;
 import org.okapi.metrics.io.OkapiIo;
 import org.okapi.metrics.paths.PathSet;
 import org.okapi.metrics.rocks.RocksStore;
-import org.okapi.metrics.stats.RolledupStatsRestorer;
-import org.okapi.metrics.stats.Statistics;
+import org.okapi.metrics.stats.ReadonlyRestorer;
+import org.okapi.metrics.stats.UpdatableStatistics;
 
 @Slf4j
 @AllArgsConstructor
@@ -29,7 +30,7 @@ public class FrozenMetricsUploader {
   long admissionWindowHrs;
   PathSet pathSet;
   RocksStore rocksStore;
-  ParquetRollupWriter<Statistics> parquetWriter;
+  ParquetRollupWriter<UpdatableStatistics> parquetWriter;
 
   public void writeCheckpoint(String tenant, Path fp, long hr) throws IOException {
     var metricPaths = pathSet.list();
@@ -52,7 +53,7 @@ public class FrozenMetricsUploader {
         if (shards.isEmpty()) continue;
         var reader =
             FirstMatchReader.getFirstMatchReader(
-                pathRegistry, rocksStore, RolledupStatsRestorer::new, shards);
+                pathRegistry, rocksStore, ReadonlyRestorer::new, shards);
         var hourlyStat = reader.hourlyStats(serializedPath, startTime);
         if (hourlyStat.isEmpty()) {
           // this metric doesn't exist or there will be an hourly stat

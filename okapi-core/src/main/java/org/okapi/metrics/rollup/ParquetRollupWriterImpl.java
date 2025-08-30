@@ -11,6 +11,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.parquet.avro.AvroParquetWriter;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
+import org.okapi.Statistics;
 import org.okapi.metrics.PathRegistry;
 import org.okapi.metrics.avro.AggregationType;
 import org.okapi.metrics.avro.MetricRow;
@@ -18,11 +19,11 @@ import org.okapi.metrics.common.MetricPaths;
 import org.okapi.metrics.common.MetricsPathParser;
 import org.okapi.metrics.paths.PathSet;
 import org.okapi.metrics.rocks.RocksStore;
-import org.okapi.metrics.stats.RolledupStatsRestorer;
-import org.okapi.metrics.stats.Statistics;
+import org.okapi.metrics.stats.ReadonlyRestorer;
+import org.okapi.metrics.stats.UpdatableStatistics;
 
 @AllArgsConstructor
-public class ParquetRollupWriterImpl<T extends Statistics> implements ParquetRollupWriter<T> {
+public class ParquetRollupWriterImpl<T extends UpdatableStatistics> implements ParquetRollupWriter<T> {
   PathRegistry pathRegistry;
   PathSet pathSet;
   RocksStore rocksStore;
@@ -57,7 +58,7 @@ public class ParquetRollupWriterImpl<T extends Statistics> implements ParquetRol
         var shards = pathSet.shardsForPath(serializedPath);
         var reader =
             FirstMatchReader.getFirstMatchReader(
-                pathRegistry, rocksStore, RolledupStatsRestorer::new, shards);
+                pathRegistry, rocksStore, ReadonlyRestorer::new, shards);
         // effects
         var hourlyStat = reader.hourlyStats(serializedPath, hr);
         if (hourlyStat.isEmpty()) {

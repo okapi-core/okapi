@@ -23,11 +23,11 @@ import org.okapi.metrics.stats.*;
 
 public class RocksDbStatsWriterFaultTests {
 
-  class FaultyMerger implements Merger<Statistics> {
+  class FaultyMerger implements Merger<UpdatableStatistics> {
 
     int called = 0;
     @Override
-    public Statistics merge(Statistics A, Statistics B) {
+    public UpdatableStatistics merge(UpdatableStatistics A, UpdatableStatistics B) {
       called += 1;
       throw new IllegalArgumentException();
     }
@@ -52,12 +52,12 @@ public class RocksDbStatsWriterFaultTests {
   RocksStore rocksStore;
   WriteBackSettings writeBackSettings;
   SharedMessageBox<WriteBackRequest> messageBox;
-  StatisticsRestorer<Statistics> restorer;
+  StatisticsRestorer<UpdatableStatistics> restorer;
   PathRegistry pathRegistry;
   RocksDbStatsWriter rocksDbStatsWriter;
 
   // helpers
-  Supplier<Statistics> statsSupplier;
+  Supplier<UpdatableStatistics> statsSupplier;
 
   @BeforeEach
   public void setup() throws IOException, StatisticsFrozenException, InterruptedException {
@@ -66,7 +66,7 @@ public class RocksDbStatsWriterFaultTests {
     writeBackSettings =
         new WriteBackSettings(Duration.of(100, ChronoUnit.MILLIS), new SystemClock());
     messageBox = new SharedMessageBox<>(10);
-    restorer = new RolledupStatsRestorer();
+    restorer = new WritableRestorer();
     pathRegistry =
         new PathRegistryImpl(
             hourlyRoot, shardPkgRoot, parquetRoot, shardAssetsRoot, new ReentrantReadWriteLock());

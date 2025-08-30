@@ -4,9 +4,9 @@ import org.apache.datasketches.kll.KllFloatsSketch;
 
 import java.util.function.Supplier;
 
-public class KllStatSupplier implements Supplier<Statistics> {
+public class KllStatSupplier implements Supplier<UpdatableStatistics> {
     @Override
-    public Statistics get() {
+    public UpdatableStatistics get() {
         return new RolledUpStatistics(kllSketch());
     }
 
