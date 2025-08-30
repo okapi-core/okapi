@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"> <modelVersion>4.0.0</modelVersion>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -35,6 +36,8 @@
         <module>okapi-constants</module>
         <module>okapi-avros</module>
         <module>okapi-metric-rocks</module>
+        <module>okapi-promql</module>
+        <module>okapi-statistics</module>
     </modules>
     <properties>
         <java.version>21</java.version>
@@ -51,6 +54,7 @@
         <parquet.version>1.13.1</parquet.version>
         <hadoop.version>3.3.6</hadoop.version>
         <datasketches-java.version>8.0.0</datasketches-java.version>
+        <antlr4.version>4.13.1</antlr4.version>
     </properties>
     <dependencies>
 
@@ -221,23 +225,9 @@
             </dependency>
 
             <dependency>
-                <groupId>org.antlr</groupId>
-                <artifactId>ST4</artifactId>
-                <version>4.3.4</version>
-                <scope>compile</scope>
-            </dependency>
-
-            <!-- https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients -->
-            <dependency>
                 <groupId>org.apache.kafka</groupId>
                 <artifactId>kafka-clients</artifactId>
                 <version>4.0.0</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.antlr</groupId>
-                <artifactId>antlr4-runtime</artifactId>
-                <version>4.7.1</version>
             </dependency>
 
             <dependency>
@@ -380,6 +370,12 @@
                 <version>1.1</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-runtime</artifactId>
+                <version>${antlr4.version}</version>
+            </dependency>
+
         </dependencies>
 
     </dependencyManagement>
@@ -443,6 +439,11 @@
                     <groupId>org.apache.avro</groupId>
                     <artifactId>avro-maven-plugin</artifactId>
                     <version>${avro.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.antlr</groupId>
+                    <artifactId>antlr4-maven-plugin</artifactId>
+                    <version>${antlr4.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
