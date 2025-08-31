@@ -1,4 +1,4 @@
-package org.okapi.metrics.web;
+package org.okapi.metrics.controller;
 
 import com.google.gson.Gson;
 import com.okapi.rest.metrics.SubmitMetricsRequestInternal;

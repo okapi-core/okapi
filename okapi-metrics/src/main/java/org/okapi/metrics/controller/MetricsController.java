@@ -1,4 +1,4 @@
-package org.okapi.metrics.web;
+package org.okapi.metrics.controller;
 
 import com.okapi.rest.metrics.*;
 import jakarta.validation.Valid;

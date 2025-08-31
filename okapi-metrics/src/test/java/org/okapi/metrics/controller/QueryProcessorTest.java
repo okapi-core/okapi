@@ -1,4 +1,4 @@
-package org.okapi.metrics.web;
+package org.okapi.metrics.controller;
 
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;

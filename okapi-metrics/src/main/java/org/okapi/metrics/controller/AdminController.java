@@ -1,4 +1,4 @@
-package org.okapi.metrics.web;
+package org.okapi.metrics.controller;
 
 import static org.okapi.validation.OkapiChecks.checkArgument;
 
