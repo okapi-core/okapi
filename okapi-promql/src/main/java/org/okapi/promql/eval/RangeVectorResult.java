@@ -1,8 +1,10 @@
 package org.okapi.promql.eval;
 
 import java.util.*;
+import lombok.ToString;
 import org.okapi.promql.eval.VectorData.*;
 
+@ToString
 public final class RangeVectorResult implements ExpressionResult, Iterable<SeriesWindow> {
   private final List<SeriesWindow> data;
 
