@@ -3,6 +3,7 @@ package org.okapi.metrics.query.promql;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import lombok.AllArgsConstructor;
 import org.okapi.Statistics;
 import org.okapi.metrics.PathRegistry;
 import org.okapi.metrics.common.MetricPaths;
@@ -15,17 +16,19 @@ import org.okapi.metrics.stats.StatisticsRestorer;
 import org.okapi.promql.eval.ts.RESOLUTION;
 import org.okapi.promql.eval.ts.TimeseriesClient;
 
+@AllArgsConstructor
 public class RocksMetricsClient implements TimeseriesClient {
 
   ShardsAndSeriesAssigner shardsAndSeriesAssigner;
   PathRegistry pathRegistry;
   RocksStore rocksStore;
   StatisticsRestorer<Statistics> unmarshaller;
+  String tenantId;
 
   @Override
   public Map<Long, Statistics> get(
       String name, Map<String, String> tags, RESOLUTION res, long startMs, long endMs) {
-    var path = MetricPaths.convertToPath(name, tags);
+    var path = MetricPaths.convertToPath(tenantId, name, tags);
     var shard = shardsAndSeriesAssigner.getShard(path);
     var dbPath = pathRegistry.rocksPath(shard);
     RocksDbReader rocksReader;

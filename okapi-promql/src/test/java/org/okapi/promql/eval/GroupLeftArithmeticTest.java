@@ -15,6 +15,7 @@ import org.okapi.promql.eval.VectorData.*;
 import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.okapi.promql.extractor.TimeSeriesExtractor.findValue;
 
 public class GroupLeftArithmeticTest {
 
@@ -78,18 +79,9 @@ public class GroupLeftArithmeticTest {
     // Compute expectations:
     // i1: avg(requests[2m]) at t2 => (200,300)->250 ; + replicas(3) => 253
     // i2: (20,30)->25 ; + 3 => 28
-    float i1 = sample(iv, new SeriesId("requests", new Labels(cm.cpuUsageApiI1Tags)), t);
-    float i2 = sample(iv, new SeriesId("requests", new Labels(cm.cpuUsageApiI2Tags)), t);
+    float i1 = findValue(iv, new SeriesId("requests", new Labels(cm.cpuUsageApiI1Tags)), t);
+    float i2 = findValue(iv, new SeriesId("requests", new Labels(cm.cpuUsageApiI2Tags)), t);
     assertEquals(253f, i1, 1e-4);
     assertEquals(28f, i2, 1e-4);
-  }
-
-  private static float sample(InstantVectorResult iv, SeriesId series, long ts) {
-    return iv.data().stream()
-        .filter(s -> s.series().equals(series) && s.sample().ts() == ts)
-        .findFirst()
-        .orElseThrow()
-        .sample()
-        .value();
   }
 }

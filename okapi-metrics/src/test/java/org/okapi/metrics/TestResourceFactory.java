@@ -25,7 +25,9 @@ import org.okapi.metrics.common.ServiceRegistry;
 import org.okapi.metrics.common.ServiceRegistryImpl;
 import org.okapi.metrics.common.ZkPaths;
 import org.okapi.metrics.common.pojo.*;
+import org.okapi.metrics.common.sharding.ShardsAndSeriesAssigner;
 import org.okapi.metrics.paths.PathSet;
+import org.okapi.metrics.query.promql.*;
 import org.okapi.metrics.rocks.RocksStore;
 import org.okapi.metrics.rollup.*;
 import org.okapi.metrics.service.*;
@@ -38,6 +40,7 @@ import org.okapi.metrics.sharding.LeaderJobsImpl;
 import org.okapi.metrics.sharding.ShardPkgManager;
 import org.okapi.metrics.sharding.fakes.FixedAssignerFactory;
 import org.okapi.metrics.stats.*;
+import org.okapi.promql.eval.ts.StatisticsMerger;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -418,6 +421,7 @@ public class TestResourceFactory {
   public StatisticsRestorer<UpdatableStatistics> writableUnmarshaller() {
     return new WritableRestorer();
   }
+
   public StatisticsRestorer<Statistics> readableUnmarshaller() {
     return new ReadonlyRestorer();
   }
@@ -462,6 +466,20 @@ public class TestResourceFactory {
             throw new RuntimeException(e);
           }
         });
+  }
+
+  public RocksMetricsClientFactory rocksMetricsClientFactory(
+      ShardsAndSeriesAssigner shardsAndSeriesAssigner, Node node) {
+    return new RocksMetricsClientFactory(
+        shardsAndSeriesAssigner, pathRegistry(node), rocksStore(node), readableUnmarshaller());
+  }
+
+  public PathSetDiscoveryClientFactory pathSetSeriesDiscovery(Node node) throws IOException {
+    return new PathSetDiscoveryClientFactory(pathSet(node));
+  }
+
+  public StatisticsMerger statisticsMerger() {
+    return new RollupStatsMerger(new RolledupMergerStrategy());
   }
 
   public void startWriter(Node node) {

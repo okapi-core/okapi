@@ -1,6 +1,7 @@
 package org.okapi.promql.eval;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.okapi.promql.extractor.TimeSeriesExtractor.findValue;
 
 import java.util.concurrent.Executors;
 import org.antlr.v4.runtime.CharStreams;
@@ -42,18 +43,13 @@ public class RateCounterOverTimeTest {
         // t1 window -> {t0,t1} sum=180 over 120s => 1.5/s
         // t2 window -> {t1,t2} sum=300 over 120s => 2.5/s
         // t3 window -> {t2,t3} sum=420 over 120s => 3.5/s
-        float r1 = find(cm, iv, cm.httpRequestsCounterApi, cm.t1);
-        float r2 = find(cm, iv, cm.httpRequestsCounterApi, cm.t2);
-        float r3 = find(cm, iv, cm.httpRequestsCounterApi, cm.t3);
+        float r1 = findValue(iv, cm.httpRequestsCounterApi, cm.t1);
+        float r2 = findValue(iv, cm.httpRequestsCounterApi, cm.t2);
+        float r3 = findValue(iv, cm.httpRequestsCounterApi, cm.t3);
 
         assertEquals(1.5f, r1, 1e-4);
         assertEquals(2.5f, r2, 1e-4);
         assertEquals(3.5f, r3, 1e-4);
     }
 
-    private static float find(TestFixtures.CommonMocks cm, InstantVectorResult iv, SeriesId series, long ts) {
-        return iv.data().stream()
-                .filter(s -> s.series().equals(series) && s.sample().ts() == ts)
-                .findFirst().orElseThrow().sample().value();
-    }
 }

@@ -39,4 +39,8 @@ public class MetricPaths {
   public static MetricsContext getMetricsContext(SubmitMetricsRequestInternal request) {
     return new MetricsContext(request.getTags().getOrDefault("trace_id", null));
   }
+
+  public static String universalMetricName (String tenantId, String name){
+    return tenantId + ":" + name;
+  }
 }

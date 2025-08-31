@@ -2,6 +2,7 @@ package org.okapi.promql.eval;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.okapi.promql.extractor.TimeSeriesExtractor.findValue;
 
 import java.util.List;
 import java.util.Map;
@@ -79,12 +80,4 @@ public class AvgOverTimeTest {
     assertEquals(35f, v3, 1e-4);
   }
 
-  private static float findValue(InstantVectorResult iv, SeriesId series, long ts) {
-    return iv.data().stream()
-        .filter(s -> s.series().equals(series) && s.sample().ts() == ts)
-        .findFirst()
-        .orElseThrow(() -> new AssertionError("Missing sample for " + series + " @ " + ts))
-        .sample()
-        .value();
-  }
 }
