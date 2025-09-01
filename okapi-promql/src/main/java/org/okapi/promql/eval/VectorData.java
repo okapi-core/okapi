@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 public class VectorData {
-    public record Labels(Map<String,String> tags) {}
+    public record Labels(Map<String, String> tags) {}
 
     public record SeriesId(String metric, Labels labels) {}
 

@@ -3,12 +3,21 @@ package org.okapi.metrics.query.promql;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.okapi.exceptions.BadRequestException;
 import org.okapi.metrics.OutsideWindowException;
 import org.okapi.metrics.TestResourceFactory;
 import org.okapi.metrics.common.pojo.Node;
@@ -41,7 +50,7 @@ public class PromQlQueryProcessorTests {
   }
 
   @Test
-  public void testNoOpQuery() throws EvaluationException {
+  public void testNoOpQuery() throws EvaluationException, BadRequestException {
     var clientFactory =
         testResourceFactory.rocksMetricsClientFactory(shardsAndSeriesAssigner, node);
     var executor = Executors.newScheduledThreadPool(1);
@@ -49,23 +58,33 @@ public class PromQlQueryProcessorTests {
         new PromQlQueryProcessor(
             executor, testResourceFactory.statisticsMerger(), clientFactory, seriesDiscovery);
     String promql = "avg_over_time(http_requests[2m])";
-    queryProcessor.process(TENANT, promql, now, now + 10_000, 1_000);
+    queryProcessor.queryRange(
+        TENANT, promql, toDoubleSeconds(now), toDoubleSeconds(now + 10_000), toStepSeconds(1_000));
+    queryProcessor.queryRange(
+        TENANT, promql, toRfc3339Date(now), toRfc3339Date(now + 10_000), toStepSeconds(1_000));
   }
 
-  @Test
-  public void tesAvgQuery()
+  @ParameterizedTest
+  @MethodSource("timeTransformers")
+  public void tesAvgQuery(Function<Long, String> millisToStr)
       throws StatisticsFrozenException,
           OutsideWindowException,
           IOException,
           InterruptedException,
-          EvaluationException {
+          EvaluationException,
+          BadRequestException {
     var testCase = new PromQLSmallTestCase(now, testResourceFactory, node, shardsAndSeriesAssigner);
     String promql = "avg_over_time(http_requests[2m])";
     var queryProcessor =
         testCase.queryProcessor(testResourceFactory, shardsAndSeriesAssigner, executor, node);
 
     var result =
-        queryProcessor.process(testCase.TENANT_ID, promql, testCase.t0, testCase.t3, 60_000);
+        queryProcessor.queryRange(
+            testCase.TENANT_ID,
+            promql,
+            millisToStr.apply(testCase.t0),
+            millisToStr.apply(testCase.t3),
+            toStepSeconds(60_000));
     assertNotNull(result);
     assertEquals(ValueType.INSTANT_VECTOR, result.type());
 
@@ -81,22 +100,50 @@ public class PromQlQueryProcessorTests {
     assertEquals(Arrays.asList(10f, 15f, 25f, 35f), values);
   }
 
-  @Test
-  public void testNoResultWithoutMatchingTenant()
+  @ParameterizedTest
+  @MethodSource("timeTransformers")
+  public void testNoResultWithoutMatchingTenant(Function<Long, String> millisToStr)
       throws StatisticsFrozenException,
           OutsideWindowException,
           IOException,
           InterruptedException,
-          EvaluationException {
+          EvaluationException,
+          BadRequestException {
     var testCase = new PromQLSmallTestCase(now, testResourceFactory, node, shardsAndSeriesAssigner);
     String promql = "avg_over_time(http_requests[2m])";
     var queryProcessor =
         testCase.queryProcessor(testResourceFactory, shardsAndSeriesAssigner, executor, node);
 
-    var result = queryProcessor.process(TENANT, promql, testCase.t0, testCase.t3, 60_000);
+    var result =
+        queryProcessor.queryRange(
+            TENANT,
+            promql,
+            millisToStr.apply(testCase.t0),
+            millisToStr.apply(testCase.t3),
+            toStepSeconds(60_000));
     assertNotNull(result);
     assertEquals(ValueType.INSTANT_VECTOR, result.type());
     var iv = (InstantVectorResult) result;
     assertTrue(iv.data().isEmpty());
+  }
+
+  public static Stream<Arguments> timeTransformers() {
+    Function<Long, String> toSeconds = PromQlQueryProcessorTests::toDoubleSeconds;
+    Function<Long, String> toDate = PromQlQueryProcessorTests::toRfc3339Date;
+    return Stream.of(Arguments.of(toSeconds, toDate));
+  }
+
+  public static String toDoubleSeconds(long ts) {
+    return Double.toString((0. + ts) / 1000);
+  }
+
+  public static String toRfc3339Date(long ts) {
+    return Instant.ofEpochMilli(ts)
+        .atOffset(ZoneOffset.UTC)
+        .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+  }
+
+  public static String toStepSeconds(long stepMillis) {
+    return (stepMillis / 1000) + "s";
   }
 }

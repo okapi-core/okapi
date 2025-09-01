@@ -11,6 +11,8 @@ import org.okapi.promql.eval.visitor.ExpressionVisitor;
 import org.okapi.promql.parser.PromQLParser;
 
 public final class ExpressionEvaluator {
+  private static final long DEFAULT_INSTANT_STEP_MS =
+      1_000L; // 1s; sufficient for secondly resolution
   private final TimeseriesClient client;
   private final SeriesDiscovery discovery;
   private final ExecutorService exec;
@@ -34,11 +36,27 @@ public final class ExpressionEvaluator {
   }
 
   public ExpressionResult evaluate(
-      String promql, long startMs, long endMs, long stepMs, PromQLParser parser) throws EvaluationException {
+      String promql, long startMs, long endMs, long stepMs, PromQLParser parser)
+      throws EvaluationException {
     var tree = parser.expression(); // assume parser already constructed with token stream
     var logical = new ExpressionVisitor(statisticsMerger).visit(tree); // returns LogicalExpr
     var ctx =
         new EvalContext(startMs, endMs, stepMs, chooseResolution(stepMs), client, discovery, exec);
+    return logical.lower().eval(ctx);
+  }
+
+  public ExpressionResult evaluateAt(String promql, long tsMs, PromQLParser parser)
+      throws EvaluationException {
+    // Use a tiny step so evaluators that iterate [start..end] execute exactly once at tsMs.
+    final long effStepMs = DEFAULT_INSTANT_STEP_MS;
+
+    var tree = parser.expression();
+    var logical = new ExpressionVisitor(statisticsMerger).visit(tree);
+
+    var ctx =
+        new EvalContext(
+            tsMs, tsMs, effStepMs, chooseResolution(effStepMs), client, discovery, exec);
+
     return logical.lower().eval(ctx);
   }
 }

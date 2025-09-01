@@ -1,5 +1,7 @@
 package org.okapi.metrics;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
@@ -41,6 +43,8 @@ import org.okapi.metrics.service.self.ZkNodeCreator;
 import org.okapi.metrics.sharding.*;
 import org.okapi.metrics.stats.*;
 import org.okapi.profiles.ENV_TYPE;
+import org.okapi.rest.promql.Sample;
+import org.okapi.rest.promql.SampleAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -544,5 +548,10 @@ public class OkapiMetricsConsumerConfig {
         shardMap,
         shardPkgManager,
         rocksStore);
+  }
+
+  @Bean(name = Configurations.BEAN_PROMQL_SERIALIZER)
+  public Gson promqlSerializer() {
+    return new GsonBuilder().registerTypeAdapter(Sample.class, new SampleAdapter()).create();
   }
 }
