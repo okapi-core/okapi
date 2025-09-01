@@ -3,7 +3,7 @@ package org.okapi.auth;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.okapi.fixtures.Deduplicator.dedup;
 
-import com.okapi.rest.auth.AuthRequest;
+import org.okapi.rest.auth.AuthRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.okapi.data.exceptions.UserAlreadyExistsException;

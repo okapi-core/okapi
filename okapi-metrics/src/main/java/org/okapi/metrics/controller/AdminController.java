@@ -2,9 +2,9 @@ package org.okapi.metrics.controller;
 
 import static org.okapi.validation.OkapiChecks.checkArgument;
 
-import com.okapi.rest.metrics.admin.NodeMetadataResponse;
-import com.okapi.rest.metrics.admin.StartScaleUpRequest;
-import com.okapi.rest.metrics.admin.StartScaleUpResponse;
+import org.okapi.rest.metrics.admin.NodeMetadataResponse;
+import org.okapi.rest.metrics.admin.StartScaleUpRequest;
+import org.okapi.rest.metrics.admin.StartScaleUpResponse;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

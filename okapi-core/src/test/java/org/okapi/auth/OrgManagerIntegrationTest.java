@@ -4,10 +4,10 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.okapi.auth.TestCommons.addToOrg;
 
-import com.okapi.rest.auth.AuthRequest;
-import com.okapi.rest.org.CreateOrgMemberRequest;
-import com.okapi.rest.org.DeleteOrgMemberRequest;
-import com.okapi.rest.org.UpdateOrgRequest;
+import org.okapi.rest.auth.AuthRequest;
+import org.okapi.rest.org.CreateOrgMemberRequest;
+import org.okapi.rest.org.DeleteOrgMemberRequest;
+import org.okapi.rest.org.UpdateOrgRequest;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;

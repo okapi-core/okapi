@@ -1,6 +1,5 @@
 package org.okapi.metrics.controller;
 
-import com.okapi.rest.metrics.*;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.okapi.exceptions.BadRequestException;
@@ -8,6 +7,7 @@ import org.okapi.metrics.OutsideWindowException;
 import org.okapi.metrics.service.runnables.MetricsWriter;
 import org.okapi.metrics.service.web.QueryProcessor;
 import org.okapi.metrics.stats.StatisticsFrozenException;
+import org.okapi.rest.metrics.*;
 import org.rocksdb.RocksDBException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

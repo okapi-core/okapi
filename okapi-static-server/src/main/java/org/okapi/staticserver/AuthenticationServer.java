@@ -1,8 +1,8 @@
 package org.okapi.staticserver;
 
 import com.google.gson.Gson;
-import com.okapi.rest.auth.AuthRequest;
-import com.okapi.rest.auth.TokenResponse;
+import org.okapi.rest.auth.AuthRequest;
+import org.okapi.rest.auth.TokenResponse;
 import org.okapi.headers.CookiesAndHeaders;
 import org.okapi.staticserver.exceptions.BadRequestException;
 import java.io.IOException;

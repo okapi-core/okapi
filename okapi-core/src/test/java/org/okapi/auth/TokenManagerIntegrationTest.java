@@ -3,7 +3,7 @@ package org.okapi.auth;
 import org.okapi.data.exceptions.UserAlreadyExistsException;
 import org.okapi.fixtures.Deduplicator;
 import org.okapi.metrics.IdCreationFailedException;
-import com.okapi.rest.auth.AuthRequest;
+import org.okapi.rest.auth.AuthRequest;
 import org.okapi.exceptions.BadRequestException;
 import org.okapi.exceptions.UnAuthorizedException;
 import org.okapi.fixtures.SingletonFactory;

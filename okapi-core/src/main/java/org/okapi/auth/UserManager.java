@@ -3,11 +3,11 @@ package org.okapi.auth;
 import static org.okapi.validation.OkapiChecks.checkArgument;
 
 import com.google.common.collect.Lists;
-import com.okapi.rest.auth.AuthRequest;
-import com.okapi.rest.org.ListOrgsResponse;
-import com.okapi.rest.team.CreateTeamRequest;
-import com.okapi.rest.users.GetOrgUserView;
-import com.okapi.rest.users.GetUserMetadataResponse;
+import org.okapi.rest.auth.AuthRequest;
+import org.okapi.rest.org.ListOrgsResponse;
+import org.okapi.rest.team.CreateTeamRequest;
+import org.okapi.rest.users.GetOrgUserView;
+import org.okapi.rest.users.GetUserMetadataResponse;
 import java.util.*;
 import lombok.AllArgsConstructor;
 import org.okapi.bcrypt.BCrypt;

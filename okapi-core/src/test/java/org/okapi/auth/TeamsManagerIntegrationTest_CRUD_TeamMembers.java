@@ -5,10 +5,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.okapi.auth.TestCommons.addToOrg;
 
 import com.google.common.collect.Lists;
-import com.okapi.rest.auth.AuthRequest;
-import com.okapi.rest.team.CreateTeamMemberRequest;
-import com.okapi.rest.team.CreateTeamRequest;
-import com.okapi.rest.team.GetTeamResponse;
+import org.okapi.rest.auth.AuthRequest;
+import org.okapi.rest.team.CreateTeamMemberRequest;
+import org.okapi.rest.team.CreateTeamRequest;
+import org.okapi.rest.team.GetTeamResponse;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.BeforeEach;

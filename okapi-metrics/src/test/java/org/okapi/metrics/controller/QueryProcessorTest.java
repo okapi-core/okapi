@@ -4,8 +4,8 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.okapi.metrics.GlobalTestConfig.okapiWait;
 
-import com.okapi.rest.metrics.MetricsPathSpecifier;
-import com.okapi.rest.metrics.SearchMetricsRequestInternal;
+import org.okapi.rest.metrics.MetricsPathSpecifier;
+import org.okapi.rest.metrics.SearchMetricsRequestInternal;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;

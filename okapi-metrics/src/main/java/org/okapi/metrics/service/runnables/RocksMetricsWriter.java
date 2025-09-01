@@ -3,7 +3,7 @@ package org.okapi.metrics.service.runnables;
 import static org.okapi.metrics.common.MetricPaths.convertToPath;
 import static org.okapi.metrics.common.MetricPaths.getMetricsContext;
 
-import com.okapi.rest.metrics.SubmitMetricsRequestInternal;
+import org.okapi.rest.metrics.SubmitMetricsRequestInternal;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;

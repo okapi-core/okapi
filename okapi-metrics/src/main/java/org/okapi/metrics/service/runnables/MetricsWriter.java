@@ -1,6 +1,6 @@
 package org.okapi.metrics.service.runnables;
 
-import com.okapi.rest.metrics.SubmitMetricsRequestInternal;
+import org.okapi.rest.metrics.SubmitMetricsRequestInternal;
 import org.okapi.exceptions.BadRequestException;
 import org.okapi.metrics.OutsideWindowException;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssigner;

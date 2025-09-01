@@ -1,7 +1,7 @@
 package org.okapi.metricsproxy.service;
 
 import org.okapi.hashing.OkapiHashingUtils;
-import com.okapi.rest.metrics.MetricsPathSpecifier;
+import org.okapi.rest.metrics.MetricsPathSpecifier;
 import lombok.Getter;
 
 import java.util.ArrayList;

@@ -3,7 +3,7 @@ package org.okapi.metrics.service;
 import static org.awaitility.Awaitility.await;
 import static org.okapi.constants.Constants.N_SHARDS;
 
-import com.okapi.rest.metrics.SubmitMetricsRequestInternal;
+import org.okapi.rest.metrics.SubmitMetricsRequestInternal;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;

@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.okapi.fixtures.Deduplicator.dedup;
 
 import com.google.common.collect.Lists;
-import com.okapi.rest.tokens.CreateApiTokenRequest;
+import org.okapi.rest.tokens.CreateApiTokenRequest;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;

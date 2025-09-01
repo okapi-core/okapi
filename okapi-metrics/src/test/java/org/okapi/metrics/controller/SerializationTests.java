@@ -1,7 +1,7 @@
 package org.okapi.metrics.controller;
 
 import com.google.gson.Gson;
-import com.okapi.rest.metrics.SubmitMetricsRequestInternal;
+import org.okapi.rest.metrics.SubmitMetricsRequestInternal;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;

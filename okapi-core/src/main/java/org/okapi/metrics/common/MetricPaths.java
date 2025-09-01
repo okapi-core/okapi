@@ -1,7 +1,7 @@
 package org.okapi.metrics.common;
 
-import com.okapi.rest.metrics.GetMetricsRequestInternal;
-import com.okapi.rest.metrics.SubmitMetricsRequestInternal;
+import org.okapi.rest.metrics.GetMetricsRequestInternal;
+import org.okapi.rest.metrics.SubmitMetricsRequestInternal;
 import java.util.Map;
 
 public class MetricPaths {

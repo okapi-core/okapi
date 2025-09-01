@@ -7,8 +7,8 @@ import static org.okapi.data.dto.RelationGraphNode.RELATION_TYPE.TEAM_MEMBER;
 import static org.okapi.data.dto.RelationGraphNode.makeEntityId;
 
 import com.google.common.collect.Lists;
-import com.okapi.rest.org.UpdateTeamRequest;
-import com.okapi.rest.team.*;
+import org.okapi.rest.org.UpdateTeamRequest;
+
 import java.util.*;
 import lombok.AllArgsConstructor;
 import org.okapi.collections.OkapiOptionalUtils;
@@ -23,6 +23,7 @@ import org.okapi.exceptions.BadRequestException;
 import org.okapi.exceptions.UnAuthorizedException;
 import org.okapi.metrics.IdCreationFailedException;
 import org.okapi.metrics.IdCreator;
+import org.okapi.rest.team.*;
 import org.okapi.usermessages.UserFacingMessages;
 
 @AllArgsConstructor

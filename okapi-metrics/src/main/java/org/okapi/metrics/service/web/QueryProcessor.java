@@ -2,7 +2,6 @@ package org.okapi.metrics.service.web;
 
 import static org.okapi.validation.OkapiChecks.checkArgument;
 
-import com.okapi.rest.metrics.*;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -24,6 +23,7 @@ import org.okapi.metrics.rollup.HashFns;
 import org.okapi.metrics.rollup.RocksReaderSupplier;
 import org.okapi.metrics.rollup.RollupQueryProcessor;
 import org.okapi.metrics.search.MetricsSearcher;
+import org.okapi.rest.metrics.*;
 import org.rocksdb.RocksDBException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

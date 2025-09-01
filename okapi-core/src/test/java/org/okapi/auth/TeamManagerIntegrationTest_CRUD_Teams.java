@@ -2,8 +2,8 @@ package org.okapi.auth;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.okapi.rest.org.UpdateTeamRequest;
-import com.okapi.rest.team.CreateTeamRequest;
+import org.okapi.rest.org.UpdateTeamRequest;
+import org.okapi.rest.team.CreateTeamRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;

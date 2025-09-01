@@ -3,7 +3,7 @@ package org.okapi.metricsproxy.service;
 import static org.okapi.validation.OkapiChecks.checkArgument;
 
 import com.google.gson.Gson;
-import com.okapi.rest.metrics.*;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -35,6 +35,7 @@ import org.okapi.metrics.scanning.EmptyFileException;
 import org.okapi.metrics.scanning.HourlyCheckpointScanner;
 import org.okapi.metrics.search.MetricsSearcher;
 import org.okapi.metricsproxy.auth.AuthorizationChecker;
+import org.okapi.rest.metrics.*;
 import org.okapi.s3.S3ByteRangeCache;
 import org.okapi.usermessages.UserFacingMessages;
 import software.amazon.awssdk.services.s3.S3Client;

@@ -68,10 +68,10 @@ public class RangeStatEval implements Evaluable {
               case MIN -> agg != null ? agg.min() : Float.NaN;
               case MAX -> agg != null ? agg.max() : Float.NaN;
               case SUM -> agg != null ? (float) agg.getSum() : 0f;
-              case COUNT -> (float) count;
+              case COUNT -> (float) agg.getCount();
               case QUANTILE -> agg != null ? agg.percentile(q) : Float.NaN;
               case LAST -> lastPoint != null ? lastPoint.stats().avg() : Float.NaN;
-              case PRESENT -> (count > 0 ? 1f : 0f);
+              case PRESENT -> (agg.getCount() > 0 ? 1f : 0f);
             };
         out.add(new SeriesSample(w.id(), new Sample(t, value)));
       }

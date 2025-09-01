@@ -1,10 +1,10 @@
 package org.okapi.data;
 
-import com.okapi.rest.auth.GetAuthorizationTokenResponse;
-import com.okapi.rest.dashboards.GetDashboardResponse;
-import com.okapi.rest.team.GetTeamResponse;
-import com.okapi.rest.users.GetOrgUserView;
-import com.okapi.rest.users.GetUserMetadataResponse;
+import org.okapi.rest.auth.GetAuthorizationTokenResponse;
+import org.okapi.rest.dashboards.GetDashboardResponse;
+import org.okapi.rest.team.GetTeamResponse;
+import org.okapi.rest.users.GetOrgUserView;
+import org.okapi.rest.users.GetUserMetadataResponse;
 import org.okapi.auth.RoleTemplates;
 import org.okapi.data.dto.*;
 

@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.okapi.constants.Constants.N_SHARDS;
 import static org.okapi.metrics.GlobalTestConfig.okapiWait;
 
-import com.okapi.rest.metrics.SubmitMetricsRequestInternal;
+import org.okapi.rest.metrics.SubmitMetricsRequestInternal;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
