@@ -25,7 +25,6 @@ import org.okapi.metrics.common.ServiceRegistry;
 import org.okapi.metrics.common.ServiceRegistryImpl;
 import org.okapi.metrics.common.ZkPaths;
 import org.okapi.metrics.common.pojo.*;
-import org.okapi.metrics.common.sharding.ShardsAndSeriesAssigner;
 import org.okapi.metrics.paths.PathSet;
 import org.okapi.metrics.query.promql.*;
 import org.okapi.metrics.rocks.RocksStore;
@@ -357,6 +356,11 @@ public class TestResourceFactory {
         node, ShardPkgManager.class, () -> new ShardPkgManager(pathRegistry(node)));
   }
 
+  public TimeSeriesClientFactory timeSeriesClientFactory(Node node) {
+    return new RocksMetricsClientFactory(
+        pathRegistry(node), rocksStore(node), readableUnmarshaller());
+  }
+
   public MetricsHandlerImpl metricsHandler(Node node) throws IOException {
     return makeSingleton(
         node,
@@ -375,7 +379,8 @@ public class TestResourceFactory {
               shardsAndSeriesAssigner(),
               shardMap(node),
               shardPkgManager(node),
-              rocksStore(node));
+              rocksStore(node),
+              timeSeriesClientFactory(node));
         });
   }
 
@@ -468,10 +473,9 @@ public class TestResourceFactory {
         });
   }
 
-  public RocksMetricsClientFactory rocksMetricsClientFactory(
-      ShardsAndSeriesAssigner shardsAndSeriesAssigner, Node node) {
+  public RocksMetricsClientFactory rocksMetricsClientFactory(Node node) {
     return new RocksMetricsClientFactory(
-        shardsAndSeriesAssigner, pathRegistry(node), rocksStore(node), readableUnmarshaller());
+        pathRegistry(node), rocksStore(node), readableUnmarshaller());
   }
 
   public PathSetDiscoveryClientFactory pathSetSeriesDiscovery(Node node) throws IOException {

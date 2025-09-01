@@ -20,6 +20,7 @@ import org.okapi.metrics.async.Await;
 import org.okapi.metrics.common.ServiceRegistry;
 import org.okapi.metrics.common.pojo.NodeState;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssignerFactory;
+import org.okapi.metrics.query.promql.TimeSeriesClientFactory;
 import org.okapi.metrics.rocks.RocksStore;
 import org.okapi.metrics.service.runnables.*;
 import org.okapi.metrics.sharding.ShardPkgManager;
@@ -51,6 +52,9 @@ public class MetricsHandlerImpl implements MetricsHandler, Shardable {
   // Rocks store to close when moving shards
   RocksStore rocksStore;
 
+  // TimeSeriesFactory needs to know what are the shards
+  TimeSeriesClientFactory timeSeriesClientFactory;
+
   @Override
   public void onStart() throws Exception {
     serviceRegistry.registerMetricProcessor();
@@ -62,6 +66,7 @@ public class MetricsHandlerImpl implements MetricsHandler, Shardable {
     var assigner =
         shardsAndSeriesAssignerFactory.makeAssigner(nShards, nodes.orElse(Collections.emptyList()));
     metricsWriter.setShardsAndSeriesAssigner(assigner);
+    timeSeriesClientFactory.setShardsAndSeriesAssigner(assigner);
     scheduler.schedule(heartBeatWriter, 0, TimeUnit.SECONDS);
     scheduler.schedule(leaderResponsibilityRunnable, 0, TimeUnit.SECONDS);
     scheduler.schedule(hourlyCheckpointUploaderRunnable, 0, TimeUnit.SECONDS);
@@ -174,6 +179,7 @@ public class MetricsHandlerImpl implements MetricsHandler, Shardable {
 
     var assigner = shardsAndSeriesAssignerFactory.makeAssigner(nShards, nodes);
     metricsWriter.setShardsAndSeriesAssigner(assigner);
+    timeSeriesClientFactory.setShardsAndSeriesAssigner(assigner);
     serviceController.resumeConsumer();
   }
 
@@ -188,6 +194,7 @@ public class MetricsHandlerImpl implements MetricsHandler, Shardable {
     var assigner =
         shardsAndSeriesAssignerFactory.makeAssigner(N_SHARDS, oldNodeConfig.get().nodes());
     metricsWriter.setShardsAndSeriesAssigner(assigner);
+    timeSeriesClientFactory.setShardsAndSeriesAssigner(assigner);
     serviceController.resumeConsumer();
   }
 

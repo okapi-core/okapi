@@ -52,7 +52,8 @@ public class PromQlQueryProcessorTests {
   @Test
   public void testNoOpQuery() throws EvaluationException, BadRequestException {
     var clientFactory =
-        testResourceFactory.rocksMetricsClientFactory(shardsAndSeriesAssigner, node);
+        testResourceFactory.rocksMetricsClientFactory(node);
+    clientFactory.setShardsAndSeriesAssigner(shardsAndSeriesAssigner);
     var executor = Executors.newScheduledThreadPool(1);
     var queryProcessor =
         new PromQlQueryProcessor(

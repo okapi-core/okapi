@@ -1,6 +1,5 @@
 clusterId: nothing
 mode: isolated
-
 remoteHourlyUploads: disabled
 
 server:
@@ -41,3 +40,6 @@ rocksBacklog: 100000
 rocksDir: ${user.home}/.okapi/rocks-dbs
 writeBack:
   millis: 1000
+
+promQl:
+  evalThreads: 5

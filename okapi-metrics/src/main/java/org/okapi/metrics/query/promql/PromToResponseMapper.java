@@ -60,7 +60,7 @@ public class PromToResponseMapper {
                 w -> {
                   var toName = toPrometheusName(w.getKey());
                   var values =
-                      w.getValue().stream().map(this::fromEngineSampleToRestSample).toList();
+                      w.getValue().stream().map(PromToResponseMapper::fromEngineSampleToRestSample).toList();
                   return new MatrixSeries(toName, values);
                 })
             .toList();

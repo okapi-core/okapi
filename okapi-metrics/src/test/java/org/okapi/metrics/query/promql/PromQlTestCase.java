@@ -73,7 +73,8 @@ public class PromQlTestCase {
       ExecutorService executorService,
       Node node)
       throws IOException {
-    var clientFactory = resourceFactory.rocksMetricsClientFactory(shardsAndSeriesAssigner, node);
+    var clientFactory = resourceFactory.rocksMetricsClientFactory(node);
+    clientFactory.setShardsAndSeriesAssigner(shardsAndSeriesAssigner);
 
     var seriesDiscovery = resourceFactory.pathSetSeriesDiscovery(node);
     var queryProcessor =

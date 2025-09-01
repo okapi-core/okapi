@@ -45,24 +45,30 @@ public class PromQlQueryProcessor {
 
   public ExpressionResult queryRange(
       String tenantId, String promql, long startMs, long endMs, long stepMs)
-      throws EvaluationException {
+      throws EvaluationException, BadRequestException {
     var lexer = new PromQLLexer(CharStreams.fromString(promql));
     var tokens = new CommonTokenStream(lexer);
     var client = metricsClientFactory.getClient(tenantId);
+    if(client.isEmpty()){
+      throw new BadRequestException("Cluster is unavailable as we may be resharding.");
+    }
     var discovery = pathSetDiscoveryClientFactory.get(tenantId);
     var parser = new PromQLParser(tokens);
-    var evaluator = new ExpressionEvaluator(client, discovery, exec, merger);
+    var evaluator = new ExpressionEvaluator(client.get(), discovery, exec, merger);
     return evaluator.evaluate(promql, startMs, endMs, stepMs, parser);
   }
 
   public ExpressionResult queryPointInTime(String tenantId, String promql, long instant)
-      throws EvaluationException {
+      throws EvaluationException, BadRequestException {
     var lexer = new PromQLLexer(CharStreams.fromString(promql));
     var tokens = new CommonTokenStream(lexer);
     var client = metricsClientFactory.getClient(tenantId);
+    if(client.isEmpty()){
+      throw new BadRequestException("Cluster is unavailable as we may be resharding.");
+    }
     var discovery = pathSetDiscoveryClientFactory.get(tenantId);
     var parser = new PromQLParser(tokens);
-    var evaluator = new ExpressionEvaluator(client, discovery, exec, merger);
+    var evaluator = new ExpressionEvaluator(client.get(), discovery, exec, merger);
     var result = evaluator.evaluateAt(promql, instant, parser);
     return result;
   }

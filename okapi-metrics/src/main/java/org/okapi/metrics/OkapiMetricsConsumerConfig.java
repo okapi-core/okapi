@@ -33,6 +33,7 @@ import org.okapi.metrics.common.sharding.ConsistentHashedAssignerFactory;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssignerFactory;
 import org.okapi.metrics.coordinator.CentralCoordinator;
 import org.okapi.metrics.paths.PathSet;
+import org.okapi.metrics.query.promql.*;
 import org.okapi.metrics.rocks.RocksStore;
 import org.okapi.metrics.rollup.*;
 import org.okapi.metrics.service.*;
@@ -533,7 +534,8 @@ public class OkapiMetricsConsumerConfig {
       @Autowired ShardsAndSeriesAssignerFactory shardsAndSeriesAssignerFactory,
       @Autowired ShardMap shardMap,
       @Autowired ShardPkgManager shardPkgManager,
-      @Autowired RocksStore rocksStore) {
+      @Autowired RocksStore rocksStore,
+      @Autowired TimeSeriesClientFactory timeSeriesClientFactory) {
     return new MetricsHandlerImpl(
         serviceRegistry,
         pathRegistry,
@@ -547,11 +549,35 @@ public class OkapiMetricsConsumerConfig {
         shardsAndSeriesAssignerFactory,
         shardMap,
         shardPkgManager,
-        rocksStore);
+        rocksStore,
+        timeSeriesClientFactory);
   }
 
   @Bean(name = Configurations.BEAN_PROMQL_SERIALIZER)
   public Gson promqlSerializer() {
     return new GsonBuilder().registerTypeAdapter(Sample.class, new SampleAdapter()).create();
+  }
+
+  @Bean
+  public TimeSeriesClientFactory timeSeriesClientFactory(
+      @Autowired PathRegistry pathRegistry, @Autowired RocksStore rocksStore) {
+    var readableRestorer = new ReadonlyRestorer();
+    return new RocksMetricsClientFactory(pathRegistry, rocksStore, readableRestorer);
+  }
+
+  @Bean
+  public SeriesDiscoveryFactory seriesDiscoveryFactory(@Autowired PathSet pathSet) {
+    return new PathSetDiscoveryClientFactory(pathSet);
+  }
+
+  @Bean
+  public PromQlQueryProcessor promQlQueryProcessor(
+      @Autowired TimeSeriesClientFactory timeSeriesClientFactory,
+      @Autowired SeriesDiscoveryFactory seriesDiscoveryFactory,
+      @Value(Configurations.VAL_PROMQL_EVAL_THREADS) int threads) {
+    var singleThreadedExecutor = Executors.newFixedThreadPool(threads);
+    var merger = new RollupStatsMerger(new RolledupMergerStrategy());
+    return new PromQlQueryProcessor(
+        singleThreadedExecutor, merger, timeSeriesClientFactory, seriesDiscoveryFactory);
   }
 }
