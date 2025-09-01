@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class PromQlController {
 
+  @Autowired
   @Qualifier(Configurations.BEAN_PROMQL_SERIALIZER)
   Gson promQlSerializer;
 
@@ -47,7 +48,7 @@ public class PromQlController {
     return ResponseEntity.ok(responseBody);
   }
 
-  @GetMapping("/api/v1/query_range")
+  @GetMapping("/query_range")
   public ResponseEntity<String> queryRange(
       @RequestHeader(CookiesAndHeaders.HEADER_OKAPI_TENANT) String tenant,
       @RequestParam("query") String query,
@@ -56,7 +57,7 @@ public class PromQlController {
       @RequestParam("step") String step,
       @RequestParam(value = "timeout", required = false) String timeout)
       throws BadRequestException, EvaluationException {
-    var result = promQlQueryProcessor.queryRange(tenant, query, start, end, step);
+    var result = promQlQueryProcessor.queryRangeApi(tenant, query, start, end, step);
     var responseBody = promQlSerializer.toJson(result);
     return ResponseEntity.ok(responseBody);
   }

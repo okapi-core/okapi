@@ -69,7 +69,7 @@ public class PromToResponseMapper {
   }
 
   public static Sample fromEngineSampleToRestSample(VectorData.Sample engineSample) {
-    var inSecond = engineSample.ts() / 1000.f;
+    var inSecond = engineSample.ts() / 1000.;
     var strVal = "" + engineSample.value();
     return new Sample(inSecond, strVal);
   }
