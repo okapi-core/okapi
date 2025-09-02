@@ -2,6 +2,7 @@ package org.okapi.metrics.query.promql;
 
 import java.util.*;
 import org.okapi.promql.eval.*;
+import org.okapi.promql.eval.ScalarResult;
 import org.okapi.rest.promql.*;
 
 public class PromToResponseMapper {
@@ -9,18 +10,32 @@ public class PromToResponseMapper {
   public static final String NAME = "__name__";
 
   public enum RETURN_TYPE {
-    VECTOR,
+    VECTOR_OR_SCALAR,
     MATRIX,
+  }
+
+  public static GetPromQlResponse<List<String>> mapStringList(List<String> list) {
+    var response = new GetPromQlResponse<List<String>>();
+    response.setStatus("success");
+    response.setData(list);
+    return response;
   }
 
   public static GetPromQlResponse<PromQlData<?>> toResult(
       ExpressionResult result, RETURN_TYPE returnType) {
-    if (returnType == RETURN_TYPE.VECTOR) {
+    if (returnType == RETURN_TYPE.VECTOR_OR_SCALAR) {
       var response = new GetPromQlResponse<PromQlData<?>>();
-      var data = mapInstanceVector(result);
-      response.setStatus("success");
-      response.setData(data);
-      return response;
+      if (result instanceof InstantVectorResult) {
+        var data = mapInstanceVector(result);
+        response.setStatus("success");
+        response.setData(data);
+        return response;
+      } else if (result instanceof ScalarResult) {
+        var data = mapScalar(result);
+        response.setStatus("success");
+        response.setData(data);
+        return response;
+      }
     } else if (returnType == RETURN_TYPE.MATRIX) {
       var response = new GetPromQlResponse<PromQlData<?>>();
       var data = mapMatrixSeries(result);
@@ -32,6 +47,7 @@ public class PromToResponseMapper {
   }
 
   public static PromQlData<List<VectorSeries>> mapInstanceVector(ExpressionResult result) {
+    if (result instanceof ScalarResult) {}
     var iv = (InstantVectorResult) result;
     var promQlResponse = new PromQlData<List<VectorSeries>>();
     promQlResponse.setResultType(PromQlResultType.MATRIX);
@@ -50,6 +66,15 @@ public class PromToResponseMapper {
     return promQlResponse;
   }
 
+  public static PromQlData<Sample> mapScalar(ExpressionResult result) {
+    var scalar = (ScalarResult) result;
+    var promQlData = new PromQlData<Sample>();
+    promQlData.setResultType(PromQlResultType.SCALAR);
+    var now = System.currentTimeMillis() / 1000.;
+    promQlData.setResult(new Sample(now, Float.toString(scalar.getValue())));
+    return promQlData;
+  }
+
   public static PromQlData<List<MatrixSeries>> mapMatrixSeries(ExpressionResult result) {
     var asIv = (InstantVectorResult) result;
     var asMat = asIv.toMatrix();
@@ -60,11 +85,14 @@ public class PromToResponseMapper {
                 w -> {
                   var toName = toPrometheusName(w.getKey());
                   var values =
-                      w.getValue().stream().map(PromToResponseMapper::fromEngineSampleToRestSample).toList();
+                      w.getValue().stream()
+                          .map(PromToResponseMapper::fromEngineSampleToRestSample)
+                          .toList();
                   return new MatrixSeries(toName, values);
                 })
             .toList();
     promQlData.setResult(asMatSeries);
+    promQlData.setResultType(PromQlResultType.MATRIX);
     return promQlData;
   }
 

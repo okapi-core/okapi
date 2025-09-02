@@ -1,8 +1,10 @@
 package org.okapi.promql.eval;
 
-// eval/ExpressionEvaluator.java
+import java.util.List;
 import java.util.concurrent.*;
 import org.okapi.promql.eval.exceptions.EvaluationException;
+import org.okapi.promql.eval.labelmatch.LabelMatchVisitor;
+import org.okapi.promql.eval.labelmatch.MetricMatchCondition;
 import org.okapi.promql.eval.ts.RESOLUTION;
 import org.okapi.promql.eval.ts.SeriesDiscovery;
 import org.okapi.promql.eval.ts.StatisticsMerger;
@@ -58,5 +60,14 @@ public final class ExpressionEvaluator {
             tsMs, tsMs, effStepMs, chooseResolution(effStepMs), client, discovery, exec);
 
     return logical.lower().eval(ctx);
+  }
+
+  public List<VectorData.SeriesId> find(PromQLParser parser) {
+    var tree = parser.expression();
+    var labelMatcher = new LabelMatchVisitor();
+    var conditions = (MetricMatchCondition) labelMatcher.visit(tree);
+    var matching =
+        discovery.expand(conditions.getMetricNameOrNull(), conditions.getLabelMatchers());
+    return matching;
   }
 }

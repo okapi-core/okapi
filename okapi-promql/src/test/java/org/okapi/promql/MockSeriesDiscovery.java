@@ -21,15 +21,15 @@ public final class MockSeriesDiscovery implements SeriesDiscovery {
     List<SeriesId> out = new ArrayList<>();
     for (SeriesId s : known) {
       if (metricOrNull != null && !metricOrNull.equals(s.metric())) continue;
-      if (matchesAll(s.labels().tags(), matchers)) out.add(s);
+      if (matchesAll(s.metric(), s.labels().tags(), matchers)) out.add(s);
     }
     return out;
   }
 
-  private static boolean matchesAll(Map<String, String> labels, List<LabelMatcher> matchers) {
+  private static boolean matchesAll(String metricOrNull, Map<String, String> labels, List<LabelMatcher> matchers) {
     if (matchers == null || matchers.isEmpty()) return true;
     for (LabelMatcher m : matchers) {
-      String actual = labels.get(m.name());
+      String actual = m.name().equals("__name__") ? metricOrNull : labels.get(m.name());
       switch (m.op()) {
         case EQ -> {
           if (actual == null || !actual.equals(m.value())) return false;

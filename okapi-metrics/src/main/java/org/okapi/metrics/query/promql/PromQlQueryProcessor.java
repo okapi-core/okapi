@@ -1,5 +1,6 @@
 package org.okapi.metrics.query.promql;
 
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import lombok.AllArgsConstructor;
 import org.antlr.v4.runtime.CharStreams;
@@ -7,6 +8,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.okapi.exceptions.BadRequestException;
 import org.okapi.promql.eval.ExpressionEvaluator;
 import org.okapi.promql.eval.ExpressionResult;
+import org.okapi.promql.eval.VectorData;
 import org.okapi.promql.eval.exceptions.EvaluationException;
 import org.okapi.promql.eval.ts.StatisticsMerger;
 import org.okapi.promql.eval.visitor.DurationUtil;
@@ -49,7 +51,7 @@ public class PromQlQueryProcessor {
     var lexer = new PromQLLexer(CharStreams.fromString(promql));
     var tokens = new CommonTokenStream(lexer);
     var client = metricsClientFactory.getClient(tenantId);
-    if(client.isEmpty()){
+    if (client.isEmpty()) {
       throw new BadRequestException("Cluster is unavailable as we may be resharding.");
     }
     var discovery = pathSetDiscoveryClientFactory.get(tenantId);
@@ -63,7 +65,7 @@ public class PromQlQueryProcessor {
     var lexer = new PromQLLexer(CharStreams.fromString(promql));
     var tokens = new CommonTokenStream(lexer);
     var client = metricsClientFactory.getClient(tenantId);
-    if(client.isEmpty()){
+    if (client.isEmpty()) {
       throw new BadRequestException("Cluster is unavailable as we may be resharding.");
     }
     var discovery = pathSetDiscoveryClientFactory.get(tenantId);
@@ -93,6 +95,52 @@ public class PromQlQueryProcessor {
       now = instant.get();
     }
     var result = queryPointInTime(tenantId, promQl, now);
-    return PromToResponseMapper.toResult(result, PromToResponseMapper.RETURN_TYPE.VECTOR);
+    return PromToResponseMapper.toResult(result, PromToResponseMapper.RETURN_TYPE.VECTOR_OR_SCALAR);
+  }
+
+  public Set<VectorData.SeriesId> getMatches(String tenantId, List<String> conditions)
+      throws BadRequestException {
+    var allMatches = new HashSet<VectorData.SeriesId>();
+    for (var match : conditions) {
+      var lexer = new PromQLLexer(CharStreams.fromString(match));
+      var tokens = new CommonTokenStream(lexer);
+      var discovery = pathSetDiscoveryClientFactory.get(tenantId);
+      var client = metricsClientFactory.getClient(tenantId);
+      if (client.isEmpty()) {
+        throw new BadRequestException("Cluster is unavailable as we may be resharding.");
+      }
+      var parser = new PromQLParser(tokens);
+      var evaluator = new ExpressionEvaluator(client.get(), discovery, exec, merger);
+      var matchingSeries = evaluator.find(parser);
+      for (var series : matchingSeries) {
+        allMatches.add(series);
+      }
+    }
+
+    return Collections.unmodifiableSet(allMatches);
+  }
+
+  public GetPromQlResponse<List<String>> queryMatchApi(
+      String tenantId, List<String> matches, String start, String end) throws BadRequestException {
+    var conditions = matches != null ? matches : Collections.<String>emptyList();
+    var matchingSeriesIds = getMatches(tenantId, conditions);
+    return PromToResponseMapper.mapStringList(
+        matchingSeriesIds.stream().map(VectorData.SeriesId::metric).toList());
+  }
+
+  public GetPromQlResponse<List<String>> queryLabelsApi(
+      String tenantId, String label, List<String> matches, String start, String end)
+      throws BadRequestException {
+    var conditions = matches != null ? matches : Collections.<String>emptyList();
+    var matchingSeriesIds = getMatches(tenantId, conditions);
+    var labelValues = new HashSet<String>();
+    for (var id : matchingSeriesIds) {
+      if (id.labels() != null
+          && id.labels().tags() != null
+          && id.labels().tags().containsKey(label)) {
+        labelValues.add(id.labels().tags().get(label));
+      }
+    }
+    return PromToResponseMapper.mapStringList(new ArrayList<>(labelValues));
   }
 }
