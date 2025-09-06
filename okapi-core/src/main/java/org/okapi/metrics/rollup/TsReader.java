@@ -11,8 +11,6 @@ public interface TsReader {
 
   Map<Long, Statistics> scan(String series, long from, long to, RES_TYPE resolution);
 
-  int count(String series, long from, long to, RES_TYPE resolution);
-
   /**
    * `when` indicates a point in time denoted by linux epoch. The returned is the statistic within
    * the specific bucket. for secondly, this the statistic within the time bucket [nearest second to

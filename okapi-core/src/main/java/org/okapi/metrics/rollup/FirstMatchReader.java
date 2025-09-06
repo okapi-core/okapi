@@ -40,15 +40,6 @@ public class FirstMatchReader implements TsReader {
   }
 
   @Override
-  public int count(String series, long from, long to, RES_TYPE resolution) {
-    for (var reader : readers) {
-      var count = reader.count(series, from, to, resolution);
-      if (count > 0) return count;
-    }
-    return 0;
-  }
-
-  @Override
   public Optional<Statistics> secondlyStats(String series, long when) {
     for (var reader : readers) {
       var stat = reader.secondlyStats(series, when);

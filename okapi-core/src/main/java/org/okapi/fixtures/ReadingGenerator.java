@@ -161,25 +161,9 @@ public class ReadingGenerator {
         return ts / 1000 / 60; // convert to hours
       case HOURLY:
         return ts / 1000 / 3600; // convert to days
-      case DAILY:
-        return ts / 1000 / 3600 / 24; // convert to days
       default:
         throw new IllegalArgumentException("Unsupported resolution: " + res);
     }
-  }
-
-  private static long getIncrement(RES_TYPE resType) {
-    return switch (resType) {
-      case SECONDLY -> 1000L;
-      case MINUTELY -> 60 * 1000L;
-      case HOURLY -> 60 * 60 * 1000L;
-      case DAILY -> 86400L * 1000;
-    };
-  }
-
-  private static long discretizeAndBack(long ts, RES_TYPE resType) {
-    var inc = getIncrement(resType);
-    return inc * (ts / inc);
   }
 
   public Long groupKeyToTimestamp(long key, RES_TYPE res) {
@@ -190,8 +174,6 @@ public class ReadingGenerator {
         return key * 1000 * 60; // convert to milliseconds
       case HOURLY:
         return key * 1000 * 3600; // convert to milliseconds
-      case DAILY:
-        return key * 1000 * 3600 * 24; // convert to milliseconds
       default:
         throw new IllegalArgumentException("Unsupported resolution: " + res);
     }

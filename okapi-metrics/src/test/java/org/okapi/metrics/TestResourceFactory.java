@@ -13,7 +13,6 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.Setter;
 import org.okapi.Statistics;
@@ -32,12 +31,13 @@ import org.okapi.metrics.rollup.*;
 import org.okapi.metrics.service.*;
 import org.okapi.metrics.service.fakes.*;
 import org.okapi.metrics.service.runnables.*;
-import org.okapi.metrics.service.web.QueryProcessor;
+import org.okapi.metrics.service.web.RocksQueryProcessor;
 import org.okapi.metrics.sharding.HeartBeatChecker;
 import org.okapi.metrics.sharding.LeaderJobs;
 import org.okapi.metrics.sharding.LeaderJobsImpl;
 import org.okapi.metrics.sharding.ShardPkgManager;
 import org.okapi.metrics.sharding.fakes.FixedAssignerFactory;
+import org.okapi.metrics.singletons.AbstractSingletonFactory;
 import org.okapi.metrics.stats.*;
 import org.okapi.promql.eval.ts.StatisticsMerger;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -46,10 +46,9 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
 
-public class TestResourceFactory {
+public class TestResourceFactory extends AbstractSingletonFactory {
 
   int nodeCounter = 0;
-  Map<String, Object> singletons;
   Duration checkpointDuration = Duration.of(1, ChronoUnit.HOURS);
   @Getter String dataBucket = "okapi-test-data-bucket";
   Path snapshotDir;
@@ -60,12 +59,11 @@ public class TestResourceFactory {
   Map<String, Node> registeredNodes;
 
   public TestResourceFactory() {
-    this.singletons = new HashMap<>();
+    super();
     try {
       snapshotDir = Files.createTempDirectory("snapshot-directory");
       rocksRoot = Files.createTempDirectory("rocks-root");
       metricsPathSetWalRoot = Files.createTempDirectory("metrics-paths-wal");
-      registeredNodes = new HashMap<>();
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -231,41 +229,8 @@ public class TestResourceFactory {
         });
   }
 
-  public <T> T makeSingleton(Node node, String specifier, Supplier<T> objSupplier) {
-    var key = specifier + "/" + node.id();
-    if (singletons.containsKey(key)) {
-      return (T) singletons.get(key);
-    } else {
-      singletons.put(key, objSupplier.get());
-      return (T) singletons.get(key);
-    }
-  }
-
   public Optional<Node> getNode(String id) {
     return Optional.ofNullable(this.registeredNodes.get(id));
-  }
-
-  public <T> T makeSingleton(Node node, Class<T> clazz, Supplier<T> objSupplier) {
-    if (!registeredNodes.containsKey(node.id())) {
-      registeredNodes.put(node.id(), node);
-    }
-    var key = node.id() + "/" + clazz.getSimpleName();
-    if (singletons.containsKey(key)) {
-      return (T) singletons.get(key);
-    } else {
-      singletons.put(key, objSupplier.get());
-      return (T) singletons.get(key);
-    }
-  }
-
-  public <T> T makeSingleton(Class<T> clazz, Supplier<T> objSupplier) {
-    var key = "/" + clazz.getSimpleName();
-    if (singletons.containsKey(key)) {
-      return (T) singletons.get(key);
-    } else {
-      singletons.put(key, objSupplier.get());
-      return (T) singletons.get(key);
-    }
   }
 
   public FixedAssignerFactory shardsAndSeriesAssigner() {
@@ -452,13 +417,13 @@ public class TestResourceFactory {
         });
   }
 
-  public QueryProcessor queryProcessor(Node node) {
+  public RocksQueryProcessor queryProcessor(Node node) {
     return makeSingleton(
         node,
-        QueryProcessor.class,
+        RocksQueryProcessor.class,
         () -> {
           try {
-            return new QueryProcessor(
+            return new RocksQueryProcessor(
                 shardMap(node),
                 shardsAndSeriesAssigner(),
                 rollupQueryProcessor(node),

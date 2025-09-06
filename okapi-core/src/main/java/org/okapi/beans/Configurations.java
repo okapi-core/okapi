@@ -11,6 +11,7 @@ public class Configurations {
 
     // beans
     public static final String BEAN_ROCKS_MESSAGE_BOX = "rocksMessageBox";
+    public static final String BEAN_FDB_MESSAGE_BOX = "fdbMessageBox";
     public static final String BEAN_SERIES_SUPPLIER = "seriesSupplier";
     public static final String BEAN_SHARED_EXECUTOR = "sharedExecutor";
     public static final String BEAN_PROMQL_SERIALIZER = "promQlSerializer";

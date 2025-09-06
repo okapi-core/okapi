@@ -167,6 +167,7 @@ def submit_writes(ep: str, batch: List[SubmitMetricsRequestInternal],
         try:
             _post_json(url, b.__dict__, header, timeout_s)
             dur_ms = max(0.001, (time.perf_counter_ns() - st_ns) / 1e6)
+            print(f"{dur_ms}")
             durations.append(dur_ms)
             sizes.append(len(b.ts))
             ends.append(time_millis())

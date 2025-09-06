@@ -27,13 +27,7 @@ public class RocksTsReader implements TsReader {
       case SECONDLY -> ts * 1000;
       case MINUTELY -> ts * 1000 * 60;
       case HOURLY -> ts * 1000 * 3600;
-      case DAILY -> ts * 1000 * 3600 * 24;
     };
-  }
-
-  @Override
-  public int count(String series, long from, long to, RES_TYPE resolution) {
-    return 0;
   }
 
   private Optional<Statistics> readBucket(String bucket) {
@@ -119,7 +113,6 @@ public class RocksTsReader implements TsReader {
       case SECONDLY -> secondlyBucket(timeSeries, t);
       case MINUTELY -> minutelyBucket(timeSeries, t);
       case HOURLY -> hourlyBucket(timeSeries, t);
-      case DAILY -> throw new IllegalArgumentException("DAILY not supported");
     };
   }
 
@@ -128,7 +121,6 @@ public class RocksTsReader implements TsReader {
       case SECONDLY -> ts / 1000;
       case MINUTELY -> ts / 1000 / 60;
       case HOURLY -> ts / 1000 / 3600;
-      case DAILY -> ts / 1000 / 3600 / 24;
     };
   }
 

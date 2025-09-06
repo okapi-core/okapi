@@ -15,8 +15,7 @@ public class ZkNodeCreator implements NodeCreator {
   CuratorFramework curatorFramework;
   Node node;
   IpSupplier ipSupplier;
-  String nodeType;
-  String idPath;
+  String nodeType; String idPath;
 
   public ZkNodeCreator(
       CuratorFramework curatorFramework, String nodeType, IpSupplier ipSupplier) {

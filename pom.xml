@@ -35,7 +35,6 @@
         <module>okapi-wal</module>
         <module>okapi-constants</module>
         <module>okapi-avros</module>
-        <module>okapi-metric-rocks</module>
         <module>okapi-promql</module>
         <module>okapi-statistics</module>
     </modules>
@@ -376,6 +375,11 @@
                 <version>${antlr4.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.foundationdb</groupId>
+                <artifactId>fdb-java</artifactId>
+                <version>7.3.68</version>
+            </dependency>
         </dependencies>
 
     </dependencyManagement>

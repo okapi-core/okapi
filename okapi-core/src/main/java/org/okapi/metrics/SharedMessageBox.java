@@ -13,12 +13,15 @@ public class SharedMessageBox<T> {
     pending = new ArrayBlockingQueue<>(maxPending);
   }
 
-  public void push(T request, String id) throws InterruptedException {
+  public void push(T request) throws InterruptedException {
     this.pending.put(request);
   }
 
   public void drain(Collection<T> sink, String id) {
-    this.pending.drainTo(sink);
+    this.pending.drainTo(sink, 10);
+  }
+  public void drain(Collection<T> sink, int size, String id) {
+    this.pending.drainTo(sink, size);
   }
 
   public boolean isEmpty(){

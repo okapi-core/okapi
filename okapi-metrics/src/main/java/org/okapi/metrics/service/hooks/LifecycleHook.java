@@ -20,7 +20,6 @@ public class LifecycleHook implements SmartLifecycle {
   boolean isRunning;
 
   @Autowired BackgroundJobs backgroundJobs;
-
   @Autowired(required = false)
   CentralCoordinator centralCoordinator;
 

@@ -83,7 +83,7 @@ public class RocksDbStatsWriterFaultTests {
     messageBox.push(new WriteBackRequest(
             ctx,
             0, key, stats
-    ), this.getClass().getSimpleName());
+    ));
 
   }
 

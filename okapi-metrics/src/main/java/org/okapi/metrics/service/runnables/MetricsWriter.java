@@ -11,10 +11,14 @@ import java.io.IOException;
 
 public interface MetricsWriter {
   void onRequestArrive(SubmitMetricsRequestInternal request)
-      throws BadRequestException, OutsideWindowException, InterruptedException, StatisticsFrozenException;
+      throws BadRequestException,
+          OutsideWindowException,
+          InterruptedException,
+          StatisticsFrozenException;
 
   void setShardsAndSeriesAssigner(ShardsAndSeriesAssigner shardsAndSeriesAssigner);
 
   boolean isReady();
+
   void init() throws IOException, StreamReadingException;
 }

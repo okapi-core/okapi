@@ -74,14 +74,14 @@ public class RocksDbStatsWriterTests {
     messageBox.push(new WriteBackRequest(
             ctx,
             0, key, stats
-    ), this.getClass().getSimpleName());
+    ));
     var stats2 = statsSupplier.get();
     var key2 = HashFns.minutelyBucket("mp-2{}", t0);
     stats2.update(ctx, 0.1f);
     messageBox.push(new WriteBackRequest(
             ctx,
             0, key2, stats2
-    ), this.getClass().getSimpleName());
+    ));
     rocksDbStatsWriter.setRocksStore(rocksStore);
     rocksDbStatsWriter.once();
     Assertions.assertTrue(messageBox.isEmpty());

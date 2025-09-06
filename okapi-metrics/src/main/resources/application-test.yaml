@@ -39,7 +39,10 @@ remoteCkptDelaySeconds: 500
 rocksBacklog: 100000
 rocksDir: ${user.home}/.okapi/rocks-dbs
 writeBack:
-  millis: 1000
+  millis: 10000
 
 promQl:
   evalThreads: 5
+
+foundationDb:
+  queueLag: 10000

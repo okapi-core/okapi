@@ -16,10 +16,9 @@ import org.okapi.exceptions.ExceptionUtils;
 import org.okapi.metrics.SharedMessageBox;
 import org.okapi.metrics.WriteBackRequest;
 import org.okapi.metrics.common.MetricsContext;
-import org.okapi.metrics.constants.ReaderIds;
 import org.okapi.metrics.io.OkapiIo;
-import org.okapi.metrics.stats.UpdatableStatistics;
 import org.okapi.metrics.stats.StatisticsFrozenException;
+import org.okapi.metrics.stats.UpdatableStatistics;
 
 @Slf4j
 public class RollupSeries<T extends UpdatableStatistics> {
@@ -113,8 +112,7 @@ public class RollupSeries<T extends UpdatableStatistics> {
     stat.freeze();
     log.debug("Writing to box.");
     this.messageBox.push(
-        new WriteBackRequest(MetricsContext.createContext("test"), shard, key, stat),
-        ReaderIds.MSG_FREEZER);
+        new WriteBackRequest(MetricsContext.createContext("test"), shard, key, stat));
     // cleanup
     stats.remove(key);
     createTime.remove(key);

@@ -1,10 +1,9 @@
 package org.okapi.metrics.query.promql;
 
-import com.google.re2j.Pattern;
+import static org.okapi.metrics.query.promql.PathMatchConditions.pathMatchesConditions;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.function.BiFunction;
 import lombok.AllArgsConstructor;
 import org.okapi.metrics.common.MetricsPathParser;
 import org.okapi.metrics.paths.PathSet;
@@ -41,42 +40,4 @@ public class PathSetSeriesDiscovery implements SeriesDiscovery {
     return matches;
   }
 
-  public boolean pathMatchesConditions(
-      MetricsPathParser.MetricsRecord record, List<LabelMatcher> matchers) {
-    for (var matcher : matchers) {
-      var name = matcher.name();
-      var hasLabel = record.tags().containsKey(name);
-      if (!hasLabel) return false;
-      var value = record.tags().get(name);
-      var matchArg = matcher.value();
-      BiFunction<String, String, Boolean> matchingFn =
-          switch (matcher.op()) {
-            case EQ -> this::isStringEqual;
-            case NE -> this::isStringNotEqual;
-            case RE -> this::isPatternMatch;
-            case NRE -> this::isNotPatternMatch;
-          };
-      var result = matchingFn.apply(value, matchArg);
-      if (!result) return false;
-    }
-    return true;
-  }
-
-  public boolean isStringEqual(String value, String pattern) {
-    return Objects.equals(value, pattern);
-  }
-
-  public boolean isStringNotEqual(String value, String pattern) {
-    return !Objects.equals(value, pattern);
-  }
-
-  public boolean isPatternMatch(String value, String pattern) {
-    var compiled = Pattern.compile(pattern);
-    return compiled.matches(value);
-  }
-
-  public boolean isNotPatternMatch(String value, String pattern) {
-    var compiled = Pattern.compile(pattern);
-    return !compiled.matches(value);
-  }
 }

@@ -12,8 +12,7 @@ import java.util.function.BiFunction;
 
 public class RollupQueryProcessor implements QueryProcessor {
   @Override
-  public QueryRecords.QueryResult scan(
-      TsReader rollupSeries, QueryRecords.Slice slice) {
+  public QueryRecords.QueryResult scan(TsReader rollupSeries, QueryRecords.Slice slice) {
     var scanResult =
         rollupSeries.scan(
             slice.series(), slice.from(), slice.to(), slice.aggregation(), slice.resolution());
@@ -83,14 +82,12 @@ public class RollupQueryProcessor implements QueryProcessor {
 
   @Override
   public float count(TsReader rollupSeries, QueryRecords.Slice slice) {
-    return rollupSeries.count(slice.series(), slice.from(), slice.to(), slice.resolution());
+    throw new IllegalArgumentException();
   }
 
   @Override
   public QueryRecords.QueryResult transform(
-      TsReader rollupSeries,
-      QueryRecords.Slice slice,
-      QueryProcessor.TRANSFORM transform) {
+      TsReader rollupSeries, QueryRecords.Slice slice, QueryProcessor.TRANSFORM transform) {
     var scaledResult =
         rollupSeries.scan(
             slice.series(), slice.from(), slice.to(), slice.aggregation(), slice.resolution());
@@ -169,8 +166,7 @@ public class RollupQueryProcessor implements QueryProcessor {
   }
 
   @Override
-  public QueryRecords.QueryResult firstDerivative(
-      TsReader rollupSeries, QueryRecords.Slice slice) {
+  public QueryRecords.QueryResult firstDerivative(TsReader rollupSeries, QueryRecords.Slice slice) {
     var scaledResult =
         rollupSeries.scan(
             slice.series(), slice.from(), slice.to(), slice.aggregation(), slice.resolution());
@@ -190,8 +186,7 @@ public class RollupQueryProcessor implements QueryProcessor {
   }
 
   @Override
-  public QueryRecords.QueryResult aggregateSum(
-      TsReader rollupSeries, QueryRecords.Slice slice) {
+  public QueryRecords.QueryResult aggregateSum(TsReader rollupSeries, QueryRecords.Slice slice) {
     var windowSize = slice.from() - slice.to();
     return movingWindowTransform(
         rollupSeries, slice, Duration.of(windowSize, ChronoUnit.MILLIS), (sum, count) -> sum);
@@ -202,7 +197,6 @@ public class RollupQueryProcessor implements QueryProcessor {
       case SECONDLY -> 1000L;
       case MINUTELY -> 60 * 1000L;
       case HOURLY -> 60 * 60 * 1000L;
-      case DAILY -> 86400L * 1000;
     };
   }
 

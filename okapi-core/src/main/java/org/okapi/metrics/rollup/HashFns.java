@@ -36,4 +36,5 @@ public class HashFns {
     var series = splits.get(2);
     return Optional.of(new HashedValue(series, time, hashType));
   }
+
 }
