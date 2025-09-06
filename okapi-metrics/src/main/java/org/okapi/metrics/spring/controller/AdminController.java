@@ -1,21 +1,23 @@
-package org.okapi.metrics.controller;
+package org.okapi.metrics.spring.controller;
 
 import static org.okapi.validation.OkapiChecks.checkArgument;
 
-import org.okapi.rest.metrics.admin.NodeMetadataResponse;
-import org.okapi.rest.metrics.admin.StartScaleUpRequest;
-import org.okapi.rest.metrics.admin.StartScaleUpResponse;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import org.okapi.exceptions.BadRequestException;
 import org.okapi.metrics.common.ServiceRegistry;
 import org.okapi.metrics.common.ZkResources;
+import org.okapi.rest.metrics.admin.NodeMetadataResponse;
+import org.okapi.rest.metrics.admin.StartScaleUpRequest;
+import org.okapi.rest.metrics.admin.StartScaleUpResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/admin")
+@Profile("sharded")
 public class AdminController {
   @Autowired ServiceRegistry serviceRegistry;
 

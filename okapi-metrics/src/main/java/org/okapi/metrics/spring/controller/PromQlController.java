@@ -1,4 +1,4 @@
-package org.okapi.metrics.controller;
+package org.okapi.metrics.spring.controller;
 
 import com.google.gson.Gson;
 import java.util.List;
