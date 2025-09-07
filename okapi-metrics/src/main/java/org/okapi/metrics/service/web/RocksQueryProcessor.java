@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.NotImplementedException;
 import org.okapi.exceptions.BadRequestException;
 import org.okapi.metrics.PathRegistry;
 import org.okapi.metrics.ShardMap;
@@ -34,7 +35,6 @@ public class RocksQueryProcessor implements QueryProcessor {
   PathSet pathSet;
   RocksStore rocksStore;
   PathRegistry pathRegistry;
-  
 
   public GetMetricsResponse getMetricsResponse(GetMetricsRequestInternal request) throws Exception {
     var nodes = serviceRegistry.listActiveNodes();
@@ -112,5 +112,10 @@ public class RocksQueryProcessor implements QueryProcessor {
     }
 
     return SearchMetricsResponse.builder().results(results).build();
+  }
+
+  @Override
+  public ListMetricsResponse listMetricsResponse(ListMetricsRequest request) {
+    throw new NotImplementedException();
   }
 }

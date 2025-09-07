@@ -78,10 +78,10 @@ public class FdbWriter {
   public Set<SearchTuple> groupForSearch(List<SubmitMetricsRequestInternal> requestInternals) {
     var group = new HashSet<SearchTuple>();
     for (var r : requestInternals) {
-      var path = MetricPaths.convertToPath(r);
+      var localPath = MetricPaths.localPath(r.getMetricName(), r.getTags());
       for (var ts : r.getTs()) {
         var minutely = ts / 60_000;
-        var key = new SearchTuple(path, minutely);
+        var key = new SearchTuple(r.getTenantId(), localPath, minutely);
         group.add(key);
       }
     }

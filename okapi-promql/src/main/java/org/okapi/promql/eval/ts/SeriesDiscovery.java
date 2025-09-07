@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface SeriesDiscovery {
   /** Expand a selector into concrete (metric, tags) series. */
-  List<SeriesId> expand(String metricOrNull, List<LabelMatcher> matchers);
+  List<SeriesId> expand(String metricOrNull, List<LabelMatcher> matchers, long start, long end);
 }

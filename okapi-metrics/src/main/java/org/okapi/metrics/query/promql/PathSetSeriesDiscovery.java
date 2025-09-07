@@ -1,6 +1,6 @@
 package org.okapi.metrics.query.promql;
 
-import static org.okapi.metrics.query.promql.PathMatchConditions.pathMatchesConditions;
+import static org.okapi.metrics.query.promql.PromQlPathMatcher.pathMatchesConditions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +18,7 @@ public class PathSetSeriesDiscovery implements SeriesDiscovery {
   PathSet pathSet;
 
   @Override
-  public List<VectorData.SeriesId> expand(String metricOrNull, List<LabelMatcher> matchers) {
+  public List<VectorData.SeriesId> expand(String metricOrNull, List<LabelMatcher> matchers, long st, long en) {
     var allMetrics = pathSet.list();
     var matches = new ArrayList<VectorData.SeriesId>();
     for (var entry : allMetrics.entrySet()) {

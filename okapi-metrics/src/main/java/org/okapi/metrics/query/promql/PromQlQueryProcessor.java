@@ -98,8 +98,8 @@ public class PromQlQueryProcessor {
     return PromToResponseMapper.toResult(result, PromToResponseMapper.RETURN_TYPE.VECTOR_OR_SCALAR);
   }
 
-  public Set<VectorData.SeriesId> getMatches(String tenantId, List<String> conditions)
-      throws BadRequestException {
+  public Set<VectorData.SeriesId> getMatches(
+      String tenantId, List<String> conditions, long start, long end) throws BadRequestException {
     var allMatches = new HashSet<VectorData.SeriesId>();
     for (var match : conditions) {
       var lexer = new PromQLLexer(CharStreams.fromString(match));
@@ -111,7 +111,7 @@ public class PromQlQueryProcessor {
       }
       var parser = new PromQLParser(tokens);
       var evaluator = new ExpressionEvaluator(client.get(), discovery, exec, merger);
-      var matchingSeries = evaluator.find(parser);
+      var matchingSeries = evaluator.find(parser, start, end);
       for (var series : matchingSeries) {
         allMatches.add(series);
       }
@@ -123,7 +123,9 @@ public class PromQlQueryProcessor {
   public GetPromQlResponse<List<String>> queryMatchApi(
       String tenantId, List<String> matches, String start, String end) throws BadRequestException {
     var conditions = matches != null ? matches : Collections.<String>emptyList();
-    var matchingSeriesIds = getMatches(tenantId, conditions);
+    var st = DurationUtil.parseToMillis(start);
+    var en = DurationUtil.parseToMillis(end);
+    var matchingSeriesIds = getMatches(tenantId, conditions, st, en);
     return PromToResponseMapper.mapStringList(
         matchingSeriesIds.stream().map(VectorData.SeriesId::metric).toList());
   }
@@ -131,8 +133,10 @@ public class PromQlQueryProcessor {
   public GetPromQlResponse<List<String>> queryLabelsApi(
       String tenantId, String label, List<String> matches, String start, String end)
       throws BadRequestException {
+    var st = DurationUtil.parseToMillis(start);
+    var en = DurationUtil.parseToMillis(end);
     var conditions = matches != null ? matches : Collections.<String>emptyList();
-    var matchingSeriesIds = getMatches(tenantId, conditions);
+    var matchingSeriesIds = getMatches(tenantId, conditions, st, en);
     var labelValues = new HashSet<String>();
     for (var id : matchingSeriesIds) {
       if (id.labels() != null

@@ -11,6 +11,7 @@ import org.okapi.metrics.common.pojo.Node;
 import org.okapi.metrics.fdb.*;
 import org.okapi.metrics.query.promql.TimeSeriesClientFactory;
 import org.okapi.metrics.rollup.TsReader;
+import org.okapi.metrics.rollup.TsSearcher;
 import org.okapi.metrics.service.self.NodeCreator;
 import org.okapi.metrics.service.self.UniqueNodeCreator;
 import org.okapi.metrics.service.web.QueryProcessor;
@@ -47,11 +48,6 @@ public class FdbConfig {
   }
 
   @Bean
-  public QueryProcessor foundationQueryProcessor(@Autowired TsReader reader) {
-    return new FdbQueryProcessor(reader);
-  }
-
-  @Bean
   public FdbWriter fdbWriter(
       @Qualifier(Configurations.BEAN_FDB_MESSAGE_BOX) @Autowired
           SharedMessageBox<SubmitMetricsRequestInternal> messageBox,
@@ -77,7 +73,18 @@ public class FdbConfig {
   }
 
   @Bean
-  public FdbSeriesDiscoveryFactory seriesDiscoveryFactory(){
-    return new FdbSeriesDiscoveryFactory();
+  public TsSearcher tsSearcher(@Autowired Database database) {
+    return new FdbTsSearcher(database);
+  }
+
+  @Bean
+  public FdbSeriesDiscoveryFactory seriesDiscoveryFactory(@Autowired TsSearcher tsSearcher) {
+    return new FdbSeriesDiscoveryFactory(tsSearcher);
+  }
+
+  @Bean
+  public QueryProcessor foundationQueryProcessor(
+      @Autowired TsReader reader, @Autowired TsSearcher searcher) {
+    return new FdbQueryProcessor(reader, searcher);
   }
 }

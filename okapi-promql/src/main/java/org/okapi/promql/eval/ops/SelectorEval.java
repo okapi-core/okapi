@@ -26,7 +26,7 @@ public class SelectorEval implements Evaluable {
       end -= node.offsetMs;
     }
 
-    var series = ctx.discovery.expand(node.metricOrNull, node.matchers);
+    var series = ctx.discovery.expand(node.metricOrNull, node.matchers, start, end);
     // For an instant-vector at each step, we need the last point at each timestamp (Prom
     // semantics).
     // Here we fetch a window covering [start, end], then at materialization time we select

@@ -27,4 +27,8 @@ public class SharedMessageBox<T> {
   public boolean isEmpty(){
     return pending.isEmpty();
   }
+
+  public int size(){
+    return this.pending.size();
+  }
 }

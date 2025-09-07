@@ -62,12 +62,12 @@ public final class ExpressionEvaluator {
     return logical.lower().eval(ctx);
   }
 
-  public List<VectorData.SeriesId> find(PromQLParser parser) {
+  public List<VectorData.SeriesId> find(PromQLParser parser, long start, long end) {
     var tree = parser.expression();
     var labelMatcher = new LabelMatchVisitor();
     var conditions = (MetricMatchCondition) labelMatcher.visit(tree);
     var matching =
-        discovery.expand(conditions.getMetricNameOrNull(), conditions.getLabelMatchers());
+        discovery.expand(conditions.getMetricNameOrNull(), conditions.getLabelMatchers(), start, end);
     return matching;
   }
 }

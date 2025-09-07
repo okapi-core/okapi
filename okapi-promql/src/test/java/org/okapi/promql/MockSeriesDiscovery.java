@@ -17,7 +17,7 @@ public final class MockSeriesDiscovery implements SeriesDiscovery {
   }
 
   @Override
-  public List<SeriesId> expand(String metricOrNull, List<LabelMatcher> matchers) {
+  public List<SeriesId> expand(String metricOrNull, List<LabelMatcher> matchers, long st, long end) {
     List<SeriesId> out = new ArrayList<>();
     for (SeriesId s : known) {
       if (metricOrNull != null && !metricOrNull.equals(s.metric())) continue;

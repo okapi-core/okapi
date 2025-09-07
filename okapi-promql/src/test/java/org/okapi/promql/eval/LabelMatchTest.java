@@ -28,15 +28,15 @@ public class LabelMatchTest {
         var lexer = new PromQLLexer(CharStreams.fromString(promql));
         var tokens = new CommonTokenStream(lexer);
         var parser = new PromQLParser(tokens);
-        var list = evaluator.find(parser);
+        var list = evaluator.find(parser, commonMocks.t0, commonMocks.t3);
         assertFalse(list.isEmpty());
     }
 
-    private static List<VectorData.SeriesId> find(ExpressionEvaluator evaluator, String selector) {
+    private static List<VectorData.SeriesId> find(ExpressionEvaluator evaluator, String selector, long start, long end) {
         var lexer = new PromQLLexer(CharStreams.fromString(selector));
         var tokens = new CommonTokenStream(lexer);
         var parser = new PromQLParser(tokens);
-        return evaluator.find(parser);
+        return evaluator.find(parser, start, end);
     }
 
     @Test
@@ -44,8 +44,8 @@ public class LabelMatchTest {
         var cm = TestFixtures.buildCommonMocks();
         var evaluator = new ExpressionEvaluator(cm.client, cm.discovery, Executors.newFixedThreadPool(2), new MockStatsMerger());
 
-        // Match all metrics whose __name__ starts with "cpu_"
-        var out = find(evaluator, "{__name__=~\"cpu_.*\"}");
+    // Match all metrics whose __name__ starts with "cpu_"
+    var out = find(evaluator, "{__name__=~\"cpu_.*\"}", cm.t0, cm.t3);
 
         assertFalse(out.isEmpty(), "expected matches for cpu_.*");
         // Expect only cpu_usage (two instances). Be tolerant on size but enforce all metrics start with cpu_
@@ -61,7 +61,7 @@ public class LabelMatchTest {
         var evaluator = new ExpressionEvaluator(cm.client, cm.discovery, Executors.newFixedThreadPool(2), new MockStatsMerger());
 
         // Exclude any metric whose name starts with cpu_
-        var out = find(evaluator, "{__name__!~\"cpu_.*\"}");
+        var out = find(evaluator, "{__name__!~\"cpu_.*\"}", cm.t0, cm.t3);
 
         assertFalse(out.isEmpty(), "expected some non-cpu metrics in fixture");
         assertTrue(out.stream().noneMatch(s -> s.metric().startsWith("cpu_")), "cpu_ metrics should be excluded");
@@ -73,7 +73,7 @@ public class LabelMatchTest {
         var evaluator = new ExpressionEvaluator(cm.client, cm.discovery, Executors.newFixedThreadPool(2), new MockStatsMerger());
 
         // Match any series with instance label i1 or i2
-        var out = find(evaluator, "{instance=~\"i[12]\"}");
+        var out = find(evaluator, "{instance=~\"i[12]\"}", cm.t0, cm.t3);
 
         assertFalse(out.isEmpty(), "expected series with instance i1/i2");
         var insts = out.stream().map(s -> s.labels().tags().get("instance")).collect(java.util.stream.Collectors.toSet());
@@ -88,7 +88,7 @@ public class LabelMatchTest {
         var evaluator = new ExpressionEvaluator(cm.client, cm.discovery, Executors.newFixedThreadPool(2), new MockStatsMerger());
 
         // Exclude instance exactly "i2"
-        var out = find(evaluator, "{instance!~\"^i2$\"}");
+        var out = find(evaluator, "{instance!~\"^i2$\"}", cm.t0, cm.t3);
 
         assertFalse(out.isEmpty(), "expected some series remaining after exclusion");
         // Ensure no series with instance=i2 is present

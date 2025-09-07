@@ -1,8 +1,8 @@
 package org.okapi.metrics.common;
 
+import java.util.Map;
 import org.okapi.rest.metrics.GetMetricsRequestInternal;
 import org.okapi.rest.metrics.SubmitMetricsRequestInternal;
-import java.util.Map;
 
 public class MetricPaths {
 
@@ -20,8 +20,13 @@ public class MetricPaths {
     var sb = new StringBuilder();
     sb.append(universalMetricName);
     sb.append("{");
+    var first = true;
     for (var entry : tags.entrySet()) {
+      if (!first) {
+        sb.append(",");
+      }
       sb.append(entry.getKey()).append("=").append(entry.getValue());
+      first = false;
     }
     sb.append("}");
     return sb.toString();
@@ -40,7 +45,7 @@ public class MetricPaths {
     return new MetricsContext(request.getTags().getOrDefault("trace_id", null));
   }
 
-  public static String universalMetricName (String tenantId, String name){
-    return tenantId + ":" + name;
+  public static String localPath(String name, Map<String, String> tags) {
+    return getMetricPath(name, tags);
   }
 }

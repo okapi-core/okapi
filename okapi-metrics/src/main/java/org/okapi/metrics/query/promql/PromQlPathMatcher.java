@@ -7,7 +7,7 @@ import java.util.function.BiFunction;
 import org.okapi.metrics.common.MetricsPathParser;
 import org.okapi.promql.parse.LabelMatcher;
 
-public class PathMatchConditions {
+public class PromQlPathMatcher {
 
   public static boolean pathMatchesConditions(
       MetricsPathParser.MetricsRecord record, List<LabelMatcher> matchers) {
@@ -19,10 +19,10 @@ public class PathMatchConditions {
       var matchArg = matcher.value();
       BiFunction<String, String, Boolean> matchingFn =
           switch (matcher.op()) {
-            case EQ -> PathMatchConditions::isStringEqual;
-            case NE -> PathMatchConditions::isStringNotEqual;
-            case RE -> PathMatchConditions::isPatternMatch;
-            case NRE -> PathMatchConditions::isNotPatternMatch;
+            case EQ -> PromQlPathMatcher::isStringEqual;
+            case NE -> PromQlPathMatcher::isStringNotEqual;
+            case RE -> PromQlPathMatcher::isPatternMatch;
+            case NRE -> PromQlPathMatcher::isNotPatternMatch;
           };
       var result = matchingFn.apply(value, matchArg);
       if (!result) return false;

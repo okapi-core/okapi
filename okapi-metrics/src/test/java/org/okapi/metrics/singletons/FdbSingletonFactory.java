@@ -7,6 +7,7 @@ import org.okapi.metrics.Merger;
 import org.okapi.metrics.SharedMessageBox;
 import org.okapi.metrics.common.pojo.Node;
 import org.okapi.metrics.fdb.FdbTsReader;
+import org.okapi.metrics.fdb.FdbTsSearcher;
 import org.okapi.metrics.fdb.FdbWriter;
 import org.okapi.metrics.stats.*;
 import org.okapi.rest.metrics.SubmitMetricsRequestInternal;
@@ -67,5 +68,9 @@ public class FdbSingletonFactory extends AbstractSingletonFactory {
         node,
         FdbTsReader.class,
         () -> new FdbTsReader(getDatabase(), updatableStatisticsMerger(), unmarshaller()));
+  }
+
+  public FdbTsSearcher fdbTsSearcher(Node node) {
+    return makeSingleton(node, FdbTsSearcher.class, () -> new FdbTsSearcher(getDatabase()));
   }
 }
