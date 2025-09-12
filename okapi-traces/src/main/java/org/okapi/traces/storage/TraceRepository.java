@@ -22,9 +22,9 @@ public class TraceRepository {
         db = fdb.open();
     }
 
-    public List<Span> getSpansByTraceId(String traceId) {
-        // FoundationDB key schema: "trace:{traceId}:{spanId}"
-        byte[] prefix = Tuple.from("trace", traceId).pack();
+    public List<Span> getSpansByTraceId(String traceId, String tenant, String app) {
+        // FoundationDB key schema: "trace:{tenant}:{app}:{traceId}:{spanId}"
+        byte[] prefix = Tuple.from("trace", tenant, app, traceId).pack();
         return db.read(tr -> {
             List<Span> spans = new ArrayList<>();
             // TODO: implement range query over the keys with the given prefix

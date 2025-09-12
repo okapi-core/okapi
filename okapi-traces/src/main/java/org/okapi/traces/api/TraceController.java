@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/traces")
+@RequestMapping("/v1/traces")
 public class TraceController {
 
     @Autowired
@@ -16,8 +16,10 @@ public class TraceController {
 
     // Endpoint to retrieve spans for a given trace id
     @GetMapping("/{traceId}/spans")
-    public List<Span> getSpans(@PathVariable String traceId) {
-        return traceService.getSpans(traceId);
+    public List<Span> getSpans(@PathVariable String traceId,
+                               @RequestHeader("X-Okapi-Tenant") String tenant,
+                               @RequestHeader("X-Okapi-App") String app) {
+        return traceService.getSpans(traceId, tenant, app);
     }
 
     // Future endpoints for ingesting OTel trace requests can be added here.

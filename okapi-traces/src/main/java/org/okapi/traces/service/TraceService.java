@@ -17,12 +17,12 @@ public class TraceService {
     @Autowired
     private SamplingStrategy samplingStrategy;
 
-    public List<Span> getSpans(String traceId) {
+    public List<Span> getSpans(String traceId, String tenant, String app) {
         // Apply sampling strategy; if the trace is not sampled, return empty.
         if (!samplingStrategy.sample(traceId)) {
             return List.of();
         }
-        return traceRepository.getSpansByTraceId(traceId);
+        return traceRepository.getSpansByTraceId(traceId, tenant, app);
     }
 
     // Future methods for trace ingestion can be added here.
