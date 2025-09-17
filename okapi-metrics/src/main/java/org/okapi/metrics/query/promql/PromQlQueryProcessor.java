@@ -22,8 +22,8 @@ public class PromQlQueryProcessor {
 
   ExecutorService exec;
   StatisticsMerger merger;
-  TimeSeriesClientFactory metricsClientFactory;
-  SeriesDiscoveryFactory pathSetDiscoveryClientFactory;
+  TsClientFactory metricsClientFactory;
+  SeriesDiscoveryFactory seriesDiscoveryFactory;
 
   public ExpressionResult queryRange(
       String tenantId, String promql, String start, String end, String step)
@@ -54,7 +54,7 @@ public class PromQlQueryProcessor {
     if (client.isEmpty()) {
       throw new BadRequestException("Cluster is unavailable as we may be resharding.");
     }
-    var discovery = pathSetDiscoveryClientFactory.get(tenantId);
+    var discovery = seriesDiscoveryFactory.get(tenantId);
     var parser = new PromQLParser(tokens);
     var evaluator = new ExpressionEvaluator(client.get(), discovery, exec, merger);
     return evaluator.evaluate(promql, startMs, endMs, stepMs, parser);
@@ -68,7 +68,7 @@ public class PromQlQueryProcessor {
     if (client.isEmpty()) {
       throw new BadRequestException("Cluster is unavailable as we may be resharding.");
     }
-    var discovery = pathSetDiscoveryClientFactory.get(tenantId);
+    var discovery = seriesDiscoveryFactory.get(tenantId);
     var parser = new PromQLParser(tokens);
     var evaluator = new ExpressionEvaluator(client.get(), discovery, exec, merger);
     var result = evaluator.evaluateAt(promql, instant, parser);
@@ -104,7 +104,7 @@ public class PromQlQueryProcessor {
     for (var match : conditions) {
       var lexer = new PromQLLexer(CharStreams.fromString(match));
       var tokens = new CommonTokenStream(lexer);
-      var discovery = pathSetDiscoveryClientFactory.get(tenantId);
+      var discovery = seriesDiscoveryFactory.get(tenantId);
       var client = metricsClientFactory.getClient(tenantId);
       if (client.isEmpty()) {
         throw new BadRequestException("Cluster is unavailable as we may be resharding.");

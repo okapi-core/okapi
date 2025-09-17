@@ -5,11 +5,19 @@ import java.util.Optional;
 import org.okapi.Statistics;
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
+import org.okapi.metrics.pojos.SUM_TYPE;
+import org.okapi.metrics.results.GaugeScan;
+import org.okapi.metrics.results.HistoScan;
+import org.okapi.metrics.results.SumScan;
 
 public interface TsReader {
-  ScanResult scan(String series, long from, long to, AGG_TYPE aggregation, RES_TYPE resolution);
+  GaugeScan scanGauge(String series, long from, long to, AGG_TYPE aggregation, RES_TYPE resolution);
 
-  Map<Long, Statistics> scan(String series, long from, long to, RES_TYPE resolution);
+  HistoScan scanHisto(String series, long from, long to);
+
+  SumScan scanSum(String series, long from, long to, long windowSize, SUM_TYPE sumType);
+
+  Map<Long, ? extends Statistics> scanGauge(String series, long from, long to, RES_TYPE resolution);
 
   /**
    * `when` indicates a point in time denoted by linux epoch. The returned is the statistic within

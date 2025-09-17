@@ -2,14 +2,14 @@ package org.okapi.metrics.fdb;
 
 import lombok.AllArgsConstructor;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssigner;
-import org.okapi.metrics.query.promql.TimeSeriesClientFactory;
+import org.okapi.metrics.query.promql.TsClientFactory;
 import org.okapi.metrics.rollup.TsReader;
 import org.okapi.promql.eval.ts.TimeseriesClient;
 
 import java.util.Optional;
 
 @AllArgsConstructor
-public class FdbTsClientFactory implements TimeSeriesClientFactory {
+public class FdbTsClientFactory implements TsClientFactory {
 
   TsReader tsReader;
 

@@ -8,7 +8,7 @@ import java.time.*;
 import java.time.temporal.ChronoUnit;
 import org.assertj.core.util.Files;
 import org.junit.jupiter.api.Test;
-import org.okapi.fixtures.ReadingGenerator;
+import org.okapi.fixtures.GaugeGenerator;
 import org.okapi.metrics.io.StreamReadingException;
 import org.okapi.metrics.storage.ByteBufferWriter;
 import org.okapi.metrics.storage.TsStore;
@@ -24,7 +24,7 @@ public class TsStoreTests {
     var allocator = new DirectBufferAllocator();
     // 1 MB buffers for all time series
     var tsStore = new TsStore(allocator, 1_000_000, 1_000_000);
-    var reading = new ReadingGenerator(Duration.of(10, ChronoUnit.MILLIS), 240);
+    var reading = new GaugeGenerator(Duration.of(10, ChronoUnit.MILLIS), 240);
     reading.populateRandom(500.f, 540.f);
     var ts = reading.getTimestamps();
     var vals = reading.getValues();
@@ -51,7 +51,7 @@ public class TsStoreTests {
     var allocator = new DirectBufferAllocator();
     // todo: 1mb buffers
     var tsStore = new TsStore(allocator, 1_000_000, 1_000_000);
-    var reading = new ReadingGenerator(Duration.of(10, ChronoUnit.MILLIS), 10);
+    var reading = new GaugeGenerator(Duration.of(10, ChronoUnit.MILLIS), 10);
     reading.populateRandom(500.f, 540.f);
     var ts = reading.getTimestamps();
     var vals = reading.getValues();
@@ -73,7 +73,7 @@ public class TsStoreTests {
     var allocator = new DirectBufferAllocator();
     var tsStore = new TsStore(allocator, 1_000_000, 5_000_000);
     // 100 * 60 * 240 -> 1.44 million held in this shard -> 100
-    var reading1 = new ReadingGenerator(Duration.of(100, ChronoUnit.MILLIS), 60);
+    var reading1 = new GaugeGenerator(Duration.of(100, ChronoUnit.MILLIS), 60);
     reading1.populateRandom(500.f, 540.f);
     var ts1 = reading1.getTimestamps();
     var vals1 = reading1.getValues();
@@ -81,7 +81,7 @@ public class TsStoreTests {
       tsStore.write("SeriesA", ts1.get(i), vals1.get(i));
     }
 
-    var reading2 = new ReadingGenerator(Duration.of(100, ChronoUnit.MILLIS), 10);
+    var reading2 = new GaugeGenerator(Duration.of(100, ChronoUnit.MILLIS), 10);
     reading2.populateRandom(500.f, 540.f);
     var ts2 = reading1.getTimestamps();
     var vals2 = reading1.getValues();
@@ -109,7 +109,7 @@ public class TsStoreTests {
   @Test
   public void testCheckpoint2HrsBuffer() throws BufferFullException, IOException {
     // 100 * 60 * 240 -> 1.44 million held in this shard -> 100
-    var reading1 = new ReadingGenerator(Duration.of(10, ChronoUnit.MILLIS), 240);
+    var reading1 = new GaugeGenerator(Duration.of(10, ChronoUnit.MILLIS), 240);
     reading1.populateRandom(500.f, 540.f);
 
     var allocator = new DirectBufferAllocator();

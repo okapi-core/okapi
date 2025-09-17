@@ -26,11 +26,11 @@ public class MetricsController {
 
   @Qualifier(Configurations.BEAN_FDB_MESSAGE_BOX)
   @Autowired
-  SharedMessageBox<SubmitMetricsRequestInternal> messageBox;
+  SharedMessageBox<ExportMetricsRequest> messageBox;
 
   @PostMapping("")
   public SubmitMetricsResponse submit(
-      @Valid @RequestBody SubmitMetricsRequestInternal submitMetricsBatchRequest)
+      @Valid @RequestBody ExportMetricsRequest submitMetricsBatchRequest)
       throws BadRequestException,
           OutsideWindowException,
           InterruptedException,
@@ -53,11 +53,9 @@ public class MetricsController {
   }
 
   @PostMapping("/list")
-  public ListMetricsResponse search(@RequestBody @Valid ListMetricsRequest request)
-          throws BadRequestException, IOException, RocksDBException {
+  public ListMetricsResponse search(@RequestBody @Valid ListMetricsRequest request) {
     return queryProcessor.listMetricsResponse(request);
   }
-
 
   @GetMapping("/lag")
   public int lag() {

@@ -1,12 +1,12 @@
 package org.okapi.metrics.common;
 
 import java.util.Map;
+import org.okapi.rest.metrics.ExportMetricsRequest;
 import org.okapi.rest.metrics.GetMetricsRequestInternal;
-import org.okapi.rest.metrics.SubmitMetricsRequestInternal;
 
 public class MetricPaths {
 
-  public static String convertToPath(SubmitMetricsRequestInternal request) {
+  public static String convertToPath(ExportMetricsRequest request) {
     // separator shouldn't clash with the rest of teh system
     return convertToPath(request.getTenantId(), request.getMetricName(), request.getTags());
   }
@@ -41,11 +41,15 @@ public class MetricPaths {
     return getMetricPath(universalMetricName, tags);
   }
 
-  public static MetricsContext getMetricsContext(SubmitMetricsRequestInternal request) {
+  public static MetricsContext getMetricsContext(ExportMetricsRequest request) {
     return new MetricsContext(request.getTags().getOrDefault("trace_id", null));
   }
 
   public static String localPath(String name, Map<String, String> tags) {
     return getMetricPath(name, tags);
+  }
+  
+  public static String univPath(String tenantId, String name, Map<String, String> tags) {
+    return tenantId + ":" + getMetricPath(name, tags);
   }
 }

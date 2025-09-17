@@ -19,7 +19,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.okapi.Statistics;
 import org.okapi.collections.OkapiLists;
-import org.okapi.fixtures.ReadingGenerator;
+import org.okapi.fixtures.GaugeGenerator;
 import org.okapi.metrics.OutsideWindowException;
 import org.okapi.metrics.common.MetricsContext;
 import org.okapi.metrics.io.StreamReadingException;
@@ -77,7 +77,7 @@ public class RollupSeriesTests {
   @MethodSource("testRestoreFuzzyArgs")
   public void testRestoreFuzzy(Duration ticker, int minutes)
       throws IOException, StreamReadingException, StatisticsFrozenException, InterruptedException {
-    var readings = new ReadingGenerator(ticker, minutes);
+    var readings = new GaugeGenerator(ticker, minutes);
     var ctx = new MetricsContext("test");
     readings.populateRandom(500.f, 540.f);
     var ts = readings.getTimestamps();

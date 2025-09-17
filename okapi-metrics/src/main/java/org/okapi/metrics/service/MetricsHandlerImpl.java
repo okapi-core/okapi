@@ -20,7 +20,7 @@ import org.okapi.metrics.async.Await;
 import org.okapi.metrics.common.ServiceRegistry;
 import org.okapi.metrics.common.pojo.NodeState;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssignerFactory;
-import org.okapi.metrics.query.promql.TimeSeriesClientFactory;
+import org.okapi.metrics.query.promql.TsClientFactory;
 import org.okapi.metrics.rocks.RocksStore;
 import org.okapi.metrics.service.runnables.*;
 import org.okapi.metrics.sharding.ShardPkgManager;
@@ -40,7 +40,6 @@ public class MetricsHandlerImpl implements MetricsHandler, Shardable {
   // background jobs
   HeartBeatReporterRunnable heartBeatWriter;
   LeaderResponsibilityRunnable leaderResponsibilityRunnable;
-  CheckpointUploader hourlyCheckpointUploaderRunnable;
 
   ScheduledExecutorService scheduler;
   ShardsAndSeriesAssignerFactory shardsAndSeriesAssignerFactory;
@@ -53,7 +52,7 @@ public class MetricsHandlerImpl implements MetricsHandler, Shardable {
   RocksStore rocksStore;
 
   // TimeSeriesFactory needs to know what are the shards
-  TimeSeriesClientFactory timeSeriesClientFactory;
+  TsClientFactory tsClientFactory;
 
   @Override
   public void onStart() throws Exception {
@@ -66,10 +65,9 @@ public class MetricsHandlerImpl implements MetricsHandler, Shardable {
     var assigner =
         shardsAndSeriesAssignerFactory.makeAssigner(nShards, nodes.orElse(Collections.emptyList()));
     metricsWriter.setShardsAndSeriesAssigner(assigner);
-    timeSeriesClientFactory.setShardsAndSeriesAssigner(assigner);
+    tsClientFactory.setShardsAndSeriesAssigner(assigner);
     scheduler.schedule(heartBeatWriter, 0, TimeUnit.SECONDS);
     scheduler.schedule(leaderResponsibilityRunnable, 0, TimeUnit.SECONDS);
-    scheduler.schedule(hourlyCheckpointUploaderRunnable, 0, TimeUnit.SECONDS);
     metricsWriter.init();
   }
 
@@ -179,7 +177,7 @@ public class MetricsHandlerImpl implements MetricsHandler, Shardable {
 
     var assigner = shardsAndSeriesAssignerFactory.makeAssigner(nShards, nodes);
     metricsWriter.setShardsAndSeriesAssigner(assigner);
-    timeSeriesClientFactory.setShardsAndSeriesAssigner(assigner);
+    tsClientFactory.setShardsAndSeriesAssigner(assigner);
     serviceController.resumeConsumer();
   }
 
@@ -194,7 +192,7 @@ public class MetricsHandlerImpl implements MetricsHandler, Shardable {
     var assigner =
         shardsAndSeriesAssignerFactory.makeAssigner(N_SHARDS, oldNodeConfig.get().nodes());
     metricsWriter.setShardsAndSeriesAssigner(assigner);
-    timeSeriesClientFactory.setShardsAndSeriesAssigner(assigner);
+    tsClientFactory.setShardsAndSeriesAssigner(assigner);
     serviceController.resumeConsumer();
   }
 

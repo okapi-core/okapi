@@ -16,19 +16,17 @@ import org.okapi.ip.FixedIpSupplier;
 import org.okapi.ip.IpSupplier;
 import org.okapi.metrics.*;
 import org.okapi.metrics.aws.NoOpCredentials;
-import org.okapi.metrics.common.*;
 import org.okapi.metrics.common.pojo.Node;
 import org.okapi.metrics.common.sharding.ConsistentHashedAssignerFactory;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssignerFactory;
+import org.okapi.metrics.fdb.FdbMetricsWriter;
+import org.okapi.metrics.fdb.FdbTx;
 import org.okapi.metrics.query.promql.*;
 import org.okapi.metrics.rollup.*;
-import org.okapi.metrics.service.*;
 import org.okapi.metrics.service.runnables.*;
 import org.okapi.metrics.service.self.NodeCreator;
-import org.okapi.metrics.sharding.*;
 import org.okapi.metrics.stats.*;
 import org.okapi.profiles.ENV_TYPE;
-import org.okapi.rest.metrics.SubmitMetricsRequestInternal;
 import org.okapi.rest.promql.Sample;
 import org.okapi.rest.promql.SampleAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,7 +74,6 @@ public class OkapiMetricsConsumerConfig {
     return new ConsistentHashedAssignerFactory();
   }
 
-
   @Bean
   public IpSupplier ipSupplier(@Autowired ENV_TYPE envType, @Value("${server.port}") int port) {
     return switch (envType) {
@@ -94,7 +91,6 @@ public class OkapiMetricsConsumerConfig {
   public RollupQueryProcessor rollupQueryProcessor() {
     return new RollupQueryProcessor();
   }
-
 
   @Bean
   public AwsCredentialsProvider credentialsProviderV2(@Autowired ENV_TYPE ENV_TYPE) {
@@ -129,10 +125,9 @@ public class OkapiMetricsConsumerConfig {
       @Autowired Database database,
       @Autowired Node node,
       @Qualifier(Configurations.BEAN_FDB_MESSAGE_BOX) @Autowired
-          SharedMessageBox<SubmitMetricsRequestInternal> messageBox) {
-    return new FdbMetricsWriter(database, node.id(), messageBox);
+          SharedMessageBox<FdbTx> messageBox) {
+    return new FdbMetricsWriter(node.id(), messageBox, new KllStatSupplier());
   }
-
 
   @Bean(name = Configurations.BEAN_PROMQL_SERIALIZER)
   public Gson promqlSerializer() {
@@ -141,12 +136,12 @@ public class OkapiMetricsConsumerConfig {
 
   @Bean
   public PromQlQueryProcessor promQlQueryProcessor(
-      @Autowired TimeSeriesClientFactory timeSeriesClientFactory,
+      @Autowired TsClientFactory tsClientFactory,
       @Autowired SeriesDiscoveryFactory seriesDiscoveryFactory,
       @Value(Configurations.VAL_PROMQL_EVAL_THREADS) int threads) {
     var singleThreadedExecutor = Executors.newFixedThreadPool(threads);
     var merger = new RollupStatsMerger(new RolledupMergerStrategy());
     return new PromQlQueryProcessor(
-        singleThreadedExecutor, merger, timeSeriesClientFactory, seriesDiscoveryFactory);
+        singleThreadedExecutor, merger, tsClientFactory, seriesDiscoveryFactory);
   }
 }

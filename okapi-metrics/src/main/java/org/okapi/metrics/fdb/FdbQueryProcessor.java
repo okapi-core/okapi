@@ -19,7 +19,7 @@ public class FdbQueryProcessor implements QueryProcessor {
     var res = request.getResolution();
     var path = MetricPaths.convertToPath(request);
     var agg = request.getAggregation();
-    var scanResult = tsReader.scan(path, start, end, agg, res);
+    var scanResult = tsReader.scanGauge(path, start, end, agg, res);
     return GetMetricsResponse.builder()
         .name(request.getMetricName())
         .tags(request.getTags())

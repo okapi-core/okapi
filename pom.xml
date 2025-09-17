@@ -37,6 +37,7 @@
         <module>okapi-avros</module>
         <module>okapi-promql</module>
         <module>okapi-statistics</module>
+        <module>okapi-traces</module>
     </modules>
     <properties>
         <java.version>21</java.version>
@@ -380,6 +381,32 @@
                 <artifactId>fdb-java</artifactId>
                 <version>7.3.68</version>
             </dependency>
+
+
+            <dependency>
+                <groupId>org.apache.cassandra</groupId>
+                <artifactId>java-driver-core</artifactId>
+                <version>${cassandra-driver.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.cassandra</groupId>
+                <artifactId>java-driver-query-builder</artifactId>
+                <version>${cassandra-driver.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.cassandra</groupId>
+                <artifactId>java-driver-mapper-runtime</artifactId>
+                <version>${cassandra-driver.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.cassandra</groupId>
+                <artifactId>java-driver-mapper-processor</artifactId>
+                <version>${cassandra-driver.version}</version>
+                <scope>provided</scope>
+            </dependency>
         </dependencies>
 
     </dependencyManagement>
@@ -422,6 +449,11 @@
                                 <groupId>org.mapstruct</groupId>
                                 <artifactId>mapstruct-processor</artifactId>
                                 <version>${org.mapstruct.version}</version>
+                            </path>
+                            <path>
+                                <groupId>org.apache.cassandra</groupId>
+                                <artifactId>java-driver-mapper-processor</artifactId>
+                                <version>${cassandra-driver.version}</version>
                             </path>
                         </annotationProcessorPaths>
                     </configuration>

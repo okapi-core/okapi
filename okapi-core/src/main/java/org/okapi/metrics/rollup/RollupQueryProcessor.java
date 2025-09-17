@@ -14,32 +14,32 @@ public class RollupQueryProcessor implements QueryProcessor {
   @Override
   public QueryRecords.QueryResult scan(TsReader rollupSeries, QueryRecords.Slice slice) {
     var scanResult =
-        rollupSeries.scan(
+        rollupSeries.scanGauge(
             slice.series(), slice.from(), slice.to(), slice.aggregation(), slice.resolution());
     return new QueryRecords.QueryResult(
-        scanResult.getSeriesName(), scanResult.getTimestamps(), scanResult.getValues());
+        scanResult.getUniversalPath(), scanResult.getTimestamps(), scanResult.getValues());
   }
 
   @Override
   public QueryRecords.QueryResult scale(
       TsReader rollupSeries, QueryRecords.Slice slice, float scaleFactor) {
     var scaledResult =
-        rollupSeries.scan(
+        rollupSeries.scanGauge(
             slice.series(), slice.from(), slice.to(), slice.aggregation(), slice.resolution());
     var ts = scaledResult.getTimestamps();
     var values = scaledResult.getValues();
     values.replaceAll(aFloat -> aFloat * scaleFactor);
-    return new QueryRecords.QueryResult(scaledResult.getSeriesName(), ts, values);
+    return new QueryRecords.QueryResult(scaledResult.getUniversalPath(), ts, values);
   }
 
   @Override
   public QueryRecords.QueryResult sum(
       TsReader rollupSeries, QueryRecords.Slice left, QueryRecords.Slice right) {
     var scanLeft =
-        rollupSeries.scan(
+        rollupSeries.scanGauge(
             left.series(), left.from(), left.to(), left.aggregation(), left.resolution());
     var scanRight =
-        rollupSeries.scan(
+        rollupSeries.scanGauge(
             right.series(), right.from(), right.to(), right.aggregation(), right.resolution());
     int nLeft = scanLeft.getValues().size();
     int nRight = scanRight.getValues().size();
@@ -89,7 +89,7 @@ public class RollupQueryProcessor implements QueryProcessor {
   public QueryRecords.QueryResult transform(
       TsReader rollupSeries, QueryRecords.Slice slice, QueryProcessor.TRANSFORM transform) {
     var scaledResult =
-        rollupSeries.scan(
+        rollupSeries.scanGauge(
             slice.series(), slice.from(), slice.to(), slice.aggregation(), slice.resolution());
     var ts = scaledResult.getTimestamps();
     var values = scaledResult.getValues();
@@ -101,7 +101,7 @@ public class RollupQueryProcessor implements QueryProcessor {
             default -> throw new IllegalArgumentException("Unknown transform: " + transform);
           };
         });
-    return new QueryRecords.QueryResult(scaledResult.getSeriesName(), ts, values);
+    return new QueryRecords.QueryResult(scaledResult.getUniversalPath(), ts, values);
   }
 
   @Override
@@ -116,7 +116,7 @@ public class RollupQueryProcessor implements QueryProcessor {
       Duration windowSize,
       BiFunction<Float, Integer, Float> valueComputeFn) {
     var scanResult =
-        rollupSeries.scan(
+        rollupSeries.scanGauge(
             slice.series(), slice.from(), slice.to(), slice.aggregation(), slice.resolution());
     var timestamps = scanResult.getTimestamps();
     if (timestamps.isEmpty()) {
@@ -168,7 +168,7 @@ public class RollupQueryProcessor implements QueryProcessor {
   @Override
   public QueryRecords.QueryResult firstDerivative(TsReader rollupSeries, QueryRecords.Slice slice) {
     var scaledResult =
-        rollupSeries.scan(
+        rollupSeries.scanGauge(
             slice.series(), slice.from(), slice.to(), slice.aggregation(), slice.resolution());
     var ts = scaledResult.getTimestamps();
     var values = scaledResult.getValues();

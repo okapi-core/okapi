@@ -11,7 +11,7 @@ import org.okapi.metrics.common.MetricPaths;
 import org.okapi.metrics.common.pojo.Node;
 import org.okapi.metricsproxy.auth.AuthorizationChecker;
 import org.okapi.rest.metrics.SubmitMetricsRequest;
-import org.okapi.rest.metrics.SubmitMetricsRequestInternal;
+import org.okapi.rest.metrics.ExportMetricsRequest;
 import org.okapi.rest.metrics.SubmitMetricsResponse;
 import java.nio.charset.StandardCharsets;
 import lombok.AllArgsConstructor;
@@ -49,7 +49,7 @@ public class MetricsDispatcher {
         tokenDto.getAuthorizationRoles().contains(writerRole), UnAuthorizedException::new);
     var tenantId = IdCreator.getTenantId(orgId, teamId);
     var routable =
-        SubmitMetricsRequestInternal.builder()
+        ExportMetricsRequest.builder()
             .ts(requestV2.getTs())
             .values(requestV2.getValues())
             .tags(requestV2.getTags())

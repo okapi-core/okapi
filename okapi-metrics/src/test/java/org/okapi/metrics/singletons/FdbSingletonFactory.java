@@ -2,15 +2,12 @@ package org.okapi.metrics.singletons;
 
 import com.apple.foundationdb.Database;
 import com.apple.foundationdb.FDB;
-import java.util.function.Supplier;
 import org.okapi.metrics.Merger;
 import org.okapi.metrics.SharedMessageBox;
 import org.okapi.metrics.common.pojo.Node;
-import org.okapi.metrics.fdb.FdbTsReader;
-import org.okapi.metrics.fdb.FdbTsSearcher;
-import org.okapi.metrics.fdb.FdbWriter;
+import org.okapi.metrics.fdb.*;
+import org.okapi.metrics.fdb.FdbMetricsWriter;
 import org.okapi.metrics.stats.*;
-import org.okapi.rest.metrics.SubmitMetricsRequestInternal;
 
 public class FdbSingletonFactory extends AbstractSingletonFactory {
 
@@ -32,17 +29,13 @@ public class FdbSingletonFactory extends AbstractSingletonFactory {
     return new WritableRestorer();
   }
 
-  public SharedMessageBox<SubmitMetricsRequestInternal> messageBox(Node node) {
+  public SharedMessageBox<FdbTx> messageBox(Node node) {
     return makeSingleton(
         node,
         SharedMessageBox.class,
         () -> {
-          return new SharedMessageBox<SubmitMetricsRequestInternal>(100);
+          return new SharedMessageBox<FdbTx>(100);
         });
-  }
-
-  public Supplier<UpdatableStatistics> updatableStatisticsSupplier() {
-    return new KllStatSupplier();
   }
 
   public Merger<UpdatableStatistics> updatableStatisticsMerger() {
@@ -51,16 +44,14 @@ public class FdbSingletonFactory extends AbstractSingletonFactory {
 
   public FdbWriter fdbWriter(Node node) {
     return makeSingleton(
+        node, FdbWriter.class, () -> new FdbWriter(getDatabase(), messageBox(node)));
+  }
+
+  public FdbMetricsWriter fdbMetricsWriter(Node node) {
+    return makeSingleton(
         node,
-        FdbWriter.class,
-        () ->
-            new FdbWriter(
-                messageBox(node),
-                updatableStatisticsMerger(),
-                getDatabase(),
-                node,
-                updatableStatisticsSupplier(),
-                unmarshaller()));
+        FdbMetricsWriter.class,
+        () -> new FdbMetricsWriter(node.id(), messageBox(node), new KllStatSupplier()));
   }
 
   public FdbTsReader fdbTsReader(Node node) {
@@ -72,5 +63,17 @@ public class FdbSingletonFactory extends AbstractSingletonFactory {
 
   public FdbTsSearcher fdbTsSearcher(Node node) {
     return makeSingleton(node, FdbTsSearcher.class, () -> new FdbTsSearcher(getDatabase()));
+  }
+
+  public FdbTsClientFactory fdbTsClientFactory(Node node) {
+    return makeSingleton(
+        node, FdbTsClientFactory.class, () -> new FdbTsClientFactory(fdbTsReader(node)));
+  }
+
+  public FdbSeriesDiscoveryFactory fdbSeriesDiscoveryFactory(Node node) {
+    return makeSingleton(
+        node,
+        FdbSeriesDiscoveryFactory.class,
+        () -> new FdbSeriesDiscoveryFactory(fdbTsSearcher(node)));
   }
 }

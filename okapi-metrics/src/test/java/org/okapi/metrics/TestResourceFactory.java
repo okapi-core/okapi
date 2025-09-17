@@ -1,8 +1,5 @@
 package org.okapi.metrics;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import com.google.gson.Gson;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -10,34 +7,30 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import lombok.Getter;
 import lombok.Setter;
-import org.okapi.Statistics;
 import org.okapi.clock.Clock;
 import org.okapi.clock.SystemClock;
 import org.okapi.fake.FakeClock;
-import org.okapi.metrics.common.DefaultShardConfig;
+import org.okapi.metrics.cas.CasMetricsWriter;
+import org.okapi.metrics.cas.CasTsReader;
+import org.okapi.metrics.cas.dao.MetricsMapper;
 import org.okapi.metrics.common.ServiceRegistry;
 import org.okapi.metrics.common.ServiceRegistryImpl;
-import org.okapi.metrics.common.ZkPaths;
 import org.okapi.metrics.common.pojo.*;
 import org.okapi.metrics.paths.PathSet;
 import org.okapi.metrics.query.promql.*;
-import org.okapi.metrics.rocks.RocksStore;
 import org.okapi.metrics.rollup.*;
 import org.okapi.metrics.service.*;
 import org.okapi.metrics.service.fakes.*;
 import org.okapi.metrics.service.runnables.*;
-import org.okapi.metrics.service.web.RocksQueryProcessor;
 import org.okapi.metrics.sharding.HeartBeatChecker;
 import org.okapi.metrics.sharding.LeaderJobs;
 import org.okapi.metrics.sharding.LeaderJobsImpl;
-import org.okapi.metrics.sharding.ShardPkgManager;
-import org.okapi.metrics.sharding.fakes.FixedAssignerFactory;
 import org.okapi.metrics.singletons.AbstractSingletonFactory;
+import org.okapi.metrics.singletons.FdbSingletonFactory;
 import org.okapi.metrics.stats.*;
 import org.okapi.promql.eval.ts.StatisticsMerger;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -51,12 +44,14 @@ public class TestResourceFactory extends AbstractSingletonFactory {
   int nodeCounter = 0;
   Duration checkpointDuration = Duration.of(1, ChronoUnit.HOURS);
   @Getter String dataBucket = "okapi-test-data-bucket";
+  public static final String KEYSPACE = "okapi_telemetry";
   Path snapshotDir;
   @Setter @Getter int admissionWindowHrs = 1;
   Path rocksRoot;
   Path metricsPathSetWalRoot;
   @Setter boolean useRealClock;
   Map<String, Node> registeredNodes;
+  @Getter FdbSingletonFactory fdbSingletonFactory;
 
   public TestResourceFactory() {
     super();
@@ -64,6 +59,7 @@ public class TestResourceFactory extends AbstractSingletonFactory {
       snapshotDir = Files.createTempDirectory("snapshot-directory");
       rocksRoot = Files.createTempDirectory("rocks-root");
       metricsPathSetWalRoot = Files.createTempDirectory("metrics-paths-wal");
+      fdbSingletonFactory = new FdbSingletonFactory();
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -158,40 +154,9 @@ public class TestResourceFactory extends AbstractSingletonFactory {
         });
   }
 
-  public S3CheckpointUploaderDownloader checkpointUploader(Node node) {
-    return makeSingleton(
-        S3CheckpointUploaderDownloader.class,
-        () -> new S3CheckpointUploaderDownloader(dataBucket, s3Client(), clock(node)));
-  }
-
-  public ServiceControllerImpl serviceController(Node node) {
-    return makeSingleton(
-        node,
-        ServiceControllerImpl.class,
-        () -> new ServiceControllerImpl(node.id(), messageBox(node)));
-  }
-
   public ScheduledExecutorService scheduledExecutorService(Node node) {
     return makeSingleton(
         node, ScheduledExecutorService.class, () -> Executors.newScheduledThreadPool(10));
-  }
-
-  public HeartBeatReporterRunnable heartBeatReporterRunnable(Node node) {
-    return makeSingleton(
-        node,
-        HeartBeatReporterRunnable.class,
-        () ->
-            new HeartBeatReporterRunnable(
-                serviceRegistry(node), scheduledExecutorService(node), serviceController(node)));
-  }
-
-  public LeaderResponsibilityRunnable leaderResponsibilityRunnable(Node node) {
-    return makeSingleton(
-        node,
-        LeaderResponsibilityRunnable.class,
-        () ->
-            new LeaderResponsibilityRunnable(
-                scheduledExecutorService(node), leaderJobs(node), serviceController(node)));
   }
 
   public SharedMessageBox<WriteBackRequest> messageBox(Node node) {
@@ -229,218 +194,10 @@ public class TestResourceFactory extends AbstractSingletonFactory {
         });
   }
 
-  public Optional<Node> getNode(String id) {
-    return Optional.ofNullable(this.registeredNodes.get(id));
-  }
-
-  public FixedAssignerFactory shardsAndSeriesAssigner() {
-    return makeSingleton(FixedAssignerFactory.class, FixedAssignerFactory::new);
-  }
-
-  public NodeStateRegistry nodeStateRegistry(Node node) {
-    return makeSingleton(
-        node, NodeStateRegistryImpl.class, () -> new NodeStateRegistryImpl(fleetMetadata(), node));
-  }
-
-  public ParquetRollupWriter<UpdatableStatistics> parquetRollupWriter(Node node) {
-    return makeSingleton(
-        ParquetRollupWriter.class,
-        () -> {
-          try {
-            return new ParquetRollupWriterImpl<UpdatableStatistics>(
-                pathRegistry(node), pathSet(node), rocksStore(node));
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        });
-  }
-
-  public FrozenMetricsUploader hourlyCheckpointWriter(Node node) {
-    return makeSingleton(
-        node,
-        FrozenMetricsUploader.class,
-        () -> {
-          try {
-            return new FrozenMetricsUploader(
-                checkpointUploader(node),
-                pathRegistry(node),
-                nodeStateRegistry(node),
-                clock(node),
-                admissionWindowHrs,
-                pathSet(node),
-                rocksStore(node),
-                parquetRollupWriter(node));
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        });
-  }
-
-  public CheckpointUploader uploaderRunnable(Node node) {
-    return makeSingleton(
-        node,
-        CheckpointUploader.class,
-        () ->
-            new CheckpointUploader(
-                hourlyCheckpointWriter(node),
-                scheduledExecutorService(node),
-                serviceController(node),
-                checkpointDuration));
-  }
-
-  public Path walRoot(Node node) {
-    return makeSingleton(
-        node,
-        Path.class,
-        () -> {
-          try {
-            // Create a unique, node-scoped temporary WAL root and cache it
-            return Files.createTempDirectory("wal-" + node.id() + "-");
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        });
-  }
-
-  public RocksMetricsWriter rocksWriter(Node node) {
-    return makeSingleton(
-        node,
-        RocksMetricsWriter.class,
-        () -> {
-          try {
-            return new RocksMetricsWriter(
-                shardMap(node), serviceController(node), node.id(), pathSet(node));
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        });
-  }
-
-  public ShardPkgManager shardPkgManager(Node node) {
-    return makeSingleton(
-        node, ShardPkgManager.class, () -> new ShardPkgManager(pathRegistry(node)));
-  }
-
-  public TimeSeriesClientFactory timeSeriesClientFactory(Node node) {
-    return new RocksMetricsClientFactory(
-        pathRegistry(node), rocksStore(node), readableUnmarshaller());
-  }
-
-  public MetricsHandlerImpl metricsHandler(Node node) throws IOException {
-    return makeSingleton(
-        node,
-        MetricsHandlerImpl.class,
-        () -> {
-          return new MetricsHandlerImpl(
-              serviceRegistry(node),
-              pathRegistry(node),
-              checkpointUploader(node),
-              serviceController(node),
-              rocksWriter(node),
-              heartBeatReporterRunnable(node),
-              leaderResponsibilityRunnable(node),
-              uploaderRunnable(node),
-              scheduledExecutorService(node),
-              shardsAndSeriesAssigner(),
-              shardMap(node),
-              shardPkgManager(node),
-              rocksStore(node),
-              timeSeriesClientFactory(node));
-        });
-  }
-
   public Node makeNode(String id) {
     nodeCounter++;
     var ip = "127.0.0." + nodeCounter;
     return new Node(id, ip, NodeState.NODE_CREATED);
-  }
-
-  public void scaleUp(List<String> nodes, String initial, String opId) {
-    assertTrue(nodes.contains(initial));
-    var gson = new Gson();
-    var scaleupOp =
-        new ClusterChangeOp(
-            opId,
-            nodes,
-            TWO_PHASE_STATE.DONE,
-            System.currentTimeMillis(),
-            System.currentTimeMillis());
-    fleetMetadata().setData(ZkPaths.clusterChangeOpPath(), gson.toJson(scaleupOp).getBytes());
-    var oldConfig = new ClusterConfig(DefaultShardConfig.OP_ID, Arrays.asList(initial));
-    var newNodeConfig = new ClusterConfig(opId, nodes);
-    fleetMetadata().setData(ZkPaths.newNodeConfig(), gson.toJson(newNodeConfig).getBytes());
-    fleetMetadata().setData(ZkPaths.oldNodeConfig(), gson.toJson(oldConfig).getBytes());
-  }
-
-  public RollupQueryProcessor rollupQueryProcessor(Node node) {
-    return makeSingleton(node, RollupQueryProcessor.class, RollupQueryProcessor::new);
-  }
-
-  public RocksStore rocksStore(Node node) {
-    return makeSingleton(
-        RocksStore.class,
-        () -> {
-          try {
-            return new RocksStore();
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        });
-  }
-
-  public StatisticsRestorer<UpdatableStatistics> writableUnmarshaller() {
-    return new WritableRestorer();
-  }
-
-  public StatisticsRestorer<Statistics> readableUnmarshaller() {
-    return new ReadonlyRestorer();
-  }
-
-  public RocksReaderSupplier rocksReaderSupplier(Node node) {
-    return new RocksReaderSupplier(pathRegistry(node), readableUnmarshaller(), rocksStore(node));
-  }
-
-  public RocksDbStatsWriter rocksDbStatsWriter(Node node) {
-    return makeSingleton(
-        node,
-        RocksDbStatsWriter.class,
-        () -> {
-          try {
-            return new RocksDbStatsWriter(
-                messageBox(node),
-                writableUnmarshaller(),
-                new RolledupMergerStrategy(),
-                pathRegistry(node));
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        });
-  }
-
-  public RocksQueryProcessor queryProcessor(Node node) {
-    return makeSingleton(
-        node,
-        RocksQueryProcessor.class,
-        () -> {
-          try {
-            return new RocksQueryProcessor(
-                shardMap(node),
-                shardsAndSeriesAssigner(),
-                rollupQueryProcessor(node),
-                serviceRegistry(node),
-                rocksReaderSupplier(node),
-                pathSet(node),
-                rocksStore(node),
-                pathRegistry(node));
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        });
-  }
-
-  public RocksMetricsClientFactory rocksMetricsClientFactory(Node node) {
-    return new RocksMetricsClientFactory(
-        pathRegistry(node), rocksStore(node), readableUnmarshaller());
   }
 
   public PathSetDiscoveryClientFactory pathSetSeriesDiscovery(Node node) throws IOException {
@@ -451,8 +208,27 @@ public class TestResourceFactory extends AbstractSingletonFactory {
     return new RollupStatsMerger(new RolledupMergerStrategy());
   }
 
-  public void startWriter(Node node) {
-    var writer = this.rocksDbStatsWriter(node);
-    writer.startWriting(scheduledExecutorService(node), rocksStore(node), writeBackSettings(node));
+  public CasMetricsWriter casMetricsWriter(MetricsMapper mapper, Node node) {
+    return makeSingleton(
+        node,
+        CasMetricsWriter.class,
+        () ->
+            new CasMetricsWriter(
+                new KllStatSupplier(),
+                mapper.sketchesDao(KEYSPACE),
+                mapper.searchHintDao(KEYSPACE),
+                Executors.newFixedThreadPool(50)));
+  }
+
+  public CasTsReader casTsReaders(MetricsMapper mapper, Node node) {
+    return makeSingleton(
+        node,
+        CasTsReader.class,
+        () ->
+            new CasTsReader(
+                mapper.sketchesDao(KEYSPACE),
+                new KllStatSupplier(),
+                new WritableRestorer(),
+                new RolledupMergerStrategy()));
   }
 }

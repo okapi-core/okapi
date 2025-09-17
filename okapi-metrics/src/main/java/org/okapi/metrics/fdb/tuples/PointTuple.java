@@ -15,7 +15,7 @@ public class PointTuple {
   }
 
   public byte[][] pointQuery() {
-    var subspace = SubspaceFactory.getMetricsSub();
+    var subspace = SubspaceFactory.getGaugeSub();
     return new byte[][] {
       subspace.pack(Tuple.from(universalPath, type, bucket)), 
             subspace.pack(Tuple.from(universalPath, type, bucket + 1))
@@ -23,7 +23,7 @@ public class PointTuple {
   }
 
   public byte[][] inclusiveRange(long endBucket) {
-    var subspace = SubspaceFactory.getMetricsSub();
+    var subspace = SubspaceFactory.getGaugeSub();
     return new byte[][] {
       subspace.pack(Tuple.from(universalPath, type.name(), bucket)), subspace.pack(Tuple.from(universalPath, type.name(), endBucket + 1))
     };

@@ -28,3 +28,4 @@ target/
 **/*.si
 **/write.lock
 **/segments_*
+.aider*

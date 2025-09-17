@@ -3,7 +3,6 @@ package org.okapi.metrics.service.hooks;
 import java.util.concurrent.ScheduledExecutorService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.okapi.metrics.RocksDbStatsWriter;
 import org.okapi.metrics.common.pojo.Node;
 import org.okapi.metrics.coordinator.CentralCoordinator;
 import org.okapi.metrics.rocks.RocksStore;
@@ -27,7 +26,6 @@ public class LifecycleHook implements SmartLifecycle {
   @Autowired MetricsHandlerImpl metricsHandler;
 
   @Autowired ScheduledExecutorService scheduledExecutorService;
-  @Autowired RocksDbStatsWriter rocksDbStatsWriter;
   @Autowired RocksStore rocksStore;
   @Autowired
   WriteBackSettings writeBackSettings;
@@ -46,7 +44,6 @@ public class LifecycleHook implements SmartLifecycle {
   public void start() {
     doCoordinatorStuff();
     startHandler();
-    rocksDbStatsWriter.startWriting(scheduledExecutorService, rocksStore, writeBackSettings);
     backgroundJobs.trigger();
     isRunning = true;
   }

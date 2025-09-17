@@ -1,10 +1,9 @@
 package org.okapi.metrics.rollup;
 
 import java.util.List;
-import java.util.Optional;
 import org.okapi.Statistics;
-import org.okapi.fixtures.ReadingGenerator;
-import org.okapi.fixtures.ReadingGeneratorReduction;
+import org.okapi.fixtures.GaugeGenerator;
+import org.okapi.fixtures.ReadingAggregation;
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
 
@@ -54,17 +53,6 @@ public class RollupTestUtils {
     }
   }
 
-  public static Optional<Statistics> getStats(
-          RocksTsReader reader, String series, long timestamp, RES_TYPE resType) {
-
-    return switch (resType) {
-      case SECONDLY -> reader.secondlyStats(series, timestamp);
-      case MINUTELY -> reader.minutelyStats(series, timestamp);
-      case HOURLY -> reader.hourlyStats(series, timestamp);
-      default -> throw new IllegalArgumentException("Unknown resolution type: " + resType);
-    };
-  }
-
   public static float getStats(Statistics stats, AGG_TYPE aggType) {
     return switch (aggType) {
       case MIN -> stats.min();
@@ -80,8 +68,8 @@ public class RollupTestUtils {
     };
   }
 
-  public static ReadingGeneratorReduction applyReduction(
-      ReadingGenerator reading, AGG_TYPE aggType, RES_TYPE resType) {
+  public static ReadingAggregation applyReduction(
+          GaugeGenerator reading, AGG_TYPE aggType, RES_TYPE resType) {
     return switch (aggType) {
       case MIN -> reading.minReduction(resType);
       case MAX -> reading.maxReduction(resType);

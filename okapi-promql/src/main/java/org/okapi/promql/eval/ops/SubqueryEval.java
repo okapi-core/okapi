@@ -23,7 +23,6 @@ public final class SubqueryEval implements Evaluable {
   public ExpressionResult eval(EvalContext ctx) throws EvaluationException {
     long outerStart = ctx.startMs;
     long outerEnd = ctx.endMs;
-    long outerStep = ctx.stepMs;
     long offset = node.offsetMs == null ? 0L : node.offsetMs;
 
     List<SeriesWindow> out = new ArrayList<>();

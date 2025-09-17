@@ -1,19 +1,24 @@
 package org.okapi.metrics.fdb;
 
 import com.apple.foundationdb.Database;
+import com.google.api.client.util.Lists;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.primitives.Ints;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.okapi.Statistics;
 import org.okapi.metrics.Merger;
-import org.okapi.metrics.fdb.tuples.BUCKET_TYPE;
-import org.okapi.metrics.fdb.tuples.MetricWriteTuple;
-import org.okapi.metrics.fdb.tuples.PointTuple;
+import org.okapi.metrics.fdb.tuples.*;
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
-import org.okapi.metrics.rollup.ScanResult;
+import org.okapi.metrics.pojos.SUM_TYPE;
+import org.okapi.metrics.results.GaugeScan;
+import org.okapi.metrics.results.HistoScan;
+import org.okapi.metrics.results.SumScan;
 import org.okapi.metrics.rollup.TsReader;
 import org.okapi.metrics.stats.StatisticsRestorer;
 import org.okapi.metrics.stats.UpdatableStatistics;
@@ -27,10 +32,10 @@ public class FdbTsReader implements TsReader {
   StatisticsRestorer<UpdatableStatistics> unmarshaller;
 
   @Override
-  public ScanResult scan(
+  public GaugeScan scanGauge(
       String series, long from, long to, AGG_TYPE aggregation, RES_TYPE resolution) {
     // add the reduction
-    var reading = scan(series, from, to, resolution);
+    var reading = scanGauge(series, from, to, resolution);
     var reduced = new TreeMap<Long, Float>();
     for (var entry : reading.keySet()) {
       var agg = aggregate(reading.get(entry), aggregation);
@@ -38,7 +43,90 @@ public class FdbTsReader implements TsReader {
     }
     var ts = new ArrayList<>(reduced.keySet());
     var vals = ts.stream().map(reduced::get).toList();
-    return new ScanResult(series, ts, vals);
+    return new GaugeScan(series, ts, vals);
+  }
+
+  @Override
+  public HistoScan scanHisto(String series, long from, long to) {
+    // convert to secondly, do a range read -> aggregate in a TreeSet<Float, Count> -> convert the
+    AtomicInteger infCount = new AtomicInteger();
+    var ubCount = new TreeMap<Float, Integer>();
+    var blockStart = from / 1000;
+    var blockEnd = to / 1000;
+    var rangeScan = HistoTuple.rangeScanHalfOpen(series, blockStart, blockEnd);
+    database.run(
+        tr -> {
+          var range = tr.getRange(rangeScan[0].pack(), rangeScan[1].pack()).iterator();
+          while (range.hasNext()) {
+            var kv = range.next();
+            var optionalHistoTuple = TupleDeserializer.readHistoTuple(kv.getKey());
+            if (optionalHistoTuple.isEmpty()) continue;
+            var histoTuple = optionalHistoTuple.get();
+            if (histoTuple.getEndBucket() * 1000 > to) continue;
+            var val = Ints.fromByteArray(kv.getValue());
+            if (histoTuple.isInf()) {
+              infCount.addAndGet(val);
+            } else {
+              var updated = ubCount.getOrDefault(histoTuple.getUb(), 0) + val;
+              ubCount.put(histoTuple.getUb(), updated);
+            }
+          }
+          return null;
+        });
+    var buckets = Lists.newArrayList(ubCount.keySet());
+    var counts = new ArrayList<>(ubCount.values());
+    counts.add(infCount.get());
+    return new HistoScan(series, from, to, buckets, counts);
+  }
+
+  @Override
+  public SumScan scanSum(String series, long from, long to, long windowSize, SUM_TYPE sumType) {
+    return switch (sumType) {
+      case CSUM -> scanCsum(series, from, to, windowSize);
+      case DELTA -> scanDeltas(series, from, to, windowSize);
+    };
+  }
+
+  public SumScan scanCsum(String series, long from, long to, long windowSize) {
+    return readWithAggregation(series, from, to, windowSize, (a, b) -> b);
+  }
+
+  public SumScan scanDeltas(String series, long from, long to, long windowSize) {
+    return readWithAggregation(series, from, to, windowSize, Integer::sum);
+  }
+
+  protected SumScan readWithAggregation(
+      String series,
+      long from,
+      long to,
+      long windowSize,
+      BiFunction<Integer, Integer, Integer> aggregator) {
+    var blockStart = from / 1000;
+    var blockEnd = to / 1000;
+    var range = DeltaSumTuple.rangeScanHalfOpen(series, blockStart, blockEnd);
+    var expectedDiff = windowSize / 1000;
+    var reading =
+        database.run(
+            tr -> {
+              var scan = tr.getRange(range[0].pack(), range[1].pack()).iterator();
+              var agg = new TreeMap<Long, Integer>();
+              while (scan.hasNext()) {
+                var kv = scan.next();
+                var optionalDeltaSumTuple = TupleDeserializer.readDeltaSumTuple(kv.getKey());
+                if (optionalDeltaSumTuple.isEmpty()) continue;
+                var deltaTuple = optionalDeltaSumTuple.get();
+                if (deltaTuple.getEndBucket() - deltaTuple.getStartBucket() >= expectedDiff)
+                  continue;
+                var val = Ints.fromByteArray(kv.getValue());
+                var updated =
+                    aggregator.apply(agg.getOrDefault(deltaTuple.getStartBucket() * 1000, 0), val);
+                agg.put(deltaTuple.getStartBucket() * 1000, updated);
+              }
+              return agg;
+            });
+    var ts = new ArrayList<>(reading.keySet());
+    var vals = new ArrayList<>(reading.values());
+    return null;
   }
 
   public Float aggregate(Statistics statistics, AGG_TYPE aggType) {
@@ -68,7 +156,7 @@ public class FdbTsReader implements TsReader {
   }
 
   @Override
-  public Map<Long, Statistics> scan(String series, long from, long to, RES_TYPE resolution) {
+  public Map<Long, Statistics> scanGauge(String series, long from, long to, RES_TYPE resolution) {
     BUCKET_TYPE bucketType =
         switch (resolution) {
           case HOURLY -> BUCKET_TYPE.H;
@@ -101,7 +189,7 @@ public class FdbTsReader implements TsReader {
           var iterable = tr.getRange(rangeStart, rangeEnd).iterator();
           while (iterable.hasNext()) {
             var kv = iterable.next();
-            var metric = MetricWriteTuple.fromKey(kv.getKey());
+            var metric = GaugeTuple.fromKey(kv.getKey());
             var t = timeScale * metric.getBucket();
             var v = unmarshaller.deserialize(kv.getValue());
             reading.put(t, v);

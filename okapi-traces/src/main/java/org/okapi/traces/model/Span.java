@@ -1,69 +1,31 @@
 package org.okapi.traces.model;
 
 import java.time.Instant;
+import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Span {
-    private String traceId;
-    private String spanId;
-    private String parentSpanId;
-    private String name;
-    private Instant startTime;
-    private Instant endTime;
-    private String status;
+  private String tenantId;
+  private String appId;
 
-    public String getTraceId() {
-        return traceId;
-    }
+  private String traceId;
+  private String spanId;
+  private String parentSpanId;
+  private String name;
+  private Instant startTime;
+  private Instant endTime;
+  private long durationMillis;
 
-    public void setTraceId(String traceId) {
-        this.traceId = traceId;
-    }
+  private String kind; // SERVER/CLIENT/INTERNAL etc.
+  private String statusCode;
+  private String statusMessage;
 
-    public String getSpanId() {
-        return spanId;
-    }
-
-    public void setSpanId(String spanId) {
-        this.spanId = spanId;
-    }
-
-    public String getParentSpanId() {
-        return parentSpanId;
-    }
-
-    public void setParentSpanId(String parentSpanId) {
-        this.parentSpanId = parentSpanId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Instant getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(Instant startTime) {
-        this.startTime = startTime;
-    }
-
-    public Instant getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(Instant endTime) {
-        this.endTime = endTime;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
+  private Map<String, String> attributes; // flattened string attributes for quick metadata viewing
 }

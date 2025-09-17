@@ -1,21 +1,18 @@
 package org.okapi.metrics.query.promql;
 
-import org.okapi.collections.OkapiLists;
-import org.okapi.metrics.OutsideWindowException;
-import org.okapi.metrics.TestResourceFactory;
-import org.okapi.metrics.common.MetricsContext;
-import org.okapi.metrics.common.pojo.Node;
-import org.okapi.metrics.common.sharding.ShardsAndSeriesAssigner;
-import org.okapi.metrics.stats.StatisticsFrozenException;
+import static org.awaitility.Awaitility.await;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
-
-import static org.awaitility.Awaitility.await;
-import static org.okapi.metrics.GlobalTestConfig.okapiWait;
+import org.okapi.collections.OkapiLists;
+import org.okapi.metrics.OutsideWindowException;
+import org.okapi.metrics.TestResourceFactory;
+import org.okapi.metrics.common.MetricsContext;
+import org.okapi.metrics.common.pojo.Node;
+import org.okapi.metrics.stats.StatisticsFrozenException;
 
 public class PromQlTestCase {
   Map<Integer, Map<String, TreeMap<Long, Float>>> values;
@@ -62,24 +59,19 @@ public class PromQlTestCase {
 
     var box = resourceFactory.messageBox(node);
     shardMap.flushAll();
-    resourceFactory.startWriter(node);
     await().atMost(Duration.of(1, ChronoUnit.SECONDS)).until(() -> box.isEmpty());
-    okapiWait().until(() -> resourceFactory.rocksReaderSupplier(node).apply(0).isPresent());
   }
 
   public PromQlQueryProcessor queryProcessor(
-      TestResourceFactory resourceFactory,
-      ShardsAndSeriesAssigner shardsAndSeriesAssigner,
-      ExecutorService executorService,
-      Node node)
+      TestResourceFactory resourceFactory, ExecutorService executorService, Node node)
       throws IOException {
-    var clientFactory = resourceFactory.rocksMetricsClientFactory(node);
-    clientFactory.setShardsAndSeriesAssigner(shardsAndSeriesAssigner);
-
-    var seriesDiscovery = resourceFactory.pathSetSeriesDiscovery(node);
+    SeriesDiscoveryFactory seriesDiscovery =
+        resourceFactory.getFdbSingletonFactory().fdbSeriesDiscoveryFactory(node);
+    TsClientFactory clientFactoy =
+        resourceFactory.getFdbSingletonFactory().fdbTsClientFactory(node);
     var queryProcessor =
         new PromQlQueryProcessor(
-            executorService, resourceFactory.statisticsMerger(), clientFactory, seriesDiscovery);
+            executorService, resourceFactory.statisticsMerger(), clientFactoy, seriesDiscovery);
     return queryProcessor;
   }
 }

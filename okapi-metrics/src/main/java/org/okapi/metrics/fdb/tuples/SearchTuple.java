@@ -10,12 +10,13 @@ import java.util.Objects;
 
 @AllArgsConstructor
 @ToString
-public class SearchTuple {
+public class SearchTuple implements FdbTuple {
   @Getter String tenant;
   @Getter String localPath;
   @Getter Long bucket;
 
-  public byte[] toKey() {
+  @Override
+  public byte[] pack() {
     var searchSub = SubspaceFactory.getMetricsSearchSub();
     return searchSub.pack(Tuple.from(tenant, bucket, localPath));
   }
@@ -50,4 +51,5 @@ public class SearchTuple {
     var path = tuple.getString(2);
     return new SearchTuple(tenant, path, bucket);
   }
+
 }

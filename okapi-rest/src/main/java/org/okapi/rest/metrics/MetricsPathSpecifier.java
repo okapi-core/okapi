@@ -12,4 +12,5 @@ import java.util.Map;
 public class MetricsPathSpecifier {
     String name;
     Map<String, String> tags;
+    MetricType type;
 }
