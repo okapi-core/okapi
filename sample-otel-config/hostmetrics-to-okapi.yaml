@@ -1,0 +1,29 @@
+receivers:
+  hostmetrics:
+    collection_interval: 10s
+    scrapers:
+      cpu: {}
+      memory: {}
+      disk: {}
+      filesystem: {}
+      load: {}
+      network: {}
+
+processors:
+  batch: {}
+
+exporters:
+  otlphttp/okapi:
+    # Base endpoint; exporter appends /v1/metrics for metrics
+    endpoint: http://localhost:9000
+    compression: none
+    headers:
+      X-Okapi-Tenant: demo
+
+service:
+  pipelines:
+    metrics:
+      receivers: [hostmetrics]
+      processors: [batch]
+      exporters: [otlphttp/okapi]
+

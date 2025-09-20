@@ -1,0 +1,57 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.okapi</groupId>
+        <artifactId>okapi</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+    <artifactId>okapi-otel-protos</artifactId>
+    <name>OpenTelemetry Protobuf Definitions</name>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <!-- Runtime for generated protobuf messages -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.xolstice.maven.plugins</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <configuration>
+                    <protocArtifact>
+                        com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}
+                    </protocArtifact>
+                    <!-- Use the OpenTelemetry proto submodule as source root -->
+                    <protoSourceRoot>${project.basedir}/opentelemetry-proto</protoSourceRoot>
+                    <!-- Only compile message types needed for metrics wiring (no gRPC services). -->
+                    <includes>
+                        <include>opentelemetry/proto/common/**/*.proto</include>
+                        <include>opentelemetry/proto/resource/**/*.proto</include>
+                        <include>opentelemetry/proto/metrics/**/*.proto</include>
+                        <include>opentelemetry/proto/collector/metrics/**/*.proto</include>
+                    </includes>
+                    <outputDirectory>${project.build.directory}/generated-sources/protobuf/java</outputDirectory>
+                    <attachProtoSources>true</attachProtoSources>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
