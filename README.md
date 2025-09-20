@@ -220,6 +220,69 @@ Okapi is under active development. Current state:
 
 Sample payloads are in the [`examples/`](./examples) directory.
 
+---
+
+## OTLP/HTTP Ingest (OpenTelemetry)
+
+Okapi exposes an OTLP/HTTP-compatible protobuf endpoint for metrics at `POST /v1/metrics`.
+
+- Content-Type: `application/x-protobuf`
+- Request message: `io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest`
+- Response message: `io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceResponse` (empty)
+- Required header: `X-Okapi-Tenant: <tenant>`
+
+Tenant header validation
+- Okapi requires a non-empty `X-Okapi-Tenant` header on OTLP/HTTP ingest requests.
+- Requests missing or with a blank tenant are rejected with HTTP 400.
+
+Compression
+- Disable request compression in the exporter (set `compression: none`) unless your deployment adds a decompression filter.
+
+### Example: OpenTelemetry Collector → Okapi (system metrics)
+
+Assume `okapi-metrics` runs on `localhost:9000`.
+
+Collector config (`otel-collector.yaml`):
+
+```yaml
+receivers:
+  hostmetrics:
+    collection_interval: 10s
+    scrapers:
+      cpu: {}
+      memory: {}
+      disk: {}
+      filesystem: {}
+      load: {}
+      network: {}
+
+processors:
+  batch: {}
+
+exporters:
+  otlphttp/okapi:
+    # Base endpoint; exporter appends /v1/metrics for metrics
+    endpoint: http://localhost:9000
+    compression: none
+    headers:
+      X-Okapi-Tenant: demo
+
+service:
+  pipelines:
+    metrics:
+      receivers: [hostmetrics]
+      processors: [batch]
+      exporters: [otlphttp/okapi]
+```
+
+Run the collector:
+
+```bash
+otelcol --config otel-collector.yaml
+```
+
+The collector will scrape system metrics and export them to Okapi at `http://localhost:9000/v1/metrics` using OTLP/HTTP (protobuf). You can then query metrics via Okapi’s native APIs under `/api/v1/metrics/q`.
+
 ## License
 
 Licensed under the [Apache License, Version 2.0](./LICENSE).

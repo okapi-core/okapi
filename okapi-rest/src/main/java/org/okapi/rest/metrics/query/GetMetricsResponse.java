@@ -1,4 +1,4 @@
-package org.okapi.rest.metrics;
+package org.okapi.rest.metrics.query;
 
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;

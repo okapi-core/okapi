@@ -2,12 +2,12 @@ package org.okapi.promql;
 
 import org.okapi.Statistics;
 import org.okapi.promql.eval.ts.RESOLUTION;
-import org.okapi.promql.eval.ts.TimeseriesClient;
+import org.okapi.promql.eval.ts.TsClient;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public final class MockTimeSeriesClient implements TimeseriesClient {
+public final class MockTimeSeriesClient implements TsClient {
 
     public static final class Key {
         public final String metric;

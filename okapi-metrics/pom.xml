@@ -18,7 +18,12 @@
         <dependency>
             <groupId>com.okapi</groupId>
             <artifactId>okapi-core</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.okapi</groupId>
+            <artifactId>okapi-otel-protos</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -95,6 +100,31 @@
             <groupId>org.okapi</groupId>
             <artifactId>okapi-protos</artifactId>
             <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
+        <!-- OpenTelemetry proto message classes (collector + metrics + common + resource) -->
+        <dependency>
+            <groupId>org.okapi</groupId>
+            <artifactId>okapi-otel-protos</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
+        <!-- Test dependencies -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.14.2</version>
+            <scope>test</scope>
         </dependency>
 
 

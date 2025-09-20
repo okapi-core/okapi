@@ -1,7 +1,6 @@
 clusterId: nothing
 mode: isolated
 remoteHourlyUploads: disabled
-
 server:
   tomcat:
     max-threads: 512
@@ -44,5 +43,11 @@ writeBack:
 promQl:
   evalThreads: 5
 
-foundationDb:
-  queueLag: 10000
+cas:
+  metrics:
+    keyspace: okapi_telemetry
+  async:
+    threads: 20
+  contact:
+    point: localhost:9042
+    datacenter: datacenter1

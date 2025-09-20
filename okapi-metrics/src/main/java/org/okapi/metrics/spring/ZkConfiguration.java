@@ -11,8 +11,6 @@ import org.okapi.clock.Clock;
 import org.okapi.ip.IpSupplier;
 import org.okapi.metrics.common.*;
 import org.okapi.metrics.common.pojo.Node;
-import org.okapi.metrics.coordinator.CentralCoordinator;
-import org.okapi.metrics.service.ServiceController;
 import org.okapi.metrics.service.self.NodeCreator;
 import org.okapi.metrics.service.self.ZkNodeCreator;
 import org.okapi.metrics.sharding.HeartBeatChecker;
@@ -101,13 +99,5 @@ public class ZkConfiguration {
       @Autowired ZkResources zk,
       @Autowired Clock clock) {
     return new LeaderJobsImpl(serviceRegistry, beatChecker, zk, clock);
-  }
-
-  @Bean
-  public CentralCoordinator centralCoordinator(
-      @Autowired ServiceController serviceController,
-      @Autowired CuratorFramework curatorFramework,
-      @Value("${zk.node.type}") String nodeType) {
-    return new CentralCoordinator(serviceController, curatorFramework, nodeType);
   }
 }

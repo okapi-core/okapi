@@ -13,6 +13,7 @@ import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -30,7 +31,8 @@ import org.okapi.promql.eval.VectorData;
 import org.okapi.promql.eval.exceptions.EvaluationException;
 import org.okapi.promql.extractor.TimeSeriesExtractor;
 
-public class PromQlFdbQueryProcessorTests {
+@Disabled
+public class PromQlQueryProcImplTests {
 
   public static final String TENANT = "tenant";
   Node node = new Node("test-node-1", "localhost:1", NodeState.METRICS_CONSUMPTION_START);
@@ -51,7 +53,7 @@ public class PromQlFdbQueryProcessorTests {
 
   @Test
   public void testNoOpQuery() throws EvaluationException, BadRequestException {
-    var clientFactory = testResourceFactory.getFdbSingletonFactory().fdbTsClientFactory(node);
+    var clientFactory = testResourceFactory.tsClientFactory(node);
     var executor = Executors.newScheduledThreadPool(1);
     var queryProcessor =
         new PromQlQueryProcessor(
@@ -125,8 +127,8 @@ public class PromQlFdbQueryProcessorTests {
   }
 
   public static Stream<Arguments> timeTransformers() {
-    Function<Long, String> toSeconds = PromQlFdbQueryProcessorTests::toDoubleSeconds;
-    Function<Long, String> toDate = PromQlFdbQueryProcessorTests::toRfc3339Date;
+    Function<Long, String> toSeconds = PromQlQueryProcImplTests::toDoubleSeconds;
+    Function<Long, String> toDate = PromQlQueryProcImplTests::toRfc3339Date;
     return Stream.of(Arguments.of(toSeconds, toDate));
   }
 

@@ -44,8 +44,9 @@ PRIMARY KEY ((tenant_id, local_path), start_second)
 --
 CREATE TABLE IF NOT EXISTS okapi_telemetry.search_hints(
 tenant_id text,
+shard_key int,
 start_minute bigint,
 local_path text,
 metric_type text,
-PRIMARY KEY ((tenant_id), start_minute)
+PRIMARY KEY ((tenant_id, shard_key), start_minute)
 ) with CLUSTERING ORDER BY (start_minute ASC);

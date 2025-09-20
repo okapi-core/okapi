@@ -6,11 +6,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.okapi.beans.Configurations;
 import org.okapi.exceptions.BadRequestException;
 import org.okapi.metrics.OutsideWindowException;
-import org.okapi.metrics.SharedMessageBox;
 import org.okapi.metrics.service.runnables.MetricsWriter;
 import org.okapi.metrics.service.web.QueryProcessor;
 import org.okapi.metrics.stats.StatisticsFrozenException;
 import org.okapi.rest.metrics.*;
+import org.okapi.rest.metrics.query.GetMetricsRequestInternal;
+import org.okapi.rest.metrics.query.GetMetricsResponse;
+import org.okapi.rest.metrics.query.ListMetricsRequest;
+import org.okapi.rest.metrics.query.ListMetricsResponse;
+import org.okapi.rest.metrics.search.SearchMetricsRequestInternal;
+import org.okapi.rest.metrics.search.SearchMetricsResponse;
+import org.okapi.rest.metrics.search.SubmitMetricsResponse;
 import org.rocksdb.RocksDBException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -23,10 +29,7 @@ public class MetricsController {
 
   @Autowired MetricsWriter metricsWriter;
   @Autowired QueryProcessor queryProcessor;
-
   @Qualifier(Configurations.BEAN_FDB_MESSAGE_BOX)
-  @Autowired
-  SharedMessageBox<ExportMetricsRequest> messageBox;
 
   @PostMapping("")
   public SubmitMetricsResponse submit(
@@ -55,11 +58,6 @@ public class MetricsController {
   @PostMapping("/list")
   public ListMetricsResponse search(@RequestBody @Valid ListMetricsRequest request) {
     return queryProcessor.listMetricsResponse(request);
-  }
-
-  @GetMapping("/lag")
-  public int lag() {
-    return messageBox.size();
   }
 
   @GetMapping(path = "/ready")

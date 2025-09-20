@@ -39,6 +39,7 @@ import org.okapi.rest.metrics.payloads.Sum;
 public class CasMetricsWriter implements MetricsWriter {
   public static final Long MINUTE_BLOCK_LEN = Duration.of(1, ChronoUnit.MINUTES).toMillis();
   public static final Integer CONCURRENT_WRITES = 100000;
+  public static final Integer SHARD_0 = 0;
 
   Supplier<UpdatableStatistics> statisticsSupplier;
   SketchesDao sketchesDao;
@@ -259,6 +260,7 @@ public class CasMetricsWriter implements MetricsWriter {
       var searchHint =
           SearchHints.builder()
               .tenantId(request.getTenantId())
+              .shardKey(SHARD_0)
               .startMinute(min)
               .metricType(type)
               .localPath(path)

@@ -75,7 +75,11 @@ public class GaugeGenerator {
   }
 
   public GaugeGenerator populateRandom(float min, float max) {
-    var now = System.currentTimeMillis();
+    return populateRandom(System.currentTimeMillis(), min, max);
+  }
+
+  public GaugeGenerator populateRandom(long st, float min, float max) {
+    var now = st;
     var totalMetrics =
         Duration.of(minutes, ChronoUnit.MINUTES).toMillis() / tickerInterval.toMillis();
     var random = new Random();

@@ -28,6 +28,5 @@ public class ExportMetricsRequest {
 
   @Nullable Gauge gauge;
   @Nullable Histo histo;
-  @Nullable
-  Sum sum;
+  @Nullable Sum sum;
 }

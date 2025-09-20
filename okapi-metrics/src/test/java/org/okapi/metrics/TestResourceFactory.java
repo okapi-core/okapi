@@ -14,8 +14,7 @@ import lombok.Setter;
 import org.okapi.clock.Clock;
 import org.okapi.clock.SystemClock;
 import org.okapi.fake.FakeClock;
-import org.okapi.metrics.cas.CasMetricsWriter;
-import org.okapi.metrics.cas.CasTsReader;
+import org.okapi.metrics.cas.*;
 import org.okapi.metrics.cas.dao.MetricsMapper;
 import org.okapi.metrics.common.ServiceRegistry;
 import org.okapi.metrics.common.ServiceRegistryImpl;
@@ -30,7 +29,6 @@ import org.okapi.metrics.sharding.HeartBeatChecker;
 import org.okapi.metrics.sharding.LeaderJobs;
 import org.okapi.metrics.sharding.LeaderJobsImpl;
 import org.okapi.metrics.singletons.AbstractSingletonFactory;
-import org.okapi.metrics.singletons.FdbSingletonFactory;
 import org.okapi.metrics.stats.*;
 import org.okapi.promql.eval.ts.StatisticsMerger;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -50,8 +48,6 @@ public class TestResourceFactory extends AbstractSingletonFactory {
   Path rocksRoot;
   Path metricsPathSetWalRoot;
   @Setter boolean useRealClock;
-  Map<String, Node> registeredNodes;
-  @Getter FdbSingletonFactory fdbSingletonFactory;
 
   public TestResourceFactory() {
     super();
@@ -59,7 +55,6 @@ public class TestResourceFactory extends AbstractSingletonFactory {
       snapshotDir = Files.createTempDirectory("snapshot-directory");
       rocksRoot = Files.createTempDirectory("rocks-root");
       metricsPathSetWalRoot = Files.createTempDirectory("metrics-paths-wal");
-      fdbSingletonFactory = new FdbSingletonFactory();
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -230,5 +225,18 @@ public class TestResourceFactory extends AbstractSingletonFactory {
                 new KllStatSupplier(),
                 new WritableRestorer(),
                 new RolledupMergerStrategy()));
+  }
+
+  public CasTsSearcher casTsSearcher(MetricsMapper mapper, Node node) {
+    return makeSingleton(
+        node, CasTsSearcher.class, () -> new CasTsSearcher(mapper.searchHintDao(KEYSPACE)));
+  }
+
+  public SeriesDiscoveryFactory casDiscoveryFactory(Node node) {
+    return makeSingleton(node, SeriesDiscoveryFactory.class, () -> new CasSeriesDiscoveryFactory());
+  }
+
+  public TsClientFactory tsClientFactory(Node node) {
+    return makeSingleton(node, TsClientFactory.class, () -> new CasTsClientFactory());
   }
 }

@@ -1,4 +1,4 @@
-package org.okapi.rest.metrics;
+package org.okapi.rest.metrics.search;
 
 import lombok.Builder;
 import lombok.Getter;

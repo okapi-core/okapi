@@ -1,4 +1,4 @@
-package org.okapi.rest.metrics;
+package org.okapi.rest.metrics.query;
 
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
@@ -12,7 +12,7 @@ import java.util.Map;
 @AllArgsConstructor
 @Builder
 @Getter
-public class GetMetricsRequest {
+public class GetGaugeRequest {
 
   @NotNull(message = "metric must be specified.")
   String metricName;

@@ -65,13 +65,11 @@ public class PromQlTestCase {
   public PromQlQueryProcessor queryProcessor(
       TestResourceFactory resourceFactory, ExecutorService executorService, Node node)
       throws IOException {
-    SeriesDiscoveryFactory seriesDiscovery =
-        resourceFactory.getFdbSingletonFactory().fdbSeriesDiscoveryFactory(node);
-    TsClientFactory clientFactoy =
-        resourceFactory.getFdbSingletonFactory().fdbTsClientFactory(node);
+    var discovery = resourceFactory.casDiscoveryFactory(node);
+    TsClientFactory clientFactoy = resourceFactory.tsClientFactory(node);
     var queryProcessor =
         new PromQlQueryProcessor(
-            executorService, resourceFactory.statisticsMerger(), clientFactoy, seriesDiscovery);
+            executorService, resourceFactory.statisticsMerger(), clientFactoy, discovery);
     return queryProcessor;
   }
 }

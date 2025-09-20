@@ -16,6 +16,7 @@ public class UserFacingMessages {
 
     // metrics related
     public static final String METRIC_TYPE_MISSING = "Request should specify a metric type.";
+    public static final String APP_MISSING = "Request should specify an app to associate this metric with.";
 
     // metrics validation messages
     public static final String GAUGE_PAYLOAD_MISSING = "Gauge payload must be supplied.";

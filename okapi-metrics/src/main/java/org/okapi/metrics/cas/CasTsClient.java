@@ -2,11 +2,11 @@ package org.okapi.metrics.cas;
 
 import org.okapi.Statistics;
 import org.okapi.promql.eval.ts.RESOLUTION;
-import org.okapi.promql.eval.ts.TimeseriesClient;
+import org.okapi.promql.eval.ts.TsClient;
 
 import java.util.Map;
 
-public class CasTsClient implements TimeseriesClient {
+public class CasTsClient implements TsClient {
     String tenantId;
 
     @Override

@@ -7,10 +7,15 @@ import org.okapi.headers.CookiesAndHeaders;
 import org.okapi.metricsproxy.service.ClusterManager;
 import org.okapi.metricsproxy.service.MetricsDispatcher;
 import org.okapi.metricsproxy.service.ScanQueryProcessor;
-import org.okapi.rest.metrics.*;
 import org.okapi.rest.metrics.admin.DiscoveryResponse;
 import org.okapi.rest.metrics.admin.StartScaleUpResponse;
 import jakarta.validation.Valid;
+import org.okapi.rest.metrics.query.GetGaugeRequest;
+import org.okapi.rest.metrics.query.GetMetricsResponse;
+import org.okapi.rest.metrics.search.SearchMetricsRequest;
+import org.okapi.rest.metrics.search.SearchMetricsResponse;
+import org.okapi.rest.metrics.search.SubmitMetricsRequest;
+import org.okapi.rest.metrics.search.SubmitMetricsResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -34,9 +39,9 @@ public class MetricsProxyController {
   @PostMapping("/query")
   public GetMetricsResponse query(
       @RequestHeader(CookiesAndHeaders.HEADER_TEMP_TOKEN) String tempToken,
-      @RequestBody @Validated GetMetricsRequest getMetricsRequest)
+      @RequestBody @Validated GetGaugeRequest getGaugeRequest)
       throws Exception {
-    return scanQueryProcessor.getMetricsResponse(tempToken, getMetricsRequest);
+    return scanQueryProcessor.getMetricsResponse(tempToken, getGaugeRequest);
   }
 
   @PostMapping("/s")

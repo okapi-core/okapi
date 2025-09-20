@@ -3,14 +3,14 @@ package org.okapi.promql.eval;
 // eval/EvalContext.java
 import org.okapi.promql.eval.ts.RESOLUTION;
 import org.okapi.promql.eval.ts.SeriesDiscovery;
-import org.okapi.promql.eval.ts.TimeseriesClient;
+import org.okapi.promql.eval.ts.TsClient;
 
 import java.util.concurrent.*;
 
 public final class EvalContext {
   public final long startMs, endMs, stepMs;
   public final RESOLUTION resolution;
-  public final TimeseriesClient client;
+  public final TsClient client;
   public final SeriesDiscovery discovery;
   public final ExecutorService exec;
 
@@ -19,7 +19,7 @@ public final class EvalContext {
       long endMs,
       long stepMs,
       RESOLUTION res,
-      TimeseriesClient client,
+      TsClient client,
       SeriesDiscovery discovery,
       ExecutorService exec) {
     this.startMs = startMs;

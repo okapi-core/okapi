@@ -1,6 +1,5 @@
 package org.okapi.metrics.spring;
 
-import com.apple.foundationdb.Database;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.util.concurrent.Executors;
@@ -16,25 +15,23 @@ import org.okapi.ip.FixedIpSupplier;
 import org.okapi.ip.IpSupplier;
 import org.okapi.metrics.*;
 import org.okapi.metrics.aws.NoOpCredentials;
-import org.okapi.metrics.common.pojo.Node;
 import org.okapi.metrics.common.sharding.ConsistentHashedAssignerFactory;
 import org.okapi.metrics.common.sharding.ShardsAndSeriesAssignerFactory;
-import org.okapi.metrics.fdb.FdbMetricsWriter;
-import org.okapi.metrics.fdb.FdbTx;
+import org.okapi.metrics.query.QueryProcImpl;
 import org.okapi.metrics.query.promql.*;
 import org.okapi.metrics.rollup.*;
 import org.okapi.metrics.service.runnables.*;
-import org.okapi.metrics.service.self.NodeCreator;
+import org.okapi.metrics.service.web.QueryProcessor;
 import org.okapi.metrics.stats.*;
 import org.okapi.profiles.ENV_TYPE;
 import org.okapi.rest.promql.Sample;
 import org.okapi.rest.promql.SampleAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.http.converter.protobuf.ProtobufHttpMessageConverter;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 
 /**
@@ -83,11 +80,6 @@ public class OkapiMetricsConsumerConfig {
   }
 
   @Bean
-  public Node self(@Autowired NodeCreator nodeCreator) {
-    return nodeCreator.whoAmI();
-  }
-
-  @Bean
   public RollupQueryProcessor rollupQueryProcessor() {
     return new RollupQueryProcessor();
   }
@@ -120,15 +112,6 @@ public class OkapiMetricsConsumerConfig {
     return new WritableRestorer();
   }
 
-  @Bean
-  public MetricsWriter metricsWriter(
-      @Autowired Database database,
-      @Autowired Node node,
-      @Qualifier(Configurations.BEAN_FDB_MESSAGE_BOX) @Autowired
-          SharedMessageBox<FdbTx> messageBox) {
-    return new FdbMetricsWriter(node.id(), messageBox, new KllStatSupplier());
-  }
-
   @Bean(name = Configurations.BEAN_PROMQL_SERIALIZER)
   public Gson promqlSerializer() {
     return new GsonBuilder().registerTypeAdapter(Sample.class, new SampleAdapter()).create();
@@ -143,5 +126,16 @@ public class OkapiMetricsConsumerConfig {
     var merger = new RollupStatsMerger(new RolledupMergerStrategy());
     return new PromQlQueryProcessor(
         singleThreadedExecutor, merger, tsClientFactory, seriesDiscoveryFactory);
+  }
+
+  @Bean
+  public ProtobufHttpMessageConverter protobufHttpMessageConverter() {
+    return new ProtobufHttpMessageConverter();
+  }
+
+  @Bean
+  public QueryProcessor queryProcessor(
+      @Autowired TsReader tsReader, @Autowired TsSearcher tsSearcher) {
+    return new QueryProcImpl(tsReader, tsSearcher);
   }
 }

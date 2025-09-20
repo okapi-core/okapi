@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableScheduling
 @SpringBootApplication
-@ComponentScan(basePackages = {"org.okapi.metrics.config", "org.okapi.metrics.spring"})
+@ComponentScan(basePackages = {"org.okapi.metrics.spring"})
 public class OkapiMetricsConsumer {
 
   public static void main(String[] args) {

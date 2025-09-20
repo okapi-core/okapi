@@ -66,7 +66,7 @@ public class CasGaugeTests extends CasTesting {
     writer.onRequestArrive(request);
 
     var reader = resourceFactory.casTsReaders(getMapper(), node);
-    var univPath = TENANT + ":" + MetricPaths.localPath(GAUGE_METRIC, TAGS);
+    var univPath = MetricPaths.univPath(TENANT, GAUGE_METRIC, TAGS);
     var reduction = gen.avgReduction(RES_TYPE.SECONDLY);
     var st = gen.getTimestamps().stream().reduce(Math::min).get();
     var en = gen.getTimestamps().stream().reduce(Math::max).get();
@@ -107,7 +107,7 @@ public class CasGaugeTests extends CasTesting {
     writer.onRequestArrive(request);
 
     var reader = resourceFactory.casTsReaders(getMapper(), node);
-    var univPath = TENANT + ":" + MetricPaths.localPath(GAUGE_METRIC, TAGS);
+    var univPath = MetricPaths.univPath(TENANT, GAUGE_METRIC, TAGS);
     var reduction = gen.avgReduction(RES_TYPE.MINUTELY);
     var st = gen.getTimestamps().stream().reduce(Math::min).get();
     var en = gen.getTimestamps().stream().reduce(Math::max).get();
@@ -149,7 +149,7 @@ public class CasGaugeTests extends CasTesting {
     writer.onRequestArrive(request);
 
     var reader = resourceFactory.casTsReaders(getMapper(), node);
-    var univPath = TENANT + ":" + MetricPaths.localPath(GAUGE_METRIC, TAGS);
+    var univPath = MetricPaths.univPath(TENANT, GAUGE_METRIC, TAGS);
     var reduction = gen.avgReduction(RES_TYPE.HOURLY);
     var st = gen.getTimestamps().stream().reduce(Math::min).get();
     var en = gen.getTimestamps().stream().reduce(Math::max).get();

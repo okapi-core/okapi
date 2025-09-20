@@ -3,7 +3,6 @@ package org.okapi.metricsproxy.service;
 import static org.okapi.validation.OkapiChecks.checkArgument;
 
 import com.google.gson.Gson;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -36,6 +35,12 @@ import org.okapi.metrics.scanning.HourlyCheckpointScanner;
 import org.okapi.metrics.search.MetricsSearcher;
 import org.okapi.metricsproxy.auth.AuthorizationChecker;
 import org.okapi.rest.metrics.*;
+import org.okapi.rest.metrics.query.GetGaugeRequest;
+import org.okapi.rest.metrics.query.GetMetricsRequestInternal;
+import org.okapi.rest.metrics.query.GetMetricsResponse;
+import org.okapi.rest.metrics.search.SearchMetricsRequest;
+import org.okapi.rest.metrics.search.SearchMetricsRequestInternal;
+import org.okapi.rest.metrics.search.SearchMetricsResponse;
 import org.okapi.s3.S3ByteRangeCache;
 import org.okapi.usermessages.UserFacingMessages;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -57,9 +62,9 @@ public class ScanQueryProcessor {
   TeamsDao teamsDao;
 
   public GetMetricsResponse getMetricsResponse(
-      String tempToken, GetMetricsRequest getMetricsRequest) throws Exception {
+      String tempToken, GetGaugeRequest getGaugeRequest) throws Exception {
     var userId = tokenManager.getUserId(tempToken);
-    var teamId = getMetricsRequest.getTeam();
+    var teamId = getGaugeRequest.getTeam();
     var optionalTeamDto = teamsDao.get(teamId);
     checkArgument(
         optionalTeamDto.isPresent(),
@@ -71,15 +76,15 @@ public class ScanQueryProcessor {
     var getMetricsRequestInternal =
         GetMetricsRequestInternal.builder()
             .tenantId(tenantId)
-            .metricName(getMetricsRequest.getMetricName())
-            .tags(getMetricsRequest.getTags())
-            .start(getMetricsRequest.getStart())
-            .end(getMetricsRequest.getEnd())
-            .aggregation(getMetricsRequest.getAggregation())
-            .resolution(getMetricsRequest.getResolution())
+            .metricName(getGaugeRequest.getMetricName())
+            .tags(getGaugeRequest.getTags())
+            .start(getGaugeRequest.getStart())
+            .end(getGaugeRequest.getEnd())
+            .aggregation(getGaugeRequest.getAggregation())
+            .resolution(getGaugeRequest.getResolution())
             .build();
     var queryInterval =
-        new IntervalUtils.Interval(getMetricsRequest.getStart(), getMetricsRequest.getEnd());
+        new IntervalUtils.Interval(getGaugeRequest.getStart(), getGaugeRequest.getEnd());
     var admissionWindow = System.currentTimeMillis() - Duration.of(24, ChronoUnit.HOURS).toMillis();
     var onlinePart =
         IntervalUtils.clipAfter(queryInterval.start(), queryInterval.end(), admissionWindow);
@@ -138,7 +143,7 @@ public class ScanQueryProcessor {
       AGG_TYPE aggType)
       throws Exception {
     if (end < start) return Optional.empty();
-    var path = MetricPaths.convertToPath(tenantId, metricName, tags);
+    var path = MetricPaths.convertToUnivPath(tenantId, metricName, tags);
     var node = zkRegistry.route(path);
     var getQuery =
         GetMetricsRequestInternal.builder()
@@ -204,7 +209,7 @@ public class ScanQueryProcessor {
       RES_TYPE resType,
       AGG_TYPE aggType)
       throws StreamReadingException, IOException, ExecutionException {
-    var path = MetricPaths.convertToPath(tenantId, metricName, tags);
+    var path = MetricPaths.convertToUnivPath(tenantId, metricName, tags);
     var matchingPrefix =
         metadataCache.getPrefix(
             path, hour, tenantId); // check which metric path is correct based on the cache.

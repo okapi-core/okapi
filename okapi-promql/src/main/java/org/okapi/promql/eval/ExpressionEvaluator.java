@@ -8,20 +8,20 @@ import org.okapi.promql.eval.labelmatch.MetricMatchCondition;
 import org.okapi.promql.eval.ts.RESOLUTION;
 import org.okapi.promql.eval.ts.SeriesDiscovery;
 import org.okapi.promql.eval.ts.StatisticsMerger;
-import org.okapi.promql.eval.ts.TimeseriesClient;
+import org.okapi.promql.eval.ts.TsClient;
 import org.okapi.promql.eval.visitor.ExpressionVisitor;
 import org.okapi.promql.parser.PromQLParser;
 
 public final class ExpressionEvaluator {
   private static final long DEFAULT_INSTANT_STEP_MS =
       1_000L; // 1s; sufficient for secondly resolution
-  private final TimeseriesClient client;
+  private final TsClient client;
   private final SeriesDiscovery discovery;
   private final ExecutorService exec;
   private final StatisticsMerger statisticsMerger;
 
   public ExpressionEvaluator(
-      TimeseriesClient client,
+      TsClient client,
       SeriesDiscovery discovery,
       ExecutorService exec,
       StatisticsMerger statisticsMerger) {

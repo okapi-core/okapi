@@ -1,16 +1,14 @@
-package org.okapi.metrics.fdb;
+package org.okapi.metrics.query.promql;
 
 import lombok.AllArgsConstructor;
-import org.okapi.metrics.query.promql.PromQlPathMatcher;
 import org.okapi.metrics.rollup.TsSearcher;
 import org.okapi.promql.eval.VectorData;
-import org.okapi.promql.eval.ts.SeriesDiscovery;
 import org.okapi.promql.parse.LabelMatcher;
 
 import java.util.List;
 
 @AllArgsConstructor
-public class FdbSeriesDiscovery implements SeriesDiscovery {
+public class SeriesDiscovery implements org.okapi.promql.eval.ts.SeriesDiscovery {
   String tenantId;
 
   TsSearcher searcher;

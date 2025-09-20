@@ -35,7 +35,7 @@
         <logger name="org.springframework" level="INFO">
             <appender-ref ref="STDOUT"/>
         </logger>
-        <logger name="com.okapi" level="INFO">
+        <logger name="org.okapi" level="DEBUG">
             <appender-ref ref="STDOUT"/>
         </logger>
         <logger name="org.apache" level="INFO">

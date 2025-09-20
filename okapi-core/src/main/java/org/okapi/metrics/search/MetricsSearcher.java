@@ -1,4 +1,5 @@
 package org.okapi.metrics.search;
+
 import org.okapi.metrics.common.MetricsPathParser;
 
 import java.util.*;
@@ -7,14 +8,14 @@ import java.util.regex.Pattern;
 public class MetricsSearcher {
 
   public static List<MetricsPathParser.MetricsRecord> searchMatchingMetrics(
-          String tenantId, Collection<String> metricPaths, String pattern) {
+      String tenantId, Collection<String> univPaths, String pattern) {
 
     PatternInfo patternInfo = PatternInfo.parse(pattern);
     List<MetricsPathParser.MetricsRecord> results = new ArrayList<>();
 
-    for (String path : metricPaths) {
+    for (String path : univPaths) {
       var maybeRecord = MetricsPathParser.parse(path);
-      if(maybeRecord.isEmpty())continue;
+      if (maybeRecord.isEmpty()) continue;
       var record = maybeRecord.get();
 
       if (!tenantId.equals(record.tenantId())) continue;
@@ -26,7 +27,18 @@ public class MetricsSearcher {
     return results;
   }
 
-  private static class PatternInfo {
+  public static boolean isAMatch(String tenantId, String path, PatternInfo patternInfo) {
+    var maybeRecord = MetricsPathParser.parse(path);
+    if (maybeRecord.isEmpty()) return false;
+    var record = maybeRecord.get();
+
+    if (!tenantId.equals(record.tenantId())) return false;
+    if (!patternInfo.metricNameMatches(record.name())) return false;
+    if (!patternInfo.labelFiltersMatch(record.tags())) return false;
+    return true;
+  }
+
+  public static class PatternInfo {
     private final Pattern metricNamePattern;
     private final List<LabelFilter> labelFilters;
 
@@ -35,7 +47,7 @@ public class MetricsSearcher {
       this.labelFilters = labelFilters;
     }
 
-    static PatternInfo parse(String input) {
+    public static PatternInfo parse(String input) {
       String metricPattern = null;
       List<LabelFilter> labelFilters = new ArrayList<>();
 
@@ -59,7 +71,8 @@ public class MetricsSearcher {
           boolean valHasWildcard = rawVal.endsWith("*");
 
           if (keyHasWildcard && valHasWildcard) {
-            throw new IllegalArgumentException("Wildcard in both key and value is not allowed: " + part);
+            throw new IllegalArgumentException(
+                "Wildcard in both key and value is not allowed: " + part);
           }
 
           if (keyHasWildcard) {
@@ -67,7 +80,8 @@ public class MetricsSearcher {
           } else if (rawVal.equals("*")) {
             labelFilters.add(LabelFilter.anyValue(rawKey));
           } else if (valHasWildcard) {
-            labelFilters.add(LabelFilter.prefixValue(rawKey, rawVal.substring(0, rawVal.length() - 1)));
+            labelFilters.add(
+                LabelFilter.prefixValue(rawKey, rawVal.substring(0, rawVal.length() - 1)));
           } else {
             labelFilters.add(LabelFilter.exact(rawKey, rawVal));
           }
@@ -93,7 +107,12 @@ public class MetricsSearcher {
   }
 
   private static class LabelFilter {
-    enum Type { EXACT, VALUE_PREFIX, KEY_PREFIX, ANY }
+    enum Type {
+      EXACT,
+      VALUE_PREFIX,
+      KEY_PREFIX,
+      ANY
+    }
 
     final Type type;
     final String key;

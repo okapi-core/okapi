@@ -4,7 +4,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.okapi.metrics.common.pojo.Node;
-import org.okapi.metrics.coordinator.CentralCoordinator;
 import org.okapi.metrics.rocks.RocksStore;
 import org.okapi.metrics.rollup.WriteBackSettings;
 import org.okapi.metrics.service.*;
@@ -19,8 +18,6 @@ public class LifecycleHook implements SmartLifecycle {
   boolean isRunning;
 
   @Autowired BackgroundJobs backgroundJobs;
-  @Autowired(required = false)
-  CentralCoordinator centralCoordinator;
 
   @Autowired Node node;
   @Autowired MetricsHandlerImpl metricsHandler;
@@ -34,15 +31,9 @@ public class LifecycleHook implements SmartLifecycle {
     metricsHandler.onStart();
   }
 
-  private void doCoordinatorStuff() throws Exception {
-    if (centralCoordinator == null) return;
-    centralCoordinator.registerWatchersForIdLoss(node);
-  }
-
   @SneakyThrows
   @Override
   public void start() {
-    doCoordinatorStuff();
     startHandler();
     backgroundJobs.trigger();
     isRunning = true;
