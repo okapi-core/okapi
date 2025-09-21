@@ -5,12 +5,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.okapi.metrics.rollup.SearchResult;
 import org.okapi.metrics.rollup.TsSearcher;
 import org.okapi.promql.eval.VectorData;
 import org.okapi.promql.eval.ts.SeriesDiscovery;
 import org.okapi.promql.parse.LabelMatcher;
 
+@Slf4j
 @AllArgsConstructor
 public class CasSeriesDiscovery implements SeriesDiscovery {
   String tenantId;
@@ -21,6 +23,7 @@ public class CasSeriesDiscovery implements SeriesDiscovery {
       String metricOrNull, List<LabelMatcher> matchers, long start, long end) {
     String metricPattern = (metricOrNull == null || metricOrNull.isBlank()) ? "*" : metricOrNull;
     List<SearchResult> candidates = searcher.search(tenantId, metricPattern, start, end);
+    log.info("Found {} candidates", candidates);
 
     List<VectorData.SeriesId> out = new ArrayList<>();
     for (SearchResult sr : candidates) {

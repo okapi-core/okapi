@@ -2,6 +2,7 @@ package org.okapi.metrics.cas;
 
 import java.util.Map;
 import java.util.TreeMap;
+import lombok.extern.slf4j.Slf4j;
 import org.okapi.metrics.cas.dao.TypeHintsDao;
 import org.okapi.metrics.cas.dto.TypeHints;
 import org.okapi.metrics.common.MetricPaths;
@@ -14,15 +15,24 @@ import org.okapi.metrics.rollup.TsReader;
 import org.okapi.promql.eval.ts.RESOLUTION;
 import org.okapi.promql.eval.ts.TsClient;
 
+@Slf4j
 public class CasTsClient implements TsClient {
   String tenantId;
   TsReader reader;
   TypeHintsDao typeHintsDao;
 
   @Override
-  public Scan get(String name, Map<String, String> unsortedTags, RESOLUTION res, long startMs, long endMs) {
+  public Scan get(
+      String name, Map<String, String> unsortedTags, RESOLUTION res, long startMs, long endMs) {
     var sortedCopy = new TreeMap<>(unsortedTags);
     String localPath = MetricPaths.localPath(name, sortedCopy);
+    log.info(
+        "Fetching metrics for {} with path {} between {} and {} with resolution {}",
+        name,
+        localPath,
+        startMs,
+        endMs,
+        res);
     TypeHints hint = typeHintsDao.get(tenantId, localPath);
     String metricType = (hint != null) ? hint.getMetricType() : null;
     String series = MetricPaths.univPath(tenantId, name, sortedCopy);
@@ -34,7 +44,9 @@ public class CasTsClient implements TsClient {
         };
 
     if (MetricTypesSearchVals.GAUGE.equals(metricType)) {
-      return reader.scanGauge(series, startMs, endMs, AGG_TYPE.AVG, resolution);
+      var result = reader.scanGauge(series, startMs, endMs, AGG_TYPE.AVG, resolution);
+      log.info("Found {} results in scan", result.getTimestamps().size());
+      return result;
     } else if (MetricTypesSearchVals.HISTO.equals(metricType)) {
       return reader.scanHisto(series, startMs, endMs);
     } else if (MetricTypesSearchVals.SUM.equals(metricType)) {

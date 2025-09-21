@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS okapi_telemetry.gauge_sketch_secondly_v2(
+CREATE TABLE IF NOT EXISTS okapi_telemetry.gauge_sketch_secondly(
 tenant_id text,
 local_path text,
 second_block bigint,

@@ -3,6 +3,7 @@ package org.okapi.promql.eval.ops;
 // eval/ops/SelectorEval.java
 import java.util.*;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.okapi.metrics.pojos.results.Scan;
 import org.okapi.promql.eval.EvalContext;
 import org.okapi.promql.eval.Evaluable;
@@ -11,6 +12,7 @@ import org.okapi.promql.eval.RangeVectorResult;
 import org.okapi.promql.eval.VectorData.*;
 import org.okapi.promql.eval.nodes.SelectorExpr;
 
+@Slf4j
 @AllArgsConstructor
 public class SelectorEval implements Evaluable {
   private final SelectorExpr node;

@@ -20,7 +20,6 @@ import org.okapi.metrics.common.sharding.ShardsAndSeriesAssignerFactory;
 import org.okapi.metrics.query.QueryProcImpl;
 import org.okapi.metrics.query.promql.*;
 import org.okapi.metrics.rollup.*;
-import org.okapi.metrics.service.runnables.*;
 import org.okapi.metrics.service.web.QueryProcessor;
 import org.okapi.metrics.stats.*;
 import org.okapi.profiles.ENV_TYPE;
