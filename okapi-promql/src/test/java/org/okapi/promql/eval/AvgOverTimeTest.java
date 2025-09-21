@@ -11,7 +11,6 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.junit.jupiter.api.Test;
 import org.okapi.promql.MockSeriesDiscovery;
-import org.okapi.promql.MockStatistics;
 import org.okapi.promql.MockStatsMerger;
 import org.okapi.promql.MockTimeSeriesClient;
 import org.okapi.promql.eval.VectorData.*;
@@ -38,10 +37,10 @@ public class AvgOverTimeTest {
     long t2 = t1 + step;
     long t3 = t2 + step;
 
-    client.put("http_requests", tags, t0, new MockStatistics(List.of(10f)));
-    client.put("http_requests", tags, t1, new MockStatistics(List.of(20f)));
-    client.put("http_requests", tags, t2, new MockStatistics(List.of(30f)));
-    client.put("http_requests", tags, t3, new MockStatistics(List.of(40f)));
+    client.put("http_requests", tags, t0, 10f);
+    client.put("http_requests", tags, t1, 20f);
+    client.put("http_requests", tags, t2, 30f);
+    client.put("http_requests", tags, t3, 40f);
 
     // Window = 2m; Evaluate from t1..t3 with 1m steps.
     long start = t1;

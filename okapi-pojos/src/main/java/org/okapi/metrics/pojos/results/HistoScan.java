@@ -7,7 +7,7 @@ import java.util.List;
 
 @AllArgsConstructor
 @Value
-public class HistoScan {
+public class HistoScan extends Scan{
   String universalPath;
   long start;
   long end;

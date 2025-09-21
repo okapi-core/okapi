@@ -1,19 +1,13 @@
 package org.okapi.promql;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import org.okapi.Statistics;
 import org.okapi.promql.eval.ts.StatisticsMerger;
 
+// Not used in the new Scan-based flow, but kept for constructor compatibility
 public class MockStatsMerger implements StatisticsMerger {
     @Override
     public Statistics merge(Statistics a, Statistics b) {
-        var castA = (MockStatistics) a;
-        var castB = (MockStatistics) b; // fixed
-        var combined = new ArrayList<Float>(castA.getValues().size() + castB.getValues().size());
-        combined.addAll(castA.getValues());
-        combined.addAll(castB.getValues());
-        return new MockStatistics(Collections.unmodifiableList(combined));
+        // Return the second for determinism; tests do not rely on this
+        return b;
     }
 }
-

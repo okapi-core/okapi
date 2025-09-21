@@ -9,7 +9,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Getter
-public class SumScan {
+public class SumScan extends Scan {
   String universalPath;
   List<Long> ts;
   long windowSize;

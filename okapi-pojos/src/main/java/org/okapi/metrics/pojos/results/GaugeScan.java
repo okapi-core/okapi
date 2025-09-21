@@ -8,7 +8,7 @@ import java.util.List;
 
 @AllArgsConstructor
 @Builder
-public class GaugeScan {
+public class GaugeScan extends Scan{
 
     @Getter
     public final String universalPath;

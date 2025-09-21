@@ -3,7 +3,7 @@ package org.okapi.promql.eval.ops;
 // eval/ops/SelectorEval.java
 import java.util.*;
 import lombok.AllArgsConstructor;
-import org.okapi.Statistics;
+import org.okapi.metrics.pojos.results.Scan;
 import org.okapi.promql.eval.EvalContext;
 import org.okapi.promql.eval.Evaluable;
 import org.okapi.promql.eval.ExpressionResult;
@@ -27,22 +27,11 @@ public class SelectorEval implements Evaluable {
     }
 
     var series = ctx.discovery.expand(node.metricOrNull, node.matchers, start, end);
-    // For an instant-vector at each step, we need the last point at each timestamp (Prom
-    // semantics).
-    // Here we fetch a window covering [start, end], then at materialization time we select
-    // per-step.
     List<SeriesWindow> windows = new ArrayList<>(series.size());
     for (SeriesId id : series) {
-      Map<Long, Statistics> raw =
-          ctx.client.get(id.metric(), id.labels().tags(), ctx.resolution, start, end);
-      var points =
-          raw.entrySet().stream()
-              .sorted(Map.Entry.comparingByKey())
-              .map(e -> new StatsPoint(e.getKey(), e.getValue()))
-              .toList();
-      windows.add(new SeriesWindow(id, points));
+      Scan scan = ctx.client.get(id.metric(), id.labels().tags(), ctx.resolution, start, end);
+      windows.add(new SeriesWindow(id, scan));
     }
-    return new RangeVectorResult(
-        windows); // callers (e.g. instantizer or range fns) will consume appropriately
+    return new RangeVectorResult(windows);
   }
 }

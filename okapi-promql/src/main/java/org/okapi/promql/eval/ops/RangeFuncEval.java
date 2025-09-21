@@ -2,6 +2,9 @@ package org.okapi.promql.eval.ops;
 
 import java.util.*;
 import lombok.AllArgsConstructor;
+import org.okapi.metrics.pojos.results.GaugeScan;
+import org.okapi.metrics.pojos.results.SumScan;
+import org.okapi.metrics.pojos.results.Scan;
 import org.okapi.promql.eval.*;
 import org.okapi.promql.eval.VectorData.*;
 import org.okapi.promql.eval.exceptions.EvaluationException;
@@ -33,90 +36,105 @@ public class RangeFuncEval implements Evaluable {
     long rangeMs = inferRangeFromArg(fn.args.get(0));
     List<SeriesSample> out = new ArrayList<>();
     for (SeriesWindow w : rv.data()) {
-      var pts = w.points();
+      Scan s = w.scan();
       for (long t = ctx.startMs; t <= ctx.endMs; t += ctx.stepMs) {
         long winStart = t - rangeMs;
-        float value =
-            switch (kind) {
-              case INCREASE -> increase(pts, winStart, t);
-              case RATE -> {
-                float inc = increase(pts, winStart, t);
-                yield (t > winStart) ? inc / ((t - winStart) / 1000f) : Float.NaN;
-              }
-              case IRATE -> irate(pts, winStart, t);
-              case DELTA -> delta(pts, winStart, t);
-              case IDELTA -> idelta(pts, winStart, t);
-              case DERIV -> deriv(pts, winStart, t);
-            };
+        float value;
+        switch (kind) {
+          case INCREASE -> value = (s instanceof SumScan ss) ? increase(ss, winStart, t) : Float.NaN;
+          case RATE -> {
+            if (s instanceof SumScan ss) {
+              float inc = increase(ss, winStart, t);
+              value = (t > winStart) ? inc / ((t - winStart) / 1000f) : Float.NaN;
+            } else value = Float.NaN;
+          }
+          case IRATE -> value = (s instanceof SumScan ss) ? irate(ss, winStart, t) : Float.NaN;
+          case DELTA -> value = (s instanceof GaugeScan gs) ? delta(gs, winStart, t) : Float.NaN;
+          case IDELTA -> value = (s instanceof GaugeScan gs) ? idelta(gs, winStart, t) : Float.NaN;
+          case DERIV -> value = (s instanceof GaugeScan gs) ? deriv(gs, winStart, t) : Float.NaN;
+          default -> value = Float.NaN;
+        }
         out.add(new SeriesSample(w.id(), new Sample(t, value)));
       }
     }
     return new InstantVectorResult(out);
   }
 
-  private static float increase(List<StatsPoint> pts, long start, long end) {
+  private static float increase(SumScan ss, long start, long end) {
     float total = 0f;
-    for (var p : pts) {
-      long ts = p.ts();
-      if (ts <= start || ts > end) continue; // (start, end]
-      total += (float) p.stats().getSum();
+    var ts = ss.getTs();
+    var cnt = ss.getCounts();
+    for (int i = 0; i < ts.size(); i++) {
+      long tsi = ts.get(i);
+      if (tsi <= start || tsi > end) continue; // (start, end]
+      total += cnt.get(i);
     }
     return total;
   }
 
-  private static float irate(List<StatsPoint> pts, long start, long end) {
-    StatsPoint prev = null, last = null;
-    for (int i = pts.size() - 1; i >= 0; --i) {
-      var p = pts.get(i);
-      if (p.ts() <= start || p.ts() > end) continue;
-      if (last == null) last = p;
+  private static float irate(SumScan ss, long start, long end) {
+    var ts = ss.getTs();
+    var cnt = ss.getCounts();
+    Integer lastIdx = null, prevIdx = null;
+    for (int i = ts.size() - 1; i >= 0; --i) {
+      long tsi = ts.get(i);
+      if (tsi <= start || tsi > end) continue;
+      if (lastIdx == null) lastIdx = i;
       else {
-        prev = p;
+        prevIdx = i;
         break;
       }
     }
-    if (last == null || prev == null) return Float.NaN;
-    float delta = (float) last.stats().getSum();
-    float seconds = Math.max((last.ts() - prev.ts()) / 1000f, 1f);
+    if (lastIdx == null || prevIdx == null) return Float.NaN;
+    float delta = cnt.get(lastIdx);
+    float seconds = Math.max((ts.get(lastIdx) - ts.get(prevIdx)) / 1000f, 1f);
     return delta / seconds;
   }
 
-  private static float delta(List<StatsPoint> pts, long start, long end) {
-    StatsPoint first = null, last = null;
-    for (var p : pts) {
-      if (p.ts() <= start || p.ts() > end) continue;
-      if (first == null) first = p;
-      last = p;
+  private static float delta(GaugeScan gs, long start, long end) {
+    var ts = gs.getTimestamps();
+    var vals = gs.getValues();
+    int firstIdx = -1, lastIdx = -1;
+    for (int i = 0; i < ts.size(); i++) {
+      long tsi = ts.get(i);
+      if (tsi <= start || tsi > end) continue;
+      if (firstIdx == -1) firstIdx = i;
+      lastIdx = i;
     }
-    if (first == null || last == null) return Float.NaN;
-    return last.stats().avg() - first.stats().avg();
+    if (firstIdx == -1 || lastIdx == -1) return Float.NaN;
+    return vals.get(lastIdx) - vals.get(firstIdx);
   }
 
-  private static float idelta(List<StatsPoint> pts, long start, long end) {
-    StatsPoint prev = null, last = null;
-    for (int i = pts.size() - 1; i >= 0; --i) {
-      var p = pts.get(i);
-      if (p.ts() <= start || p.ts() > end) continue;
-      if (last == null) last = p;
+  private static float idelta(GaugeScan gs, long start, long end) {
+    var ts = gs.getTimestamps();
+    var vals = gs.getValues();
+    Integer lastIdx = null, prevIdx = null;
+    for (int i = ts.size() - 1; i >= 0; --i) {
+      long tsi = ts.get(i);
+      if (tsi <= start || tsi > end) continue;
+      if (lastIdx == null) lastIdx = i;
       else {
-        prev = p;
+        prevIdx = i;
         break;
       }
     }
-    if (last == null || prev == null) return Float.NaN;
-    return last.stats().avg() - prev.stats().avg();
+    if (lastIdx == null || prevIdx == null) return Float.NaN;
+    return vals.get(lastIdx) - vals.get(prevIdx);
   }
 
-  private static float deriv(List<StatsPoint> pts, long start, long end) {
-    StatsPoint first = null, last = null;
-    for (var p : pts) {
-      if (p.ts() <= start || p.ts() > end) continue;
-      if (first == null) first = p;
-      last = p;
+  private static float deriv(GaugeScan gs, long start, long end) {
+    var ts = gs.getTimestamps();
+    var vals = gs.getValues();
+    int firstIdx = -1, lastIdx = -1;
+    for (int i = 0; i < ts.size(); i++) {
+      long tsi = ts.get(i);
+      if (tsi <= start || tsi > end) continue;
+      if (firstIdx == -1) firstIdx = i;
+      lastIdx = i;
     }
-    if (first == null || last == null) return Float.NaN;
-    float d = last.stats().avg() - first.stats().avg();
-    float seconds = Math.max((last.ts() - first.ts()) / 1000f, 1f);
+    if (firstIdx == -1 || lastIdx == -1) return Float.NaN;
+    float d = vals.get(lastIdx) - vals.get(firstIdx);
+    float seconds = Math.max((ts.get(lastIdx) - ts.get(firstIdx)) / 1000f, 1f);
     return d / seconds;
   }
 

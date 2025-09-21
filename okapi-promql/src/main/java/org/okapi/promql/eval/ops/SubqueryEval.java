@@ -2,15 +2,15 @@
 package org.okapi.promql.eval.ops;
 
 import java.util.*;
-import org.okapi.Statistics;
+import org.okapi.metrics.pojos.results.GaugeScan;
 import org.okapi.promql.eval.*;
 import org.okapi.promql.eval.VectorData.*;
 import org.okapi.promql.eval.exceptions.EvaluationException;
 import org.okapi.promql.eval.nodes.SubqueryExpr;
 
 /**
- * Evaluates inner expr over (t-range, t] with subquery step; wraps inner samples as single-sample
- * Statistics.
+ * Evaluates inner expr over (t-range, t] with subquery step; wraps inner samples into GaugeScans
+ * per series for downstream range processing.
  */
 public final class SubqueryEval implements Evaluable {
   private final SubqueryExpr node;
@@ -36,18 +36,28 @@ public final class SubqueryEval implements Evaluable {
             subStart, subEnd, node.stepMs, ctx.resolution, ctx.client, ctx.discovery, ctx.exec);
     var innerRes = node.inner.lower().eval(subCtx);
 
-    // We need (series → list of (substep ts, value as Statistics))
+    // We need (series → GaugeScan of (substep ts, value))
     if (innerRes instanceof InstantVectorResult iv) {
-      // regroup by series
-      Map<SeriesId, List<StatsPoint>> map = new LinkedHashMap<>();
+      // regroup by series and build GaugeScan per series
+      Map<SeriesId, List<Sample>> map = new LinkedHashMap<>();
       for (SeriesSample s : iv.data()) {
-        map.computeIfAbsent(s.series(), k -> new ArrayList<>())
-            .add(new StatsPoint(s.sample().ts(), new SingleSampleStatistics(s.sample().value())));
+        map.computeIfAbsent(s.series(), k -> new ArrayList<>()).add(s.sample());
       }
-      // keep order
       for (var e : map.entrySet()) {
-        e.getValue().sort(Comparator.comparingLong(StatsPoint::ts));
-        out.add(new SeriesWindow(e.getKey(), e.getValue()));
+        var samples = e.getValue();
+        samples.sort(Comparator.comparingLong(Sample::ts));
+        List<Long> ts = new ArrayList<>(samples.size());
+        List<Float> vals = new ArrayList<>(samples.size());
+        for (var smp : samples) {
+          ts.add(smp.ts());
+          vals.add(smp.value());
+        }
+        GaugeScan gs = GaugeScan.builder()
+            .universalPath("")
+            .timestamps(Collections.unmodifiableList(ts))
+            .values(Collections.unmodifiableList(vals))
+            .build();
+        out.add(new SeriesWindow(e.getKey(), gs));
       }
       return new RangeVectorResult(out);
     } else if (innerRes instanceof RangeVectorResult rv) {
@@ -55,62 +65,24 @@ public final class SubqueryEval implements Evaluable {
       if (offset == 0) return rv;
       List<SeriesWindow> shifted = new ArrayList<>(rv.data().size());
       for (SeriesWindow w : rv.data()) {
-        List<StatsPoint> pts = new ArrayList<>(w.points().size());
-        for (var p : w.points()) pts.add(new StatsPoint(p.ts() + offset, p.stats()));
-        shifted.add(new SeriesWindow(w.id(), pts));
+        var scan = w.scan();
+        if (scan instanceof GaugeScan gs) {
+          List<Long> ts = new ArrayList<>(gs.getTimestamps().size());
+          for (Long t : gs.getTimestamps()) ts.add(t + offset);
+          GaugeScan shiftedGs = GaugeScan.builder()
+              .universalPath(gs.getUniversalPath())
+              .timestamps(Collections.unmodifiableList(ts))
+              .values(gs.getValues())
+              .build();
+          shifted.add(new SeriesWindow(w.id(), shiftedGs));
+        } else {
+          // For other scan types, leave as-is (or could handle shifting if needed)
+          shifted.add(w);
+        }
       }
       return new RangeVectorResult(shifted);
     }
 
     return innerRes; // scalar: nothing to do
-  }
-
-  /** Minimal single-sample Statistics adapter for subquery samples. */
-  static final class SingleSampleStatistics implements Statistics {
-    private final float v;
-
-    SingleSampleStatistics(float v) {
-      this.v = v;
-    }
-
-    @Override
-    public float percentile(double q) {
-      return v;
-    }
-
-    @Override
-    public float avg() {
-      return v;
-    }
-
-    @Override
-    public float min() {
-      return v;
-    }
-
-    @Override
-    public float max() {
-      return v;
-    }
-
-    @Override
-    public byte[] serialize() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public float getSum() {
-      return v;
-    }
-
-    @Override
-    public float getCount() {
-      return 1f;
-    }
-
-    @Override
-    public float getSumOfDeviationsSquared() {
-      return 0;
-    }
   }
 }

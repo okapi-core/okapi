@@ -1,9 +1,8 @@
 package org.okapi.promql.eval;
 
-import org.okapi.Statistics;
-
 import java.util.List;
 import java.util.Map;
+import org.okapi.metrics.pojos.results.Scan;
 
 public class VectorData {
     public record Labels(Map<String, String> tags) {}
@@ -18,7 +17,6 @@ public class VectorData {
         }
     }
 
-    public record StatsPoint(long ts, Statistics stats) {} // backed by your storage
-
-    public record SeriesWindow(SeriesId id, List<StatsPoint> points) {}
+    // A window now carries the scan for the series over the requested range
+    public record SeriesWindow(SeriesId id, Scan scan) {}
 }

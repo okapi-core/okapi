@@ -134,12 +134,20 @@ public class RangeVectorBasicsTest {
   }
 
   private static void assertHasPointAvg(SeriesWindow w, long ts, float expectedAvg) {
-    var p =
-        w.points().stream()
-            .filter(sp -> sp.ts() == ts)
-            .findFirst()
-            .orElseThrow(() -> new AssertionError("missing point @ ts=" + ts + " in " + w.id()));
-    assertEquals(expectedAvg, p.stats().avg(), 1e-4, "unexpected avg at ts=" + ts);
+    var scan = w.scan();
+    if (!(scan instanceof org.okapi.metrics.pojos.results.GaugeScan gs)) {
+      throw new AssertionError("expected GaugeScan for series " + w.id());
+    }
+    var tsList = gs.getTimestamps();
+    var valList = gs.getValues();
+    int idx = -1;
+    for (int i = 0; i < tsList.size(); i++) {
+      if (tsList.get(i) == ts) { idx = i; break; }
+    }
+    if (idx == -1) {
+      throw new AssertionError("missing point @ ts=" + ts + " in " + w.id());
+    }
+    assertEquals(expectedAvg, valList.get(idx), 1e-4, "unexpected avg at ts=" + ts);
   }
 
   private static Set<String> presentSet(RangeVectorResult rv) {

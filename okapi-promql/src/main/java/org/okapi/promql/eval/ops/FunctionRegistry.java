@@ -30,6 +30,7 @@ public final class FunctionRegistry {
       case "quantile_over_time" -> { return new RangeStatEval(fn, RangeStatEval.Kind.QUANTILE, statisticsMerger); }
       case "last_over_time"     -> { return new RangeStatEval(fn, RangeStatEval.Kind.LAST, statisticsMerger); }
       case "present_over_time"  -> { return new RangeStatEval(fn, RangeStatEval.Kind.PRESENT, statisticsMerger); }
+      case "histogram_quantile" -> { return new HistogramQuantileEval(fn); }
 
       // Instant/vector utilities
       case "scalar"     -> { return new ScalarFuncEval(fn); }
