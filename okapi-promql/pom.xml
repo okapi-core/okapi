@@ -22,7 +22,13 @@
         <dependency>
             <groupId>org.okapi</groupId>
             <artifactId>okapi-statistics</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.okapi</groupId>
+            <artifactId>okapi-pojos</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>

@@ -10,7 +10,7 @@ import org.okapi.metrics.service.runnables.MetricsWriter;
 import org.okapi.metrics.service.web.QueryProcessor;
 import org.okapi.metrics.stats.StatisticsFrozenException;
 import org.okapi.rest.metrics.*;
-import org.okapi.rest.metrics.query.GetMetricsRequestInternal;
+import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
 import org.okapi.rest.metrics.query.ListMetricsRequest;
 import org.okapi.rest.metrics.query.ListMetricsResponse;
@@ -43,7 +43,7 @@ public class MetricsController {
   }
 
   @PostMapping("/q")
-  public GetMetricsResponse get(@RequestBody @Valid GetMetricsRequestInternal requestV2)
+  public GetMetricsResponse get(@RequestBody @Valid GetMetricsRequest requestV2)
       throws Exception {
     var ans = queryProcessor.getMetricsResponse(requestV2);
     return ans;

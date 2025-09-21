@@ -1,15 +1,13 @@
 package org.okapi.promql.eval;
 
 import java.util.*;
+import lombok.AllArgsConstructor;
 import org.okapi.promql.eval.VectorData.*;
 import org.okapi.promql.eval.VectorData.SeriesSample;
 
+@AllArgsConstructor
 public final class InstantVectorResult implements ExpressionResult, Iterable<SeriesSample> {
   private final List<SeriesSample> data;
-
-  public InstantVectorResult(List<SeriesSample> data) {
-    this.data = data;
-  }
 
   public List<SeriesSample> data() {
     return data;

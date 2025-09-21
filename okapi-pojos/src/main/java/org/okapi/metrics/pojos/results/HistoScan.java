@@ -1,4 +1,4 @@
-package org.okapi.metrics.results;
+package org.okapi.metrics.pojos.results;
 
 import lombok.AllArgsConstructor;
 import lombok.Value;

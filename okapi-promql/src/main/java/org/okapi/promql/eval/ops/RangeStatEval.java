@@ -52,13 +52,11 @@ public class RangeStatEval implements Evaluable {
       for (long t = ctx.startMs; t <= ctx.endMs; t += ctx.stepMs) {
         long winStart = t - rangeMs;
         Statistics agg = null;
-        int count = 0;
         StatsPoint lastPoint = null;
 
         for (StatsPoint p : pts) {
           if (p.ts() <= winStart || p.ts() > t) continue; // (start, t]
           agg = (agg == null) ? p.stats() : merger.merge(agg, p.stats());
-          count++;
           lastPoint = p;
         }
 
@@ -67,8 +65,8 @@ public class RangeStatEval implements Evaluable {
               case AVG -> agg != null ? agg.avg() : Float.NaN;
               case MIN -> agg != null ? agg.min() : Float.NaN;
               case MAX -> agg != null ? agg.max() : Float.NaN;
-              case SUM -> agg != null ? (float) agg.getSum() : 0f;
-              case COUNT -> (float) agg.getCount();
+              case SUM -> agg != null ? agg.getSum() : 0f;
+              case COUNT -> agg.getCount();
               case QUANTILE -> agg != null ? agg.percentile(q) : Float.NaN;
               case LAST -> lastPoint != null ? lastPoint.stats().avg() : Float.NaN;
               case PRESENT -> (agg.getCount() > 0 ? 1f : 0f);

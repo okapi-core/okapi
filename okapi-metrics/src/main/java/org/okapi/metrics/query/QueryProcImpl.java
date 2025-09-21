@@ -6,7 +6,7 @@ import org.okapi.metrics.rollup.TsReader;
 import org.okapi.metrics.rollup.TsSearcher;
 import org.okapi.metrics.service.web.QueryProcessor;
 import org.okapi.rest.metrics.*;
-import org.okapi.rest.metrics.query.GetMetricsRequestInternal;
+import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
 import org.okapi.rest.metrics.query.ListMetricsRequest;
 import org.okapi.rest.metrics.query.ListMetricsResponse;
@@ -19,7 +19,7 @@ public class QueryProcImpl implements QueryProcessor {
   TsSearcher tsSearcher;
 
   @Override
-  public GetMetricsResponse getMetricsResponse(GetMetricsRequestInternal request) {
+  public GetMetricsResponse getMetricsResponse(GetMetricsRequest request) {
     var start = request.getStart();
     var end = request.getEnd();
     var res = request.getResolution();

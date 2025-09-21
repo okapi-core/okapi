@@ -11,7 +11,7 @@ import org.okapi.metrics.pojos.RES_TYPE;
 @AllArgsConstructor
 @Builder
 @Getter
-public class GetMetricsRequestInternal {
+public class GetMetricsRequest {
   @NotNull(message = "Unknown tenant.")
   @Getter
   String tenantId;
@@ -29,6 +29,8 @@ public class GetMetricsRequestInternal {
 
   @NotNull(message = "End time is required.")
   long end;
+
+  // some representation for query parameters
 
   @NotNull(message = "resolution is required.")
   RES_TYPE resolution;

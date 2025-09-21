@@ -1,11 +1,11 @@
 package org.okapi.metrics.common;
 
 import java.util.Map;
-import org.okapi.rest.metrics.query.GetMetricsRequestInternal;
+import org.okapi.rest.metrics.query.GetMetricsRequest;
 
 public class MetricPaths {
 
-  public static String convertToUnivPath(GetMetricsRequestInternal request) {
+  public static String convertToUnivPath(GetMetricsRequest request) {
     // separator shouldn't clash with the rest of teh system
     return convertToUnivPath(
         request.getTenantId(), request.getMetricName(), request.getTags());

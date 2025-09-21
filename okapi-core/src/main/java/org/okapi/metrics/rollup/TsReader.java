@@ -6,9 +6,9 @@ import org.okapi.Statistics;
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
 import org.okapi.metrics.pojos.SUM_TYPE;
-import org.okapi.metrics.results.GaugeScan;
-import org.okapi.metrics.results.HistoScan;
-import org.okapi.metrics.results.SumScan;
+import org.okapi.metrics.pojos.results.GaugeScan;
+import org.okapi.metrics.pojos.results.HistoScan;
+import org.okapi.metrics.pojos.results.SumScan;
 
 public interface TsReader {
   GaugeScan scanGauge(String series, long from, long to, AGG_TYPE aggregation, RES_TYPE resolution);

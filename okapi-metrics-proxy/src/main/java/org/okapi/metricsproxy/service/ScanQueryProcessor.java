@@ -36,7 +36,7 @@ import org.okapi.metrics.search.MetricsSearcher;
 import org.okapi.metricsproxy.auth.AuthorizationChecker;
 import org.okapi.rest.metrics.*;
 import org.okapi.rest.metrics.query.GetGaugeRequest;
-import org.okapi.rest.metrics.query.GetMetricsRequestInternal;
+import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
 import org.okapi.rest.metrics.search.SearchMetricsRequest;
 import org.okapi.rest.metrics.search.SearchMetricsRequestInternal;
@@ -74,7 +74,7 @@ public class ScanQueryProcessor {
     accessManager.checkUserCanReadFromTeam(userId, orgId, teamId);
     var tenantId = IdCreator.getTenantId(orgId, teamId);
     var getMetricsRequestInternal =
-        GetMetricsRequestInternal.builder()
+        GetMetricsRequest.builder()
             .tenantId(tenantId)
             .metricName(getGaugeRequest.getMetricName())
             .tags(getGaugeRequest.getTags())
@@ -146,7 +146,7 @@ public class ScanQueryProcessor {
     var path = MetricPaths.convertToUnivPath(tenantId, metricName, tags);
     var node = zkRegistry.route(path);
     var getQuery =
-        GetMetricsRequestInternal.builder()
+        GetMetricsRequest.builder()
             .start(start)
             .end(end)
             .tenantId(tenantId)
