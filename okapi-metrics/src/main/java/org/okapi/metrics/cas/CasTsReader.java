@@ -113,7 +113,10 @@ public class CasTsReader implements TsReader {
       reading.put(time, val);
     }
     return new SumScan(
-        tenant, Lists.newArrayList(reading.keySet()), windowSize, Lists.newArrayList(reading.values()));
+        tenant,
+        Lists.newArrayList(reading.keySet()),
+        windowSize,
+        Lists.newArrayList(reading.values()));
   }
 
   @Override

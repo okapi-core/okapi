@@ -144,13 +144,13 @@
         <dependency>
             <groupId>org.okapi</groupId>
             <artifactId>okapi-promql</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.okapi</groupId>
             <artifactId>okapi-statistics</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -176,6 +176,11 @@
         <dependency>
             <groupId>org.apache.cassandra</groupId>
             <artifactId>java-driver-mapper-processor</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.re2j</groupId>
+            <artifactId>re2j</artifactId>
         </dependency>
 
     </dependencies>

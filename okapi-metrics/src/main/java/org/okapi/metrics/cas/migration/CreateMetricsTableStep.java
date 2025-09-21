@@ -18,6 +18,7 @@ public class CreateMetricsTableStep {
     for (var sp : split) {
       log.info("Executing..\n" + sp);
       session.execute(sp);
+      log.info("Done");
     }
   }
 }

@@ -17,6 +17,7 @@ import org.okapi.exceptions.BadRequestException;
 import org.okapi.exceptions.ExceptionUtils;
 import org.okapi.metrics.cas.dao.SearchHintDao;
 import org.okapi.metrics.cas.dao.SketchesDao;
+import org.okapi.metrics.cas.dao.TypeHintsDao;
 import org.okapi.metrics.cas.dto.*;
 import org.okapi.metrics.common.MetricPaths;
 import org.okapi.metrics.common.MetricsContext;
@@ -44,6 +45,7 @@ public class CasMetricsWriter implements MetricsWriter {
   Supplier<UpdatableStatistics> statisticsSupplier;
   SketchesDao sketchesDao;
   SearchHintDao searchHintDao;
+  TypeHintsDao typeHintsDao;
   ExecutorService executorService;
 
   @Override
@@ -52,6 +54,7 @@ public class CasMetricsWriter implements MetricsWriter {
     ValidateSubmitMetrics.checkSubmitMetricsRequest(request);
     handleRequest(request);
     handleSearch(request);
+    handleTypeHints(request);
   }
 
   protected void handleRequest(ExportMetricsRequest request) throws StatisticsFrozenException {
@@ -60,6 +63,25 @@ public class CasMetricsWriter implements MetricsWriter {
       case HISTO -> handleHistoRequest(request);
       case COUNTER -> handleSumsRequest(request);
     }
+  }
+
+  protected void handleTypeHints(ExportMetricsRequest request){
+    var localPath = MetricPaths.localPath(request.getMetricName(), request.getTags());
+    var tenant = request.getTenantId();
+    String metricType =
+        switch (request.getType()) {
+          case GAUGE -> org.okapi.metrics.fdb.MetricTypesSearchVals.GAUGE;
+          case HISTO -> org.okapi.metrics.fdb.MetricTypesSearchVals.HISTO;
+          case COUNTER ->
+              switch (request.getSum().getSumType()) {
+                case CUMULATIVE -> org.okapi.metrics.fdb.MetricTypesSearchVals.CSUM;
+                case DELTA -> org.okapi.metrics.fdb.MetricTypesSearchVals.SUM;
+              };
+        };
+
+    var hint =
+        TypeHints.builder().tenantId(tenant).localPath(localPath).metricType(metricType).build();
+    typeHintsDao.insert(hint);
   }
 
   protected void handleGaugeRequest(ExportMetricsRequest request) throws StatisticsFrozenException {

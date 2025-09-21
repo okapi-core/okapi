@@ -10,16 +10,19 @@ import java.util.concurrent.ExecutorService;
 import org.okapi.collections.OkapiLists;
 import org.okapi.metrics.OutsideWindowException;
 import org.okapi.metrics.TestResourceFactory;
+import org.okapi.metrics.cas.dao.MetricsMapper;
 import org.okapi.metrics.common.MetricsContext;
 import org.okapi.metrics.common.pojo.Node;
 import org.okapi.metrics.stats.StatisticsFrozenException;
 
 public class PromQlTestCase {
+  MetricsMapper mapper;
   Map<Integer, Map<String, TreeMap<Long, Float>>> values;
   public static final MetricsContext FIXED_CTX = MetricsContext.createContext("test");
 
-  public PromQlTestCase() {
+  public PromQlTestCase(MetricsMapper metricsMapper) {
     this.values = new HashMap<>();
+    this.mapper = metricsMapper;
   }
 
   void set(int shard, String series, long ts, float val) {
@@ -65,7 +68,7 @@ public class PromQlTestCase {
   public PromQlQueryProcessor queryProcessor(
       TestResourceFactory resourceFactory, ExecutorService executorService, Node node)
       throws IOException {
-    var discovery = resourceFactory.casDiscoveryFactory(node);
+    var discovery = resourceFactory.casDiscoveryFactory(mapper, node);
     TsClientFactory clientFactoy = resourceFactory.tsClientFactory(node);
     var queryProcessor =
         new PromQlQueryProcessor(

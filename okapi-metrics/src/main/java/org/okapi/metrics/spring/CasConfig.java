@@ -26,9 +26,11 @@ public class CasConfig {
   public MetricsWriter metricsWriter(
       @Autowired SketchesDao sketchesDao,
       @Autowired SearchHintDao searchHintDao,
+      @Autowired org.okapi.metrics.cas.dao.TypeHintsDao typeHintsDao,
       @Value(Configurations.VAL_CAS_ASYNC_THREADS) int asyncThreads) {
     var executor = Executors.newFixedThreadPool(asyncThreads);
-    return new CasMetricsWriter(new KllStatSupplier(), sketchesDao, searchHintDao, executor);
+    return new CasMetricsWriter(
+        new KllStatSupplier(), sketchesDao, searchHintDao, typeHintsDao, executor);
   }
 
   @Bean
@@ -63,6 +65,13 @@ public class CasConfig {
   }
 
   @Bean
+  public org.okapi.metrics.cas.dao.TypeHintsDao typeHintsDao(
+      @Autowired MetricsMapper metricsMapper,
+      @Value(Configurations.VAL_METRICS_KEY_SPACE) String keyspace) {
+    return metricsMapper.typeHintsDao(keyspace);
+  }
+
+  @Bean
   public TsReader reader(@Autowired SketchesDao sketchesDao) {
     return new CasTsReader(
         sketchesDao, new KllStatSupplier(), new WritableRestorer(), new RolledupMergerStrategy());
@@ -74,12 +83,14 @@ public class CasConfig {
   }
 
   @Bean
-  public TsClientFactory tsClientFactory() {
-    return new CasTsClientFactory();
+  public TsClientFactory tsClientFactory(
+      @Autowired TsReader tsReader,
+      @Autowired org.okapi.metrics.cas.dao.TypeHintsDao typeHintsDao) {
+    return new CasTsClientFactory(tsReader, typeHintsDao);
   }
 
   @Bean
-  public SeriesDiscoveryFactory discoveryFactory() {
-    return new CasSeriesDiscoveryFactory();
+  public SeriesDiscoveryFactory discoveryFactory(@Autowired TsSearcher searcher) {
+    return new CasSeriesDiscoveryFactory(searcher);
   }
 }

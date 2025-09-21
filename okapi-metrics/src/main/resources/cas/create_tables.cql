@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS okapi_telemetry.gauge_sketch_secondly(
+CREATE TABLE IF NOT EXISTS okapi_telemetry.gauge_sketch_secondly_v2(
 tenant_id text,
 local_path text,
 second_block bigint,
@@ -48,5 +48,12 @@ shard_key int,
 start_minute bigint,
 local_path text,
 metric_type text,
-PRIMARY KEY ((tenant_id, shard_key), start_minute)
-) with CLUSTERING ORDER BY (start_minute ASC);
+PRIMARY KEY ((tenant_id, shard_key), start_minute, local_path)
+) with CLUSTERING ORDER BY (start_minute ASC, local_path ASC);
+--
+CREATE TABLE IF NOT EXISTS okapi_telemetry.type_hints(
+tenant_id text,
+local_path text,
+metric_type text,
+PRIMARY KEY ((tenant_id, local_path))
+);

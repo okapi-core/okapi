@@ -12,4 +12,7 @@ public interface MetricsMapper {
 
   @DaoFactory
   SearchHintDao searchHintDao(@DaoKeyspace String keyspace);
+
+  @DaoFactory
+  TypeHintsDao typeHintsDao(@DaoKeyspace String keyspace);
 }

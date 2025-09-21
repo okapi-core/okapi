@@ -1,29 +1,24 @@
 package org.okapi.metrics.cas.dto;
 
-import com.datastax.oss.driver.api.mapper.annotations.ClusteringColumn;
 import com.datastax.oss.driver.api.mapper.annotations.CqlName;
 import com.datastax.oss.driver.api.mapper.annotations.Entity;
 import com.datastax.oss.driver.api.mapper.annotations.PartitionKey;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
-@CqlName("search_hints")
+@CqlName("type_hints")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SearchHints {
-
+public class TypeHints {
   @PartitionKey(0)
   String tenantId;
 
-  @PartitionKey(2)
-  int shardKey;
-
-  @ClusteringColumn(0)
-  long startMinute;
-
-  @ClusteringColumn(1)
+  @PartitionKey(1)
   String localPath;
 
   String metricType;

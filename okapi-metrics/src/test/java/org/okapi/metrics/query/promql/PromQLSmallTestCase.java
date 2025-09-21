@@ -12,11 +12,8 @@ public class PromQLSmallTestCase extends PromQlTestCase {
 
   long t0, t1, t2, t3;
 
-  public PromQLSmallTestCase(
-      long now,
-      TestResourceFactory resourceFactory,
-      Node node) {
-    super();
+  public PromQLSmallTestCase(long now, TestResourceFactory resourceFactory, Node node) {
+    super(resourceFactory.metricsMapper());
     t0 = now - Duration.of(5, ChronoUnit.MINUTES).toMillis(); // arbitrary fixed base
     long step = 60_000L; // 1 minute
     t1 = t0 + step; // now - 4

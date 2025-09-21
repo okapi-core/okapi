@@ -2,6 +2,7 @@ package org.okapi.metrics.cas;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -36,6 +37,7 @@ public class CasTsSearcher implements TsSearcher {
     var bEn = end / ONE_MIN.toMillis();
     var hints = new HashSet<SearchResult>();
     var patternInfo = MetricsSearcher.PatternInfo.parse(pattern);
+    var matched = new ArrayList<String>();
     searchHintDao
         .scan(tenantId, 0, bs, bEn)
         .iterator()
@@ -48,6 +50,8 @@ public class CasTsSearcher implements TsSearcher {
               } else {
                 var parsed = MetricsPathParser.parse(univPath);
                 if (parsed.isEmpty()) return;
+                if (matched.contains(univPath)) return;
+                matched.add(univPath);
                 hints.add(
                     SearchResult.builder()
                         .tenantId(tenantId)

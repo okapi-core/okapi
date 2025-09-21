@@ -1,5 +1,6 @@
 package org.okapi.metrics;
 
+import com.datastax.oss.driver.api.core.CqlSession;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -16,6 +17,8 @@ import org.okapi.clock.SystemClock;
 import org.okapi.fake.FakeClock;
 import org.okapi.metrics.cas.*;
 import org.okapi.metrics.cas.dao.MetricsMapper;
+import org.okapi.metrics.cas.dao.MetricsMapperBuilder;
+import org.okapi.metrics.cas.migration.CreateMetricsTableStep;
 import org.okapi.metrics.common.ServiceRegistry;
 import org.okapi.metrics.common.ServiceRegistryImpl;
 import org.okapi.metrics.common.pojo.*;
@@ -212,6 +215,7 @@ public class TestResourceFactory extends AbstractSingletonFactory {
                 new KllStatSupplier(),
                 mapper.sketchesDao(KEYSPACE),
                 mapper.searchHintDao(KEYSPACE),
+                mapper.typeHintsDao(KEYSPACE),
                 Executors.newFixedThreadPool(50)));
   }
 
@@ -232,11 +236,31 @@ public class TestResourceFactory extends AbstractSingletonFactory {
         node, CasTsSearcher.class, () -> new CasTsSearcher(mapper.searchHintDao(KEYSPACE)));
   }
 
-  public SeriesDiscoveryFactory casDiscoveryFactory(Node node) {
-    return makeSingleton(node, SeriesDiscoveryFactory.class, () -> new CasSeriesDiscoveryFactory());
+  public SeriesDiscoveryFactory casDiscoveryFactory(MetricsMapper mapper, Node node) {
+    return makeSingleton(
+        node,
+        SeriesDiscoveryFactory.class,
+        () -> new CasSeriesDiscoveryFactory(casTsSearcher(mapper, node)));
   }
 
   public TsClientFactory tsClientFactory(Node node) {
     return makeSingleton(node, TsClientFactory.class, () -> new CasTsClientFactory());
+  }
+
+  public MetricsMapper metricsMapper() {
+    return makeSingleton(
+        MetricsMapper.class,
+        () -> {
+          var session = CqlSession.builder().build();
+          MetricsMapper mapper = new MetricsMapperBuilder(session).build();
+          var createMetricsTableStep = new CreateMetricsTableStep(session);
+          createMetricsTableStep.doStep();
+
+          // check the migration
+          mapper.sketchesDao("okapi_telemetry");
+          mapper.searchHintDao("okapi_telemetry");
+          mapper.typeHintsDao("okapi_telemetry");
+          return mapper;
+        });
   }
 }

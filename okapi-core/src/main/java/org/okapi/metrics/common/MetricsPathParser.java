@@ -1,9 +1,6 @@
 package org.okapi.metrics.common;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class MetricsPathParser {
 
@@ -49,7 +46,7 @@ public class MetricsPathParser {
     var name = path.substring(0, startBrace);
     var keyValues = path.substring(1 + startBrace, endBrace);
     var keyValuePairs = keyValues.split(",");
-    var tags = new HashMap<String, String>();
+    var tags = new TreeMap<String, String>();
     for (var kvp : keyValuePairs) {
       var split = kvp.split("=");
       if (split.length != 2) continue;

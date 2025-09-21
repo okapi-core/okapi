@@ -28,6 +28,7 @@ public class OtelController {
   public ResponseEntity<ExportMetricsServiceResponse> export(
       @RequestHeader("X-Okapi-Tenant") String tenant,
       @RequestBody ExportMetricsServiceRequest request) {
+
     try {
       if (tenant == null || tenant.isBlank()) {
         log.debug("Tenant not specified.");

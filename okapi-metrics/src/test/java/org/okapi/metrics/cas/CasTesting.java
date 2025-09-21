@@ -18,5 +18,6 @@ public class CasTesting {
     // check the migration
     mapper.sketchesDao("okapi_telemetry");
     mapper.searchHintDao("okapi_telemetry");
+    mapper.typeHintsDao("okapi_telemetry");
   }
 }

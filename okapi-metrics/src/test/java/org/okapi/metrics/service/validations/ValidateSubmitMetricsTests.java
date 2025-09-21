@@ -32,7 +32,7 @@ public class ValidateSubmitMetricsTests {
 
   @Test
   public void gauge_timestamps_too_far_apart_throws() {
-    var gauge = new Gauge(new long[] {0L, 3_600_001L}, new float[] {1.0f, 2.0f});
+    var gauge = new Gauge(new long[] {0L, 24 * 3_600_001L + 1000L}, new float[] {1.0f, 2.0f});
     var req =
         ExportMetricsRequest.builder()
             .tenantId("t")
