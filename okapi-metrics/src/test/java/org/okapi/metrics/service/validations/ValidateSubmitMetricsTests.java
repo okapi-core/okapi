@@ -105,9 +105,9 @@ public class ValidateSubmitMetricsTests {
   }
 
   @Test
-  public void histo_non_positive_values_throws() {
+  public void histo_negative_value_throws() {
     var pt =
-        new HistoPoint(0L, 1000L, new float[] {0.1f, 0.2f}, new int[] {1, 0, 2});
+        new HistoPoint(0L, 1000L, new float[] {0.1f, 0.2f}, new int[] {1, -1, 2});
     var histo = new Histo(java.util.List.of(pt));
     var req =
         ExportMetricsRequest.builder()
