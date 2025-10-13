@@ -14,7 +14,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
-import org.okapi.traces.model.Span;
+import org.okapi.traces.model.OkapiSpan;
 
 /**
  * Integration tests for TraceRepository.
@@ -67,15 +67,15 @@ public class TraceRepositoryTests {
     String traceId = "trace-1";
 
     Instant base = nowRoundedToHour().toInstant().plusSeconds(5);
-    Span s1 = span(tenant, app, traceId, "s-1", null, base, base.plusMillis(100));
-    Span s2 = span(tenant, app, traceId, "s-2", "s-1", base.plusMillis(1_000), base.plusMillis(2_000));
-    Span s3 = span(tenant, app, traceId, "s-3", "s-1", base.plusMillis(2_500), base.plusMillis(2_900));
+    OkapiSpan s1 = span(tenant, app, traceId, "s-1", null, base, base.plusMillis(100));
+    OkapiSpan s2 = span(tenant, app, traceId, "s-2", "s-1", base.plusMillis(1_000), base.plusMillis(2_000));
+    OkapiSpan s3 = span(tenant, app, traceId, "s-3", "s-1", base.plusMillis(2_500), base.plusMillis(2_900));
 
     repo.saveBatch(List.of(s1, s2, s3));
 
     var spans = repo.getSpansByTraceId(traceId, tenant, app);
     assertEquals(3, spans.size(), "Should return all spans for the trace");
-    var ids = spans.stream().map(Span::getSpanId).collect(Collectors.toSet());
+    var ids = spans.stream().map(OkapiSpan::getSpanId).collect(Collectors.toSet());
     assertTrue(ids.containsAll(Set.of("s-1", "s-2", "s-3")));
 
     var byId = repo.getSpanById("s-2", tenant, app);
@@ -92,13 +92,13 @@ public class TraceRepositoryTests {
     ZonedDateTime hr = nowRoundedToHour();
     Instant t0 = hr.toInstant().plusSeconds(10);
     // Durations: 3000, 1500, 500
-    Span a1 = span(tenant, app, traceA, "a1", null, t0, t0.plusMillis(3_000));
-    Span a2 = span(tenant, app, traceA, "a2", "a1", t0.plusMillis(10), t0.plusMillis(1_510));
-    Span b1 = span(tenant, app, traceB, "b1", null, t0.plusMillis(20), t0.plusMillis(520));
+    OkapiSpan a1 = span(tenant, app, traceA, "a1", null, t0, t0.plusMillis(3_000));
+    OkapiSpan a2 = span(tenant, app, traceA, "a2", "a1", t0.plusMillis(10), t0.plusMillis(1_510));
+    OkapiSpan b1 = span(tenant, app, traceB, "b1", null, t0.plusMillis(20), t0.plusMillis(520));
 
     // Different app/tenant noise (should be ignored)
-    Span otherApp = span(tenant, app + "-other", "trace-C", "x1", null, t0, t0.plusMillis(10_000));
-    Span otherTenant = span(tenant + "-other", app, "trace-D", "y1", null, t0, t0.plusMillis(10_000));
+    OkapiSpan otherApp = span(tenant, app + "-other", "trace-C", "x1", null, t0, t0.plusMillis(10_000));
+    OkapiSpan otherTenant = span(tenant + "-other", app, "trace-D", "y1", null, t0, t0.plusMillis(10_000));
 
     repo.saveBatch(List.of(a1, a2, b1, otherApp, otherTenant));
 
@@ -125,7 +125,7 @@ public class TraceRepositoryTests {
     return Instant.now().atZone(ZoneOffset.UTC).withMinute(0).withSecond(0).withNano(0);
   }
 
-  private static Span span(
+  private static OkapiSpan span(
       String tenant,
       String app,
       String traceId,
@@ -133,7 +133,7 @@ public class TraceRepositoryTests {
       String parentSpanId,
       Instant start,
       Instant end) {
-    return Span.builder()
+    return OkapiSpan.builder()
         .tenantId(tenant)
         .appId(app)
         .traceId(traceId)

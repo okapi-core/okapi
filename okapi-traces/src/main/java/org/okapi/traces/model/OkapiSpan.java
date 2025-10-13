@@ -1,6 +1,7 @@
 package org.okapi.traces.model;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,9 +12,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Span {
+public class OkapiSpan {
   private String tenantId;
-  private String appId;
 
   private String traceId;
   private String spanId;
@@ -28,4 +28,5 @@ public class Span {
   private String statusMessage;
 
   private Map<String, String> attributes; // flattened string attributes for quick metadata viewing
+  private List<Map<String, String>> events; // simplified event attributes
 }

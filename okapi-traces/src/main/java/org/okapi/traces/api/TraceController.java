@@ -1,9 +1,9 @@
 package org.okapi.traces.api;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.util.List;
 import java.util.Map;
-import org.okapi.traces.model.Span;
+
+import org.okapi.traces.model.OkapiSpan;
 import org.okapi.traces.service.TraceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,54 +16,91 @@ public class TraceController {
   @Autowired private TraceService traceService;
 
   // OTLP/HTTP compatible ingest endpoint (JSON)
-  @PostMapping("")
+  @PostMapping(value = "", consumes = "application/json")
   public ResponseEntity<Map<String, Object>> ingest(
-      @RequestHeader("X-Okapi-Tenant") String tenant,
-      @RequestHeader("X-Okapi-App") String app,
-      @RequestBody JsonNode otlpTraces) {
-    validateTenantAndApp(tenant, app);
-    int count = traceService.ingestOtelJson(otlpTraces, tenant, app);
+      @RequestHeader("X-Okapi-Tenant-Id") String tenant,
+      @RequestBody String otlpTraces) {
+    validateTenant(tenant);
+    int count = traceService.ingestOtelJson(otlpTraces, tenant);
+    return ResponseEntity.ok(Map.of("ingested", count));
+  }
+
+  // OTLP/HTTP compatible ingest endpoint (Protobuf)
+  @PostMapping(value = "", consumes = "application/x-protobuf")
+  public ResponseEntity<Map<String, Object>> ingestProtobuf(
+      @RequestHeader("X-Okapi-Tenant-Id") String tenant,
+      @RequestBody byte[] body) {
+    validateTenant(tenant);
+    int count = traceService.ingestOtelProtobuf(body, tenant);
     return ResponseEntity.ok(Map.of("ingested", count));
   }
 
   // List all spans for a trace
   @GetMapping("/{traceId}/spans")
-  public List<Span> getSpans(
+  public List<OkapiSpan> getSpans(
       @PathVariable String traceId,
-      @RequestHeader("X-Okapi-Tenant") String tenant,
-      @RequestHeader("X-Okapi-App") String app) {
-    validateTenantAndApp(tenant, app);
-    return traceService.getSpans(traceId, tenant, app);
+      @RequestHeader("X-Okapi-Tenant-Id") String tenant) {
+    validateTenant(tenant);
+    return traceService.getSpans(traceId, tenant);
   }
 
   // Get span metadata by span-id
   @GetMapping("/span/{spanId}")
-  public ResponseEntity<Span> getSpan(
+  public ResponseEntity<OkapiSpan> getSpan(
       @PathVariable String spanId,
-      @RequestHeader("X-Okapi-Tenant") String tenant,
-      @RequestHeader("X-Okapi-App") String app) {
-    validateTenantAndApp(tenant, app);
+      @RequestHeader("X-Okapi-Tenant-Id") String tenant) {
+    validateTenant(tenant);
     return traceService
-        .getSpanById(spanId, tenant, app)
+        .getSpanById(spanId, tenant)
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
   }
 
   // List spans by duration for a given application and time window
   @GetMapping("/spans/by-duration")
-  public List<Span> listByDuration(
-      @RequestHeader("X-Okapi-Tenant") String tenant,
-      @RequestHeader("X-Okapi-App") String app,
+  public List<OkapiSpan> listByDuration(
+      @RequestHeader("X-Okapi-Tenant-Id") String tenant,
       @RequestParam("startMillis") long startMillis,
       @RequestParam("endMillis") long endMillis,
       @RequestParam(value = "limit", required = false, defaultValue = "100") int limit) {
-    validateTenantAndApp(tenant, app);
-    return traceService.listByDuration(tenant, app, startMillis, endMillis, limit);
+    validateTenant(tenant);
+    return traceService.listByDuration(tenant, startMillis, endMillis, limit);
   }
 
-  private static void validateTenantAndApp(String tenant, String app) {
-    if (tenant == null || tenant.isBlank() || app == null || app.isBlank()) {
-      throw new IllegalArgumentException("Missing X-Okapi-Tenant or X-Okapi-App header");
+  // List traces within time window and how many have error spans
+  @GetMapping("/traces/by-window")
+  public Map<String, Object> listTracesByWindow(
+      @RequestHeader("X-Okapi-Tenant-Id") String tenant,
+      @RequestParam("startMillis") long startMillis,
+      @RequestParam("endMillis") long endMillis) {
+    validateTenant(tenant);
+    return traceService.listTracesByWindow(tenant, startMillis, endMillis);
+  }
+
+  // List spans of type error in a window
+  @GetMapping("/spans/errors")
+  public List<OkapiSpan> listErrorSpans(
+      @RequestHeader("X-Okapi-Tenant-Id") String tenant,
+      @RequestParam("startMillis") long startMillis,
+      @RequestParam("endMillis") long endMillis,
+      @RequestParam(value = "limit", required = false, defaultValue = "1000") int limit) {
+    validateTenant(tenant);
+    return traceService.listErrorSpans(tenant, startMillis, endMillis, limit);
+  }
+
+  // Histogram of spans of type error and ok, minutely granularity
+  @GetMapping("/spans/histogram")
+  public Map<Long, Map<String, Long>> spanHistogram(
+      @RequestHeader("X-Okapi-Tenant-Id") String tenant,
+      @RequestParam("startMillis") long startMillis,
+      @RequestParam("endMillis") long endMillis) {
+    validateTenant(tenant);
+    return traceService.spanHistogramByMinute(tenant, startMillis, endMillis);
+  }
+
+  private static void validateTenant(String tenant) {
+    if (tenant == null || tenant.isBlank()) {
+      throw new IllegalArgumentException("Missing X-Okapi-Tenant-Id header");
     }
   }
 }

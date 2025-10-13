@@ -34,7 +34,8 @@
                         <include>opentelemetry/proto/common/**/*.proto</include>
                         <include>opentelemetry/proto/resource/**/*.proto</include>
                         <include>opentelemetry/proto/metrics/**/*.proto</include>
-                        <include>opentelemetry/proto/traces/**/*.proto</include>
+                        <include>opentelemetry/proto/trace/**/*.proto</include>
+                        <include>opentelemetry/proto/collector/trace/**/*.proto</include>
                         <include>opentelemetry/proto/collector/metrics/**/*.proto</include>
                     </includes>
                     <outputDirectory>${project.build.directory}/generated-sources/protobuf/java</outputDirectory>

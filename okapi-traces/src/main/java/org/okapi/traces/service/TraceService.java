@@ -1,10 +1,14 @@
 package org.okapi.traces.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.google.protobuf.util.JsonFormat;
+import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
+import io.opentelemetry.proto.common.v1.AnyValue;
+import io.opentelemetry.proto.common.v1.KeyValue;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.okapi.traces.model.Span;
+import org.okapi.traces.model.OkapiSpan;
 import org.okapi.traces.sampler.SamplingStrategy;
 import org.okapi.traces.storage.TraceRepository;
 import org.springframework.stereotype.Service;
@@ -16,53 +20,77 @@ public class TraceService {
   private final TraceRepository traceRepository;
   private final SamplingStrategy samplingStrategy;
 
-  public List<Span> getSpans(String traceId, String tenant, String app) {
-    return traceRepository.getSpansByTraceId(traceId, tenant, app);
+  public List<OkapiSpan> getSpans(String traceId, String tenant) {
+    return traceRepository.getSpansByTraceId(traceId, tenant);
   }
 
-  public Optional<Span> getSpanById(String spanId, String tenant, String app) {
-    return traceRepository.getSpanById(spanId, tenant, app);
+  public Optional<OkapiSpan> getSpanById(String spanId, String tenant) {
+    return traceRepository.getSpanById(spanId, tenant);
   }
 
-  public List<Span> listByDuration(
-      String tenant, String app, long startMillis, long endMillis, int limit) {
-    return traceRepository.listSpansByDuration(tenant, app, startMillis, endMillis, limit);
+  public List<OkapiSpan> listByDuration(String tenant, long startMillis, long endMillis, int limit) {
+    return traceRepository.listSpansByDuration(tenant, startMillis, endMillis, limit);
   }
 
-  public int ingestOtelJson(JsonNode root, String tenant, String app) {
-    if (root == null || !root.has("resourceSpans")) return 0;
-    List<Span> toWrite = new ArrayList<>();
-    for (JsonNode rs : root.path("resourceSpans")) {
-      for (JsonNode ss : rs.path("scopeSpans")) {
-        for (JsonNode sp : ss.path("spans")) {
-          String traceId = text(sp, "traceId");
-          if (traceId == null || traceId.isEmpty()) continue;
-          // Head sampling on trace
+  public int ingestOtelJson(String json, String tenant) {
+    try {
+      var builder = ExportTraceServiceRequest.newBuilder();
+      JsonFormat.parser().ignoringUnknownFields().merge(json, builder);
+      return ingestRequest(builder.build(), tenant);
+    } catch (Exception e) {
+      return 0;
+    }
+  }
+
+  public int ingestOtelProtobuf(byte[] body, String tenant) {
+    try {
+      var req = ExportTraceServiceRequest.parseFrom(body);
+      return ingestRequest(req, tenant);
+    } catch (Exception e) {
+      return 0;
+    }
+  }
+
+  private int ingestRequest(ExportTraceServiceRequest req, String tenant) {
+    List<OkapiSpan> toWrite = new ArrayList<>();
+    for (var rs : req.getResourceSpansList()) {
+      for (Object ss : getScopeOrInstrumentationSpans(rs)) {
+        for (io.opentelemetry.proto.trace.v1.Span sp : getSpansFromScope(ss)) {
+          String traceId = bytesToHex(sp.getTraceId().toByteArray());
           if (!samplingStrategy.sample(traceId)) continue;
-
-          String spanId = text(sp, "spanId");
-          String parentSpanId = text(sp, "parentSpanId");
-          String name = text(sp, "name");
-          String kind = kindText(sp);
-          long startNanos = asLong(sp, "startTimeUnixNano");
-          long endNanos = asLong(sp, "endTimeUnixNano");
+          String spanId = bytesToHex(sp.getSpanId().toByteArray());
+          String parentSpanId = bytesToHex(sp.getParentSpanId().toByteArray());
+          String name = sp.getName();
+          String kind = sp.getKind().name();
+          long startNanos = sp.getStartTimeUnixNano();
+          long endNanos = sp.getEndTimeUnixNano();
           long durationMillis = Math.max(0L, (endNanos - startNanos) / 1_000_000L);
           Instant start = Instant.ofEpochMilli(startNanos / 1_000_000L);
           Instant end = Instant.ofEpochMilli(endNanos / 1_000_000L);
+          Map<String, String> attributes =
+              sp.getAttributesList().stream()
+                  .collect(
+                      Collectors.toMap(
+                          KeyValue::getKey, kv -> anyValueToString(kv.getValue()), (a, b) -> a));
+          List<Map<String, String>> events =
+              sp.getEventsList().stream()
+                  .map(
+                      ev -> {
+                        Map<String, String> m = new HashMap<>();
+                        m.put("name", ev.getName());
+                        m.put("timeUnixNano", String.valueOf(ev.getTimeUnixNano()));
+                        ev.getAttributesList()
+                            .forEach(kv -> m.put(kv.getKey(), anyValueToString(kv.getValue())));
+                        return m;
+                      })
+                  .toList();
 
-          Map<String, String> attributes = extractStringAttributes(sp.path("attributes"));
-          // Status
-          String statusCode = null;
-          String statusMessage = null;
-          if (sp.has("status")) {
-            statusCode = text(sp.path("status"), "code");
-            statusMessage = text(sp.path("status"), "message");
-          }
+          String statusCode = sp.getStatus().getCode().name();
+          String statusMessage = sp.getStatus().getMessage();
 
-          Span s =
-              Span.builder()
+          OkapiSpan s =
+              OkapiSpan.builder()
                   .tenantId(tenant)
-                  .appId(app)
                   .traceId(traceId)
                   .spanId(spanId)
                   .parentSpanId(parentSpanId)
@@ -74,6 +102,7 @@ public class TraceService {
                   .statusCode(statusCode)
                   .statusMessage(statusMessage)
                   .attributes(attributes)
+                  .events(events)
                   .build();
           toWrite.add(s);
         }
@@ -83,56 +112,68 @@ public class TraceService {
     return toWrite.size();
   }
 
-  private static String text(JsonNode n, String field) {
-    JsonNode v = n.get(field);
-    if (v == null || v.isNull()) return null;
-    return v.asText();
+  // removed JSON tree helpers; using protobuf JsonFormat instead
+
+  public Map<String, Object> listTracesByWindow(String tenant, long startMillis, long endMillis) {
+    return traceRepository.listTracesByWindow(tenant, startMillis, endMillis);
   }
 
-  private static long asLong(JsonNode n, String field) {
-    JsonNode v = n.get(field);
-    if (v == null || v.isNull()) return 0L;
+  public List<OkapiSpan> listErrorSpans(String tenant, long startMillis, long endMillis, int limit) {
+    return traceRepository.listErrorSpans(tenant, startMillis, endMillis, limit);
+  }
+
+  public Map<Long, Map<String, Long>> spanHistogramByMinute(
+      String tenant, long startMillis, long endMillis) {
+    return traceRepository.spanHistogramByMinute(tenant, startMillis, endMillis);
+  }
+
+  private static String anyValueToString(AnyValue v) {
+    return switch (v.getValueCase()) {
+      case STRING_VALUE -> v.getStringValue();
+      case BOOL_VALUE -> Boolean.toString(v.getBoolValue());
+      case INT_VALUE -> Long.toString(v.getIntValue());
+      case DOUBLE_VALUE -> Double.toString(v.getDoubleValue());
+      case ARRAY_VALUE -> v.getArrayValue().getValuesList().toString();
+      case KVLIST_VALUE -> v.getKvlistValue().getValuesList().toString();
+      case BYTES_VALUE -> bytesToHex(v.getBytesValue().toByteArray());
+      case VALUE_NOT_SET -> null;
+    };
+  }
+
+  // Compatibility: support both ResourceSpans.getScopeSpansList() and
+  // ResourceSpans.getInstrumentationLibrarySpansList() via reflection.
+  private static List<?> getScopeOrInstrumentationSpans(
+      io.opentelemetry.proto.trace.v1.ResourceSpans rs) {
     try {
-      // OTLP JSON represents nanos as strings
-      return Long.parseLong(v.asText());
-    } catch (NumberFormatException e) {
-      return v.asLong(0L);
+      var m = rs.getClass().getMethod("getScopeSpansList");
+      return (List<?>) m.invoke(rs);
+    } catch (NoSuchMethodException e) {
+      try {
+        var m = rs.getClass().getMethod("getInstrumentationLibrarySpansList");
+        return (List<?>) m.invoke(rs);
+      } catch (Exception ex) {
+        return List.of();
+      }
+    } catch (Exception e) {
+      return List.of();
     }
   }
 
-  private static String kindText(JsonNode sp) {
-    JsonNode kindNode = sp.get("kind");
-    if (kindNode == null) return null;
-    return kindNode.asText();
+  @SuppressWarnings("unchecked")
+  private static List<io.opentelemetry.proto.trace.v1.Span> getSpansFromScope(Object scope) {
+    try {
+      var m = scope.getClass().getMethod("getSpansList");
+      return (List<io.opentelemetry.proto.trace.v1.Span>) m.invoke(scope);
+    } catch (Exception e) {
+      return List.of();
+    }
   }
 
-  private static Map<String, String> extractStringAttributes(JsonNode attrsNode) {
-    Map<String, String> out = new HashMap<>();
-    if (attrsNode == null || !attrsNode.isArray()) return out;
-    for (JsonNode attr : attrsNode) {
-      String k = text(attr, "key");
-      if (k == null) continue;
-      JsonNode v = attr.get("value");
-      if (v == null) continue;
-      // value is a union in OTLP JSON; pick string/bool/int/double as text
-      String str =
-          Optional.ofNullable(v.get("stringValue"))
-              .map(JsonNode::asText)
-              .orElseGet(
-                  () ->
-                      Optional.ofNullable(v.get("boolValue"))
-                          .map(JsonNode::asText)
-                          .orElseGet(
-                              () ->
-                                  Optional.ofNullable(v.get("intValue"))
-                                      .map(JsonNode::asText)
-                                      .orElseGet(
-                                          () ->
-                                              Optional.ofNullable(v.get("doubleValue"))
-                                                  .map(JsonNode::asText)
-                                                  .orElse(null))));
-      if (str != null) out.put(k, str);
+  private static String bytesToHex(byte[] bytes) {
+    StringBuilder sb = new StringBuilder(bytes.length * 2);
+    for (byte b : bytes) {
+      sb.append(String.format("%02x", b));
     }
-    return out;
+    return sb.toString();
   }
 }
