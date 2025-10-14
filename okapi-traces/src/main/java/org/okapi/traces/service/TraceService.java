@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.okapi.traces.model.OkapiSpan;
 import org.okapi.traces.sampler.SamplingStrategy;
+import org.okapi.traces.page.BufferPoolManager;
 import org.okapi.traces.storage.TraceRepository;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ public class TraceService {
 
   private final TraceRepository traceRepository;
   private final SamplingStrategy samplingStrategy;
+  private final BufferPoolManager bufferPoolManager;
 
   public List<OkapiSpan> getSpans(String traceId, String tenant) {
     return traceRepository.getSpansByTraceId(traceId, tenant);
@@ -28,7 +30,8 @@ public class TraceService {
     return traceRepository.getSpanById(spanId, tenant);
   }
 
-  public List<OkapiSpan> listByDuration(String tenant, long startMillis, long endMillis, int limit) {
+  public List<OkapiSpan> listByDuration(
+      String tenant, long startMillis, long endMillis, int limit) {
     return traceRepository.listSpansByDuration(tenant, startMillis, endMillis, limit);
   }
 
@@ -46,6 +49,30 @@ public class TraceService {
     try {
       var req = ExportTraceServiceRequest.parseFrom(body);
       return ingestRequest(req, tenant);
+    } catch (Exception e) {
+      return 0;
+    }
+  }
+
+  // New ingestion path: write raw OTLP payloads into BufferPoolManager pages per tenant/app
+  public int ingestOtelProtobuf(byte[] body, String tenant, String application) {
+    try {
+      var req = ExportTraceServiceRequest.parseFrom(body);
+      bufferPoolManager.consume(tenant, application, req);
+      // count spans for accounting
+      int count = 0;
+      for (var rs : req.getResourceSpansList()) {
+        try {
+          var m = rs.getClass().getMethod("getScopeSpansList");
+          var scopes = (java.util.List<?>) m.invoke(rs);
+          for (Object scope : scopes) {
+            var mm = scope.getClass().getMethod("getSpansList");
+            count += ((java.util.List<?>) mm.invoke(scope)).size();
+          }
+        } catch (Exception ignored) {
+        }
+      }
+      return count;
     } catch (Exception e) {
       return 0;
     }
@@ -118,7 +145,8 @@ public class TraceService {
     return traceRepository.listTracesByWindow(tenant, startMillis, endMillis);
   }
 
-  public List<OkapiSpan> listErrorSpans(String tenant, long startMillis, long endMillis, int limit) {
+  public List<OkapiSpan> listErrorSpans(
+      String tenant, long startMillis, long endMillis, int limit) {
     return traceRepository.listErrorSpans(tenant, startMillis, endMillis, limit);
   }
 

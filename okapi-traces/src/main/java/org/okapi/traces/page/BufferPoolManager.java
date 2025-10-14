@@ -110,4 +110,17 @@ public class BufferPoolManager {
       return java.util.List.of();
     }
   }
+
+  // Expose a loose-consistency snapshot of current pages for a tenant/application
+  public java.util.List<SpanPage> listPages(String tenantId, String application) {
+    var out = new java.util.ArrayList<SpanPage>();
+    for (var e : pages.entrySet()) {
+      var k = e.getKey();
+      if (k.tenantId().equals(tenantId) && k.application().equals(application)) {
+        SpanPage p = e.getValue();
+        if (p != null) out.add(p);
+      }
+    }
+    return out;
+  }
 }
