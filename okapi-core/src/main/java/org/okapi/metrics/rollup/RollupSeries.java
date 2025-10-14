@@ -73,7 +73,7 @@ public class RollupSeries<T extends UpdatableStatistics> {
   }
 
   private void retryUpdate(
-          Supplier<UpdatableStatistics> statisticsSupplier, MetricsContext context, float val) {
+      Supplier<UpdatableStatistics> statisticsSupplier, MetricsContext context, float val) {
     var retries = 3;
     for (int i = 0; i < retries; i++) {
       try {
@@ -119,7 +119,7 @@ public class RollupSeries<T extends UpdatableStatistics> {
   }
 
   public void flush() throws InterruptedException {
-    for(var key: stats.keySet()){
+    for (var key : stats.keySet()) {
       popKey(key);
     }
   }

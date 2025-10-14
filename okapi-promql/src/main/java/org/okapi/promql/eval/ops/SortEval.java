@@ -1,13 +1,12 @@
 package org.okapi.promql.eval.ops;
 
+import java.util.ArrayList;
 import org.okapi.promql.eval.EvalContext;
 import org.okapi.promql.eval.Evaluable;
 import org.okapi.promql.eval.ExpressionResult;
 import org.okapi.promql.eval.InstantVectorResult;
 import org.okapi.promql.eval.exceptions.EvaluationException;
 import org.okapi.promql.eval.nodes.FunctionExpr;
-
-import java.util.ArrayList;
 
 public class SortEval implements Evaluable {
   private final FunctionExpr fn;

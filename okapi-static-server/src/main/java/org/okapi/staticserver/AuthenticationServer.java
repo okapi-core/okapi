@@ -1,14 +1,14 @@
 package org.okapi.staticserver;
 
 import com.google.gson.Gson;
-import org.okapi.rest.auth.AuthRequest;
-import org.okapi.rest.auth.TokenResponse;
-import org.okapi.headers.CookiesAndHeaders;
-import org.okapi.staticserver.exceptions.BadRequestException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import org.okapi.headers.CookiesAndHeaders;
+import org.okapi.rest.auth.AuthRequest;
+import org.okapi.rest.auth.TokenResponse;
+import org.okapi.staticserver.exceptions.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

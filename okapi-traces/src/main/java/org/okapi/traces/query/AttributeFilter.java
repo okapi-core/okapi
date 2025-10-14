@@ -30,6 +30,7 @@ public class AttributeFilter {
     this.pattern = pattern;
   }
 
-  public boolean isPattern() { return pattern != null; }
+  public boolean isPattern() {
+    return pattern != null;
+  }
 }
-

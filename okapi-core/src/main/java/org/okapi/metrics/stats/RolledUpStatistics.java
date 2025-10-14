@@ -182,7 +182,7 @@ public class RolledUpStatistics implements UpdatableStatistics {
     return frozen.get();
   }
 
-  protected KllFloatsSketch getSketch(){
+  protected KllFloatsSketch getSketch() {
     return this.floatsQuantiles;
   }
 }

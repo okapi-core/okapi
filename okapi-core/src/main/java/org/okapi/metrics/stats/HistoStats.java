@@ -1,9 +1,8 @@
 package org.okapi.metrics.stats;
 
 import com.google.common.primitives.Ints;
-import lombok.Getter;
-
 import java.io.ByteArrayOutputStream;
+import lombok.Getter;
 
 @Getter
 public class HistoStats {

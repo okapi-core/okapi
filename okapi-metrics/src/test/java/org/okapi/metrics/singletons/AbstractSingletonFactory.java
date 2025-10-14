@@ -1,10 +1,9 @@
 package org.okapi.metrics.singletons;
 
-import org.okapi.metrics.common.pojo.Node;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
+import org.okapi.metrics.common.pojo.Node;
 
 public class AbstractSingletonFactory {
   Map<String, Object> singletons;

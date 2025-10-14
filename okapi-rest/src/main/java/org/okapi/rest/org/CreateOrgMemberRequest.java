@@ -9,8 +9,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 public class CreateOrgMemberRequest {
-    private String orgId;
-    private String email;
-    @Setter
-    private boolean admin;
+  private String orgId;
+  private String email;
+  @Setter private boolean admin;
 }

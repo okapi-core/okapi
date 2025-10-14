@@ -1,13 +1,12 @@
 package org.okapi.promql;
 
 import com.google.re2j.Pattern;
-import org.okapi.promql.eval.VectorData.*;
-import org.okapi.promql.eval.ts.SeriesDiscovery;
-import org.okapi.promql.parse.LabelMatcher;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.okapi.promql.eval.VectorData.*;
+import org.okapi.promql.eval.ts.SeriesDiscovery;
+import org.okapi.promql.parse.LabelMatcher;
 
 public final class MockSeriesDiscovery implements SeriesDiscovery {
   private final List<SeriesId> known;
@@ -17,7 +16,8 @@ public final class MockSeriesDiscovery implements SeriesDiscovery {
   }
 
   @Override
-  public List<SeriesId> expand(String metricOrNull, List<LabelMatcher> matchers, long st, long end) {
+  public List<SeriesId> expand(
+      String metricOrNull, List<LabelMatcher> matchers, long st, long end) {
     List<SeriesId> out = new ArrayList<>();
     for (SeriesId s : known) {
       if (metricOrNull != null && !metricOrNull.equals(s.metric())) continue;
@@ -26,7 +26,8 @@ public final class MockSeriesDiscovery implements SeriesDiscovery {
     return out;
   }
 
-  private static boolean matchesAll(String metricOrNull, Map<String, String> labels, List<LabelMatcher> matchers) {
+  private static boolean matchesAll(
+      String metricOrNull, Map<String, String> labels, List<LabelMatcher> matchers) {
     if (matchers == null || matchers.isEmpty()) return true;
     for (LabelMatcher m : matchers) {
       String actual = m.name().equals("__name__") ? metricOrNull : labels.get(m.name());

@@ -39,4 +39,3 @@ public class CasSpan {
   ByteBuffer attributesBlob;
   ByteBuffer eventsBlob;
 }
-

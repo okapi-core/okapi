@@ -29,8 +29,8 @@ public class MetricsController {
 
   @Autowired MetricsWriter metricsWriter;
   @Autowired QueryProcessor queryProcessor;
-  @Qualifier(Configurations.BEAN_FDB_MESSAGE_BOX)
 
+  @Qualifier(Configurations.BEAN_FDB_MESSAGE_BOX)
   @PostMapping("")
   public SubmitMetricsResponse submit(
       @Valid @RequestBody ExportMetricsRequest submitMetricsBatchRequest)
@@ -43,8 +43,7 @@ public class MetricsController {
   }
 
   @PostMapping("/q")
-  public GetMetricsResponse get(@RequestBody @Valid GetMetricsRequest requestV2)
-      throws Exception {
+  public GetMetricsResponse get(@RequestBody @Valid GetMetricsRequest requestV2) throws Exception {
     var ans = queryProcessor.getMetricsResponse(requestV2);
     return ans;
   }

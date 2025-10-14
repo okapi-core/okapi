@@ -1,18 +1,18 @@
 package org.okapi.auth;
 
-import org.okapi.data.exceptions.UserAlreadyExistsException;
-import org.okapi.fixtures.Deduplicator;
-import org.okapi.metrics.IdCreationFailedException;
-import org.okapi.rest.auth.AuthRequest;
-import org.okapi.exceptions.BadRequestException;
-import org.okapi.exceptions.UnAuthorizedException;
-import org.okapi.fixtures.SingletonFactory;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import static org.okapi.auth.TestCommons.addToOrg;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.okapi.auth.TestCommons.addToOrg;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.okapi.data.exceptions.UserAlreadyExistsException;
+import org.okapi.exceptions.BadRequestException;
+import org.okapi.exceptions.UnAuthorizedException;
+import org.okapi.fixtures.Deduplicator;
+import org.okapi.fixtures.SingletonFactory;
+import org.okapi.metrics.IdCreationFailedException;
+import org.okapi.rest.auth.AuthRequest;
 
 public class TokenManagerIntegrationTest {
   SingletonFactory singletonFactory;

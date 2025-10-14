@@ -12,7 +12,8 @@ public class RolledUpSeriesRestorer implements RollupSeriesRestorer<UpdatableSta
 
   private final Function<Integer, RollupSeries<UpdatableStatistics>> seriesSupplier;
 
-  public RolledUpSeriesRestorer(Function<Integer, RollupSeries<UpdatableStatistics>> seriesSupplier) {
+  public RolledUpSeriesRestorer(
+      Function<Integer, RollupSeries<UpdatableStatistics>> seriesSupplier) {
     this.seriesSupplier = seriesSupplier;
   }
 

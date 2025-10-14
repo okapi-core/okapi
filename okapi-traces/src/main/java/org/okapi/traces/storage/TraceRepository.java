@@ -24,4 +24,3 @@ public interface TraceRepository {
   Map<Long, Map<String, Long>> spanHistogramByMinute(
       String tenant, long startMillis, long endMillis);
 }
-

@@ -76,4 +76,3 @@ public class OtelConverterSumTest {
     assertEquals(4, sp2.getSum()); // 4.2 rounded -> 4
   }
 }
-

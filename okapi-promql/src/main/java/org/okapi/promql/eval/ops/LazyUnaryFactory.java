@@ -1,13 +1,12 @@
 package org.okapi.promql.eval.ops;
 
 // eval/ops/LazyUnaryFactory.java
-import org.okapi.promql.eval.Evaluable;
-import org.okapi.promql.eval.InstantVectorResult;
-import org.okapi.promql.eval.nodes.FunctionExpr;
-import org.okapi.promql.eval.VectorData.*;
-
 import java.util.*;
 import java.util.function.*;
+import org.okapi.promql.eval.Evaluable;
+import org.okapi.promql.eval.InstantVectorResult;
+import org.okapi.promql.eval.VectorData.*;
+import org.okapi.promql.eval.nodes.FunctionExpr;
 
 public class LazyUnaryFactory {
   public LazyUnaryFactory() {}

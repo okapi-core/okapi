@@ -22,31 +22,50 @@ class TraceServiceTest {
     }
 
     @Override
-    public List<OkapiSpan> getSpansByTraceId(String traceId, String tenant) { return List.of(); }
+    public List<OkapiSpan> getSpansByTraceId(String traceId, String tenant) {
+      return List.of();
+    }
 
     @Override
-    public Optional<OkapiSpan> getSpanById(String spanId, String tenant) { return Optional.empty(); }
+    public Optional<OkapiSpan> getSpanById(String spanId, String tenant) {
+      return Optional.empty();
+    }
 
     @Override
-    public List<OkapiSpan> listSpansByDuration(String tenant, long startMillis, long endMillis, int limit) { return List.of(); }
+    public List<OkapiSpan> listSpansByDuration(
+        String tenant, long startMillis, long endMillis, int limit) {
+      return List.of();
+    }
 
     @Override
-    public Map<String, Object> listTracesByWindow(String tenant, long startMillis, long endMillis) { return Map.of(); }
+    public Map<String, Object> listTracesByWindow(String tenant, long startMillis, long endMillis) {
+      return Map.of();
+    }
 
     @Override
-    public List<OkapiSpan> listErrorSpans(String tenant, long startMillis, long endMillis, int limit) { return List.of(); }
+    public List<OkapiSpan> listErrorSpans(
+        String tenant, long startMillis, long endMillis, int limit) {
+      return List.of();
+    }
 
     @Override
-    public Map<Long, Map<String, Long>> spanHistogramByMinute(String tenant, long startMillis, long endMillis) { return Map.of(); }
+    public Map<Long, Map<String, Long>> spanHistogramByMinute(
+        String tenant, long startMillis, long endMillis) {
+      return Map.of();
+    }
   }
 
   static class AlwaysSample implements SamplingStrategy {
-    @Override public boolean sample(String traceId) { return true; }
+    @Override
+    public boolean sample(String traceId) {
+      return true;
+    }
   }
 
   @Test
   void ingestOtelJson_parsesSpansAndEvents() throws Exception {
-    String json = """
+    String json =
+        """
         {
           "resourceSpans": [
             {

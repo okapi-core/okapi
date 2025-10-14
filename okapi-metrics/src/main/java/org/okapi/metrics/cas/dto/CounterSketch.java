@@ -4,12 +4,11 @@ import com.datastax.oss.driver.api.mapper.annotations.ClusteringColumn;
 import com.datastax.oss.driver.api.mapper.annotations.CqlName;
 import com.datastax.oss.driver.api.mapper.annotations.Entity;
 import com.datastax.oss.driver.api.mapper.annotations.PartitionKey;
+import java.nio.ByteBuffer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.nio.ByteBuffer;
 
 @Entity
 @CqlName("sums_sketch")
@@ -17,7 +16,7 @@ import java.nio.ByteBuffer;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CounterSketch implements Sketchable{
+public class CounterSketch implements Sketchable {
   @PartitionKey(0)
   String tenantId;
 

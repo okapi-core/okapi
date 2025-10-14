@@ -22,11 +22,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.zip.CRC32;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.okapi.s3.S3ByteRangeCache;
 import org.okapi.traces.metrics.MetricsEmitter;
 import org.okapi.traces.metrics.NoopMetricsEmitter;
-import org.okapi.s3.S3ByteRangeCache;
 
 @Slf4j
 public class S3QueryProcessor implements TraceQueryProcessor {
@@ -46,15 +45,23 @@ public class S3QueryProcessor implements TraceQueryProcessor {
     this(cache, resolver, TraceQueryConfig.builder().build(), new NoopMetricsEmitter());
   }
 
-  public S3QueryProcessor(S3ByteRangeCache cache, S3TracefileKeyResolver resolver, TraceQueryConfig config, MetricsEmitter metrics) {
+  public S3QueryProcessor(
+      S3ByteRangeCache cache,
+      S3TracefileKeyResolver resolver,
+      TraceQueryConfig config,
+      MetricsEmitter metrics) {
     this.resolver = resolver;
-    this.fetcher = (b,k,s,e) -> cache.getRange(b,k,s,e);
+    this.fetcher = (b, k, s, e) -> cache.getRange(b, k, s, e);
     this.config = config;
     this.metrics = metrics == null ? new NoopMetricsEmitter() : metrics;
     this.pool = Executors.newFixedThreadPool(config.getQueryThreads());
   }
 
-  public S3QueryProcessor(RangeFetcher fetcher, S3TracefileKeyResolver resolver, TraceQueryConfig config, MetricsEmitter metrics) {
+  public S3QueryProcessor(
+      RangeFetcher fetcher,
+      S3TracefileKeyResolver resolver,
+      TraceQueryConfig config,
+      MetricsEmitter metrics) {
     this.resolver = resolver;
     this.fetcher = fetcher;
     this.config = config;
@@ -63,7 +70,8 @@ public class S3QueryProcessor implements TraceQueryProcessor {
   }
 
   @Override
-  public List<Span> getSpans(long start, long end, String tenantId, String application, String traceId)
+  public List<Span> getSpans(
+      long start, long end, String tenantId, String application, String traceId)
       throws IOException {
     List<long[]> keys = hourBuckets(start, end);
     if (keys.isEmpty()) return List.of();
@@ -75,14 +83,19 @@ public class S3QueryProcessor implements TraceQueryProcessor {
     }
     List<Span> result = new ArrayList<>();
     for (Future<List<Span>> f : invokeAll(tasks)) {
-      try { result.addAll(f.get()); } catch (ExecutionException e) { log.warn("S3 scan failed", e); }
+      try {
+        result.addAll(f.get());
+      } catch (ExecutionException e) {
+        log.warn("S3 scan failed", e);
+      }
     }
     result.sort(Comparator.comparingLong(Span::getStartTimeUnixNano));
     return result;
   }
 
   @Override
-  public List<Span> getSpans(long start, long end, String tenantId, String application, AttributeFilter filter)
+  public List<Span> getSpans(
+      long start, long end, String tenantId, String application, AttributeFilter filter)
       throws IOException {
     List<long[]> keys = hourBuckets(start, end);
     if (keys.isEmpty()) return List.of();
@@ -94,15 +107,19 @@ public class S3QueryProcessor implements TraceQueryProcessor {
     }
     List<Span> result = new ArrayList<>();
     for (Future<List<Span>> f : invokeAll(tasks)) {
-      try { result.addAll(f.get()); } catch (ExecutionException e) { log.warn("S3 scan failed", e); }
+      try {
+        result.addAll(f.get());
+      } catch (ExecutionException e) {
+        log.warn("S3 scan failed", e);
+      }
     }
     result.sort(Comparator.comparingLong(Span::getStartTimeUnixNano));
     return result;
   }
 
   @Override
-  public List<Span> getTrace(long start, long end, String tenantId, String application, String spanId)
-      throws IOException {
+  public List<Span> getTrace(
+      long start, long end, String tenantId, String application, String spanId) throws IOException {
     List<long[]> keys = hourBuckets(start, end);
     if (keys.isEmpty()) return List.of();
 
@@ -110,7 +127,8 @@ public class S3QueryProcessor implements TraceQueryProcessor {
     var ecs = new ExecutorCompletionService<Optional<Span>>(pool);
     List<Future<Optional<Span>>> futures = new ArrayList<>();
     for (long hb : bucketsFrom(keys)) {
-      final String bucket = resolver.bucket(); final String key = resolver.keyFor(tenantId, application, hb);
+      final String bucket = resolver.bucket();
+      final String key = resolver.keyFor(tenantId, application, hb);
       futures.add(ecs.submit(() -> findSpanInFile(bucket, key, start, end, spanId, token)));
     }
     Span target = null;
@@ -119,9 +137,18 @@ public class S3QueryProcessor implements TraceQueryProcessor {
       try {
         Future<Optional<Span>> fut = ecs.take();
         Optional<Span> s = fut.get();
-        if (s.isPresent()) { target = s.get(); token.cancel(); for (Future<Optional<Span>> other : futures) other.cancel(true); break; }
-      } catch (InterruptedException e) { Thread.currentThread().interrupt(); break; }
-      catch (ExecutionException e) { log.warn("S3 scan failed", e); }
+        if (s.isPresent()) {
+          target = s.get();
+          token.cancel();
+          for (Future<Optional<Span>> other : futures) other.cancel(true);
+          break;
+        }
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        break;
+      } catch (ExecutionException e) {
+        log.warn("S3 scan failed", e);
+      }
     }
     if (target == null) return List.of();
 
@@ -130,56 +157,127 @@ public class S3QueryProcessor implements TraceQueryProcessor {
   }
 
   private List<Future> invokeAll(List<? extends Callable> tasks) {
-    try { return (List<Future>) pool.invokeAll((List) tasks); }
-    catch (InterruptedException e) { Thread.currentThread().interrupt(); return Collections.emptyList(); }
+    try {
+      return (List<Future>) pool.invokeAll((List) tasks);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      return Collections.emptyList();
+    }
   }
 
   private static List<long[]> hourBuckets(long start, long end) {
-    long s = start / 3_600_000L; long e = end / 3_600_000L; List<long[]> l = new ArrayList<>(); l.add(new long[] {s,e}); return l;
+    long s = start / 3_600_000L;
+    long e = end / 3_600_000L;
+    List<long[]> l = new ArrayList<>();
+    l.add(new long[] {s, e});
+    return l;
   }
 
   private static List<Long> bucketsFrom(List<long[]> ranges) {
     List<Long> buckets = new ArrayList<>();
-    for (long[] r : ranges) for (long i=r[0]; i<=r[1]; i++) buckets.add(i);
+    for (long[] r : ranges) for (long i = r[0]; i <= r[1]; i++) buckets.add(i);
     return buckets;
   }
 
-  private List<Span> scanFileForTraceId(String bucket, String key, long start, long end, String tenantId, String application, String traceId) {
+  private List<Span> scanFileForTraceId(
+      String bucket,
+      String key,
+      long start,
+      long end,
+      String tenantId,
+      String application,
+      String traceId) {
     List<Span> out = new ArrayList<>();
     long offset = 0;
     while (true) {
       byte[] hdr;
-      try { hdr = fetcher.getRange(bucket, key, offset, offset+8); } catch (Exception e) { log.debug("header fetch failed for {}:{}", bucket, key, e); break; }
+      try {
+        hdr = fetcher.getRange(bucket, key, offset, offset + 8);
+      } catch (Exception e) {
+        log.debug("header fetch failed for {}:{}", bucket, key, e);
+        break;
+      }
       if (hdr == null || hdr.length < 8) break; // EOF
       int totalLen = readIntBE(hdr, 0);
       int crc32 = readIntBE(hdr, 4);
 
       // time window pre-filter
       byte[] ts;
-      try { ts = fetcher.getRange(bucket, key, offset+8, offset+8+16); } catch (Exception e) { metrics.emitPageParseError(tenantId, application); offset += 8L + totalLen; continue; }
-      if (ts == null || ts.length < 16) { offset += 8L + totalLen; continue; }
-      long tsStart = readLongBE(ts, 0); long tsEnd = readLongBE(ts, 8);
+      try {
+        ts = fetcher.getRange(bucket, key, offset + 8, offset + 8 + 16);
+      } catch (Exception e) {
+        metrics.emitPageParseError(tenantId, application);
+        offset += 8L + totalLen;
+        continue;
+      }
+      if (ts == null || ts.length < 16) {
+        offset += 8L + totalLen;
+        continue;
+      }
+      long tsStart = readLongBE(ts, 0);
+      long tsEnd = readLongBE(ts, 8);
       metrics.emitPageRead(tenantId, application);
-      if (!(tsStart <= end && start <= tsEnd)) { metrics.emitPageTimeSkipped(tenantId, application); offset += 8L + totalLen; continue; }
+      if (!(tsStart <= end && start <= tsEnd)) {
+        metrics.emitPageTimeSkipped(tenantId, application);
+        offset += 8L + totalLen;
+        continue;
+      }
 
       // Bloom check
       byte[] blenBytes;
-      try { blenBytes = fetcher.getRange(bucket, key, offset+8+16, offset+8+16+4); } catch (Exception e) { metrics.emitPageParseError(tenantId, application); offset += 8L + totalLen; continue; }
-      if (blenBytes == null || blenBytes.length < 4) { offset += 8L + totalLen; continue; }
+      try {
+        blenBytes = fetcher.getRange(bucket, key, offset + 8 + 16, offset + 8 + 16 + 4);
+      } catch (Exception e) {
+        metrics.emitPageParseError(tenantId, application);
+        offset += 8L + totalLen;
+        continue;
+      }
+      if (blenBytes == null || blenBytes.length < 4) {
+        offset += 8L + totalLen;
+        continue;
+      }
       int bloomLen = readIntBE(blenBytes, 0);
       byte[] bloomBytes;
-      try { bloomBytes = fetcher.getRange(bucket, key, offset+8+16+4, offset+8+16+4+bloomLen); } catch (Exception e) { metrics.emitPageParseError(tenantId, application); offset += 8L + totalLen; continue; }
       try {
-        BloomFilter<CharSequence> bloom = BloomFilter.readFrom(new java.io.ByteArrayInputStream(bloomBytes), Funnels.stringFunnel(StandardCharsets.UTF_8));
+        bloomBytes =
+            fetcher.getRange(bucket, key, offset + 8 + 16 + 4, offset + 8 + 16 + 4 + bloomLen);
+      } catch (Exception e) {
+        metrics.emitPageParseError(tenantId, application);
+        offset += 8L + totalLen;
+        continue;
+      }
+      try {
+        BloomFilter<CharSequence> bloom =
+            BloomFilter.readFrom(
+                new java.io.ByteArrayInputStream(bloomBytes),
+                Funnels.stringFunnel(StandardCharsets.UTF_8));
         metrics.emitBloomChecked(tenantId, application);
-        if (!bloom.mightContain(traceId)) { metrics.emitBloomMiss(tenantId, application); offset += 8L + totalLen; continue; }
+        if (!bloom.mightContain(traceId)) {
+          metrics.emitBloomMiss(tenantId, application);
+          offset += 8L + totalLen;
+          continue;
+        }
         metrics.emitBloomHit(tenantId, application);
-      } catch (IOException ioe) { metrics.emitPageParseError(tenantId, application); offset += 8L + totalLen; continue; }
+      } catch (IOException ioe) {
+        metrics.emitPageParseError(tenantId, application);
+        offset += 8L + totalLen;
+        continue;
+      }
 
       // Fetch full payload for CRC and parsing
       byte[] pagePayload;
-      try { pagePayload = fetcher.getRange(bucket, key, offset+8, offset+8+totalLen); } catch (Exception e) { metrics.emitPageParseError(tenantId, application); offset += 8L + totalLen; continue; }
-      if (!validateCrc(pagePayload, crc32)) { metrics.emitPageParseError(tenantId, application); offset += 8L + totalLen; continue; }
+      try {
+        pagePayload = fetcher.getRange(bucket, key, offset + 8, offset + 8 + totalLen);
+      } catch (Exception e) {
+        metrics.emitPageParseError(tenantId, application);
+        offset += 8L + totalLen;
+        continue;
+      }
+      if (!validateCrc(pagePayload, crc32)) {
+        metrics.emitPageParseError(tenantId, application);
+        offset += 8L + totalLen;
+        continue;
+      }
 
       int before = out.size();
       parsePayloadCollectByTraceId(pagePayload, start, end, traceId, out);
@@ -191,26 +289,62 @@ public class S3QueryProcessor implements TraceQueryProcessor {
     return out;
   }
 
-  private List<Span> scanFileForAttribute(String bucket, String key, long start, long end, String tenantId, String application, AttributeFilter filter) {
+  private List<Span> scanFileForAttribute(
+      String bucket,
+      String key,
+      long start,
+      long end,
+      String tenantId,
+      String application,
+      AttributeFilter filter) {
     List<Span> out = new ArrayList<>();
     long offset = 0;
     while (true) {
       byte[] hdr;
-      try { hdr = fetcher.getRange(bucket, key, offset, offset+8); } catch (Exception e) { log.debug("header fetch failed for {}:{}", bucket, key, e); break; }
+      try {
+        hdr = fetcher.getRange(bucket, key, offset, offset + 8);
+      } catch (Exception e) {
+        log.debug("header fetch failed for {}:{}", bucket, key, e);
+        break;
+      }
       if (hdr == null || hdr.length < 8) break; // EOF
       int totalLen = readIntBE(hdr, 0);
       int crc32 = readIntBE(hdr, 4);
 
       byte[] ts;
-      try { ts = fetcher.getRange(bucket, key, offset+8, offset+8+16); } catch (Exception e) { metrics.emitPageParseError(tenantId, application); offset += 8L + totalLen; continue; }
-      if (ts == null || ts.length < 16) { offset += 8L + totalLen; continue; }
-      long tsStart = readLongBE(ts, 0); long tsEnd = readLongBE(ts, 8);
+      try {
+        ts = fetcher.getRange(bucket, key, offset + 8, offset + 8 + 16);
+      } catch (Exception e) {
+        metrics.emitPageParseError(tenantId, application);
+        offset += 8L + totalLen;
+        continue;
+      }
+      if (ts == null || ts.length < 16) {
+        offset += 8L + totalLen;
+        continue;
+      }
+      long tsStart = readLongBE(ts, 0);
+      long tsEnd = readLongBE(ts, 8);
       metrics.emitPageRead(tenantId, application);
-      if (!(tsStart <= end && start <= tsEnd)) { metrics.emitPageTimeSkipped(tenantId, application); offset += 8L + totalLen; continue; }
+      if (!(tsStart <= end && start <= tsEnd)) {
+        metrics.emitPageTimeSkipped(tenantId, application);
+        offset += 8L + totalLen;
+        continue;
+      }
 
       byte[] pagePayload;
-      try { pagePayload = fetcher.getRange(bucket, key, offset+8, offset+8+totalLen); } catch (Exception e) { metrics.emitPageParseError(tenantId, application); offset += 8L + totalLen; continue; }
-      if (!validateCrc(pagePayload, crc32)) { metrics.emitPageParseError(tenantId, application); offset += 8L + totalLen; continue; }
+      try {
+        pagePayload = fetcher.getRange(bucket, key, offset + 8, offset + 8 + totalLen);
+      } catch (Exception e) {
+        metrics.emitPageParseError(tenantId, application);
+        offset += 8L + totalLen;
+        continue;
+      }
+      if (!validateCrc(pagePayload, crc32)) {
+        metrics.emitPageParseError(tenantId, application);
+        offset += 8L + totalLen;
+        continue;
+      }
 
       int before = out.size();
       parsePayloadCollectByAttribute(pagePayload, start, end, filter, out);
@@ -222,24 +356,49 @@ public class S3QueryProcessor implements TraceQueryProcessor {
     return out;
   }
 
-  private Optional<Span> findSpanInFile(String bucket, String key, long start, long end, String spanId, CancellationToken token) {
+  private Optional<Span> findSpanInFile(
+      String bucket, String key, long start, long end, String spanId, CancellationToken token) {
     long offset = 0;
     while (true) {
       if (token.isCancelled() || Thread.currentThread().isInterrupted()) return Optional.empty();
       byte[] hdr;
-      try { hdr = fetcher.getRange(bucket, key, offset, offset+8); } catch (Exception e) { break; }
+      try {
+        hdr = fetcher.getRange(bucket, key, offset, offset + 8);
+      } catch (Exception e) {
+        break;
+      }
       if (hdr == null || hdr.length < 8) break;
       int totalLen = readIntBE(hdr, 0);
       int crc32 = readIntBE(hdr, 4);
       byte[] ts;
-      try { ts = fetcher.getRange(bucket, key, offset+8, offset+8+16); } catch (Exception e) { offset += 8L + totalLen; continue; }
-      if (ts == null || ts.length < 16) { offset += 8L + totalLen; continue; }
-      long tsStart = readLongBE(ts, 0); long tsEnd = readLongBE(ts, 8);
-      if (!(tsStart <= end && start <= tsEnd)) { offset += 8L + totalLen; continue; }
+      try {
+        ts = fetcher.getRange(bucket, key, offset + 8, offset + 8 + 16);
+      } catch (Exception e) {
+        offset += 8L + totalLen;
+        continue;
+      }
+      if (ts == null || ts.length < 16) {
+        offset += 8L + totalLen;
+        continue;
+      }
+      long tsStart = readLongBE(ts, 0);
+      long tsEnd = readLongBE(ts, 8);
+      if (!(tsStart <= end && start <= tsEnd)) {
+        offset += 8L + totalLen;
+        continue;
+      }
 
       byte[] pagePayload;
-      try { pagePayload = fetcher.getRange(bucket, key, offset+8, offset+8+totalLen); } catch (Exception e) { offset += 8L + totalLen; continue; }
-      if (!validateCrc(pagePayload, crc32)) { offset += 8L + totalLen; continue; }
+      try {
+        pagePayload = fetcher.getRange(bucket, key, offset + 8, offset + 8 + totalLen);
+      } catch (Exception e) {
+        offset += 8L + totalLen;
+        continue;
+      }
+      if (!validateCrc(pagePayload, crc32)) {
+        offset += 8L + totalLen;
+        continue;
+      }
 
       Span found = parsePayloadFindSpanId(pagePayload, start, end, spanId);
       if (found != null) return Optional.of(found);
@@ -250,18 +409,30 @@ public class S3QueryProcessor implements TraceQueryProcessor {
 
   private static boolean validateCrc(byte[] pagePayload, int crc32Header) {
     try {
-      CRC32 crc = new CRC32(); crc.update(pagePayload); long computed = crc.getValue();
-      return ((int)(computed & 0xFFFFFFFFL)) == crc32Header;
-    } catch (Exception e) { return false; }
+      CRC32 crc = new CRC32();
+      crc.update(pagePayload);
+      long computed = crc.getValue();
+      return ((int) (computed & 0xFFFFFFFFL)) == crc32Header;
+    } catch (Exception e) {
+      return false;
+    }
   }
 
-  private static void parsePayloadCollectByTraceId(byte[] pagePayload, long start, long end, String traceId, List<Span> out) {
+  private static void parsePayloadCollectByTraceId(
+      byte[] pagePayload, long start, long end, String traceId, List<Span> out) {
     int pos = 0;
-    long tsStart = readLongBE(pagePayload, pos); pos += 8; long tsEnd = readLongBE(pagePayload, pos); pos += 8;
-    int bloomLen = readIntBE(pagePayload, pos); pos += 4; pos += bloomLen;
+    long tsStart = readLongBE(pagePayload, pos);
+    pos += 8;
+    long tsEnd = readLongBE(pagePayload, pos);
+    pos += 8;
+    int bloomLen = readIntBE(pagePayload, pos);
+    pos += 4;
+    pos += bloomLen;
     while (pos < pagePayload.length) {
-      int len = readIntBE(pagePayload, pos); pos += 4;
-      byte[] bytes = java.util.Arrays.copyOfRange(pagePayload, pos, pos+len); pos += len;
+      int len = readIntBE(pagePayload, pos);
+      pos += 4;
+      byte[] bytes = java.util.Arrays.copyOfRange(pagePayload, pos, pos + len);
+      pos += len;
       try {
         ExportTraceServiceRequest req = ExportTraceServiceRequest.parseFrom(bytes);
         for (ResourceSpans rs : req.getResourceSpansList()) {
@@ -272,17 +443,26 @@ public class S3QueryProcessor implements TraceQueryProcessor {
             }
           }
         }
-      } catch (Exception ignore) {}
+      } catch (Exception ignore) {
+      }
     }
   }
 
-  private static void parsePayloadCollectByAttribute(byte[] pagePayload, long start, long end, AttributeFilter filter, List<Span> out) {
+  private static void parsePayloadCollectByAttribute(
+      byte[] pagePayload, long start, long end, AttributeFilter filter, List<Span> out) {
     int pos = 0;
-    long tsStart = readLongBE(pagePayload, pos); pos += 8; long tsEnd = readLongBE(pagePayload, pos); pos += 8;
-    int bloomLen = readIntBE(pagePayload, pos); pos += 4; pos += bloomLen;
+    long tsStart = readLongBE(pagePayload, pos);
+    pos += 8;
+    long tsEnd = readLongBE(pagePayload, pos);
+    pos += 8;
+    int bloomLen = readIntBE(pagePayload, pos);
+    pos += 4;
+    pos += bloomLen;
     while (pos < pagePayload.length) {
-      int len = readIntBE(pagePayload, pos); pos += 4;
-      byte[] bytes = java.util.Arrays.copyOfRange(pagePayload, pos, pos+len); pos += len;
+      int len = readIntBE(pagePayload, pos);
+      pos += 4;
+      byte[] bytes = java.util.Arrays.copyOfRange(pagePayload, pos, pos + len);
+      pos += len;
       try {
         ExportTraceServiceRequest req = ExportTraceServiceRequest.parseFrom(bytes);
         for (ResourceSpans rs : req.getResourceSpansList()) {
@@ -293,43 +473,58 @@ public class S3QueryProcessor implements TraceQueryProcessor {
             }
           }
         }
-      } catch (Exception ignore) {}
+      } catch (Exception ignore) {
+      }
     }
   }
 
-  private static Span parsePayloadFindSpanId(byte[] pagePayload, long start, long end, String spanId) {
+  private static Span parsePayloadFindSpanId(
+      byte[] pagePayload, long start, long end, String spanId) {
     int pos = 0;
-    long tsStart = readLongBE(pagePayload, pos); pos += 8; long tsEnd = readLongBE(pagePayload, pos); pos += 8;
-    int bloomLen = readIntBE(pagePayload, pos); pos += 4; pos += bloomLen;
+    long tsStart = readLongBE(pagePayload, pos);
+    pos += 8;
+    long tsEnd = readLongBE(pagePayload, pos);
+    pos += 8;
+    int bloomLen = readIntBE(pagePayload, pos);
+    pos += 4;
+    pos += bloomLen;
     while (pos < pagePayload.length) {
-      int len = readIntBE(pagePayload, pos); pos += 4;
-      byte[] bytes = java.util.Arrays.copyOfRange(pagePayload, pos, pos+len); pos += len;
+      int len = readIntBE(pagePayload, pos);
+      pos += 4;
+      byte[] bytes = java.util.Arrays.copyOfRange(pagePayload, pos, pos + len);
+      pos += len;
       try {
         ExportTraceServiceRequest req = ExportTraceServiceRequest.parseFrom(bytes);
         for (ResourceSpans rs : req.getResourceSpansList()) {
           for (Object ss : getScopeOrInstrumentationSpans(rs)) {
             for (Span sp : getSpansFromScope(ss)) {
-              if (spanId.equals(bytesToHex(sp.getSpanId().toByteArray())) && spanOverlaps(sp, start, end)) return sp;
+              if (spanId.equals(bytesToHex(sp.getSpanId().toByteArray()))
+                  && spanOverlaps(sp, start, end)) return sp;
             }
           }
         }
-      } catch (Exception ignore) {}
+      } catch (Exception ignore) {
+      }
     }
     return null;
   }
 
   private static int readIntBE(byte[] b, int off) {
-    return ((b[off] & 0xFF) << 24) | ((b[off+1] & 0xFF) << 16) | ((b[off+2] & 0xFF) << 8) | (b[off+3] & 0xFF);
+    return ((b[off] & 0xFF) << 24)
+        | ((b[off + 1] & 0xFF) << 16)
+        | ((b[off + 2] & 0xFF) << 8)
+        | (b[off + 3] & 0xFF);
   }
+
   private static long readLongBE(byte[] b, int off) {
-    return ((long)(b[off] & 0xFF) << 56)
-        | ((long)(b[off+1] & 0xFF) << 48)
-        | ((long)(b[off+2] & 0xFF) << 40)
-        | ((long)(b[off+3] & 0xFF) << 32)
-        | ((long)(b[off+4] & 0xFF) << 24)
-        | ((long)(b[off+5] & 0xFF) << 16)
-        | ((long)(b[off+6] & 0xFF) << 8)
-        | ((long)(b[off+7] & 0xFF));
+    return ((long) (b[off] & 0xFF) << 56)
+        | ((long) (b[off + 1] & 0xFF) << 48)
+        | ((long) (b[off + 2] & 0xFF) << 40)
+        | ((long) (b[off + 3] & 0xFF) << 32)
+        | ((long) (b[off + 4] & 0xFF) << 24)
+        | ((long) (b[off + 5] & 0xFF) << 16)
+        | ((long) (b[off + 6] & 0xFF) << 8)
+        | ((long) (b[off + 7] & 0xFF));
   }
 
   private static boolean resourceMatches(ResourceSpans rs, AttributeFilter filter) {
@@ -337,13 +532,17 @@ public class S3QueryProcessor implements TraceQueryProcessor {
     for (KeyValue kv : res.getAttributesList()) {
       if (!kv.getKey().equals(filter.getName())) continue;
       String v = anyValueToString(kv.getValue());
-      if (filter.getPattern() != null) { if (filter.getPattern().matches(v)) return true; }
-      else if (filter.getValue() != null) { if (filter.getValue().equals(v)) return true; }
+      if (filter.getPattern() != null) {
+        if (filter.getPattern().matches(v)) return true;
+      } else if (filter.getValue() != null) {
+        if (filter.getValue().equals(v)) return true;
+      }
     }
     return false;
   }
 
   @Override
-  public void close() { pool.shutdown(); }
+  public void close() {
+    pool.shutdown();
+  }
 }
-

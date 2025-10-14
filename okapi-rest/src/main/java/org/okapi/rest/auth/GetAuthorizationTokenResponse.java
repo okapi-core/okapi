@@ -9,8 +9,8 @@ import lombok.Getter;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @Getter
-public class GetAuthorizationTokenResponse{
-    String authorizationToken;
-    Instant createdAt;
-    List<String> roles;
+public class GetAuthorizationTokenResponse {
+  String authorizationToken;
+  Instant createdAt;
+  List<String> roles;
 }

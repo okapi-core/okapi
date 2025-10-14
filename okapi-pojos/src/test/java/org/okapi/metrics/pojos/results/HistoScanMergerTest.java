@@ -30,7 +30,8 @@ public class HistoScanMergerTest {
     assertEquals(List.of(100f, 150f, 200f, 250f), merged.getUbs());
     int total = merged.getCounts().stream().mapToInt(i -> i).sum();
     assertEquals(40, total);
-    // Expect non-zero in head/interior reflecting redistribution; sanity check monotonic CDF via non-negative counts
+    // Expect non-zero in head/interior reflecting redistribution; sanity check monotonic CDF via
+    // non-negative counts
     for (int c : merged.getCounts()) assertTrue(c >= 0);
   }
 
@@ -41,4 +42,3 @@ public class HistoScanMergerTest {
     assertTrue(merged.getCounts().isEmpty());
   }
 }
-

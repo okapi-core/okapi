@@ -1,0 +1,17 @@
+server:
+  port: 8083
+
+sampling:
+  fraction: 1.0
+
+cas:
+  contact:
+    point: 127.0.0.1:9042
+    datacenter: datacenter1
+  traces:
+    keyspace: okapi_telemetry
+
+spring:
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: true

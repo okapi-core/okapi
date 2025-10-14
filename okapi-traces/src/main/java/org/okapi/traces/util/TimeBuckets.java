@@ -11,4 +11,3 @@ public final class TimeBuckets {
     return epochMillis / 60000L; // minutes since epoch
   }
 }
-

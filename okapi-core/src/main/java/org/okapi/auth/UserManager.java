@@ -3,11 +3,6 @@ package org.okapi.auth;
 import static org.okapi.validation.OkapiChecks.checkArgument;
 
 import com.google.common.collect.Lists;
-import org.okapi.rest.auth.AuthRequest;
-import org.okapi.rest.org.ListOrgsResponse;
-import org.okapi.rest.team.CreateTeamRequest;
-import org.okapi.rest.users.GetOrgUserView;
-import org.okapi.rest.users.GetUserMetadataResponse;
 import java.util.*;
 import lombok.AllArgsConstructor;
 import org.okapi.bcrypt.BCrypt;
@@ -22,6 +17,11 @@ import org.okapi.exceptions.NotFoundException;
 import org.okapi.exceptions.UnAuthorizedException;
 import org.okapi.metrics.IdCreationFailedException;
 import org.okapi.metrics.IdCreator;
+import org.okapi.rest.auth.AuthRequest;
+import org.okapi.rest.org.ListOrgsResponse;
+import org.okapi.rest.team.CreateTeamRequest;
+import org.okapi.rest.users.GetOrgUserView;
+import org.okapi.rest.users.GetUserMetadataResponse;
 import org.okapi.usermessages.UserFacingMessages;
 
 @AllArgsConstructor
@@ -40,16 +40,16 @@ public class UserManager {
       throw new BadRequestException(UserFacingMessages.NO_PASSWORD);
     }
     try {
-    var user =
-        usersDao.create(
-            request.getFirstName(),
-            request.getLastName(),
-            request.getEmail(),
-            request.getPassword());
-    afterSignUp(user.getUserId());
-    var loginToken = tokenManager.issueLoginToken(user.getUserId());
-    return loginToken;
-    }catch (UserAlreadyExistsException e){
+      var user =
+          usersDao.create(
+              request.getFirstName(),
+              request.getLastName(),
+              request.getEmail(),
+              request.getPassword());
+      afterSignUp(user.getUserId());
+      var loginToken = tokenManager.issueLoginToken(user.getUserId());
+      return loginToken;
+    } catch (UserAlreadyExistsException e) {
       throw new BadRequestException(UserFacingMessages.USER_ALREADY_EXISTS);
     }
   }
@@ -78,7 +78,7 @@ public class UserManager {
     return ListOrgsResponse.builder().orgs(orgs).build();
   }
 
-  private List<GetOrgUserView> listUserOrgsAux(String userId){
+  private List<GetOrgUserView> listUserOrgsAux(String userId) {
     var userRoles = Lists.newArrayList(usersDao.listRolesByUserId(userId));
     var orgs = new ArrayList<GetOrgUserView>();
     for (var role : userRoles) {
@@ -89,11 +89,11 @@ public class UserManager {
       if (org.isEmpty()) continue;
       var creator = org.get().getOrgCreator().equals(userId);
       orgs.add(
-              GetOrgUserView.builder()
-                      .isCreator(creator)
-                      .orgId(org.get().getOrgId())
-                      .orgName(org.get().getOrgName())
-                      .build());
+          GetOrgUserView.builder()
+              .isCreator(creator)
+              .orgId(org.get().getOrgId())
+              .orgName(org.get().getOrgName())
+              .build());
     }
 
     return orgs;

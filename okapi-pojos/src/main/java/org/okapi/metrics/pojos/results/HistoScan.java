@@ -1,13 +1,12 @@
 package org.okapi.metrics.pojos.results;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
-import java.util.List;
-
 @AllArgsConstructor
 @Value
-public class HistoScan extends Scan{
+public class HistoScan extends Scan {
   String universalPath;
   long start;
   long end;

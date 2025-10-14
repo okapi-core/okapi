@@ -9,8 +9,9 @@ import lombok.Getter;
 @Getter
 @Builder
 public class NodeMetadataResponse {
-    String ip;
-    String id;
-    @SerializedName("leader")
-    boolean leader;
+  String ip;
+  String id;
+
+  @SerializedName("leader")
+  boolean leader;
 }

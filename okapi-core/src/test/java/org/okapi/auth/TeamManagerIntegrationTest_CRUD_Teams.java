@@ -2,8 +2,6 @@ package org.okapi.auth;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.okapi.rest.org.UpdateTeamRequest;
-import org.okapi.rest.team.CreateTeamRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
@@ -13,6 +11,8 @@ import org.okapi.exceptions.UnAuthorizedException;
 import org.okapi.fixtures.Deduplicator;
 import org.okapi.fixtures.SingletonFactory;
 import org.okapi.metrics.IdCreationFailedException;
+import org.okapi.rest.org.UpdateTeamRequest;
+import org.okapi.rest.team.CreateTeamRequest;
 
 @Execution(ExecutionMode.CONCURRENT)
 public class TeamManagerIntegrationTest_CRUD_Teams {

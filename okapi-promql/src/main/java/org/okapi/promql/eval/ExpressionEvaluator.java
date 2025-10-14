@@ -67,7 +67,8 @@ public final class ExpressionEvaluator {
     var labelMatcher = new LabelMatchVisitor();
     var conditions = (MetricMatchCondition) labelMatcher.visit(tree);
     var matching =
-        discovery.expand(conditions.getMetricNameOrNull(), conditions.getLabelMatchers(), start, end);
+        discovery.expand(
+            conditions.getMetricNameOrNull(), conditions.getLabelMatchers(), start, end);
     return matching;
   }
 }

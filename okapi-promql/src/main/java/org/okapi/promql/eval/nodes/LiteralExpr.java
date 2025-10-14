@@ -6,8 +6,14 @@ import org.okapi.promql.eval.ScalarResult;
 
 // eval/nodes/LiteralExpr.java
 public final class LiteralExpr implements LogicalExpr {
-    private final float value;
-    public LiteralExpr(float value) { this.value = value; }
-    @Override public Evaluable lower() { return ctx -> new ScalarResult(value); }
-}
+  private final float value;
 
+  public LiteralExpr(float value) {
+    this.value = value;
+  }
+
+  @Override
+  public Evaluable lower() {
+    return ctx -> new ScalarResult(value);
+  }
+}

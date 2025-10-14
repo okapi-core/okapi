@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateTeamMemberRequest {
-    private String email;
-    private boolean reader;
-    private boolean writer;
-    private boolean admin;
+  private String email;
+  private boolean reader;
+  private boolean writer;
+  private boolean admin;
 }

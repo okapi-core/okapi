@@ -1,14 +1,13 @@
 // eval/ops/BinaryOpEval.java
 package org.okapi.promql.eval.ops;
 
+import java.util.*;
+import java.util.function.Function;
 import org.okapi.promql.eval.*;
+import org.okapi.promql.eval.VectorData.*;
 import org.okapi.promql.eval.exceptions.EvaluationException;
 import org.okapi.promql.eval.nodes.BinaryOpExpr;
 import org.okapi.promql.eval.nodes.MatchSpec;
-import org.okapi.promql.eval.VectorData.*;
-
-import java.util.*;
-import java.util.function.Function;
 
 /**
  * Implements arithmetic, comparisons (with/without 'bool'), and set ops (and/or/unless) with full

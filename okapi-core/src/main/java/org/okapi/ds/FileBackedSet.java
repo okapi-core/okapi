@@ -113,6 +113,5 @@ public class FileBackedSet implements PersistedSet<String> {
   }
 
   @Override
-  public void close() throws IOException {
-  }
+  public void close() throws IOException {}
 }

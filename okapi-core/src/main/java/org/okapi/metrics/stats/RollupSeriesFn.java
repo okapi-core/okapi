@@ -1,14 +1,13 @@
 package org.okapi.metrics.stats;
 
+import java.util.function.Function;
 import org.okapi.metrics.rollup.RollupSeries;
 
-import java.util.function.Function;
-
 public class RollupSeriesFn implements Function<Integer, RollupSeries<UpdatableStatistics>> {
-    @Override
-    public RollupSeries<UpdatableStatistics> apply(Integer integer) {
-        var statsSupplier = new KllStatSupplier();
-        var series = new RollupSeries<>(statsSupplier, integer);
-        return series;
-    }
+  @Override
+  public RollupSeries<UpdatableStatistics> apply(Integer integer) {
+    var statsSupplier = new KllStatSupplier();
+    var series = new RollupSeries<>(statsSupplier, integer);
+    return series;
+  }
 }

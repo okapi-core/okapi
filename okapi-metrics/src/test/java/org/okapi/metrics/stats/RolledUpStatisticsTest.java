@@ -39,7 +39,8 @@ public class RolledUpStatisticsTest {
 
   @ParameterizedTest
   @MethodSource("fuzzyTestDataConfigs")
-  public void testSerializeFuzzy(float base, float scale, int count) throws StatisticsFrozenException {
+  public void testSerializeFuzzy(float base, float scale, int count)
+      throws StatisticsFrozenException {
     var gen = OkapiTestUtils.genRandom(base, scale, count);
     var stats = new RolledUpStatistics(KllFloatsSketch.newHeapInstance(8));
     var ctx = new MetricsContext("trace");
@@ -85,5 +86,4 @@ public class RolledUpStatisticsTest {
     assert restoredSketch.getQuantile(0.99f) == sketch.getQuantile(0.99f)
         : "Expected quantile value is 1.5";
   }
-
 }

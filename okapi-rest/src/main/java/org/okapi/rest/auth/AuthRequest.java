@@ -1,6 +1,5 @@
 package org.okapi.rest.auth;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,8 +10,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @Builder
 public class AuthRequest {
-    String firstName;
-    String lastName;
-    String email;
-    String password;
+  String firstName;
+  String lastName;
+  String email;
+  String password;
 }

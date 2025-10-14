@@ -9,8 +9,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.okapi.traces.model.OkapiSpan;
-import org.okapi.traces.sampler.SamplingStrategy;
 import org.okapi.traces.page.BufferPoolManager;
+import org.okapi.traces.sampler.SamplingStrategy;
 import org.okapi.traces.storage.TraceRepository;
 import org.springframework.stereotype.Service;
 

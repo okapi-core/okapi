@@ -24,7 +24,9 @@ public class FileTraceQueryProcessor implements TraceQueryProcessor {
   private final ExecutorService pool;
   private final TraceQueryConfig config;
 
-  public FileTraceQueryProcessor(Path baseDir) { this(baseDir, TraceQueryConfig.builder().build()); }
+  public FileTraceQueryProcessor(Path baseDir) {
+    this(baseDir, TraceQueryConfig.builder().build());
+  }
 
   public FileTraceQueryProcessor(Path baseDir, TraceQueryConfig config) {
     this.locator = new TraceFileLocator(baseDir);
@@ -34,18 +36,24 @@ public class FileTraceQueryProcessor implements TraceQueryProcessor {
   }
 
   @Override
-  public List<Span> getSpans(long start, long end, String tenantId, String application, String traceId)
+  public List<Span> getSpans(
+      long start, long end, String tenantId, String application, String traceId)
       throws IOException {
     List<Path> files = locator.locate(tenantId, application, start, end);
     if (files.isEmpty()) return List.of();
     var metrics = new NoopMetricsEmitter();
     List<Callable<List<Span>>> tasks = new ArrayList<>();
     for (Path f : files) {
-      tasks.add(() -> reader.scanForTraceId(f, start, end, tenantId, application, traceId, metrics));
+      tasks.add(
+          () -> reader.scanForTraceId(f, start, end, tenantId, application, traceId, metrics));
     }
     List<Span> result = new ArrayList<>();
     for (Future<List<Span>> fut : invokeAll(tasks)) {
-      try { result.addAll(fut.get()); } catch (ExecutionException e) { log.warn("scan failed", e); }
+      try {
+        result.addAll(fut.get());
+      } catch (ExecutionException e) {
+        log.warn("scan failed", e);
+      }
     }
     result.sort(Comparator.comparingLong(Span::getStartTimeUnixNano));
     return result;
@@ -60,19 +68,25 @@ public class FileTraceQueryProcessor implements TraceQueryProcessor {
     var metrics = new NoopMetricsEmitter();
     List<Callable<List<Span>>> tasks = new ArrayList<>();
     for (Path f : files) {
-      tasks.add(() -> reader.scanForAttributeFilter(f, start, end, tenantId, application, filter, metrics));
+      tasks.add(
+          () ->
+              reader.scanForAttributeFilter(f, start, end, tenantId, application, filter, metrics));
     }
     List<Span> result = new ArrayList<>();
     for (Future<List<Span>> fut : invokeAll(tasks)) {
-      try { result.addAll(fut.get()); } catch (ExecutionException e) { log.warn("scan failed", e); }
+      try {
+        result.addAll(fut.get());
+      } catch (ExecutionException e) {
+        log.warn("scan failed", e);
+      }
     }
     result.sort(Comparator.comparingLong(Span::getStartTimeUnixNano));
     return result;
   }
 
   @Override
-  public List<Span> getTrace(long start, long end, String tenantId, String application, String spanId)
-      throws IOException {
+  public List<Span> getTrace(
+      long start, long end, String tenantId, String application, String spanId) throws IOException {
     List<Path> files = locator.locate(tenantId, application, start, end);
     if (files.isEmpty()) return List.of();
 
@@ -122,11 +136,16 @@ public class FileTraceQueryProcessor implements TraceQueryProcessor {
   }
 
   private List<Future> invokeAll(List<? extends Callable> tasks) {
-    try { return (List<Future>) pool.invokeAll((List) tasks); }
-    catch (InterruptedException e) { Thread.currentThread().interrupt(); return Collections.emptyList(); }
+    try {
+      return (List<Future>) pool.invokeAll((List) tasks);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      return Collections.emptyList();
+    }
   }
 
   @Override
-  public void close() { pool.shutdown(); }
+  public void close() {
+    pool.shutdown();
+  }
 }
-

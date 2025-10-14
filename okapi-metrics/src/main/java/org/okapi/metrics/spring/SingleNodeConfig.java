@@ -26,11 +26,12 @@ public class SingleNodeConfig {
   public ServiceRegistry serviceRegistryIso(@Autowired Node node) {
     return new IsolatedServiceRegistry(node);
   }
-  
+
   @Bean
   public LeaderJobs leaderJobsNoOp() {
     return new OwnLeaderJobs();
   }
+
   @Bean
   public FleetMetadata fleetMetadataIso() {
     return new InMemoryFleetMetadata();

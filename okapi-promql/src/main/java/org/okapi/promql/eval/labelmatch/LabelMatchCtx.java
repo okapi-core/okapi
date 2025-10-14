@@ -1,6 +1,5 @@
 package org.okapi.promql.eval.labelmatch;
 
-
 public abstract class LabelMatchCtx {
   public enum TYPE {
     LABEL_CONDITION,

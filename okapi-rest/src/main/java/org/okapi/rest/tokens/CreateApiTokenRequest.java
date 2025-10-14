@@ -7,9 +7,9 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public class CreateApiTokenRequest {
-    @SerializedName("canRead")
-    boolean canRead;
-    @SerializedName("canWrite")
-    boolean canWrite;
+  @SerializedName("canRead")
+  boolean canRead;
 
+  @SerializedName("canWrite")
+  boolean canWrite;
 }

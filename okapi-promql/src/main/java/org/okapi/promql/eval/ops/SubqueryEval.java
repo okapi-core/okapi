@@ -52,11 +52,12 @@ public final class SubqueryEval implements Evaluable {
           ts.add(smp.ts());
           vals.add(smp.value());
         }
-        GaugeScan gs = GaugeScan.builder()
-            .universalPath("")
-            .timestamps(Collections.unmodifiableList(ts))
-            .values(Collections.unmodifiableList(vals))
-            .build();
+        GaugeScan gs =
+            GaugeScan.builder()
+                .universalPath("")
+                .timestamps(Collections.unmodifiableList(ts))
+                .values(Collections.unmodifiableList(vals))
+                .build();
         out.add(new SeriesWindow(e.getKey(), gs));
       }
       return new RangeVectorResult(out);
@@ -69,11 +70,12 @@ public final class SubqueryEval implements Evaluable {
         if (scan instanceof GaugeScan gs) {
           List<Long> ts = new ArrayList<>(gs.getTimestamps().size());
           for (Long t : gs.getTimestamps()) ts.add(t + offset);
-          GaugeScan shiftedGs = GaugeScan.builder()
-              .universalPath(gs.getUniversalPath())
-              .timestamps(Collections.unmodifiableList(ts))
-              .values(gs.getValues())
-              .build();
+          GaugeScan shiftedGs =
+              GaugeScan.builder()
+                  .universalPath(gs.getUniversalPath())
+                  .timestamps(Collections.unmodifiableList(ts))
+                  .values(gs.getValues())
+                  .build();
           shifted.add(new SeriesWindow(w.id(), shiftedGs));
         } else {
           // For other scan types, leave as-is (or could handle shifting if needed)

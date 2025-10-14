@@ -1,5 +1,7 @@
 package org.okapi.staticserver.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import org.okapi.headers.CookiesAndHeaders;
 import org.okapi.rest.auth.AuthRequest;
 import org.okapi.rest.auth.TokenResponse;
@@ -7,8 +9,6 @@ import org.okapi.staticserver.AuthenticationServer;
 import org.okapi.staticserver.CookieConfig;
 import org.okapi.staticserver.ProxyServer;
 import org.okapi.staticserver.exceptions.BadRequestException;
-import jakarta.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpCookie;

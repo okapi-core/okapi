@@ -1,11 +1,10 @@
 package org.okapi.metrics;
 
-import org.awaitility.core.ConditionFactory;
+import static org.awaitility.Awaitility.await;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-
-import static org.awaitility.Awaitility.await;
+import org.awaitility.core.ConditionFactory;
 
 public class GlobalTestConfig {
 

@@ -7,8 +7,7 @@ import org.okapi.promql.parse.LabelMatcher;
 @AllArgsConstructor
 public class LabelCondition extends LabelMatchCtx {
 
-  @Getter
-  private LabelMatcher labelMatcher;
+  @Getter private LabelMatcher labelMatcher;
 
   @Override
   public TYPE getType() {

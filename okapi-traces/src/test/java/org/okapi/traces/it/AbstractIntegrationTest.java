@@ -37,9 +37,7 @@ public abstract class AbstractIntegrationTest {
             .withKeyspace(KEYSPACE)
             .build()) {
       InputStream in =
-          AbstractIntegrationTest.class
-              .getClassLoader()
-              .getResourceAsStream("schema.cql");
+          AbstractIntegrationTest.class.getClassLoader().getResourceAsStream("schema.cql");
       if (in == null) return;
       String cql =
           new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))
@@ -74,4 +72,3 @@ public abstract class AbstractIntegrationTest {
     }
   }
 }
-

@@ -6,10 +6,10 @@ import org.okapi.promql.parser.PromQLLexer;
 
 public class PromQLMain {
 
-    public static void main(String[] args){
-        var example = "day_of_month(timestamp(up{job=\"prometheus\"}))";
-        var stream = CharStreams.fromString(example);
-        var lexer = new PromQLLexer(stream);
-        var tokens = new CommonTokenStream(lexer);
-    }
+  public static void main(String[] args) {
+    var example = "day_of_month(timestamp(up{job=\"prometheus\"}))";
+    var stream = CharStreams.fromString(example);
+    var lexer = new PromQLLexer(stream);
+    var tokens = new CommonTokenStream(lexer);
+  }
 }

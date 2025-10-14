@@ -3,7 +3,6 @@ package org.okapi.auth;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.okapi.fixtures.Deduplicator.dedup;
 
-import org.okapi.rest.auth.AuthRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.okapi.data.exceptions.UserAlreadyExistsException;
@@ -12,6 +11,7 @@ import org.okapi.exceptions.NotFoundException;
 import org.okapi.exceptions.UnAuthorizedException;
 import org.okapi.fixtures.SingletonFactory;
 import org.okapi.metrics.IdCreationFailedException;
+import org.okapi.rest.auth.AuthRequest;
 import org.okapi.usermessages.UserFacingMessages;
 
 public class UserManagerIntegrationTest {

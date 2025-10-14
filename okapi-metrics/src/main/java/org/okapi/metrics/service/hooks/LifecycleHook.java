@@ -24,8 +24,7 @@ public class LifecycleHook implements SmartLifecycle {
 
   @Autowired ScheduledExecutorService scheduledExecutorService;
   @Autowired RocksStore rocksStore;
-  @Autowired
-  WriteBackSettings writeBackSettings;
+  @Autowired WriteBackSettings writeBackSettings;
 
   void startHandler() throws Exception {
     metricsHandler.onStart();

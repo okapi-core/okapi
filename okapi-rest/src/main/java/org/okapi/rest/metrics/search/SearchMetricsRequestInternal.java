@@ -6,9 +6,9 @@ import lombok.Getter;
 @Getter
 @Builder
 public class SearchMetricsRequestInternal {
-    // use the search term to be tenantId:pattern
-    String pattern;
-    String tenantId;
-    long startTime;
-    long endTime;
+  // use the search term to be tenantId:pattern
+  String pattern;
+  String tenantId;
+  long startTime;
+  long endTime;
 }

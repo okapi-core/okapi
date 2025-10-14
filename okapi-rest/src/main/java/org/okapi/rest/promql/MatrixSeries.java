@@ -10,9 +10,9 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class MatrixSeries {
-    @SerializedName("metric")
-    private Map<String, String> metric;
+  @SerializedName("metric")
+  private Map<String, String> metric;
 
-    @SerializedName("values")
-    private List<Sample> values;
+  @SerializedName("values")
+  private List<Sample> values;
 }

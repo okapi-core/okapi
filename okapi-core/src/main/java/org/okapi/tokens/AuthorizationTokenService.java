@@ -1,6 +1,11 @@
 package org.okapi.tokens;
 
 import com.google.common.collect.Lists;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import lombok.AllArgsConstructor;
 import org.okapi.auth.AccessManager;
 import org.okapi.auth.JwtClaims;
 import org.okapi.auth.RoleTemplates;
@@ -15,11 +20,6 @@ import org.okapi.rest.auth.GetAuthorizationTokenResponse;
 import org.okapi.rest.auth.ListAuthorizationTokensResponse;
 import org.okapi.rest.tokens.CreateApiTokenRequest;
 import org.okapi.validation.OkapiChecks;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public class AuthorizationTokenService {
@@ -123,5 +123,4 @@ public class AuthorizationTokenService {
     accessManager.checkUserIsTeamAdmin(userId, team.get().getOrgId(), team.get().getTeamId());
     authorizationTokenDao.deleteToken(authorizationToken);
   }
-
 }

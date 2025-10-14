@@ -1,11 +1,10 @@
 package org.okapi.metrics.sharding;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import lombok.AllArgsConstructor;
 import org.okapi.metrics.PathRegistry;
 import org.okapi.metrics.rocks.TarPackager;
-
-import java.io.IOException;
-import java.nio.file.Path;
 
 @AllArgsConstructor
 public class ShardPkgManager {

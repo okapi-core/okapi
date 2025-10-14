@@ -9,8 +9,8 @@ import lombok.Getter;
 @Getter
 @Builder
 public class GetUserMetadataResponse {
-    String firstName;
-    String lastName;
-    List<GetOrgUserView> orgs;
-    String email;
+  String firstName;
+  String lastName;
+  List<GetOrgUserView> orgs;
+  String email;
 }

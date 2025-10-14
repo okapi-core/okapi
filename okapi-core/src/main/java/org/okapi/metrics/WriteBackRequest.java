@@ -6,8 +6,8 @@ import org.okapi.metrics.stats.UpdatableStatistics;
 
 @Value
 public class WriteBackRequest {
-    MetricsContext context;
-    int shard;
-    String key;
-    UpdatableStatistics statistics;
+  MetricsContext context;
+  int shard;
+  String key;
+  UpdatableStatistics statistics;
 }

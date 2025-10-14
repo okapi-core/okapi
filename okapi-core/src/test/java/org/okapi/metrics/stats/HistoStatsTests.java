@@ -1,10 +1,10 @@
 package org.okapi.metrics.stats;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.google.common.primitives.Floats;
 import com.google.common.primitives.Ints;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class HistoStatsTests {
 
@@ -19,7 +19,7 @@ public class HistoStatsTests {
   }
 
   @Test
-  public void noBuckets(){
+  public void noBuckets() {
     var buckets = new float[] {};
     var counts = new int[] {1};
     var histoStats = new HistoStats(buckets, counts);
@@ -29,7 +29,7 @@ public class HistoStatsTests {
   }
 
   @Test
-  public void singleBucket(){
+  public void singleBucket() {
     var buckets = new float[] {20.f};
     var counts = new int[] {3, 1};
     var histoStats = new HistoStats(buckets, counts);

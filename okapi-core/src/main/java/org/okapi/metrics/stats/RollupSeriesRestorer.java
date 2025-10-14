@@ -7,6 +7,7 @@ import org.okapi.metrics.io.StreamReadingException;
 import org.okapi.metrics.rollup.RollupSeries;
 
 public interface RollupSeriesRestorer<T extends UpdatableStatistics> {
-    RollupSeries<T> restore(int shard, InputStream is) throws StreamReadingException, IOException;
-    RollupSeries<T> restore(int shard, Path checkpoint) throws StreamReadingException, IOException;
+  RollupSeries<T> restore(int shard, InputStream is) throws StreamReadingException, IOException;
+
+  RollupSeries<T> restore(int shard, Path checkpoint) throws StreamReadingException, IOException;
 }

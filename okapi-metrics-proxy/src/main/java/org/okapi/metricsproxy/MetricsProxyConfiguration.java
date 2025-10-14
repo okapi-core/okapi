@@ -54,7 +54,8 @@ public class MetricsProxyConfiguration {
 
   @Autowired Environment environment;
 
-  @Bean public ENV_TYPE env() {
+  @Bean
+  public ENV_TYPE env() {
     var profiles = environment.getActiveProfiles()[0];
     return ENV_TYPE.parse(profiles);
   }

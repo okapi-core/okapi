@@ -29,4 +29,3 @@ public class TraceByTime {
   long lastEndTimeMs;
   Boolean hasError; // optional
 }
-

@@ -1,13 +1,12 @@
 package org.okapi.rest.metrics.query;
 
-import org.okapi.metrics.pojos.AGG_TYPE;
-import org.okapi.metrics.pojos.RES_TYPE;
 import jakarta.validation.constraints.NotNull;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-
-import java.util.Map;
+import org.okapi.metrics.pojos.AGG_TYPE;
+import org.okapi.metrics.pojos.RES_TYPE;
 
 @AllArgsConstructor
 @Builder

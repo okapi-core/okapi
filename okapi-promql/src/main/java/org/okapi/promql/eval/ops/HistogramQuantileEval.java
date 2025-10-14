@@ -40,11 +40,13 @@ public final class HistogramQuantileEval implements Evaluable {
 
     // Group by label set to merge histograms across series with identical labels
     List<SeriesSample> out = new ArrayList<>();
-    var grouped = new LinkedHashMap<Map<String,String>, List<VectorData.SeriesWindow>>();
+    var grouped = new LinkedHashMap<Map<String, String>, List<VectorData.SeriesWindow>>();
     for (VectorData.SeriesWindow w : rv.data()) {
-      Map<String,String> key = new HashMap<>(w.id().labels().tags());
+      Map<String, String> key = new HashMap<>(w.id().labels().tags());
       key.remove("instance"); // merge across instances by default
-      grouped.computeIfAbsent(java.util.Collections.unmodifiableMap(key), k -> new ArrayList<>()).add(w);
+      grouped
+          .computeIfAbsent(java.util.Collections.unmodifiableMap(key), k -> new ArrayList<>())
+          .add(w);
     }
     for (var e : grouped.entrySet()) {
       List<HistoScan> toMerge = new ArrayList<>();
@@ -82,7 +84,10 @@ public final class HistogramQuantileEval implements Evaluable {
     int k = -1;
     for (int i = 0; i < counts.size(); i++) {
       long next = cum + counts.get(i);
-      if (target <= next) { k = i; break; }
+      if (target <= next) {
+        k = i;
+        break;
+      }
       cum = next;
     }
     if (k == -1) k = counts.size() - 1;
@@ -90,9 +95,11 @@ public final class HistogramQuantileEval implements Evaluable {
     int n = ubs.size(); // number of finite buckets
     float lower, upper;
     if (k == 0) {
-      lower = Float.NEGATIVE_INFINITY; upper = ubs.get(0);
+      lower = Float.NEGATIVE_INFINITY;
+      upper = ubs.get(0);
     } else if (k < n) {
-      lower = ubs.get(k - 1); upper = ubs.get(k);
+      lower = ubs.get(k - 1);
+      upper = ubs.get(k);
     } else { // k == n (the +inf bucket)
       lower = (n >= 1) ? ubs.get(n - 1) : Float.NEGATIVE_INFINITY;
       upper = Float.POSITIVE_INFINITY;

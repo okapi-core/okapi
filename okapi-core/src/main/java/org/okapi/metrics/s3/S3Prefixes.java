@@ -10,7 +10,7 @@ public class S3Prefixes {
   }
 
   public static final String hourlyPrefix(String tenantId, long epoch, int shard) {
-    return hourlyPrefixRoot(epoch, tenantId) + "/" + shard  + "/checkpoint.ckpt";
+    return hourlyPrefixRoot(epoch, tenantId) + "/" + shard + "/checkpoint.ckpt";
   }
 
   public static final String parquetPrefix(String tenantId, long epoch) {

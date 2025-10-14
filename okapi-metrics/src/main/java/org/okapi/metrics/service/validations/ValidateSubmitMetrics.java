@@ -1,14 +1,14 @@
 package org.okapi.metrics.service.validations;
 
+import static org.okapi.validation.OkapiChecks.checkArgument;
+
 import org.okapi.exceptions.BadRequestException;
 import org.okapi.rest.metrics.ExportMetricsRequest;
-import org.okapi.rest.metrics.payloads.Sum;
 import org.okapi.rest.metrics.payloads.Gauge;
 import org.okapi.rest.metrics.payloads.Histo;
 import org.okapi.rest.metrics.payloads.HistoPoint;
+import org.okapi.rest.metrics.payloads.Sum;
 import org.okapi.usermessages.UserFacingMessages;
-
-import static org.okapi.validation.OkapiChecks.checkArgument;
 
 public class ValidateSubmitMetrics {
 
@@ -50,7 +50,9 @@ public class ValidateSubmitMetrics {
         histo != null, () -> new BadRequestException(UserFacingMessages.HISTO_PAYLOAD_MISSING));
 
     var points = histo.getHistoPoints();
-    checkArgument(points != null, () -> new BadRequestException(UserFacingMessages.HISTO_LES_VALUES_REQUIRED));
+    checkArgument(
+        points != null,
+        () -> new BadRequestException(UserFacingMessages.HISTO_LES_VALUES_REQUIRED));
     for (HistoPoint pt : points) {
       var buckets = pt.getBuckets();
       var counts = pt.getBucketCounts();

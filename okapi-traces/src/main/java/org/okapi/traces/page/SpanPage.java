@@ -40,8 +40,7 @@ public final class SpanPage {
 
   public static SpanPage newEmpty(int expectedInsertions, double fpp) {
     var bloom =
-        BloomFilter.create(
-            Funnels.stringFunnel(StandardCharsets.UTF_8), expectedInsertions, fpp);
+        BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), expectedInsertions, fpp);
     return new SpanPage(bloom);
   }
 
@@ -99,7 +98,11 @@ public final class SpanPage {
       for (ExportTraceServiceRequest req : payloads) {
         sumPayloads += 4L + req.toByteArray().length; // length prefix + bytes
       }
-      return 8L + 8L + 4L + bloomBytes + sumPayloads; // tsStart + tsEnd + bloomLen + bloom + payloads
+      return 8L
+          + 8L
+          + 4L
+          + bloomBytes
+          + sumPayloads; // tsStart + tsEnd + bloomLen + bloom + payloads
     } catch (IOException e) {
       return -1L;
     }

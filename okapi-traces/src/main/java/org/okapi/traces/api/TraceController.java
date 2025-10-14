@@ -2,7 +2,6 @@ package org.okapi.traces.api;
 
 import java.util.List;
 import java.util.Map;
-
 import org.okapi.traces.model.OkapiSpan;
 import org.okapi.traces.service.TraceService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +20,16 @@ public class TraceController {
       @RequestHeader("X-Okapi-Tenant-Id") String tenant,
       @RequestHeader("X-Okapi-App") String application,
       @RequestBody String otlpTraces) {
-    validateTenant(tenant); validateApp(application);
+    validateTenant(tenant);
+    validateApp(application);
     // Parse JSON into OTLP ExportTraceServiceRequest then use buffer pool path
     int count;
     try {
-      var builder = io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest.newBuilder();
-      com.google.protobuf.util.JsonFormat.parser().ignoringUnknownFields().merge(otlpTraces, builder);
+      var builder =
+          io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest.newBuilder();
+      com.google.protobuf.util.JsonFormat.parser()
+          .ignoringUnknownFields()
+          .merge(otlpTraces, builder);
       var req = builder.build();
       // serialize back to bytes to reuse service method
       count = traceService.ingestOtelProtobuf(req.toByteArray(), tenant, application);
@@ -42,7 +45,8 @@ public class TraceController {
       @RequestHeader("X-Okapi-Tenant-Id") String tenant,
       @RequestHeader("X-Okapi-App") String application,
       @RequestBody byte[] body) {
-    validateTenant(tenant); validateApp(application);
+    validateTenant(tenant);
+    validateApp(application);
     int count = traceService.ingestOtelProtobuf(body, tenant, application);
     return ResponseEntity.ok(Map.of("ingested", count));
   }
@@ -50,8 +54,7 @@ public class TraceController {
   // List all spans for a trace
   @GetMapping("/{traceId}/spans")
   public List<OkapiSpan> getSpans(
-      @PathVariable String traceId,
-      @RequestHeader("X-Okapi-Tenant-Id") String tenant) {
+      @PathVariable String traceId, @RequestHeader("X-Okapi-Tenant-Id") String tenant) {
     validateTenant(tenant);
     return traceService.getSpans(traceId, tenant);
   }
@@ -59,8 +62,7 @@ public class TraceController {
   // Get span metadata by span-id
   @GetMapping("/span/{spanId}")
   public ResponseEntity<OkapiSpan> getSpan(
-      @PathVariable String spanId,
-      @RequestHeader("X-Okapi-Tenant-Id") String tenant) {
+      @PathVariable String spanId, @RequestHeader("X-Okapi-Tenant-Id") String tenant) {
     validateTenant(tenant);
     return traceService
         .getSpanById(spanId, tenant)

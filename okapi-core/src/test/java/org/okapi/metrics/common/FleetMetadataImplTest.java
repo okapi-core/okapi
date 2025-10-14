@@ -24,18 +24,17 @@ public class FleetMetadataImplTest {
   public void setup() {
     counters = new HashMap<>();
     retryPolicy = new ExponentialBackoffRetry(100, 2);
-    client =
-            CuratorFrameworkFactory.newClient("localhost:2181", retryPolicy);
+    client = CuratorFrameworkFactory.newClient("localhost:2181", retryPolicy);
     client.start();
     f = new FleetMetadataImpl(client, retryPolicy);
   }
 
   @Test
   public void testWritePathWithoutExists() throws Exception {
-     var uniquePath = "/path/to/id/" + UUID.randomUUID();
-     f.createParentsIfNeeded(uniquePath);
-     var exists = client.checkExists().forPath(uniquePath);
-     assertNotNull(exists);
+    var uniquePath = "/path/to/id/" + UUID.randomUUID();
+    f.createParentsIfNeeded(uniquePath);
+    var exists = client.checkExists().forPath(uniquePath);
+    assertNotNull(exists);
   }
 
   @Test
@@ -53,7 +52,7 @@ public class FleetMetadataImplTest {
     var counter = new DistributedAtomicInteger(client, counterPath, retryPolicy);
     counters.put(counterPath, counter);
     f.incCounter(counterPath);
-    
+
     var count = counter.get();
     assertTrue(count.succeeded());
     assertEquals(1, count.postValue());

@@ -14,4 +14,3 @@ public interface TypeHintsDao {
   @Select(customWhereClause = "tenant_id = :tenantId AND local_path = :localPath")
   TypeHints get(String tenantId, String localPath);
 }
-

@@ -32,10 +32,12 @@ public class PathSetTests {
   public void setup() {
     wal = walRoot.resolve("pathSet.wal");
     pathRegistry = Mockito.mock(PathRegistry.class);
-    Mockito.when(pathRegistry.pathSetWal(any())).thenAnswer((invocation) -> {
-      var shard = (Integer)invocation.getArgument(0);
-      return walRoot.resolve(Integer.toString(shard));
-    });
+    Mockito.when(pathRegistry.pathSetWal(any()))
+        .thenAnswer(
+            (invocation) -> {
+              var shard = (Integer) invocation.getArgument(0);
+              return walRoot.resolve(Integer.toString(shard));
+            });
 
     pathSet = new PathSet(pathRegistry, Sets.newHashSet(0));
   }

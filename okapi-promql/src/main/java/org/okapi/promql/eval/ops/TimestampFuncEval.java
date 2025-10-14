@@ -2,9 +2,9 @@ package org.okapi.promql.eval.ops;
 
 import lombok.AllArgsConstructor;
 import org.okapi.promql.eval.*;
+import org.okapi.promql.eval.VectorData.*;
 import org.okapi.promql.eval.exceptions.EvaluationException;
 import org.okapi.promql.eval.nodes.FunctionExpr;
-import org.okapi.promql.eval.VectorData.*;
 
 @AllArgsConstructor
 public class TimestampFuncEval implements Evaluable {

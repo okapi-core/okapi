@@ -6,9 +6,6 @@ import static org.okapi.data.dto.RelationGraphNode.RELATION_TYPE.*;
 import static org.okapi.data.dto.RelationGraphNode.makeEntityId;
 import static org.okapi.validation.OkapiChecks.checkArgument;
 
-import org.okapi.rest.dashboards.CreateDashboardRequest;
-import org.okapi.rest.dashboards.GetDashboardResponse;
-import org.okapi.rest.dashboards.UpdateDashboardRequest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -25,6 +22,9 @@ import org.okapi.data.dto.DashboardDto;
 import org.okapi.data.dto.RelationGraphNode;
 import org.okapi.data.exceptions.ResourceNotFoundException;
 import org.okapi.exceptions.UnAuthorizedException;
+import org.okapi.rest.dashboards.CreateDashboardRequest;
+import org.okapi.rest.dashboards.GetDashboardResponse;
+import org.okapi.rest.dashboards.UpdateDashboardRequest;
 
 @AllArgsConstructor
 public class DashboardService {

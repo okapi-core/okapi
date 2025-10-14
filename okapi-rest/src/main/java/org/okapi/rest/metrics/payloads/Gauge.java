@@ -8,6 +8,6 @@ import lombok.Value;
 @Value
 @Builder
 public class Gauge {
-    long[] ts;
-    float[] value;
+  long[] ts;
+  float[] value;
 }

@@ -61,8 +61,8 @@ public class ScanQueryProcessor {
   AccessManager accessManager;
   TeamsDao teamsDao;
 
-  public GetMetricsResponse getMetricsResponse(
-      String tempToken, GetGaugeRequest getGaugeRequest) throws Exception {
+  public GetMetricsResponse getMetricsResponse(String tempToken, GetGaugeRequest getGaugeRequest)
+      throws Exception {
     var userId = tokenManager.getUserId(tempToken);
     var teamId = getGaugeRequest.getTeam();
     var optionalTeamDto = teamsDao.get(teamId);
@@ -228,7 +228,11 @@ public class ScanQueryProcessor {
     }
     var startTime = hour * 3600 * 1000;
     var responseBuilder =
-        GetMetricsResponse.builder().aggregation(aggType).resolution(resType).name(metricName).tags(tags);
+        GetMetricsResponse.builder()
+            .aggregation(aggType)
+            .resolution(resType)
+            .name(metricName)
+            .tags(tags);
     switch (resType) {
       case SECONDLY:
         {
@@ -285,8 +289,7 @@ public class ScanQueryProcessor {
     var body = gson.toJson(internalRequest);
     var batchClient = HttpBatchClient.create(okHttpClient);
     var cutoffWindow = System.currentTimeMillis() - Duration.of(24, ChronoUnit.HOURS).toMillis();
-    var nodes =
-        zkRegistry.listNodes().stream().map(node -> "http://" + node.ip()).toList();
+    var nodes = zkRegistry.listNodes().stream().map(node -> "http://" + node.ip()).toList();
     var results =
         batchClient
             .broadcast(

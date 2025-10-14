@@ -1,9 +1,8 @@
 package org.okapi.metrics;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.IOException;
 import java.nio.file.Path;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class NoOpCheckpointUploader implements CheckpointUploaderDownloader {

@@ -18,7 +18,8 @@ public class PathSetSeriesDiscovery implements SeriesDiscovery {
   PathSet pathSet;
 
   @Override
-  public List<VectorData.SeriesId> expand(String metricOrNull, List<LabelMatcher> matchers, long st, long en) {
+  public List<VectorData.SeriesId> expand(
+      String metricOrNull, List<LabelMatcher> matchers, long st, long en) {
     var allMetrics = pathSet.list();
     var matches = new ArrayList<VectorData.SeriesId>();
     for (var entry : allMetrics.entrySet()) {
@@ -39,5 +40,4 @@ public class PathSetSeriesDiscovery implements SeriesDiscovery {
     }
     return matches;
   }
-
 }

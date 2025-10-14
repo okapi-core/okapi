@@ -1,6 +1,5 @@
 package org.okapi.rest.metrics.search;
 
-
 import lombok.*;
 
 @Builder
@@ -9,5 +8,5 @@ import lombok.*;
 @AllArgsConstructor
 @Getter
 public class SubmitMetricsResponse {
-    String message;
+  String message;
 }

@@ -2,10 +2,10 @@ package org.okapi.promql.eval.ops;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.okapi.promql.eval.*;
-import org.okapi.promql.eval.exceptions.EvaluationException;
 import org.okapi.metrics.pojos.results.GaugeScan;
 import org.okapi.metrics.pojos.results.Scan;
+import org.okapi.promql.eval.*;
+import org.okapi.promql.eval.exceptions.EvaluationException;
 
 public final class InstantizeEval implements Evaluable {
   private static final long DEFAULT_STALENESS_MS = 5 * 60_000L;

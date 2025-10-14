@@ -1,14 +1,13 @@
 package org.okapi.metrics.rollup;
 
-import org.okapi.metrics.pojos.RES_TYPE;
-import org.okapi.metrics.query.QueryProcessor;
-import org.okapi.metrics.query.QueryRecords;
-
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.function.BiFunction;
+import org.okapi.metrics.pojos.RES_TYPE;
+import org.okapi.metrics.query.QueryProcessor;
+import org.okapi.metrics.query.QueryRecords;
 
 public class RollupQueryProcessor implements QueryProcessor {
   @Override

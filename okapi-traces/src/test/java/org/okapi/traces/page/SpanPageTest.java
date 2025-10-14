@@ -33,8 +33,7 @@ public class SpanPageTest {
     long start = 1700000000000L;
     long end = start + 2500L;
     var payload =
-        oneSpanPayload(
-            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb", start, end);
+        oneSpanPayload("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb", start, end);
 
     var page = SpanPage.newEmpty(1000, 0.01);
     page.append(payload);

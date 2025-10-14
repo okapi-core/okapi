@@ -123,9 +123,12 @@ public class DaoTraceRepository implements TraceRepository {
   }
 
   @Override
-  public List<OkapiSpan> listSpansByDuration(String tenant, long startMillis, long endMillis, int limit) {
+  public List<OkapiSpan> listSpansByDuration(
+      String tenant, long startMillis, long endMillis, int limit) {
     List<OkapiSpan> result = new ArrayList<>();
-    for (long sec = TimeBuckets.secondBucket(startMillis); sec <= TimeBuckets.secondBucket(endMillis); sec++) {
+    for (long sec = TimeBuckets.secondBucket(startMillis);
+        sec <= TimeBuckets.secondBucket(endMillis);
+        sec++) {
       for (CasSpanByDuration row : dao.getSpansByDuration(tenant, sec)) {
         long start = row.getStartTimeMs();
         if (start < startMillis || start > endMillis) continue;
@@ -147,7 +150,9 @@ public class DaoTraceRepository implements TraceRepository {
   public Map<String, Object> listTracesByWindow(String tenant, long startMillis, long endMillis) {
     Set<String> traces = new HashSet<>();
     Set<String> errorTraces = new HashSet<>();
-    for (long sec = TimeBuckets.secondBucket(startMillis); sec <= TimeBuckets.secondBucket(endMillis); sec++) {
+    for (long sec = TimeBuckets.secondBucket(startMillis);
+        sec <= TimeBuckets.secondBucket(endMillis);
+        sec++) {
       for (TraceByTime t : dao.getTracesByTime(tenant, sec)) {
         traces.add(t.getTraceId());
       }
@@ -164,9 +169,12 @@ public class DaoTraceRepository implements TraceRepository {
   }
 
   @Override
-  public List<OkapiSpan> listErrorSpans(String tenant, long startMillis, long endMillis, int limit) {
+  public List<OkapiSpan> listErrorSpans(
+      String tenant, long startMillis, long endMillis, int limit) {
     List<OkapiSpan> result = new ArrayList<>();
-    for (long sec = TimeBuckets.secondBucket(startMillis); sec <= TimeBuckets.secondBucket(endMillis); sec++) {
+    for (long sec = TimeBuckets.secondBucket(startMillis);
+        sec <= TimeBuckets.secondBucket(endMillis);
+        sec++) {
       for (CasSpanByTime row : dao.getSpansByTimeAndStatus(tenant, sec, "ERROR")) {
         long start = row.getStartTimeMs();
         if (start < startMillis || start > endMillis) continue;
@@ -184,9 +192,12 @@ public class DaoTraceRepository implements TraceRepository {
   }
 
   @Override
-  public Map<Long, Map<String, Long>> spanHistogramByMinute(String tenant, long startMillis, long endMillis) {
+  public Map<Long, Map<String, Long>> spanHistogramByMinute(
+      String tenant, long startMillis, long endMillis) {
     Map<Long, Map<String, Long>> out = new TreeMap<>();
-    for (long sec = TimeBuckets.secondBucket(startMillis); sec <= TimeBuckets.secondBucket(endMillis); sec++) {
+    for (long sec = TimeBuckets.secondBucket(startMillis);
+        sec <= TimeBuckets.secondBucket(endMillis);
+        sec++) {
       // Fetch all rows for the second and roll them up
       for (CasSpanByTime row : dao.getSpansByTime(tenant, sec)) {
         long start = row.getStartTimeMs();
@@ -194,7 +205,9 @@ public class DaoTraceRepository implements TraceRepository {
         long minute = start / 60000L;
         String status = normalizeStatus(row.getStatusCode());
         Map<String, Long> m = out.computeIfAbsent(minute, k -> new HashMap<>());
-        m.put(status.equals("ERROR") ? "error" : "ok", m.getOrDefault(status.equals("ERROR") ? "error" : "ok", 0L) + 1);
+        m.put(
+            status.equals("ERROR") ? "error" : "ok",
+            m.getOrDefault(status.equals("ERROR") ? "error" : "ok", 0L) + 1);
       }
     }
     // fill empty minutes
@@ -249,4 +262,3 @@ public class DaoTraceRepository implements TraceRepository {
     return "UNSET";
   }
 }
-

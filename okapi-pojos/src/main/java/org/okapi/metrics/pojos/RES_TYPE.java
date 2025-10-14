@@ -1,8 +1,7 @@
 package org.okapi.metrics.pojos;
 
-import lombok.Getter;
-
 import java.util.Optional;
+import lombok.Getter;
 
 public enum RES_TYPE {
   SECONDLY("s"),

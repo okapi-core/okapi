@@ -11,8 +11,8 @@ import lombok.Getter;
 @Builder
 @EqualsAndHashCode
 public class SearchResult {
-    String tenantId;
-    String name;
-    Map<String, String> tags;
-    String type;
+  String tenantId;
+  String name;
+  Map<String, String> tags;
+  String type;
 }

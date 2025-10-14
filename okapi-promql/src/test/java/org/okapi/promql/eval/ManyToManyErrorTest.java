@@ -1,5 +1,8 @@
 package org.okapi.promql.eval;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.util.concurrent.Executors;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.junit.jupiter.api.Test;
@@ -8,10 +11,6 @@ import org.okapi.promql.TestFixtures;
 import org.okapi.promql.eval.exceptions.EvaluationException;
 import org.okapi.promql.parser.PromQLLexer;
 import org.okapi.promql.parser.PromQLParser;
-
-import java.util.concurrent.Executors;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ManyToManyErrorTest {
 

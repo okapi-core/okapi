@@ -19,8 +19,8 @@ import org.okapi.traces.model.OkapiSpan;
 /**
  * Integration tests for TraceRepository.
  *
- * These tests require a real FoundationDB instance reachable via the default cluster file.
- * If you want to skip these tests locally, set env var OKAPI_TRACES_IT to anything other than "1".
+ * <p>These tests require a real FoundationDB instance reachable via the default cluster file. If
+ * you want to skip these tests locally, set env var OKAPI_TRACES_IT to anything other than "1".
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @EnabledIfEnvironmentVariable(named = "OKAPI_TRACES_IT", matches = "1")
@@ -54,12 +54,13 @@ public class TraceRepositoryTests {
     byte[] trPrefix = Tuple.from("tr", tenant, app).pack();
     byte[] sidPrefix = Tuple.from("sid", tenant, app).pack();
     byte[] durPrefix = Tuple.from("dur", tenant, app).pack();
-    db.run(tr -> {
-      tr.clear(Range.startsWith(trPrefix));
-      tr.clear(Range.startsWith(sidPrefix));
-      tr.clear(Range.startsWith(durPrefix));
-      return null;
-    });
+    db.run(
+        tr -> {
+          tr.clear(Range.startsWith(trPrefix));
+          tr.clear(Range.startsWith(sidPrefix));
+          tr.clear(Range.startsWith(durPrefix));
+          return null;
+        });
   }
 
   @Test
@@ -68,8 +69,10 @@ public class TraceRepositoryTests {
 
     Instant base = nowRoundedToHour().toInstant().plusSeconds(5);
     OkapiSpan s1 = span(tenant, app, traceId, "s-1", null, base, base.plusMillis(100));
-    OkapiSpan s2 = span(tenant, app, traceId, "s-2", "s-1", base.plusMillis(1_000), base.plusMillis(2_000));
-    OkapiSpan s3 = span(tenant, app, traceId, "s-3", "s-1", base.plusMillis(2_500), base.plusMillis(2_900));
+    OkapiSpan s2 =
+        span(tenant, app, traceId, "s-2", "s-1", base.plusMillis(1_000), base.plusMillis(2_000));
+    OkapiSpan s3 =
+        span(tenant, app, traceId, "s-3", "s-1", base.plusMillis(2_500), base.plusMillis(2_900));
 
     repo.saveBatch(List.of(s1, s2, s3));
 
@@ -97,8 +100,10 @@ public class TraceRepositoryTests {
     OkapiSpan b1 = span(tenant, app, traceB, "b1", null, t0.plusMillis(20), t0.plusMillis(520));
 
     // Different app/tenant noise (should be ignored)
-    OkapiSpan otherApp = span(tenant, app + "-other", "trace-C", "x1", null, t0, t0.plusMillis(10_000));
-    OkapiSpan otherTenant = span(tenant + "-other", app, "trace-D", "y1", null, t0, t0.plusMillis(10_000));
+    OkapiSpan otherApp =
+        span(tenant, app + "-other", "trace-C", "x1", null, t0, t0.plusMillis(10_000));
+    OkapiSpan otherTenant =
+        span(tenant + "-other", app, "trace-D", "y1", null, t0, t0.plusMillis(10_000));
 
     repo.saveBatch(List.of(a1, a2, b1, otherApp, otherTenant));
 

@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @Builder
 public class CreateTeamRequest {
-    private String name; // The name of the team
-    private String description; // Optional, can be used to provide a description of the team
+  private String name; // The name of the team
+  private String description; // Optional, can be used to provide a description of the team
 }

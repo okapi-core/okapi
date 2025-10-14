@@ -8,7 +8,9 @@ import java.util.List;
 public class TraceFileLocator {
   private final Path baseDir;
 
-  public TraceFileLocator(Path baseDir) { this.baseDir = baseDir; }
+  public TraceFileLocator(Path baseDir) {
+    this.baseDir = baseDir;
+  }
 
   public List<Path> locate(String tenantId, String application, long startMillis, long endMillis) {
     long startBucket = startMillis / 3_600_000L;
@@ -21,4 +23,3 @@ public class TraceFileLocator {
     return files;
   }
 }
-

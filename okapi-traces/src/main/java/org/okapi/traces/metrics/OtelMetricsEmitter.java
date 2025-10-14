@@ -32,33 +32,53 @@ public class OtelMetricsEmitter implements MetricsEmitter {
   }
 
   @Override
-  public void emitPageRead(String tenantId, String application) { pageRead.add(1); }
+  public void emitPageRead(String tenantId, String application) {
+    pageRead.add(1);
+  }
 
   @Override
-  public void emitPageTimeSkipped(String tenantId, String application) { pageTimeSkipped.add(1); }
+  public void emitPageTimeSkipped(String tenantId, String application) {
+    pageTimeSkipped.add(1);
+  }
 
   @Override
-  public void emitBloomChecked(String tenantId, String application) { bloomChecked.add(1); }
+  public void emitBloomChecked(String tenantId, String application) {
+    bloomChecked.add(1);
+  }
 
   @Override
-  public void emitBloomHit(String tenantId, String application) { bloomHit.add(1); }
+  public void emitBloomHit(String tenantId, String application) {
+    bloomHit.add(1);
+  }
 
   @Override
-  public void emitBloomMiss(String tenantId, String application) { bloomMiss.add(1); }
+  public void emitBloomMiss(String tenantId, String application) {
+    bloomMiss.add(1);
+  }
 
   @Override
-  public void emitPageParsed(String tenantId, String application) { pageParsed.add(1); }
+  public void emitPageParsed(String tenantId, String application) {
+    pageParsed.add(1);
+  }
 
   @Override
-  public void emitPageParseError(String tenantId, String application) { pageParseError.add(1); }
+  public void emitPageParseError(String tenantId, String application) {
+    pageParseError.add(1);
+  }
 
   @Override
-  public void emitSpansMatched(String tenantId, String application, long count) { spansMatched.add(count); }
+  public void emitSpansMatched(String tenantId, String application, long count) {
+    spansMatched.add(count);
+  }
 
   @Override
-  public void emitTracefileWriteBytes(String tenantId, String application, long hourBucket, long bytes) { writeBytes.add(bytes); }
+  public void emitTracefileWriteBytes(
+      String tenantId, String application, long hourBucket, long bytes) {
+    writeBytes.add(bytes);
+  }
 
   @Override
-  public void emitTracefileWriteFailure(String tenantId, String application, long hourBucket) { writeFailures.add(1); }
+  public void emitTracefileWriteFailure(String tenantId, String application, long hourBucket) {
+    writeFailures.add(1);
+  }
 }
-

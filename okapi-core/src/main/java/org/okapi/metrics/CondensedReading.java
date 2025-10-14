@@ -6,6 +6,6 @@ import org.okapi.metrics.stats.RolledUpStatistics;
 
 @Value
 public class CondensedReading {
-    List<Integer> ts;
-    List<RolledUpStatistics> vals;
+  List<Integer> ts;
+  List<RolledUpStatistics> vals;
 }

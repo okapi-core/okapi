@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 public class TracesApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(TracesApplication.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(TracesApplication.class, args);
+  }
 }

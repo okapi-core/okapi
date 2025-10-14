@@ -69,7 +69,7 @@ public class RollupTestUtils {
   }
 
   public static ReadingAggregation applyReduction(
-          GaugeGenerator reading, AGG_TYPE aggType, RES_TYPE resType) {
+      GaugeGenerator reading, AGG_TYPE aggType, RES_TYPE resType) {
     return switch (aggType) {
       case MIN -> reading.minReduction(resType);
       case MAX -> reading.maxReduction(resType);

@@ -1,9 +1,9 @@
 package org.okapi.promql;
 
-import lombok.AllArgsConstructor;
-import org.okapi.promql.eval.VectorData.*;
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import org.okapi.promql.eval.VectorData.*;
 
 public class TestFixtures {
   @AllArgsConstructor

@@ -43,7 +43,11 @@ public class CasPromQlTests extends CasTesting {
   private static final String METRIC_C = "metricC"; // counter
 
   TestResourceFactory resourceFactory;
-  Node node = new Node(CasGaugeTests.class.getSimpleName(), "localhost:1001", NodeState.METRICS_CONSUMPTION_START);
+  Node node =
+      new Node(
+          CasGaugeTests.class.getSimpleName(),
+          "localhost:1001",
+          NodeState.METRICS_CONSUMPTION_START);
 
   long now;
   long start;
@@ -110,7 +114,13 @@ public class CasPromQlTests extends CasTesting {
                 Histo.builder()
                     .histoPoints(
                         histoGen.getReadings().stream()
-                            .map(r -> new HistoPoint(r.start(), r.end(), Floats.toArray(histoBuckets), Ints.toArray(r.counts())))
+                            .map(
+                                r ->
+                                    new HistoPoint(
+                                        r.start(),
+                                        r.end(),
+                                        Floats.toArray(histoBuckets),
+                                        Ints.toArray(r.counts())))
                             .toList())
                     .build())
             .build();
@@ -151,19 +161,36 @@ public class CasPromQlTests extends CasTesting {
     long en = now;
 
     // Simple equals label match (metricA with job=api)
-    var res1 = discovery.expand(METRIC_A, List.of(new LabelMatcher("job", LabelOp.EQ, "api")), st, en);
+    var res1 =
+        discovery.expand(METRIC_A, List.of(new LabelMatcher("job", LabelOp.EQ, "api")), st, en);
     assertEquals(2, res1.size());
 
     // Regex on instance
-    var res2 = discovery.expand(METRIC_A, List.of(new LabelMatcher("instance", LabelOp.RE, "i[12]")), st, en);
+    var res2 =
+        discovery.expand(
+            METRIC_A, List.of(new LabelMatcher("instance", LabelOp.RE, "i[12]")), st, en);
     assertEquals(2, res2.size());
 
     // Negative regex to exclude env=prod
-    var res3 = discovery.expand(null, List.of(new LabelMatcher("job", LabelOp.EQ, "web"), new LabelMatcher("env", LabelOp.NRE, "prod")), st, en);
+    var res3 =
+        discovery.expand(
+            null,
+            List.of(
+                new LabelMatcher("job", LabelOp.EQ, "web"),
+                new LabelMatcher("env", LabelOp.NRE, "prod")),
+            st,
+            en);
     assertEquals(0, res3.size());
 
     // __name__ matching via label
-    var res4 = discovery.expand(null, List.of(new LabelMatcher("__name__", LabelOp.EQ, METRIC_B), new LabelMatcher("env", LabelOp.EQ, "prod")), st, en);
+    var res4 =
+        discovery.expand(
+            null,
+            List.of(
+                new LabelMatcher("__name__", LabelOp.EQ, METRIC_B),
+                new LabelMatcher("env", LabelOp.EQ, "prod")),
+            st,
+            en);
     assertEquals(1, res4.size());
     VectorData.SeriesId id = res4.get(0);
     assertEquals(METRIC_B, id.metric());

@@ -20,10 +20,12 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class MultiplexingTraceQueryProcessor implements TraceQueryProcessor {
   private final List<TraceQueryProcessor> processors;
-  private final ExecutorService pool = Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors()));
+  private final ExecutorService pool =
+      Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors()));
 
   @Override
-  public List<Span> getSpans(long start, long end, String tenantId, String application, String traceId)
+  public List<Span> getSpans(
+      long start, long end, String tenantId, String application, String traceId)
       throws IOException {
     List<Callable<List<Span>>> tasks = new ArrayList<>();
     for (TraceQueryProcessor p : processors) {
@@ -33,7 +35,8 @@ public class MultiplexingTraceQueryProcessor implements TraceQueryProcessor {
   }
 
   @Override
-  public List<Span> getSpans(long start, long end, String tenantId, String application, AttributeFilter filter)
+  public List<Span> getSpans(
+      long start, long end, String tenantId, String application, AttributeFilter filter)
       throws IOException {
     List<Callable<List<Span>>> tasks = new ArrayList<>();
     for (TraceQueryProcessor p : processors) {
@@ -43,8 +46,8 @@ public class MultiplexingTraceQueryProcessor implements TraceQueryProcessor {
   }
 
   @Override
-  public List<Span> getTrace(long start, long end, String tenantId, String application, String spanId)
-      throws IOException {
+  public List<Span> getTrace(
+      long start, long end, String tenantId, String application, String spanId) throws IOException {
     List<Callable<List<Span>>> tasks = new ArrayList<>();
     for (TraceQueryProcessor p : processors) {
       tasks.add(() -> p.getTrace(start, end, tenantId, application, spanId));
@@ -93,9 +96,11 @@ public class MultiplexingTraceQueryProcessor implements TraceQueryProcessor {
   @Override
   public void close() {
     for (TraceQueryProcessor p : processors) {
-      try { p.close(); } catch (Exception ignored) {}
+      try {
+        p.close();
+      } catch (Exception ignored) {
+      }
     }
     pool.shutdown();
   }
 }
-

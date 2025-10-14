@@ -4,9 +4,9 @@ import org.okapi.promql.eval.EvalContext;
 import org.okapi.promql.eval.Evaluable;
 import org.okapi.promql.eval.ExpressionResult;
 import org.okapi.promql.eval.InstantVectorResult;
+import org.okapi.promql.eval.VectorData.*;
 import org.okapi.promql.eval.exceptions.EvaluationException;
 import org.okapi.promql.eval.nodes.FunctionExpr;
-import org.okapi.promql.eval.VectorData.*;
 
 public class AbsentEval implements Evaluable {
   private final FunctionExpr fn;

@@ -9,11 +9,16 @@ public class TraceQueryService implements AutoCloseable {
 
   private final TraceQueryProcessor processor;
 
-  public TraceQueryService(Path baseDir) { this.processor = new FileTraceQueryProcessor(baseDir); }
+  public TraceQueryService(Path baseDir) {
+    this.processor = new FileTraceQueryProcessor(baseDir);
+  }
 
-  public TraceQueryService(TraceQueryProcessor processor) { this.processor = processor; }
+  public TraceQueryService(TraceQueryProcessor processor) {
+    this.processor = processor;
+  }
 
-  public List<Span> getSpans(long start, long end, String tenantId, String application, String traceId)
+  public List<Span> getSpans(
+      long start, long end, String tenantId, String application, String traceId)
       throws IOException {
     return processor.getSpans(start, end, tenantId, application, traceId);
   }
@@ -24,13 +29,16 @@ public class TraceQueryService implements AutoCloseable {
     return processor.getSpans(start, end, tenantId, application, filter);
   }
 
-  public List<Span> getTrace(long start, long end, String tenantId, String application, String spanId)
-      throws IOException {
+  public List<Span> getTrace(
+      long start, long end, String tenantId, String application, String spanId) throws IOException {
     return processor.getTrace(start, end, tenantId, application, spanId);
   }
 
   @Override
   public void close() {
-    try { processor.close(); } catch (Exception ignored) {}
+    try {
+      processor.close();
+    } catch (Exception ignored) {
+    }
   }
 }

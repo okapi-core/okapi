@@ -18,4 +18,3 @@ public interface TraceQueryProcessor extends AutoCloseable {
   @Override
   default void close() {}
 }
-

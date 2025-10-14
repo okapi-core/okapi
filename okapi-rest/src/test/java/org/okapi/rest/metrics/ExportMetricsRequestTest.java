@@ -57,8 +57,7 @@ public class ExportMetricsRequestTest {
   @Test
   public void allArgsConstructorSortsTags() {
     ExportMetricsRequest r =
-        new ExportMetricsRequest(
-            "t", "m", unsortedTags(), MetricType.GAUGE, null, null, null);
+        new ExportMetricsRequest("t", "m", unsortedTags(), MetricType.GAUGE, null, null, null);
     assertNotNull(r.getTags());
     assertTrue(r.getTags() instanceof TreeMap);
     assertEquals(List.of("a", "b", "c"), keys(r.getTags()));
@@ -68,9 +67,9 @@ public class ExportMetricsRequestTest {
   public void jsonDeserializationUsesSortedTags() throws Exception {
     String json =
         "{"
-            + "\"tenantId\":\"t\"," 
-            + "\"metricName\":\"m\"," 
-            + "\"type\":\"GAUGE\"," 
+            + "\"tenantId\":\"t\","
+            + "\"metricName\":\"m\","
+            + "\"type\":\"GAUGE\","
             + "\"tags\":{\"b\":\"2\",\"a\":\"1\",\"c\":\"3\"}"
             + "}";
     ObjectMapper mapper = new ObjectMapper();
@@ -81,4 +80,3 @@ public class ExportMetricsRequestTest {
     assertEquals(List.of("a", "b", "c"), keys(r.getTags()));
   }
 }
-

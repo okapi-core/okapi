@@ -59,4 +59,3 @@ final class TraceSpanUtils {
     return sb.toString();
   }
 }
-

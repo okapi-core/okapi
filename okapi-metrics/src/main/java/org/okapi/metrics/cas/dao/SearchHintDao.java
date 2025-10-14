@@ -8,9 +8,11 @@ import org.okapi.metrics.cas.dto.SearchHints;
 
 @Dao
 public interface SearchHintDao {
-    @Insert
-    void insert(SearchHints searchHints);
+  @Insert
+  void insert(SearchHints searchHints);
 
-    @Select(customWhereClause = "tenant_id = :tenantId AND shard_key = :shardKey AND start_minute >= :start AND start_minute <= :end")
-    PagingIterable<SearchHints> scan(String tenantId, int shardKey, long start, long end);
+  @Select(
+      customWhereClause =
+          "tenant_id = :tenantId AND shard_key = :shardKey AND start_minute >= :start AND start_minute <= :end")
+  PagingIterable<SearchHints> scan(String tenantId, int shardKey, long start, long end);
 }

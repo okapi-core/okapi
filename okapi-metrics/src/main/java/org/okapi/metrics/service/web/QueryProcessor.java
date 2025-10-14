@@ -13,7 +13,8 @@ import org.rocksdb.RocksDBException;
 public interface QueryProcessor {
   GetMetricsResponse getMetricsResponse(GetMetricsRequest request) throws Exception;
 
-  SearchMetricsResponse searchMetricsResponse(SearchMetricsRequestInternal searchMetricsRequest) throws BadRequestException, RocksDBException, IOException;
+  SearchMetricsResponse searchMetricsResponse(SearchMetricsRequestInternal searchMetricsRequest)
+      throws BadRequestException, RocksDBException, IOException;
 
   ListMetricsResponse listMetricsResponse(ListMetricsRequest request);
 }

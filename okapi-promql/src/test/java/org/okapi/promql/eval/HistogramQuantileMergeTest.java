@@ -42,7 +42,8 @@ public class HistogramQuantileMergeTest {
     var evaluator = new ExpressionEvaluator(client, discovery, exec, merger);
 
     String promql = "histogram_quantile(0.5, latency_histo[2m])";
-    var parser = new PromQLParser(new CommonTokenStream(new PromQLLexer(CharStreams.fromString(promql))));
+    var parser =
+        new PromQLParser(new CommonTokenStream(new PromQLLexer(CharStreams.fromString(promql))));
 
     var res = evaluator.evaluate(promql, t1, t3, step, parser);
     assertEquals(ValueType.INSTANT_VECTOR, res.type());

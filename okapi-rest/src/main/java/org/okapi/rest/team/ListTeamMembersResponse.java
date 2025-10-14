@@ -1,8 +1,7 @@
 package org.okapi.rest.team;
 
-import lombok.*;
-
 import java.util.List;
+import lombok.*;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -10,8 +9,8 @@ import java.util.List;
 @Setter
 @Builder
 public class ListTeamMembersResponse {
-    private String teamId;
-    List<String> admins;
-    List<String> writers;
-    List<String> readers;
+  private String teamId;
+  List<String> admins;
+  List<String> writers;
+  List<String> readers;
 }

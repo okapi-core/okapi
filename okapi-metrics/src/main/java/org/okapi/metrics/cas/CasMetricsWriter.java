@@ -65,7 +65,7 @@ public class CasMetricsWriter implements MetricsWriter {
     }
   }
 
-  protected void handleTypeHints(ExportMetricsRequest request){
+  protected void handleTypeHints(ExportMetricsRequest request) {
     var localPath = MetricPaths.localPath(request.getMetricName(), request.getTags());
     var tenant = request.getTenantId();
     String metricType =

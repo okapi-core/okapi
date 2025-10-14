@@ -1,11 +1,10 @@
 package org.okapi.metrics.service;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 import org.okapi.metrics.SharedMessageBox;
 import org.okapi.metrics.WriteBackRequest;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class ServiceControllerImpl implements ServiceController {

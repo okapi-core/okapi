@@ -7,6 +7,9 @@ import static org.okapi.validation.OkapiChecks.checkArgument;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
+import java.util.*;
+import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
 import org.okapi.data.dao.OrgDao;
 import org.okapi.data.dao.RelationGraphDao;
 import org.okapi.data.dao.UsersDao;
@@ -17,9 +20,6 @@ import org.okapi.exceptions.UnAuthorizedException;
 import org.okapi.rest.org.*;
 import org.okapi.rest.users.GetOrgUserView;
 import org.okapi.usermessages.UserFacingMessages;
-import java.util.*;
-import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public class OrgManager {

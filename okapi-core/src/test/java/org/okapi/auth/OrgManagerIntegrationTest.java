@@ -4,10 +4,6 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.okapi.auth.TestCommons.addToOrg;
 
-import org.okapi.rest.auth.AuthRequest;
-import org.okapi.rest.org.CreateOrgMemberRequest;
-import org.okapi.rest.org.DeleteOrgMemberRequest;
-import org.okapi.rest.org.UpdateOrgRequest;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -18,6 +14,10 @@ import org.okapi.exceptions.NotFoundException;
 import org.okapi.exceptions.UnAuthorizedException;
 import org.okapi.fixtures.Deduplicator;
 import org.okapi.fixtures.SingletonFactory;
+import org.okapi.rest.auth.AuthRequest;
+import org.okapi.rest.org.CreateOrgMemberRequest;
+import org.okapi.rest.org.DeleteOrgMemberRequest;
+import org.okapi.rest.org.UpdateOrgRequest;
 
 public class OrgManagerIntegrationTest {
 

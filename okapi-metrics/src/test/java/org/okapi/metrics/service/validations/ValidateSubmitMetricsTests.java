@@ -106,8 +106,7 @@ public class ValidateSubmitMetricsTests {
 
   @Test
   public void histo_negative_value_throws() {
-    var pt =
-        new HistoPoint(0L, 1000L, new float[] {0.1f, 0.2f}, new int[] {1, -1, 2});
+    var pt = new HistoPoint(0L, 1000L, new float[] {0.1f, 0.2f}, new int[] {1, -1, 2});
     var histo = new Histo(java.util.List.of(pt));
     var req =
         ExportMetricsRequest.builder()
@@ -123,8 +122,7 @@ public class ValidateSubmitMetricsTests {
 
   @Test
   public void histo_valid_passes() {
-    var pt =
-        new HistoPoint(0L, 1000L, new float[] {0.1f, 0.2f}, new int[] {1, 2, 3});
+    var pt = new HistoPoint(0L, 1000L, new float[] {0.1f, 0.2f}, new int[] {1, 2, 3});
     var histo = new Histo(java.util.List.of(pt));
     var req =
         ExportMetricsRequest.builder()

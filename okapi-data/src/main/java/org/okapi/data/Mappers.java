@@ -1,15 +1,14 @@
 package org.okapi.data;
 
+import java.util.List;
+import java.util.Objects;
+import org.okapi.auth.RoleTemplates;
+import org.okapi.data.dto.*;
 import org.okapi.rest.auth.GetAuthorizationTokenResponse;
 import org.okapi.rest.dashboards.GetDashboardResponse;
 import org.okapi.rest.team.GetTeamResponse;
 import org.okapi.rest.users.GetOrgUserView;
 import org.okapi.rest.users.GetUserMetadataResponse;
-import org.okapi.auth.RoleTemplates;
-import org.okapi.data.dto.*;
-
-import java.util.List;
-import java.util.Objects;
 
 public class Mappers {
   public static GetTeamResponse.GetTeamResponseBuilder mapDtoToBuilder(TeamDto dto) {
@@ -34,7 +33,7 @@ public class Mappers {
   }
 
   public static GetUserMetadataResponse buildUserMetadataResponse(
-          List<GetOrgUserView> userOrgs, UserDto userDto) {
+      List<GetOrgUserView> userOrgs, UserDto userDto) {
     return GetUserMetadataResponse.builder()
         .orgs(userOrgs)
         .firstName(userDto.getFirstName())

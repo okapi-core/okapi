@@ -1,20 +1,19 @@
 package org.okapi.promql.eval;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.Set;
+import java.util.concurrent.Executors;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.junit.jupiter.api.Test;
 import org.okapi.promql.MockStatsMerger;
 import org.okapi.promql.TestFixtures;
+import org.okapi.promql.eval.VectorData.*;
 import org.okapi.promql.eval.exceptions.EvaluationException;
 import org.okapi.promql.parser.PromQLLexer;
 import org.okapi.promql.parser.PromQLParser;
-import org.okapi.promql.eval.VectorData.*;
-
-import java.util.Set;
-import java.util.concurrent.Executors;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class RangeVectorBasicsTest {
 
@@ -142,7 +141,10 @@ public class RangeVectorBasicsTest {
     var valList = gs.getValues();
     int idx = -1;
     for (int i = 0; i < tsList.size(); i++) {
-      if (tsList.get(i) == ts) { idx = i; break; }
+      if (tsList.get(i) == ts) {
+        idx = i;
+        break;
+      }
     }
     if (idx == -1) {
       throw new AssertionError("missing point @ ts=" + ts + " in " + w.id());

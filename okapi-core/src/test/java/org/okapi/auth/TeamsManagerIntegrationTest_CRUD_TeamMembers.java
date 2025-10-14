@@ -5,10 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.okapi.auth.TestCommons.addToOrg;
 
 import com.google.common.collect.Lists;
-import org.okapi.rest.auth.AuthRequest;
-import org.okapi.rest.team.CreateTeamMemberRequest;
-import org.okapi.rest.team.CreateTeamRequest;
-import org.okapi.rest.team.GetTeamResponse;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +20,10 @@ import org.okapi.exceptions.UnAuthorizedException;
 import org.okapi.fixtures.Deduplicator;
 import org.okapi.fixtures.SingletonFactory;
 import org.okapi.metrics.IdCreationFailedException;
+import org.okapi.rest.auth.AuthRequest;
+import org.okapi.rest.team.CreateTeamMemberRequest;
+import org.okapi.rest.team.CreateTeamRequest;
+import org.okapi.rest.team.GetTeamResponse;
 
 @Execution(ExecutionMode.CONCURRENT)
 public class TeamsManagerIntegrationTest_CRUD_TeamMembers {

@@ -1,11 +1,10 @@
 package org.okapi.promql.eval;
 
 // eval/EvalContext.java
+import java.util.concurrent.*;
 import org.okapi.promql.eval.ts.RESOLUTION;
 import org.okapi.promql.eval.ts.SeriesDiscovery;
 import org.okapi.promql.eval.ts.TsClient;
-
-import java.util.concurrent.*;
 
 public final class EvalContext {
   public final long startMs, endMs, stepMs;

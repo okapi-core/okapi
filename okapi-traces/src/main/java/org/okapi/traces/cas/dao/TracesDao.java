@@ -47,4 +47,3 @@ public interface TracesDao {
   @Select(customWhereClause = "tenant_id = :tenantId AND bucket_second = :bucketSecond")
   PagingIterable<TraceByTime> getTracesByTime(String tenantId, long bucketSecond);
 }
-

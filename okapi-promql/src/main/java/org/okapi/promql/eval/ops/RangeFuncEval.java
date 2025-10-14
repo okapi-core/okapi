@@ -3,8 +3,8 @@ package org.okapi.promql.eval.ops;
 import java.util.*;
 import lombok.AllArgsConstructor;
 import org.okapi.metrics.pojos.results.GaugeScan;
-import org.okapi.metrics.pojos.results.SumScan;
 import org.okapi.metrics.pojos.results.Scan;
+import org.okapi.metrics.pojos.results.SumScan;
 import org.okapi.promql.eval.*;
 import org.okapi.promql.eval.VectorData.*;
 import org.okapi.promql.eval.exceptions.EvaluationException;
@@ -41,7 +41,8 @@ public class RangeFuncEval implements Evaluable {
         long winStart = t - rangeMs;
         float value;
         switch (kind) {
-          case INCREASE -> value = (s instanceof SumScan ss) ? increase(ss, winStart, t) : Float.NaN;
+          case INCREASE ->
+              value = (s instanceof SumScan ss) ? increase(ss, winStart, t) : Float.NaN;
           case RATE -> {
             if (s instanceof SumScan ss) {
               float inc = increase(ss, winStart, t);

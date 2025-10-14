@@ -1,6 +1,3 @@
 package org.okapi.metrics;
 
-public class FdbTestFactory {
-
-
-}
+public class FdbTestFactory {}

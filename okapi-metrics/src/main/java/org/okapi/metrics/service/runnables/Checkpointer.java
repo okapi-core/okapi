@@ -60,7 +60,11 @@ public class Checkpointer implements Runnable {
     var fname = "snapshot-" + clock.currentTimeMillis();
     var path = snapshotDir.resolve(fname);
     log.info("Writing checkpoint {}", fname);
-    Files.move(path, getSnapshotPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+    Files.move(
+        path,
+        getSnapshotPath(),
+        StandardCopyOption.ATOMIC_MOVE,
+        StandardCopyOption.REPLACE_EXISTING);
     Files.deleteIfExists(path);
     log.info("Writing written {}", getSnapshotPath());
   }

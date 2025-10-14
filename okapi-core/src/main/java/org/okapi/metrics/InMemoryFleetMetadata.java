@@ -1,8 +1,5 @@
 package org.okapi.metrics;
 
-import lombok.extern.slf4j.Slf4j;
-import org.okapi.metrics.common.FleetMetadata;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +7,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import lombok.extern.slf4j.Slf4j;
+import org.okapi.metrics.common.FleetMetadata;
 
 @Slf4j
 public class InMemoryFleetMetadata implements FleetMetadata {
@@ -44,7 +43,7 @@ public class InMemoryFleetMetadata implements FleetMetadata {
 
   @Override
   public void setData(String path, byte[] data) {
-    if(data == null){
+    if (data == null) {
       log.error("Setting data for path {} to null", path);
       throw new RuntimeException();
     }

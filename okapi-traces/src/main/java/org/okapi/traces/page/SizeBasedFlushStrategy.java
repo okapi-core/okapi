@@ -1,8 +1,8 @@
 package org.okapi.traces.page;
 
 /**
- * Flushes pages when their estimated serialized size crosses a threshold.
- * Default threshold suggestion: 8 MB (or a multiple of the system page size).
+ * Flushes pages when their estimated serialized size crosses a threshold. Default threshold
+ * suggestion: 8 MB (or a multiple of the system page size).
  */
 public class SizeBasedFlushStrategy implements FlushStrategy {
   public static final long DEFAULT_MAX_BYTES = 8L * 1024L * 1024L; // 8 MB
@@ -19,4 +19,3 @@ public class SizeBasedFlushStrategy implements FlushStrategy {
     return est >= 0 && est >= maxEstimatedBytes;
   }
 }
-

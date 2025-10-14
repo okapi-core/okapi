@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SharedMessageBox<T> {
   BlockingQueue<T> pending;
 
-  public SharedMessageBox(int maxPending){
+  public SharedMessageBox(int maxPending) {
     pending = new ArrayBlockingQueue<>(maxPending);
   }
 
@@ -20,15 +20,16 @@ public class SharedMessageBox<T> {
   public void drain(Collection<T> sink, String id) {
     this.pending.drainTo(sink, 10);
   }
+
   public void drain(Collection<T> sink, int size, String id) {
     this.pending.drainTo(sink, size);
   }
 
-  public boolean isEmpty(){
+  public boolean isEmpty() {
     return pending.isEmpty();
   }
 
-  public int size(){
+  public int size() {
     return this.pending.size();
   }
 }

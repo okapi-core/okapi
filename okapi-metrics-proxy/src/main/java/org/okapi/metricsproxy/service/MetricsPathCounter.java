@@ -1,13 +1,12 @@
 package org.okapi.metricsproxy.service;
 
-import org.okapi.hashing.OkapiHashingUtils;
-import org.okapi.rest.metrics.MetricsPathSpecifier;
-import lombok.Getter;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import lombok.Getter;
+import org.okapi.hashing.OkapiHashingUtils;
+import org.okapi.rest.metrics.MetricsPathSpecifier;
 
 public class MetricsPathCounter {
   Set<Integer> inBucket = new HashSet<>();

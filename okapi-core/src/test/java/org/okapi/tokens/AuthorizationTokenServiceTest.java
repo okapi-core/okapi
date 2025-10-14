@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.okapi.fixtures.Deduplicator.dedup;
 
 import com.google.common.collect.Lists;
-import org.okapi.rest.tokens.CreateApiTokenRequest;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +20,7 @@ import org.okapi.data.exceptions.UserAlreadyExistsException;
 import org.okapi.exceptions.UnAuthorizedException;
 import org.okapi.fixtures.Deduplicator;
 import org.okapi.fixtures.SingletonFactory;
+import org.okapi.rest.tokens.CreateApiTokenRequest;
 
 @Slf4j
 public class AuthorizationTokenServiceTest {

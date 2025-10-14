@@ -1,9 +1,8 @@
 package org.okapi.metrics.search;
 
-import org.okapi.metrics.common.MetricsPathParser;
-
 import java.util.*;
 import java.util.regex.Pattern;
+import org.okapi.metrics.common.MetricsPathParser;
 
 public class MetricsSearcher {
 

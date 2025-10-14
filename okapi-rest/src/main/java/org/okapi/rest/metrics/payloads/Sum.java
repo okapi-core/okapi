@@ -1,8 +1,7 @@
 package org.okapi.rest.metrics.payloads;
 
-import lombok.*;
-
 import java.util.List;
+import lombok.*;
 
 @AllArgsConstructor
 @Value

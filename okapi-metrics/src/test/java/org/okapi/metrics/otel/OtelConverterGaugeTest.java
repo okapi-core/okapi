@@ -83,4 +83,3 @@ public class OtelConverterGaugeTest {
     assertEquals(2.0f, g.getValue()[1]);
   }
 }
-

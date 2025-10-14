@@ -57,17 +57,12 @@ public class RocksStoreTests {
     for (var k : Arrays.asList(key1, key2, key3)) {
       await()
           .atMost(Duration.of(1, ChronoUnit.SECONDS))
-          .until(
-              () -> OkapiTestUtils.bytesAreEqual(
-                  reader.get().get(k.getBytes()), k.getBytes()));
+          .until(() -> OkapiTestUtils.bytesAreEqual(reader.get().get(k.getBytes()), k.getBytes()));
     }
 
     var rocks = writer.rocksDB;
     var deleteRange = Arrays.<byte[]>asList(("" + tMinus2).getBytes(), ("" + tMinus1).getBytes());
-    rocks.deleteFilesInRanges(
-        null, 
-            deleteRange,
-            true);
+    rocks.deleteFilesInRanges(null, deleteRange, true);
     rocks.compactRange();
     assertNull(reader.get().get(Long.toString(tMinus1).getBytes()));
     assertNull(reader.get().get(Long.toString(tMinus2).getBytes()));

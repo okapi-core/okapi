@@ -3,10 +3,8 @@ package org.okapi.traces.api;
 import com.google.protobuf.util.JsonFormat;
 import io.opentelemetry.proto.trace.v1.Span;
 import java.util.List;
-import java.util.Map;
 import org.okapi.traces.query.AttributeFilter;
 import org.okapi.traces.query.TraceQueryProcessor;
-import org.okapi.traces.query.TraceQueryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,11 +31,15 @@ public class SpanQueryController {
 
   @Autowired private TraceQueryProcessor multiplexingTraceQueryProcessor;
 
-  @PostMapping(value = "/span/query", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(
+      value = "/span/query",
+      consumes = MediaType.APPLICATION_JSON_VALUE,
+      produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<String> query(
       @RequestHeader("X-Okapi-Tenant-Id") String tenantFromHeader,
       @RequestHeader("X-Okapi-App") String appFromHeader,
-      @RequestBody SpanQueryRequest reqBody) throws Exception {
+      @RequestBody SpanQueryRequest reqBody)
+      throws Exception {
     String tenant = tenantFromHeader;
     String app = appFromHeader;
     validate(tenant, app);
@@ -75,8 +77,8 @@ public class SpanQueryController {
   }
 
   private static void validate(String tenant, String app) {
-    if (tenant == null || tenant.isBlank()) throw new IllegalArgumentException("Missing X-Okapi-Tenant-Id");
+    if (tenant == null || tenant.isBlank())
+      throw new IllegalArgumentException("Missing X-Okapi-Tenant-Id");
     if (app == null || app.isBlank()) throw new IllegalArgumentException("Missing X-Okapi-App");
   }
 }
-

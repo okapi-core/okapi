@@ -25,8 +25,7 @@ public class OtelConverterHistogramTest {
 
     Histogram hist =
         Histogram.newBuilder()
-            .setAggregationTemporality(
-                AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA)
+            .setAggregationTemporality(AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA)
             .addDataPoints(hdp)
             .build();
 
@@ -34,7 +33,10 @@ public class OtelConverterHistogramTest {
 
     ScopeMetrics sm = ScopeMetrics.newBuilder().addMetrics(m).build();
     ResourceMetrics rm =
-        ResourceMetrics.newBuilder().setResource(Resource.newBuilder().build()).addScopeMetrics(sm).build();
+        ResourceMetrics.newBuilder()
+            .setResource(Resource.newBuilder().build())
+            .addScopeMetrics(sm)
+            .build();
 
     ExportMetricsServiceRequest req =
         ExportMetricsServiceRequest.newBuilder().addResourceMetrics(rm).build();
@@ -56,4 +58,3 @@ public class OtelConverterHistogramTest {
     assertArrayEquals(new int[] {5, 7, 2}, hp.getBucketCounts());
   }
 }
-

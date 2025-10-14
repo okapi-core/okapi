@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,20 +28,23 @@ public class InMemoryTraceQueryProcessor implements TraceQueryProcessor {
   private final BufferPoolManager bufferPool;
   private final TraceQueryConfig config;
   private final MetricsEmitter metrics;
-  private final ExecutorService pool = Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors()));
+  private final ExecutorService pool =
+      Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors()));
 
   public InMemoryTraceQueryProcessor(BufferPoolManager bufferPool) {
     this(bufferPool, TraceQueryConfig.builder().build(), new NoopMetricsEmitter());
   }
 
-  public InMemoryTraceQueryProcessor(BufferPoolManager bufferPool, TraceQueryConfig config, MetricsEmitter metrics) {
+  public InMemoryTraceQueryProcessor(
+      BufferPoolManager bufferPool, TraceQueryConfig config, MetricsEmitter metrics) {
     this.bufferPool = bufferPool;
     this.config = config;
     this.metrics = metrics == null ? new NoopMetricsEmitter() : metrics;
   }
 
   @Override
-  public List<Span> getSpans(long start, long end, String tenantId, String application, String traceId)
+  public List<Span> getSpans(
+      long start, long end, String tenantId, String application, String traceId)
       throws IOException {
     List<SpanPage> pages = bufferPool.listPages(tenantId, application);
     List<Span> out = new ArrayList<>();
@@ -68,7 +70,8 @@ public class InMemoryTraceQueryProcessor implements TraceQueryProcessor {
   }
 
   @Override
-  public List<Span> getSpans(long start, long end, String tenantId, String application, AttributeFilter filter)
+  public List<Span> getSpans(
+      long start, long end, String tenantId, String application, AttributeFilter filter)
       throws IOException {
     List<SpanPage> pages = bufferPool.listPages(tenantId, application);
     List<Span> out = new ArrayList<>();
@@ -88,8 +91,8 @@ public class InMemoryTraceQueryProcessor implements TraceQueryProcessor {
   }
 
   @Override
-  public List<Span> getTrace(long start, long end, String tenantId, String application, String spanId)
-      throws IOException {
+  public List<Span> getTrace(
+      long start, long end, String tenantId, String application, String spanId) throws IOException {
     List<SpanPage> pages = bufferPool.listPages(tenantId, application);
     var token = new CancellationToken();
     var ecs = new ExecutorCompletionService<Optional<Span>>(pool);
@@ -104,9 +107,15 @@ public class InMemoryTraceQueryProcessor implements TraceQueryProcessor {
         Future<Optional<Span>> fut = ecs.take();
         Optional<Span> s = fut.get();
         if (s.isPresent()) {
-          target = s.get(); token.cancel(); for (Future<Optional<Span>> other : futures) other.cancel(true); break;
+          target = s.get();
+          token.cancel();
+          for (Future<Optional<Span>> other : futures) other.cancel(true);
+          break;
         }
-      } catch (Exception e) { Thread.currentThread().interrupt(); break; }
+      } catch (Exception e) {
+        Thread.currentThread().interrupt();
+        break;
+      }
     }
     if (target == null) return List.of();
 
@@ -127,9 +136,12 @@ public class InMemoryTraceQueryProcessor implements TraceQueryProcessor {
     return chain;
   }
 
-  private static boolean overlaps(long aStart, long aEnd, long bStart, long bEnd) { return aStart <= bEnd && bStart <= aEnd; }
+  private static boolean overlaps(long aStart, long aEnd, long bStart, long bEnd) {
+    return aStart <= bEnd && bStart <= aEnd;
+  }
 
-  private static void scanPageForTraceId(SpanPage page, long start, long end, String traceId, List<Span> out) {
+  private static void scanPageForTraceId(
+      SpanPage page, long start, long end, String traceId, List<Span> out) {
     for (ExportTraceServiceRequest req : page.getPayloads()) {
       for (ResourceSpans rs : req.getResourceSpansList()) {
         for (Object ss : TraceSpanUtils.getScopeOrInstrumentationSpans(rs)) {
@@ -142,7 +154,8 @@ public class InMemoryTraceQueryProcessor implements TraceQueryProcessor {
     }
   }
 
-  private static void scanPageForAttribute(SpanPage page, long start, long end, AttributeFilter filter, List<Span> out) {
+  private static void scanPageForAttribute(
+      SpanPage page, long start, long end, AttributeFilter filter, List<Span> out) {
     for (ExportTraceServiceRequest req : page.getPayloads()) {
       for (ResourceSpans rs : req.getResourceSpansList()) {
         if (!resourceMatches(rs, filter)) continue;
@@ -169,14 +182,17 @@ public class InMemoryTraceQueryProcessor implements TraceQueryProcessor {
     return false;
   }
 
-  private static Optional<Span> findSpanInPage(SpanPage page, long start, long end, String spanId, CancellationToken token) {
-    if (!overlaps(page.getTsStartMillis(), page.getTsEndMillis(), start, end)) return Optional.empty();
+  private static Optional<Span> findSpanInPage(
+      SpanPage page, long start, long end, String spanId, CancellationToken token) {
+    if (!overlaps(page.getTsStartMillis(), page.getTsEndMillis(), start, end))
+      return Optional.empty();
     for (ExportTraceServiceRequest req : page.getPayloads()) {
       if (token.isCancelled() || Thread.currentThread().isInterrupted()) return Optional.empty();
       for (ResourceSpans rs : req.getResourceSpansList()) {
         for (Object ss : TraceSpanUtils.getScopeOrInstrumentationSpans(rs)) {
           for (Span sp : TraceSpanUtils.getSpansFromScope(ss)) {
-            if (spanId.equals(bytesToHex(sp.getSpanId().toByteArray())) && spanOverlaps(sp, start, end)) {
+            if (spanId.equals(bytesToHex(sp.getSpanId().toByteArray()))
+                && spanOverlaps(sp, start, end)) {
               return Optional.of(sp);
             }
           }
@@ -187,6 +203,7 @@ public class InMemoryTraceQueryProcessor implements TraceQueryProcessor {
   }
 
   @Override
-  public void close() { pool.shutdown(); }
+  public void close() {
+    pool.shutdown();
+  }
 }
-

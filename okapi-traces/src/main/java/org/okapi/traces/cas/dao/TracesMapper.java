@@ -10,4 +10,3 @@ public interface TracesMapper {
   @DaoFactory
   TracesDao tracesDao(@DaoKeyspace String keyspace);
 }
-

@@ -1,20 +1,19 @@
 package org.okapi.promql.eval;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.okapi.promql.extractor.TimeSeriesExtractor.findValue;
+
+import java.util.concurrent.Executors;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.junit.jupiter.api.Test;
 import org.okapi.promql.MockSeriesDiscovery;
 import org.okapi.promql.MockStatsMerger;
 import org.okapi.promql.TestFixtures;
+import org.okapi.promql.eval.VectorData.*;
 import org.okapi.promql.eval.exceptions.EvaluationException;
 import org.okapi.promql.parser.PromQLLexer;
 import org.okapi.promql.parser.PromQLParser;
-import org.okapi.promql.eval.VectorData.*;
-
-import java.util.concurrent.Executors;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.okapi.promql.extractor.TimeSeriesExtractor.findValue;
 
 public class GroupLeftArithmeticTest {
 
@@ -30,23 +29,15 @@ public class GroupLeftArithmeticTest {
     // Prepare additional data for requests per instance
     // i1: 100,200,300,400 ; i2: 10,20,30,40
     // Extend client directly:
-        cm.client.put(
-        "requests", cm.cpuUsageApiI1Tags, cm.t0, 100f);
-        cm.client.put(
-        "requests", cm.cpuUsageApiI1Tags, cm.t1, 200f);
-        cm.client.put(
-        "requests", cm.cpuUsageApiI1Tags, cm.t2, 300f);
-        cm.client.put(
-        "requests", cm.cpuUsageApiI1Tags, cm.t3, 400f);
+    cm.client.put("requests", cm.cpuUsageApiI1Tags, cm.t0, 100f);
+    cm.client.put("requests", cm.cpuUsageApiI1Tags, cm.t1, 200f);
+    cm.client.put("requests", cm.cpuUsageApiI1Tags, cm.t2, 300f);
+    cm.client.put("requests", cm.cpuUsageApiI1Tags, cm.t3, 400f);
 
-        cm.client.put(
-        "requests", cm.cpuUsageApiI2Tags, cm.t0, 10f);
-        cm.client.put(
-        "requests", cm.cpuUsageApiI2Tags, cm.t1, 20f);
-        cm.client.put(
-        "requests", cm.cpuUsageApiI2Tags, cm.t2, 30f);
-        cm.client.put(
-        "requests", cm.cpuUsageApiI2Tags, cm.t3, 40f);
+    cm.client.put("requests", cm.cpuUsageApiI2Tags, cm.t0, 10f);
+    cm.client.put("requests", cm.cpuUsageApiI2Tags, cm.t1, 20f);
+    cm.client.put("requests", cm.cpuUsageApiI2Tags, cm.t2, 30f);
+    cm.client.put("requests", cm.cpuUsageApiI2Tags, cm.t3, 40f);
 
     // Also tell discovery about requests series
     // NOTE: If your MockSeriesDiscovery is immutable, create it initially with these SeriesIds in

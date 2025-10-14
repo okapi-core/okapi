@@ -27,15 +27,15 @@ public class PathSet {
   public void setShards(Set<Integer> shards) {
     this.shards = shards;
     this.shards.forEach(
-            shard -> {
-              var path = pathRegistry.pathSetWal(shard);
-              if (!Files.exists(path)) return;
-              try {
-                fileBackedSetMap.put(shard, new FileBackedSet(path));
-              } catch (IOException e) {
-                throw new RuntimeException(e);
-              }
-            });
+        shard -> {
+          var path = pathRegistry.pathSetWal(shard);
+          if (!Files.exists(path)) return;
+          try {
+            fileBackedSetMap.put(shard, new FileBackedSet(path));
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        });
     for (var entry : fileBackedSetMap.entrySet()) {
       var key = entry.getKey();
       var paths = entry.getValue().list();

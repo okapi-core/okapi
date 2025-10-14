@@ -1,5 +1,6 @@
 package org.okapi.metricsproxy.controller;
 
+import jakarta.validation.Valid;
 import org.okapi.exceptions.BadRequestException;
 import org.okapi.exceptions.NotFoundException;
 import org.okapi.exceptions.UnAuthorizedException;
@@ -9,7 +10,6 @@ import org.okapi.metricsproxy.service.MetricsDispatcher;
 import org.okapi.metricsproxy.service.ScanQueryProcessor;
 import org.okapi.rest.metrics.admin.DiscoveryResponse;
 import org.okapi.rest.metrics.admin.StartScaleUpResponse;
-import jakarta.validation.Valid;
 import org.okapi.rest.metrics.query.GetGaugeRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
 import org.okapi.rest.metrics.search.SearchMetricsRequest;

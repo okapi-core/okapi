@@ -1,5 +1,7 @@
 package org.okapi.metrics.fdb.tuples;
 
 public enum BUCKET_TYPE {
-    H, M, S;
+  H,
+  M,
+  S;
 }

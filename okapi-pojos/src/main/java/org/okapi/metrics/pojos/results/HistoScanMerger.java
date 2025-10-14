@@ -11,11 +11,10 @@ import java.util.Set;
 /**
  * Utility to merge multiple HistoScan instances into a single histogram.
  *
- * If all scans have identical finite upper bounds (ubs), counts are merged by element-wise sum.
- * Otherwise, the scans are merged approximately by constructing a combined CDF
- * F(x) = sum_i (N_i / N_total) * F_i(x), and rebinning onto a target schema which is the
- * union of all finite bounds across inputs (sorted ascending). Infinite head/tail buckets are
- * preserved.
+ * <p>If all scans have identical finite upper bounds (ubs), counts are merged by element-wise sum.
+ * Otherwise, the scans are merged approximately by constructing a combined CDF F(x) = sum_i (N_i /
+ * N_total) * F_i(x), and rebinning onto a target schema which is the union of all finite bounds
+ * across inputs (sorted ascending). Infinite head/tail buckets are preserved.
  */
 public final class HistoScanMerger {
 
@@ -101,7 +100,8 @@ public final class HistoScanMerger {
 
     List<Integer> counts = new ArrayList<>(m + 1);
     for (int v : rounded) counts.add(v);
-    return new HistoScan(universalPath, start, end, targetBounds, Collections.unmodifiableList(counts));
+    return new HistoScan(
+        universalPath, start, end, targetBounds, Collections.unmodifiableList(counts));
   }
 
   private static boolean haveSameBounds(List<HistoScan> scans) {

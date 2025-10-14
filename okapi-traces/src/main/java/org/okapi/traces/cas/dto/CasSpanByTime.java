@@ -36,4 +36,3 @@ public class CasSpanByTime {
 
   long durationMs;
 }
-

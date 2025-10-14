@@ -5,12 +5,6 @@ import static org.okapi.validation.OkapiChecks.throwIf;
 import static org.okapi.validation.OkapiResponseChecks.*;
 
 import com.google.gson.Gson;
-import org.okapi.auth.RoleTemplates;
-import org.okapi.metricsproxy.auth.AuthorizationChecker;
-import org.okapi.rest.metrics.admin.DiscoveryResponse;
-import org.okapi.rest.metrics.admin.NodeMetadataResponse;
-import org.okapi.rest.metrics.admin.StartScaleUpRequest;
-import org.okapi.rest.metrics.admin.StartScaleUpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,11 +16,17 @@ import lombok.Builder;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import org.okapi.auth.RoleTemplates;
 import org.okapi.exceptions.BadRequestException;
 import org.okapi.exceptions.InternalFailureException;
 import org.okapi.exceptions.NotFoundException;
 import org.okapi.exceptions.UnAuthorizedException;
 import org.okapi.metrics.common.ServiceRegistry;
+import org.okapi.metricsproxy.auth.AuthorizationChecker;
+import org.okapi.rest.metrics.admin.DiscoveryResponse;
+import org.okapi.rest.metrics.admin.NodeMetadataResponse;
+import org.okapi.rest.metrics.admin.StartScaleUpRequest;
+import org.okapi.rest.metrics.admin.StartScaleUpResponse;
 
 @AllArgsConstructor
 @Builder

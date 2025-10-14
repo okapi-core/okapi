@@ -7,11 +7,10 @@ public class MetricPaths {
 
   public static String convertToUnivPath(GetMetricsRequest request) {
     // separator shouldn't clash with the rest of the system
-    return convertToUnivPath(
-        request.getTenantId(), request.getMetricName(), request.getTags());
+    return convertToUnivPath(request.getTenantId(), request.getMetricName(), request.getTags());
   }
 
-  public static String getUnivPath(String tenantId, String localPath){
+  public static String getUnivPath(String tenantId, String localPath) {
     return tenantId + ":" + localPath;
   }
 

@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 public class UpdateTeamRequest {
-    private String name; // The name of the team
-    private String description; // Optional, can be used to provide a description of the team
+  private String name; // The name of the team
+  private String description; // Optional, can be used to provide a description of the team
 }

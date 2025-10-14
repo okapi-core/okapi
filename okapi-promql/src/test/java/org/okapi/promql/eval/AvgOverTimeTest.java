@@ -78,5 +78,4 @@ public class AvgOverTimeTest {
     assertEquals(25f, v2, 1e-4);
     assertEquals(35f, v3, 1e-4);
   }
-
 }

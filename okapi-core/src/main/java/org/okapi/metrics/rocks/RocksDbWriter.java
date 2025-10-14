@@ -3,6 +3,7 @@ package org.okapi.metrics.rocks;
 import lombok.AllArgsConstructor;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
+
 @AllArgsConstructor
 public class RocksDbWriter {
 

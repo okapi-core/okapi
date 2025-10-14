@@ -24,8 +24,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TraceFileReader {
 
-public List<Span> scanForTraceId(
-      Path file, long start, long end, String tenantId, String application, String traceIdHex,
+  public List<Span> scanForTraceId(
+      Path file,
+      long start,
+      long end,
+      String tenantId,
+      String application,
+      String traceIdHex,
       org.okapi.traces.metrics.MetricsEmitter metrics)
       throws IOException {
     Objects.requireNonNull(traceIdHex, "traceIdHex");
@@ -68,7 +73,8 @@ public List<Span> scanForTraceId(
             ExportTraceServiceRequest req = ExportTraceServiceRequest.parseFrom(bytes);
             int before = out.size();
             extractSpansByTraceId(req, traceIdHex, start, end, out);
-            if (metrics != null) metrics.emitSpansMatched(tenantId, application, out.size() - before);
+            if (metrics != null)
+              metrics.emitSpansMatched(tenantId, application, out.size() - before);
           }
           if (metrics != null) metrics.emitPageParsed(tenantId, application);
         } catch (Exception e) {
@@ -83,8 +89,13 @@ public List<Span> scanForTraceId(
   }
 
   public List<Span> scanForAttributeFilter(
-      Path file, long start, long end, String tenantId, String application,
-      AttributeFilter filter, org.okapi.traces.metrics.MetricsEmitter metrics)
+      Path file,
+      long start,
+      long end,
+      String tenantId,
+      String application,
+      AttributeFilter filter,
+      org.okapi.traces.metrics.MetricsEmitter metrics)
       throws IOException {
     List<Span> out = new ArrayList<>();
     try (DataInputStream in = new DataInputStream(new FileInputStream(file.toFile()))) {
@@ -114,7 +125,8 @@ public List<Span> scanForTraceId(
             ExportTraceServiceRequest req = ExportTraceServiceRequest.parseFrom(bytes);
             int before = out.size();
             extractSpansByAttribute(req, start, end, filter, out);
-            if (metrics != null) metrics.emitSpansMatched(tenantId, application, out.size() - before);
+            if (metrics != null)
+              metrics.emitSpansMatched(tenantId, application, out.size() - before);
           }
           if (metrics != null) metrics.emitPageParsed(tenantId, application);
         } catch (Exception e) {
@@ -241,7 +253,8 @@ public List<Span> scanForTraceId(
     for (var rs : req.getResourceSpansList()) {
       for (Object ss : getScopeOrInstrumentationSpans(rs)) {
         for (Span sp : getSpansFromScope(ss)) {
-          if (spanIdHex.equals(bytesToHex(sp.getSpanId().toByteArray())) && spanOverlaps(sp, start, end)) {
+          if (spanIdHex.equals(bytesToHex(sp.getSpanId().toByteArray()))
+              && spanOverlaps(sp, start, end)) {
             return sp;
           }
         }

@@ -1,10 +1,9 @@
 package org.okapi.metrics.rocks;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
-
-import java.util.List;
 
 @AllArgsConstructor
 public class RocksDbReader {

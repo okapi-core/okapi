@@ -1,18 +1,17 @@
 package org.okapi.metrics.scanning;
 
 import com.google.common.primitives.Longs;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import lombok.extern.slf4j.Slf4j;
 import org.okapi.exceptions.ExceptionUtils;
 import org.okapi.metrics.CondensedReading;
 import org.okapi.metrics.io.OkapiIo;
 import org.okapi.metrics.io.StreamReadingException;
 import org.okapi.metrics.stats.KllSketchRestorer;
 import org.okapi.metrics.stats.RolledUpStatistics;
-import lombok.extern.slf4j.Slf4j;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 @Slf4j
 public class HourlyCheckpointScanner {
@@ -64,7 +63,8 @@ public class HourlyCheckpointScanner {
     return readBlock(sc, minOff, (int) nSecBytes);
   }
 
-  public RolledUpStatistics hourly(ByteRangeScanner sc, String metricPath, Map<String, List<Long>> md)
+  public RolledUpStatistics hourly(
+      ByteRangeScanner sc, String metricPath, Map<String, List<Long>> md)
       throws StreamReadingException, IOException, ExecutionException {
     var offs = md.get(metricPath);
     var hrOff = offs.get(2);

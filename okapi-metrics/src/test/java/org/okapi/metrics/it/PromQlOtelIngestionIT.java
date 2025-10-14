@@ -51,9 +51,11 @@ public class PromQlOtelIngestionIT {
 
   @LocalServerPort int port;
 
-  @Value("${cas.contact.point}") String contactPoint;
+  @Value("${cas.contact.point}")
+  String contactPoint;
 
-  @Value("${cas.contact.datacenter}") String datacenter;
+  @Value("${cas.contact.datacenter}")
+  String datacenter;
 
   final Gson gson = new Gson();
 
@@ -115,15 +117,18 @@ public class PromQlOtelIngestionIT {
     assertEquals(HttpStatus.OK, ingResp.getStatusCode());
 
     // Wait until data is queryable
-    Awaitility.await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-      String json = queryInstant(base, tenant, metric + "{job=\"api\",instance=\"i1\"}");
-      JsonObject result = gson.fromJson(json, JsonObject.class);
-      assertEquals("success", result.get("status").getAsString());
-      JsonObject data = result.getAsJsonObject("data");
-      assertEquals("vector", data.get("resultType").getAsString());
-      var arr = data.getAsJsonArray("result");
-      assertTrue(arr.size() >= 1);
-    });
+    Awaitility.await()
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> {
+              String json = queryInstant(base, tenant, metric + "{job=\"api\",instance=\"i1\"}");
+              JsonObject result = gson.fromJson(json, JsonObject.class);
+              assertEquals("success", result.get("status").getAsString());
+              JsonObject data = result.getAsJsonObject("data");
+              assertEquals("vector", data.get("resultType").getAsString());
+              var arr = data.getAsJsonArray("result");
+              assertTrue(arr.size() >= 1);
+            });
 
     // 1) Raw vector query: latest value
     String vecJson = queryInstant(base, tenant, metric + "{job=\"api\",instance=\"i1\"}");
@@ -145,7 +150,12 @@ public class PromQlOtelIngestionIT {
 
   private static List<KeyValue> toKvList(Map<String, String> tags) {
     return tags.entrySet().stream()
-        .map(e -> KeyValue.newBuilder().setKey(e.getKey()).setValue(AnyValue.newBuilder().setStringValue(e.getValue()).build()).build())
+        .map(
+            e ->
+                KeyValue.newBuilder()
+                    .setKey(e.getKey())
+                    .setValue(AnyValue.newBuilder().setStringValue(e.getValue()).build())
+                    .build())
         .toList();
   }
 
@@ -153,8 +163,14 @@ public class PromQlOtelIngestionIT {
     HttpHeaders h = new HttpHeaders();
     h.set("x-okapi-tenant", tenant);
     HttpEntity<Void> e = new HttpEntity<>(h);
-    String url = base + "/api/v1/query?query=" + UriUtils.encode(expr) + "&time=" + (System.currentTimeMillis() / 1000.);
-    ResponseEntity<String> resp = new RestTemplate().exchange(URI.create(url), HttpMethod.GET, e, String.class);
+    String url =
+        base
+            + "/api/v1/query?query="
+            + UriUtils.encode(expr)
+            + "&time="
+            + (System.currentTimeMillis() / 1000.);
+    ResponseEntity<String> resp =
+        new RestTemplate().exchange(URI.create(url), HttpMethod.GET, e, String.class);
     assertEquals(HttpStatus.OK, resp.getStatusCode());
     return resp.getBody();
   }

@@ -173,10 +173,9 @@ public class CasSearchHintTests extends CasTesting {
   public void singleResul() {
     var pattern = "*{tag=value}";
     var searcher = resourceFactory.casTsSearcher(getMapper(), node);
-    var result = searcher.search(TENANT, pattern, start, start +  step);
+    var result = searcher.search(TENANT, pattern, start, start + step);
     assertEquals(1, result.size());
   }
-
 
   @Test
   public void noResults() {
@@ -185,5 +184,4 @@ public class CasSearchHintTests extends CasTesting {
     var result = searcher.search(TENANT, pattern, start, start + 2 * step);
     assertEquals(0, result.size());
   }
-
 }

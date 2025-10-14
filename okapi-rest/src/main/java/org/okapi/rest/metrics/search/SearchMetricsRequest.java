@@ -6,8 +6,8 @@ import lombok.Getter;
 @Getter
 @Builder
 public class SearchMetricsRequest {
-    String team;
-    String pattern;
-    long startTime;
-    long endTime;
+  String team;
+  String pattern;
+  long startTime;
+  long endTime;
 }

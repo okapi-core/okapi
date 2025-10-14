@@ -2,10 +2,9 @@ package org.okapi.promql.rest;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.okapi.rest.promql.*;
-
-import java.util.Map;
 
 public class SerializationTests {
 
@@ -21,9 +20,7 @@ public class SerializationTests {
     data.setResult(series);
     result.setData(data);
     result.setStatus("success");
-    Gson gson = new GsonBuilder()
-            .registerTypeAdapter(Sample.class, new SampleAdapter())
-            .create();
+    Gson gson = new GsonBuilder().registerTypeAdapter(Sample.class, new SampleAdapter()).create();
     var asJson = gson.toJson(result);
     System.out.println("asJson:" + asJson);
   }
