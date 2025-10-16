@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>okapi-avros</artifactId>
-    <name>Avro definitions</name>
+    <name>okapi-avros</name>
 
     <dependencies>
         <dependency>

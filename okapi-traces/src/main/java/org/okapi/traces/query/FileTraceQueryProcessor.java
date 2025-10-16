@@ -51,7 +51,7 @@ public class FileTraceQueryProcessor implements TraceQueryProcessor {
     for (Future<List<Span>> fut : invokeAll(tasks)) {
       try {
         result.addAll(fut.get());
-      } catch (ExecutionException e) {
+      } catch (ExecutionException | InterruptedException e) {
         log.warn("scan failed", e);
       }
     }
@@ -76,7 +76,7 @@ public class FileTraceQueryProcessor implements TraceQueryProcessor {
     for (Future<List<Span>> fut : invokeAll(tasks)) {
       try {
         result.addAll(fut.get());
-      } catch (ExecutionException e) {
+      } catch (ExecutionException | InterruptedException e) {
         log.warn("scan failed", e);
       }
     }

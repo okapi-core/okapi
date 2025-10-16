@@ -7,6 +7,6 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>okapi-statistics</artifactId>
-    <name>Archetype - okapi-statistics</name>
+    <name>okapi-statistics</name>
     <url>http://maven.apache.org</url>
 </project>

@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package org.okapi.protos.logs;
+
+option java_multiple_files = true;
+option java_package = "org.okapi.protos.logs";
+option java_outer_classname = "LogPayloadProtos";
+
+message LogPayloadProto {
+  int64 ts_millis = 1;
+  int32 level = 2;
+  string body = 3;
+  optional string trace_id = 4;
+}

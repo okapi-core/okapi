@@ -15,7 +15,6 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.okapi.traces.metrics.MetricsEmitter;
 import org.okapi.traces.metrics.NoopMetricsEmitter;
@@ -23,7 +22,6 @@ import org.okapi.traces.page.BufferPoolManager;
 import org.okapi.traces.page.SpanPage;
 
 @Slf4j
-@RequiredArgsConstructor
 public class InMemoryTraceQueryProcessor implements TraceQueryProcessor {
   private final BufferPoolManager bufferPool;
   private final TraceQueryConfig config;

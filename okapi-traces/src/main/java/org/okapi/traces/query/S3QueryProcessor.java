@@ -85,7 +85,7 @@ public class S3QueryProcessor implements TraceQueryProcessor {
     for (Future<List<Span>> f : invokeAll(tasks)) {
       try {
         result.addAll(f.get());
-      } catch (ExecutionException e) {
+      } catch (ExecutionException | InterruptedException e) {
         log.warn("S3 scan failed", e);
       }
     }
@@ -109,7 +109,7 @@ public class S3QueryProcessor implements TraceQueryProcessor {
     for (Future<List<Span>> f : invokeAll(tasks)) {
       try {
         result.addAll(f.get());
-      } catch (ExecutionException e) {
+      } catch (ExecutionException | InterruptedException e) {
         log.warn("S3 scan failed", e);
       }
     }

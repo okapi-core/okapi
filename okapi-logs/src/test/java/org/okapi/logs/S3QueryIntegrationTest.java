@@ -1,0 +1,103 @@
+package org.okapi.logs;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+import org.okapi.logs.config.LogsConfigProperties;
+import org.okapi.logs.io.LogPageSerializer;
+import org.okapi.logs.io.LogPage;
+import org.okapi.logs.query.RegexFilter;
+import org.okapi.logs.query.S3QueryProcessor;
+import org.okapi.logs.query.TraceFilter;
+import org.okapi.protos.logs.LogPayloadProto;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
+
+@SpringBootTest(classes = TestApplication.class)
+@TestPropertySource(properties = {
+    "okapi.logs.s3Bucket=unit-bucket",
+    "okapi.logs.s3BasePrefix=logs"
+})
+class S3QueryIntegrationTest {
+  @Autowired LogsConfigProperties cfg;
+
+  @Test
+  void queryFromS3Dump() throws Exception {
+    // Build a single-page dump with 10 docs
+    LogPage page = TestCorpus.buildTestPage();
+    byte[] bin = LogPageSerializer.serialize(page);
+    byte[] idx = buildSingleIndex(bin.length, page.getTsStart(), page.getTsEnd(), page.getMaxDocId() + 1,
+        Ints.fromByteArray(copy(bin, bin.length - 4, 4)));
+
+    Map<String, byte[]> store = new HashMap<>();
+    long startTs = page.getTsStart();
+    java.time.ZonedDateTime z = java.time.Instant.ofEpochMilli(startTs).atZone(java.time.ZoneId.of("UTC"));
+    String hour = String.format("%04d%02d%02d%02d", z.getYear(), z.getMonthValue(), z.getDayOfMonth(), z.getHour());
+    String prefix = cfg.getS3BasePrefix() + "/tenantX/streamY/" + hour;
+    store.put(prefix + "/logfile.idx", idx);
+    store.put(prefix + "/logfile.bin", bin);
+
+    S3QueryProcessor qp = new FakeS3QueryProcessor(cfg, store);
+    List<LogPayloadProto> traceA =
+        qp.getLogs("tenantX", "streamY", startTs - 60000, startTs + 60000,
+            new TraceFilter("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
+    assertEquals(5, traceA.size());
+    List<LogPayloadProto> failed =
+        qp.getLogs("tenantX", "streamY", startTs - 60000, startTs + 60000, new RegexFilter("failed"));
+    assertEquals(2, failed.size());
+  }
+
+  private static byte[] buildSingleIndex(int length, long tsStart, long tsEnd, int docCount, int crc) {
+    List<byte[]> parts = new ArrayList<>();
+    parts.add(Longs.toByteArray(0L));
+    parts.add(Ints.toByteArray(length));
+    parts.add(Longs.toByteArray(tsStart));
+    parts.add(Longs.toByteArray(tsEnd));
+    parts.add(Ints.toByteArray(docCount));
+    parts.add(Ints.toByteArray(crc));
+    int total = parts.stream().mapToInt(a -> a.length).sum();
+    byte[] out = new byte[total];
+    int p = 0;
+    for (byte[] a : parts) {
+      System.arraycopy(a, 0, out, p, a.length);
+      p += a.length;
+    }
+    return out;
+  }
+
+  private static byte[] copy(byte[] a, int off, int len) {
+    byte[] r = new byte[len];
+    System.arraycopy(a, off, r, 0, len);
+    return r;
+  }
+
+  static class FakeS3QueryProcessor extends S3QueryProcessor {
+    private final Map<String, byte[]> store;
+
+    FakeS3QueryProcessor(LogsConfigProperties cfg, Map<String, byte[]> store) {
+      super(cfg, new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
+      this.store = store;
+    }
+
+    @Override
+    protected byte[] getObjectBytes(String bucket, String key) {
+      return store.get(key);
+    }
+
+    @Override
+    protected byte[] getRangeBytes(String bucket, String key, long offset, int length) {
+      byte[] all = store.get(key);
+      byte[] r = new byte[length];
+      System.arraycopy(all, (int) offset, r, 0, length);
+      return r;
+    }
+  }
+}

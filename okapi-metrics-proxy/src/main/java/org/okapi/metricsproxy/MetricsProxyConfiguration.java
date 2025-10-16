@@ -249,14 +249,6 @@ public class MetricsProxyConfiguration {
   }
 
   @Bean
-  public MetricsDispatcher metricsDispatcher(
-      @Autowired ZkRegistry listenerBasedRegistry,
-      @Autowired OkHttpClient httpClient,
-      @Autowired AuthorizationChecker authorizationChecker) {
-    return new MetricsDispatcher(listenerBasedRegistry, httpClient, authorizationChecker);
-  }
-
-  @Bean
   public S3Enhanced s3Enhanced(
       @Autowired S3Client amazonS3, @Autowired S3ByteRangeCache s3ByteRangeCache) {
     return new S3Enhanced(s3ByteRangeCache, amazonS3);
