@@ -41,6 +41,8 @@ public class TraceFileWriterIdleCloseTest {
       page.append(payload(1700000000000L, 1700000000100L));
       writer.write("t", "a", page);
       assertTrue(writer.openStreamCount() > 0);
+      // Ensure at least 1ms elapses so the idle-close threshold is met deterministically
+      Thread.sleep(2);
       writer.sweepNow();
       // after sweep, idle streams should be closed
       assertEquals(0, writer.openStreamCount());

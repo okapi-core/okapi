@@ -2,8 +2,11 @@ package org.okapi.traces.it;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.google.protobuf.ByteString;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 // Avoid importing Span to prevent conflict with domain model
+import io.opentelemetry.proto.trace.v1.ResourceSpans;
+import io.opentelemetry.proto.trace.v1.ScopeSpans;
 import io.opentelemetry.proto.trace.v1.Span;
 import io.opentelemetry.proto.trace.v1.Status;
 import java.net.URI;
@@ -14,20 +17,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.*;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestPropertySource(
-    properties = {
-      "cas.contact.point=127.0.0.1:9042",
-      "cas.contact.datacenter=datacenter1",
-      "cas.traces.keyspace=" + ProtobufIngestIntegrationTest.KS,
-      "sampling.fraction=1.0"
-    })
-public class ProtobufIngestIntegrationTest extends AbstractIntegrationTest {
-
-  static final String KS = KEYSPACE;
+public class ProtobufIngestIntegrationTest {
 
   @LocalServerPort int port;
 
@@ -51,19 +44,23 @@ public class ProtobufIngestIntegrationTest extends AbstractIntegrationTest {
     HttpHeaders h = new HttpHeaders();
     h.setContentType(MediaType.parseMediaType("application/x-protobuf"));
     h.add("X-Okapi-Tenant-Id", tenant);
+    h.add("X-Okapi-App", "it-app");
     ResponseEntity<Map> ing =
         restTemplate.postForEntity(baseUrl(), new HttpEntity<>(body, h), Map.class);
     assertEquals(200, ing.getStatusCode().value());
     assertEquals(1, ((Number) ing.getBody().get("ingested")).intValue());
 
-    // Unknown spanId returns 404
-    ResponseEntity<String> notFound =
-        restTemplate.exchange(
-            URI.create(baseUrl() + "/span/ffffffffffffffff"),
-            HttpMethod.GET,
-            new HttpEntity<>(headers(tenant)),
-            String.class);
-    assertEquals(404, notFound.getStatusCode().value());
+    // Unknown spanId returns 404 (RestTemplate throws on 4xx)
+    try {
+      restTemplate.exchange(
+          URI.create(baseUrl() + "/span/ffffffffffffffff"),
+          HttpMethod.GET,
+          new HttpEntity<>(headers(tenant)),
+          String.class);
+      fail("Expected 404 Not Found");
+    } catch (org.springframework.web.client.HttpClientErrorException e) {
+      assertEquals(404, e.getStatusCode().value());
+    }
   }
 
   private static ExportTraceServiceRequest buildTraceRequest(
@@ -82,12 +79,12 @@ public class ProtobufIngestIntegrationTest extends AbstractIntegrationTest {
             .setStatus(Status.newBuilder().setCode(Status.StatusCode.STATUS_CODE_OK).build())
             .build();
 
-    var scope = io.opentelemetry.proto.trace.v1.ScopeSpans.newBuilder().addSpans(ok);
-    var rs = io.opentelemetry.proto.trace.v1.ResourceSpans.newBuilder().addScopeSpans(scope);
+    var scope = ScopeSpans.newBuilder().addSpans(ok);
+    var rs = ResourceSpans.newBuilder().addScopeSpans(scope);
     return ExportTraceServiceRequest.newBuilder().addResourceSpans(rs).build();
   }
 
-  private static com.google.protobuf.ByteString hexToBytes(String hex) {
+  private static ByteString hexToBytes(String hex) {
     int len = hex.length();
     byte[] data = new byte[len / 2];
     for (int i = 0; i < len; i += 2) {
@@ -101,6 +98,7 @@ public class ProtobufIngestIntegrationTest extends AbstractIntegrationTest {
   private static HttpHeaders headers(String tenant) {
     HttpHeaders h = new HttpHeaders();
     h.add("X-Okapi-Tenant-Id", tenant);
+    h.add("X-Okapi-App", "it-app");
     return h;
   }
 }

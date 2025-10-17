@@ -1,13 +1,13 @@
 package org.okapi.traces.api;
 
-import com.google.protobuf.util.JsonFormat;
 import io.opentelemetry.proto.trace.v1.Span;
 import java.util.List;
+import org.okapi.traces.api.dto.SpanDtoMapper;
+import org.okapi.traces.api.dto.SpanQueryResponse;
 import org.okapi.traces.query.AttributeFilter;
 import org.okapi.traces.query.TraceQueryProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -29,19 +29,17 @@ public class SpanQueryController {
     }
   }
 
-  @Autowired private TraceQueryProcessor multiplexingTraceQueryProcessor;
+  @Autowired private TraceQueryProcessor traceQueryProcessor;
 
   @PostMapping(
       value = "/span/query",
       consumes = MediaType.APPLICATION_JSON_VALUE,
       produces = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<String> query(
-      @RequestHeader("X-Okapi-Tenant-Id") String tenantFromHeader,
-      @RequestHeader("X-Okapi-App") String appFromHeader,
+  public SpanQueryResponse query(
+      @RequestHeader("X-Okapi-Tenant-Id") String tenant,
+      @RequestHeader("X-Okapi-App") String app,
       @RequestBody SpanQueryRequest reqBody)
       throws Exception {
-    String tenant = tenantFromHeader;
-    String app = appFromHeader;
     validate(tenant, app);
 
     long start = reqBody.startMillis;
@@ -49,31 +47,22 @@ public class SpanQueryController {
 
     List<Span> spans;
     if (reqBody.traceId != null && !reqBody.traceId.isBlank()) {
-      spans = multiplexingTraceQueryProcessor.getSpans(start, end, tenant, app, reqBody.traceId);
+      spans = traceQueryProcessor.getSpansWithFilter(start, end, tenant, app, reqBody.traceId);
     } else if (reqBody.spanId != null && !reqBody.spanId.isBlank()) {
-      spans = multiplexingTraceQueryProcessor.getTrace(start, end, tenant, app, reqBody.spanId);
+      spans = traceQueryProcessor.getTrace(start, end, tenant, app, reqBody.spanId);
     } else if (reqBody.attributeFilter != null) {
       var af = reqBody.attributeFilter;
       AttributeFilter filter =
           (af.pattern != null && !af.pattern.isBlank())
               ? AttributeFilter.withPattern(af.name, af.pattern)
               : new AttributeFilter(af.name, af.value);
-      spans = multiplexingTraceQueryProcessor.getSpans(start, end, tenant, app, filter);
+      spans = traceQueryProcessor.getSpansWithFilter(start, end, tenant, app, filter);
     } else {
-      return ResponseEntity.badRequest().body("{\"error\":\"Invalid query\"}");
+      throw new InvalidSpanQueryException("Invalid query");
     }
 
-    // Serialize as JSON array of OTel Spans
-    var printer = JsonFormat.printer();
-    StringBuilder sb = new StringBuilder();
-    sb.append("[");
-    for (int i = 0; i < spans.size(); i++) {
-      String json = printer.print(spans.get(i));
-      sb.append(json);
-      if (i < spans.size() - 1) sb.append(',');
-    }
-    sb.append("]");
-    return ResponseEntity.ok(sb.toString());
+    SpanQueryResponse out = SpanDtoMapper.toResponse(spans);
+    return out;
   }
 
   private static void validate(String tenant, String app) {

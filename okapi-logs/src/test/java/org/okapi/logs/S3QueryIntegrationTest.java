@@ -4,15 +4,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
-
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.okapi.logs.config.LogsConfigProperties;
-import org.okapi.logs.io.LogPageSerializer;
 import org.okapi.logs.io.LogPage;
+import org.okapi.logs.io.LogPageSerializer;
 import org.okapi.logs.query.RegexFilter;
 import org.okapi.logs.query.S3QueryProcessor;
 import org.okapi.logs.query.TraceFilter;
@@ -20,42 +22,57 @@ import org.okapi.protos.logs.LogPayloadProto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
+import software.amazon.awssdk.services.s3.S3Client;
 
 @SpringBootTest(classes = TestApplication.class)
-@TestPropertySource(properties = {
-    "okapi.logs.s3Bucket=unit-bucket",
-    "okapi.logs.s3BasePrefix=logs"
-})
+@TestPropertySource(
+    properties = {"okapi.logs.s3Bucket=unit-bucket", "okapi.logs.s3BasePrefix=logs"})
 class S3QueryIntegrationTest {
   @Autowired LogsConfigProperties cfg;
+
+  @Mock S3Client s3Client;
 
   @Test
   void queryFromS3Dump() throws Exception {
     // Build a single-page dump with 10 docs
     LogPage page = TestCorpus.buildTestPage();
     byte[] bin = LogPageSerializer.serialize(page);
-    byte[] idx = buildSingleIndex(bin.length, page.getTsStart(), page.getTsEnd(), page.getMaxDocId() + 1,
-        Ints.fromByteArray(copy(bin, bin.length - 4, 4)));
+    byte[] idx =
+        buildSingleIndex(
+            bin.length,
+            page.getTsStart(),
+            page.getTsEnd(),
+            page.getMaxDocId() + 1,
+            Ints.fromByteArray(copy(bin, bin.length - 4, 4)));
 
     Map<String, byte[]> store = new HashMap<>();
     long startTs = page.getTsStart();
-    java.time.ZonedDateTime z = java.time.Instant.ofEpochMilli(startTs).atZone(java.time.ZoneId.of("UTC"));
-    String hour = String.format("%04d%02d%02d%02d", z.getYear(), z.getMonthValue(), z.getDayOfMonth(), z.getHour());
+    ZonedDateTime z =
+        Instant.ofEpochMilli(startTs).atZone(java.time.ZoneId.of("UTC"));
+    String hour =
+        String.format(
+            "%04d%02d%02d%02d", z.getYear(), z.getMonthValue(), z.getDayOfMonth(), z.getHour());
     String prefix = cfg.getS3BasePrefix() + "/tenantX/streamY/" + hour;
     store.put(prefix + "/logfile.idx", idx);
     store.put(prefix + "/logfile.bin", bin);
 
-    S3QueryProcessor qp = new FakeS3QueryProcessor(cfg, store);
+    S3QueryProcessor qp = new FakeS3QueryProcessor(cfg, store, s3Client);
     List<LogPayloadProto> traceA =
-        qp.getLogs("tenantX", "streamY", startTs - 60000, startTs + 60000,
+        qp.getLogs(
+            "tenantX",
+            "streamY",
+            startTs - 60000,
+            startTs + 60000,
             new TraceFilter("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
     assertEquals(5, traceA.size());
     List<LogPayloadProto> failed =
-        qp.getLogs("tenantX", "streamY", startTs - 60000, startTs + 60000, new RegexFilter("failed"));
+        qp.getLogs(
+            "tenantX", "streamY", startTs - 60000, startTs + 60000, new RegexFilter("failed"));
     assertEquals(2, failed.size());
   }
 
-  private static byte[] buildSingleIndex(int length, long tsStart, long tsEnd, int docCount, int crc) {
+  private static byte[] buildSingleIndex(
+      int length, long tsStart, long tsEnd, int docCount, int crc) {
     List<byte[]> parts = new ArrayList<>();
     parts.add(Longs.toByteArray(0L));
     parts.add(Ints.toByteArray(length));
@@ -82,8 +99,8 @@ class S3QueryIntegrationTest {
   static class FakeS3QueryProcessor extends S3QueryProcessor {
     private final Map<String, byte[]> store;
 
-    FakeS3QueryProcessor(LogsConfigProperties cfg, Map<String, byte[]> store) {
-      super(cfg, new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
+    FakeS3QueryProcessor(LogsConfigProperties cfg, Map<String, byte[]> store, S3Client client) {
+      super(cfg, new io.micrometer.core.instrument.simple.SimpleMeterRegistry(), client);
       this.store = store;
     }
 

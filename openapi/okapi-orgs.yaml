@@ -1,0 +1,9 @@
+openapi: 3.0.3
+info:
+  title: okapi-orgs API
+  version: 1
+
+paths:
+
+components:
+  schemas:

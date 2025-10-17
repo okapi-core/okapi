@@ -1,5 +1,6 @@
 package org.okapi.traces.query;
 
+import com.google.common.base.Preconditions;
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
@@ -20,6 +21,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.zip.CRC32;
 import lombok.extern.slf4j.Slf4j;
+import org.okapi.traces.metrics.MetricsEmitter;
 
 @Slf4j
 public class TraceFileReader {
@@ -31,9 +33,9 @@ public class TraceFileReader {
       String tenantId,
       String application,
       String traceIdHex,
-      org.okapi.traces.metrics.MetricsEmitter metrics)
+      MetricsEmitter metrics)
       throws IOException {
-    Objects.requireNonNull(traceIdHex, "traceIdHex");
+    Preconditions.checkNotNull(traceIdHex, "traceIdHex");
     List<Span> out = new ArrayList<>();
     try (DataInputStream in = new DataInputStream(new FileInputStream(file.toFile()))) {
       while (true) {
@@ -56,7 +58,7 @@ public class TraceFileReader {
           }
           int bloomLen = pIn.readInt();
           byte[] bloomBytes = pIn.readNBytes(bloomLen);
-          BloomFilter<CharSequence> bloom =
+          var bloom =
               BloomFilter.readFrom(
                   new ByteArrayInputStream(bloomBytes),
                   Funnels.stringFunnel(StandardCharsets.UTF_8));
@@ -143,7 +145,7 @@ public class TraceFileReader {
   public Optional<Span> findSpanById(
       Path file, long start, long end, String spanIdHex, CancellationToken token)
       throws IOException {
-    Objects.requireNonNull(spanIdHex, "spanIdHex");
+    Objects.requireNonNull(spanIdHex, "spanIdHex is null");
     try (DataInputStream in = new DataInputStream(new FileInputStream(file.toFile()))) {
       while (true) {
         if (token != null && (token.isCancelled() || Thread.currentThread().isInterrupted())) {

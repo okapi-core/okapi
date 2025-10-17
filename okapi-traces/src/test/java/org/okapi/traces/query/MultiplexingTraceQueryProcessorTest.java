@@ -35,13 +35,13 @@ public class MultiplexingTraceQueryProcessorTest {
     }
 
     @Override
-    public List<Span> getSpans(long s, long e, String ten, String app, String traceId)
+    public List<Span> getSpansWithFilter(long s, long e, String ten, String app, String traceId)
         throws IOException {
       return a;
     }
 
     @Override
-    public List<Span> getSpans(long s, long e, String ten, String app, AttributeFilter f)
+    public List<Span> getSpansWithFilter(long s, long e, String ten, String app, AttributeFilter f)
         throws IOException {
       return b;
     }
@@ -64,10 +64,10 @@ public class MultiplexingTraceQueryProcessorTest {
 
     var mux = new MultiplexingTraceQueryProcessor(List.of(p1, p2));
 
-    var spansA = mux.getSpans(0, 1000, "t", "a", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    var spansA = mux.getSpansWithFilter(0, 1000, "t", "a", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
     assertEquals(2, spansA.size());
 
-    var spansB = mux.getSpans(0, 1000, "t", "a", new AttributeFilter("x", "y"));
+    var spansB = mux.getSpansWithFilter(0, 1000, "t", "a", new AttributeFilter("x", "y"));
     assertEquals(1, spansB.size());
 
     var chain = mux.getTrace(0, 1000, "t", "a", "1111111111111111");

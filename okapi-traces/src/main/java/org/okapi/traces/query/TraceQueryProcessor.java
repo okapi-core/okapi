@@ -5,10 +5,10 @@ import java.io.IOException;
 import java.util.List;
 
 public interface TraceQueryProcessor extends AutoCloseable {
-  List<Span> getSpans(long start, long end, String tenantId, String application, String traceId)
+  List<Span> getSpansWithFilter(long start, long end, String tenantId, String application, String traceId)
       throws IOException;
 
-  List<Span> getSpans(
+  List<Span> getSpansWithFilter(
       long start, long end, String tenantId, String application, AttributeFilter filter)
       throws IOException;
 

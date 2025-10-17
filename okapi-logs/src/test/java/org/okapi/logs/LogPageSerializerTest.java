@@ -2,13 +2,12 @@ package org.okapi.logs;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.github.roaringbitmap.RoaringBitmap;
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
-import org.okapi.logs.io.LogPageSerializer;
 import org.okapi.logs.io.LogPage;
+import org.okapi.logs.io.LogPageSerializer;
 
 class LogPageSerializerTest {
   @Test
@@ -35,4 +34,3 @@ class LogPageSerializerTest {
     assertEquals(page.getTrigramMap().size(), rt.getTrigramMap().size());
   }
 }
-

@@ -23,12 +23,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.zip.CRC32;
 import lombok.extern.slf4j.Slf4j;
-import org.okapi.s3.S3ByteRangeCache;
+import org.okapi.s3.ByteRangeCache;
 import org.okapi.traces.metrics.MetricsEmitter;
 import org.okapi.traces.metrics.NoopMetricsEmitter;
 
 @Slf4j
-public class S3QueryProcessor implements TraceQueryProcessor {
+public class S3TraceQueryProcessor implements TraceQueryProcessor {
 
   @FunctionalInterface
   public interface RangeFetcher {
@@ -37,40 +37,33 @@ public class S3QueryProcessor implements TraceQueryProcessor {
 
   private final S3TracefileKeyResolver resolver;
   private final RangeFetcher fetcher;
-  private final TraceQueryConfig config;
   private final MetricsEmitter metrics;
   private final ExecutorService pool;
 
-  public S3QueryProcessor(S3ByteRangeCache cache, S3TracefileKeyResolver resolver) {
-    this(cache, resolver, TraceQueryConfig.builder().build(), new NoopMetricsEmitter());
-  }
-
-  public S3QueryProcessor(
-      S3ByteRangeCache cache,
+  public S3TraceQueryProcessor(
+      ByteRangeCache cache,
       S3TracefileKeyResolver resolver,
       TraceQueryConfig config,
       MetricsEmitter metrics) {
     this.resolver = resolver;
     this.fetcher = (b, k, s, e) -> cache.getRange(b, k, s, e);
-    this.config = config;
     this.metrics = metrics == null ? new NoopMetricsEmitter() : metrics;
     this.pool = Executors.newFixedThreadPool(config.getQueryThreads());
   }
 
-  public S3QueryProcessor(
+  public S3TraceQueryProcessor(
       RangeFetcher fetcher,
       S3TracefileKeyResolver resolver,
       TraceQueryConfig config,
       MetricsEmitter metrics) {
     this.resolver = resolver;
     this.fetcher = fetcher;
-    this.config = config;
     this.metrics = metrics == null ? new NoopMetricsEmitter() : metrics;
     this.pool = Executors.newFixedThreadPool(config.getQueryThreads());
   }
 
   @Override
-  public List<Span> getSpans(
+  public List<Span> getSpansWithFilter(
       long start, long end, String tenantId, String application, String traceId)
       throws IOException {
     List<long[]> keys = hourBuckets(start, end);
@@ -94,7 +87,7 @@ public class S3QueryProcessor implements TraceQueryProcessor {
   }
 
   @Override
-  public List<Span> getSpans(
+  public List<Span> getSpansWithFilter(
       long start, long end, String tenantId, String application, AttributeFilter filter)
       throws IOException {
     List<long[]> keys = hourBuckets(start, end);
@@ -153,7 +146,7 @@ public class S3QueryProcessor implements TraceQueryProcessor {
     if (target == null) return List.of();
 
     String traceIdHex = bytesToHex(target.getTraceId().toByteArray());
-    return getSpans(start, end, tenantId, application, traceIdHex);
+    return getSpansWithFilter(start, end, tenantId, application, traceIdHex);
   }
 
   private List<Future> invokeAll(List<? extends Callable> tasks) {

@@ -20,13 +20,13 @@ public class TraceQueryService implements AutoCloseable {
   public List<Span> getSpans(
       long start, long end, String tenantId, String application, String traceId)
       throws IOException {
-    return processor.getSpans(start, end, tenantId, application, traceId);
+    return processor.getSpansWithFilter(start, end, tenantId, application, traceId);
   }
 
   public List<Span> getSpans(
       long start, long end, String tenantId, String application, AttributeFilter filter)
       throws IOException {
-    return processor.getSpans(start, end, tenantId, application, filter);
+    return processor.getSpansWithFilter(start, end, tenantId, application, filter);
   }
 
   public List<Span> getTrace(

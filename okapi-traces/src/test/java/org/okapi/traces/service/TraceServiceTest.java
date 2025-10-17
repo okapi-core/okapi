@@ -1,111 +1,47 @@
 package org.okapi.traces.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import com.google.protobuf.ByteString;
+import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
+import io.opentelemetry.proto.trace.v1.ResourceSpans;
+import io.opentelemetry.proto.trace.v1.ScopeSpans;
+import io.opentelemetry.proto.trace.v1.Span;
 import org.junit.jupiter.api.Test;
-import org.okapi.traces.model.OkapiSpan;
-import org.okapi.traces.sampler.SamplingStrategy;
-import org.okapi.traces.storage.TraceRepository;
+import org.okapi.traces.page.TraceBufferPoolManager;
 
-class TraceServiceTest {
+public class TraceServiceTest {
 
-  static class InMemoryRepo implements TraceRepository {
-    List<OkapiSpan> stored = new ArrayList<>();
+  @Test
+  void ingest_counts_spans_and_calls_consume() throws Exception {
+    TraceBufferPoolManager bpm = mock(TraceBufferPoolManager.class);
+    TraceService svc = new TraceService(bpm);
 
-    @Override
-    public void saveBatch(List<OkapiSpan> okapiSpans) {
-      stored.addAll(okapiSpans);
-    }
-
-    @Override
-    public List<OkapiSpan> getSpansByTraceId(String traceId, String tenant) {
-      return List.of();
-    }
-
-    @Override
-    public Optional<OkapiSpan> getSpanById(String spanId, String tenant) {
-      return Optional.empty();
-    }
-
-    @Override
-    public List<OkapiSpan> listSpansByDuration(
-        String tenant, long startMillis, long endMillis, int limit) {
-      return List.of();
-    }
-
-    @Override
-    public Map<String, Object> listTracesByWindow(String tenant, long startMillis, long endMillis) {
-      return Map.of();
-    }
-
-    @Override
-    public List<OkapiSpan> listErrorSpans(
-        String tenant, long startMillis, long endMillis, int limit) {
-      return List.of();
-    }
-
-    @Override
-    public Map<Long, Map<String, Long>> spanHistogramByMinute(
-        String tenant, long startMillis, long endMillis) {
-      return Map.of();
-    }
-  }
-
-  static class AlwaysSample implements SamplingStrategy {
-    @Override
-    public boolean sample(String traceId) {
-      return true;
-    }
+    long now = 1700000000000L;
+    var s1 = Span.newBuilder()
+        .setTraceId(ByteString.copyFrom(new byte[16]))
+        .setSpanId(ByteString.copyFrom(new byte[8]))
+        .setStartTimeUnixNano(now*1_000_000L)
+        .setEndTimeUnixNano((now+1)*1_000_000L)
+        .build();
+    var s2 = s1.toBuilder().setSpanId(ByteString.copyFrom(new byte[]{1,2,3,4,5,6,7,8})).build();
+    var scope = ScopeSpans.newBuilder().addSpans(s1).addSpans(s2).build();
+    var rs = ResourceSpans.newBuilder().addScopeSpans(scope).build();
+    var req = ExportTraceServiceRequest.newBuilder().addResourceSpans(rs).build();
+    int count = svc.ingestOtelProtobuf(req.toByteArray(), "ten", "app");
+    assertEquals(2, count);
+    verify(bpm, times(1)).consume(eq("ten"), eq("app"), any());
   }
 
   @Test
-  void ingestOtelJson_parsesSpansAndEvents() throws Exception {
-    String json =
-        """
-        {
-          "resourceSpans": [
-            {
-              "scopeSpans": [
-                {
-                  "okapiSpans": [
-                    {
-                      "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
-                      "spanId": "00f067aa0ba902b7",
-                      "parentSpanId": "1111111111111111",
-                      "name": "GET /api",
-                      "kind": "SPAN_KIND_SERVER",
-                      "startTimeUnixNano": "1700000000000000000",
-                      "endTimeUnixNano": "1700000005000000000",
-                      "attributes": [{"key": "http.method", "value": {"stringValue": "GET"}}],
-                      "events": [
-                        {"name": "e1", "timeUnixNano": "1700000001000000000", "attributes": [{"key":"k","value":{"stringValue":"v"}}]}
-                      ],
-                      "status": {"code": "STATUS_CODE_OK", "message": "OK"}
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-        """;
-    InMemoryRepo repo = new InMemoryRepo();
-    TraceService svc = new TraceService(repo, new AlwaysSample());
-    int n = svc.ingestOtelJson(json, "tenantA");
-    assertEquals(1, n);
-    assertEquals(1, repo.stored.size());
-    OkapiSpan s = repo.stored.getFirst();
-    assertEquals("tenantA", s.getTenantId());
-    assertEquals("4bf92f3577b34da6a3ce929d0e0e4736", s.getTraceId());
-    assertEquals("00f067aa0ba902b7", s.getSpanId());
-    assertEquals(5000L, s.getDurationMillis());
-    assertNotNull(s.getAttributes());
-    assertEquals("GET", s.getAttributes().get("http.method"));
-    assertEquals(1, s.getEvents().size());
-    assertEquals("e1", s.getEvents().getFirst().get("name"));
+  void ingest_invalid_bytes_returns_zero() {
+    TraceBufferPoolManager bpm = mock(TraceBufferPoolManager.class);
+    TraceService svc = new TraceService(bpm);
+    int count = svc.ingestOtelProtobuf(new byte[]{1,2,3}, "t", "a");
+    assertEquals(0, count);
+    verify(bpm, never()).consume(any(), any(), any());
   }
 }
+

@@ -11,7 +11,7 @@ import io.opentelemetry.proto.trace.v1.ScopeSpans;
 import io.opentelemetry.proto.trace.v1.Span;
 import java.util.HexFormat;
 import org.junit.jupiter.api.Test;
-import org.okapi.traces.page.BufferPoolManager;
+import org.okapi.traces.page.TraceBufferPoolManager;
 import org.okapi.traces.page.LogAndDropWriteFailedListener;
 import org.okapi.traces.page.SizeBasedFlushStrategy;
 import org.okapi.traces.page.TraceFileWriter;
@@ -55,7 +55,7 @@ public class InMemoryTraceQueryProcessorTest {
         new TraceFileWriter(
             java.nio.file.Path.of(System.getProperty("java.io.tmpdir"))); // not used
     var bpm =
-        new BufferPoolManager(
+        new TraceBufferPoolManager(
             new SizeBasedFlushStrategy(Long.MAX_VALUE),
             writer,
             new LogAndDropWriteFailedListener(),
@@ -96,11 +96,11 @@ public class InMemoryTraceQueryProcessorTest {
             kv2));
 
     var proc = new InMemoryTraceQueryProcessor(bpm);
-    var spans = proc.getSpans(base, base + 1000, tenant, app, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    var spans = proc.getSpansWithFilter(base, base + 1000, tenant, app, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
     assertEquals(2, spans.size());
 
     var patt = AttributeFilter.withPattern("service.name", "pay.*");
-    var spans2 = proc.getSpans(base, base + 1000, tenant, app, patt);
+    var spans2 = proc.getSpansWithFilter(base, base + 1000, tenant, app, patt);
     assertEquals(1, spans2.size());
 
     var chain = proc.getTrace(base, base + 1000, tenant, app, "3333333333333333");

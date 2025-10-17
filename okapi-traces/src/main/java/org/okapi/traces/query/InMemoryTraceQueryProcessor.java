@@ -18,30 +18,30 @@ import java.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
 import org.okapi.traces.metrics.MetricsEmitter;
 import org.okapi.traces.metrics.NoopMetricsEmitter;
-import org.okapi.traces.page.BufferPoolManager;
+import org.okapi.traces.page.TraceBufferPoolManager;
 import org.okapi.traces.page.SpanPage;
 
 @Slf4j
 public class InMemoryTraceQueryProcessor implements TraceQueryProcessor {
-  private final BufferPoolManager bufferPool;
+  private final TraceBufferPoolManager bufferPool;
   private final TraceQueryConfig config;
   private final MetricsEmitter metrics;
   private final ExecutorService pool =
       Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors()));
 
-  public InMemoryTraceQueryProcessor(BufferPoolManager bufferPool) {
+  public InMemoryTraceQueryProcessor(TraceBufferPoolManager bufferPool) {
     this(bufferPool, TraceQueryConfig.builder().build(), new NoopMetricsEmitter());
   }
 
   public InMemoryTraceQueryProcessor(
-      BufferPoolManager bufferPool, TraceQueryConfig config, MetricsEmitter metrics) {
+          TraceBufferPoolManager bufferPool, TraceQueryConfig config, MetricsEmitter metrics) {
     this.bufferPool = bufferPool;
     this.config = config;
     this.metrics = metrics == null ? new NoopMetricsEmitter() : metrics;
   }
 
   @Override
-  public List<Span> getSpans(
+  public List<Span> getSpansWithFilter(
       long start, long end, String tenantId, String application, String traceId)
       throws IOException {
     List<SpanPage> pages = bufferPool.listPages(tenantId, application);
@@ -68,7 +68,7 @@ public class InMemoryTraceQueryProcessor implements TraceQueryProcessor {
   }
 
   @Override
-  public List<Span> getSpans(
+  public List<Span> getSpansWithFilter(
       long start, long end, String tenantId, String application, AttributeFilter filter)
       throws IOException {
     List<SpanPage> pages = bufferPool.listPages(tenantId, application);
@@ -118,7 +118,7 @@ public class InMemoryTraceQueryProcessor implements TraceQueryProcessor {
     if (target == null) return List.of();
 
     String traceIdHex = bytesToHex(target.getTraceId().toByteArray());
-    List<Span> all = getSpans(start, end, tenantId, application, traceIdHex);
+    List<Span> all = getSpansWithFilter(start, end, tenantId, application, traceIdHex);
     if (all.isEmpty()) return List.of(target);
     var idx = new java.util.HashMap<String, Span>();
     for (Span s : all) idx.put(bytesToHex(s.getSpanId().toByteArray()), s);

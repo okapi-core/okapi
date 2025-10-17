@@ -9,7 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Manages mutable SpanPages per (tenant, application, hourBucket). Thread-safe with per-key locks.
  */
-public class BufferPoolManager {
+public class TraceBufferPoolManager {
 
   record Key(String tenantId, String application, long hourBucket) {}
 
@@ -23,7 +23,7 @@ public class BufferPoolManager {
   private final int expectedInsertions;
   private final double fpp;
 
-  public BufferPoolManager(
+  public TraceBufferPoolManager(
       FlushStrategy flushStrategy,
       TraceFileWriter writer,
       WriteFailedListener writeFailedListener,

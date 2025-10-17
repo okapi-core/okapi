@@ -3,11 +3,7 @@ package org.okapi.traces.query;
 import io.opentelemetry.proto.trace.v1.Span;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
@@ -36,7 +32,7 @@ public class FileTraceQueryProcessor implements TraceQueryProcessor {
   }
 
   @Override
-  public List<Span> getSpans(
+  public List<Span> getSpansWithFilter(
       long start, long end, String tenantId, String application, String traceId)
       throws IOException {
     List<Path> files = locator.locate(tenantId, application, start, end);
@@ -60,7 +56,7 @@ public class FileTraceQueryProcessor implements TraceQueryProcessor {
   }
 
   @Override
-  public List<Span> getSpans(
+  public List<Span> getSpansWithFilter(
       long start, long end, String tenantId, String application, AttributeFilter filter)
       throws IOException {
     List<Path> files = locator.locate(tenantId, application, start, end);
@@ -93,7 +89,7 @@ public class FileTraceQueryProcessor implements TraceQueryProcessor {
     var token = new CancellationToken();
     var ecs = new ExecutorCompletionService<Optional<Span>>(pool);
     List<Future<Optional<Span>>> futures = new ArrayList<>();
-    for (Path f : files) {
+    for (var f : files) {
       futures.add(ecs.submit(() -> reader.findSpanById(f, start, end, spanId, token)));
     }
     Span target = null;
@@ -118,10 +114,10 @@ public class FileTraceQueryProcessor implements TraceQueryProcessor {
     if (target == null) return List.of();
 
     String traceIdHex = TraceSpanUtils.bytesToHex(target.getTraceId().toByteArray());
-    List<Span> all = getSpans(start, end, tenantId, application, traceIdHex);
+    List<Span> all = getSpansWithFilter(start, end, tenantId, application, traceIdHex);
     if (all.isEmpty()) return List.of(target);
 
-    var idx = new java.util.HashMap<String, Span>();
+    var idx = new HashMap<String, Span>();
     for (Span s : all) idx.put(TraceSpanUtils.bytesToHex(s.getSpanId().toByteArray()), s);
     List<Span> chain = new ArrayList<>();
     Span cur = target;

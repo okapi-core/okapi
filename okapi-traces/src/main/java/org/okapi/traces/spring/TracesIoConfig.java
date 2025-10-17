@@ -1,7 +1,8 @@
 package org.okapi.traces.spring;
 
 import java.nio.file.Path;
-import org.okapi.s3.S3ByteRangeCache;
+import org.okapi.s3.ByteRangeCache;
+import org.okapi.s3.SimpleByteRangeCache;
 import org.okapi.traces.metrics.NoopMetricsEmitter;
 import org.okapi.traces.page.*;
 import org.okapi.traces.query.*;
@@ -36,12 +37,12 @@ public class TracesIoConfig {
   }
 
   @Bean
-  public BufferPoolManager bufferPoolManager(
+  public TraceBufferPoolManager bufferPoolManager(
       FlushStrategy strategy,
       TraceFileWriter writer,
       @Value("${okapi.traces.bloom.expectedInsertions:100000}") int expectedInsertions,
       @Value("${okapi.traces.bloom.fpp:0.01}") double fpp) {
-    return new BufferPoolManager(
+    return new TraceBufferPoolManager(
         strategy, writer, new LogAndDropWriteFailedListener(), expectedInsertions, fpp);
   }
 
@@ -60,13 +61,13 @@ public class TracesIoConfig {
 
   @Bean
   public InMemoryTraceQueryProcessor inMemoryTraceQueryProcessor(
-      BufferPoolManager bufferPoolManager, @Value("${okapi.traces.query.threads:0}") int threads) {
+          TraceBufferPoolManager traceBufferPoolManager, @Value("${okapi.traces.query.threads:0}") int threads) {
     TraceQueryConfig cfg =
         TraceQueryConfig.builder()
             .queryThreads(
                 threads > 0 ? threads : Math.max(1, Runtime.getRuntime().availableProcessors()))
             .build();
-    return new InMemoryTraceQueryProcessor(bufferPoolManager, cfg, new NoopMetricsEmitter());
+    return new InMemoryTraceQueryProcessor(traceBufferPoolManager, cfg, new NoopMetricsEmitter());
   }
 
   @Bean
@@ -75,11 +76,24 @@ public class TracesIoConfig {
   }
 
   @Bean
-  public S3ByteRangeCache s3ByteRangeCache(
+  public ByteRangeCache s3ByteRangeCache(
       S3Client s3Client,
       @Value("${okapi.traces.s3.cache.maxPages:128}") int maxPages,
       @Value("${okapi.traces.s3.cache.expirySec:60}") long expirySec) {
-    return new S3ByteRangeCache(s3Client, maxPages, java.time.Duration.ofSeconds(expirySec));
+    return new SimpleByteRangeCache(
+        (bucket, key, start, endExclusive) ->
+            s3Client
+                .getObjectAsBytes(
+                    software.amazon.awssdk.services.s3.model.GetObjectRequest
+                        .builder()
+                        .bucket(bucket)
+                        .key(key)
+                        .range("bytes=" + start + "-" + (endExclusive - 1))
+                        .build())
+                .asByteArray(),
+        maxPages,
+        16 * 1024,
+        java.time.Duration.ofSeconds(expirySec));
   }
 
   @Bean
@@ -90,8 +104,8 @@ public class TracesIoConfig {
   }
 
   @Bean
-  public S3QueryProcessor s3QueryProcessor(
-      S3ByteRangeCache cache,
+  public S3TraceQueryProcessor s3QueryProcessor(
+      ByteRangeCache cache,
       S3TracefileKeyResolver resolver,
       @Value("${okapi.traces.query.threads:0}") int threads) {
     TraceQueryConfig cfg =
@@ -99,13 +113,13 @@ public class TracesIoConfig {
             .queryThreads(
                 threads > 0 ? threads : Math.max(1, Runtime.getRuntime().availableProcessors()))
             .build();
-    return new S3QueryProcessor(cache, resolver, cfg, new NoopMetricsEmitter());
+    return new S3TraceQueryProcessor(cache, resolver, cfg, new NoopMetricsEmitter());
   }
 
   @Bean
   @org.springframework.context.annotation.Primary
   public MultiplexingTraceQueryProcessor multiplexingTraceQueryProcessor(
-      S3QueryProcessor s3, InMemoryTraceQueryProcessor mem, FileTraceQueryProcessor file) {
+          S3TraceQueryProcessor s3, InMemoryTraceQueryProcessor mem, FileTraceQueryProcessor file) {
     return new MultiplexingTraceQueryProcessor(java.util.List.of(s3, mem, file));
   }
 }

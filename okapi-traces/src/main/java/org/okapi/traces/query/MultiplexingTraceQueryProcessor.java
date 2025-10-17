@@ -19,28 +19,29 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class MultiplexingTraceQueryProcessor implements TraceQueryProcessor {
+  // todo: add a configurable thread pool instead of getting everything on a system.
   private final List<TraceQueryProcessor> processors;
   private final ExecutorService pool =
       Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors()));
 
   @Override
-  public List<Span> getSpans(
+  public List<Span> getSpansWithFilter(
       long start, long end, String tenantId, String application, String traceId)
       throws IOException {
     List<Callable<List<Span>>> tasks = new ArrayList<>();
     for (TraceQueryProcessor p : processors) {
-      tasks.add(() -> p.getSpans(start, end, tenantId, application, traceId));
+      tasks.add(() -> p.getSpansWithFilter(start, end, tenantId, application, traceId));
     }
     return merge(invokeAll(tasks));
   }
 
   @Override
-  public List<Span> getSpans(
+  public List<Span> getSpansWithFilter(
       long start, long end, String tenantId, String application, AttributeFilter filter)
       throws IOException {
     List<Callable<List<Span>>> tasks = new ArrayList<>();
     for (TraceQueryProcessor p : processors) {
-      tasks.add(() -> p.getSpans(start, end, tenantId, application, filter));
+      tasks.add(() -> p.getSpansWithFilter(start, end, tenantId, application, filter));
     }
     return merge(invokeAll(tasks));
   }

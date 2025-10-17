@@ -14,7 +14,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class BufferPoolManagerTest {
+public class TraceBufferPoolManagerTest {
 
   Path tmpDir;
 
@@ -65,7 +65,7 @@ public class BufferPoolManagerTest {
     var writer = new TraceFileWriter(tmpDir);
     var listener = new LogAndDropWriteFailedListener();
     var strategy = new SizeBasedFlushStrategy(1); // tiny threshold forces immediate flush
-    var bpm = new BufferPoolManager(strategy, writer, listener, 1000, 0.01);
+    var bpm = new TraceBufferPoolManager(strategy, writer, listener, 1000, 0.01);
 
     long t0 = 1700000000000L;
     String tenant = "tenantA";
@@ -105,7 +105,7 @@ public class BufferPoolManagerTest {
     }
     var capture = new Capture();
     var strategy = new SizeBasedFlushStrategy(1);
-    var bpm = new BufferPoolManager(strategy, writer, capture, 1000, 0.01);
+    var bpm = new TraceBufferPoolManager(strategy, writer, capture, 1000, 0.01);
 
     assertDoesNotThrow(() -> bpm.consume("t", "a", buildPayload(1, 2)));
     assertEquals(1, capture.calls);
@@ -118,7 +118,7 @@ public class BufferPoolManagerTest {
     var writer = new TraceFileWriter(tmpDir);
     var listener = new LogAndDropWriteFailedListener();
     var strategy = new SizeBasedFlushStrategy(1);
-    var bpm = new BufferPoolManager(strategy, writer, listener, 1000, 0.01);
+    var bpm = new TraceBufferPoolManager(strategy, writer, listener, 1000, 0.01);
 
     long base = 1700003600000L; // some time slightly after an hour boundary
     long prevHour = (base - 600_000L); // 10 minutes earlier
@@ -163,7 +163,7 @@ public class BufferPoolManagerTest {
     var writer = new TraceFileWriter(tmpDir);
     var listener = new LogAndDropWriteFailedListener();
     var strategy = new SizeBasedFlushStrategy(1); // flush each append
-    var bpm = new BufferPoolManager(strategy, writer, listener, 1000, 0.01);
+    var bpm = new TraceBufferPoolManager(strategy, writer, listener, 1000, 0.01);
 
     String tenant = "t";
     String app = "a";
