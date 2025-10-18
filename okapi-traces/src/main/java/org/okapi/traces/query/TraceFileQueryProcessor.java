@@ -14,17 +14,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.okapi.traces.metrics.NoopMetricsEmitter;
 
 @Slf4j
-public class FileTraceQueryProcessor implements TraceQueryProcessor {
+public class TraceFileQueryProcessor implements TraceQueryProcessor {
   private final TraceFileLocator locator;
   private final TraceFileReader reader;
   private final ExecutorService pool;
   private final TraceQueryConfig config;
 
-  public FileTraceQueryProcessor(Path baseDir) {
+  public TraceFileQueryProcessor(Path baseDir) {
     this(baseDir, TraceQueryConfig.builder().build());
   }
 
-  public FileTraceQueryProcessor(Path baseDir, TraceQueryConfig config) {
+  public TraceFileQueryProcessor(Path baseDir, TraceQueryConfig config) {
     this.locator = new TraceFileLocator(baseDir);
     this.reader = new TraceFileReader();
     this.config = config;

@@ -10,7 +10,7 @@ public class TraceQueryService implements AutoCloseable {
   private final TraceQueryProcessor processor;
 
   public TraceQueryService(Path baseDir) {
-    this.processor = new FileTraceQueryProcessor(baseDir);
+    this.processor = new TraceFileQueryProcessor(baseDir);
   }
 
   public TraceQueryService(TraceQueryProcessor processor) {

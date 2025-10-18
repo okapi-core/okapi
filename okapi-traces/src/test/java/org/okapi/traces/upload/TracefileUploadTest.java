@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.okapi.traces.page.SpanPage;
+import java.util.List;
+import org.okapi.traces.NodeIdSupplier;
 import org.okapi.traces.query.S3TracefileKeyResolver;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -100,9 +102,11 @@ public class TracefileUploadTest {
     S3Client s3 = mock(S3Client.class);
     S3TracefileKeyResolver resolver = new S3TracefileKeyResolver() {
       public String bucket() { return "B"; }
-      public String keyFor(String t, String a, long hb) { return t+"/"+a+"/"+hb; }
+      public List<String> keyFor(String t, String a, long hb) { return java.util.List.of(t+"/"+a+"/"+hb+"/"); }
+      public String uploadKey(String t, String a, long hb, String nodeId) { return t+"/"+a+"/"+hb+"/"+nodeId+"/tracefile.bin"; }
     };
-    TracefileUploadJob job = new TracefileUploadJob(s3, resolver);
+    NodeIdSupplier node = () -> "node1";
+    TracefileUploadJob job = new TracefileUploadJob(s3, resolver, node);
     // Inject baseDir via reflection since field is @Value-injected normally
     var f = TracefileUploadJob.class.getDeclaredField("baseDir");
     f.setAccessible(true);
@@ -123,4 +127,3 @@ public class TracefileUploadTest {
     verify(s3, atLeastOnce()).completeMultipartUpload(any(CompleteMultipartUploadRequest.class));
   }
 }
-

@@ -35,18 +35,26 @@ public class S3TraceQueryProcessor implements TraceQueryProcessor {
     byte[] getRange(String bucket, String key, long start, long endExclusive) throws Exception;
   }
 
+  @FunctionalInterface
+  public interface ObjectLister {
+    List<String> list(String bucket, String prefix) throws Exception;
+  }
+
   private final S3TracefileKeyResolver resolver;
   private final RangeFetcher fetcher;
+  private final ObjectLister lister;
   private final MetricsEmitter metrics;
   private final ExecutorService pool;
 
   public S3TraceQueryProcessor(
       ByteRangeCache cache,
       S3TracefileKeyResolver resolver,
+      ObjectLister lister,
       TraceQueryConfig config,
       MetricsEmitter metrics) {
     this.resolver = resolver;
     this.fetcher = (b, k, s, e) -> cache.getRange(b, k, s, e);
+    this.lister = lister;
     this.metrics = metrics == null ? new NoopMetricsEmitter() : metrics;
     this.pool = Executors.newFixedThreadPool(config.getQueryThreads());
   }
@@ -54,10 +62,12 @@ public class S3TraceQueryProcessor implements TraceQueryProcessor {
   public S3TraceQueryProcessor(
       RangeFetcher fetcher,
       S3TracefileKeyResolver resolver,
+      ObjectLister lister,
       TraceQueryConfig config,
       MetricsEmitter metrics) {
     this.resolver = resolver;
     this.fetcher = fetcher;
+    this.lister = lister;
     this.metrics = metrics == null ? new NoopMetricsEmitter() : metrics;
     this.pool = Executors.newFixedThreadPool(config.getQueryThreads());
   }
@@ -71,8 +81,19 @@ public class S3TraceQueryProcessor implements TraceQueryProcessor {
     List<Callable<List<Span>>> tasks = new ArrayList<>();
     for (long hb : bucketsFrom(keys)) {
       final String bucket = resolver.bucket();
-      final String key = resolver.keyFor(tenantId, application, hb);
-      tasks.add(() -> scanFileForTraceId(bucket, key, start, end, tenantId, application, traceId));
+      for (String prefix : resolver.keyFor(tenantId, application, hb)) {
+        List<String> objKeys;
+        try {
+          objKeys = lister.list(bucket, prefix);
+        } catch (Exception e) {
+          log.warn("S3 list failed for bucket={}, prefix={}", bucket, prefix, e);
+          continue;
+        }
+        for (String key : objKeys) {
+          tasks.add(
+              () -> scanFileForTraceId(bucket, key, start, end, tenantId, application, traceId));
+        }
+      }
     }
     List<Span> result = new ArrayList<>();
     for (Future<List<Span>> f : invokeAll(tasks)) {
@@ -95,8 +116,19 @@ public class S3TraceQueryProcessor implements TraceQueryProcessor {
     List<Callable<List<Span>>> tasks = new ArrayList<>();
     for (long hb : bucketsFrom(keys)) {
       final String bucket = resolver.bucket();
-      final String key = resolver.keyFor(tenantId, application, hb);
-      tasks.add(() -> scanFileForAttribute(bucket, key, start, end, tenantId, application, filter));
+      for (String prefix : resolver.keyFor(tenantId, application, hb)) {
+        List<String> objKeys;
+        try {
+          objKeys = lister.list(bucket, prefix);
+        } catch (Exception e) {
+          log.warn("S3 list failed for bucket={}, prefix={}", bucket, prefix, e);
+          continue;
+        }
+        for (String key : objKeys) {
+          tasks.add(
+              () -> scanFileForAttribute(bucket, key, start, end, tenantId, application, filter));
+        }
+      }
     }
     List<Span> result = new ArrayList<>();
     for (Future<List<Span>> f : invokeAll(tasks)) {
@@ -121,8 +153,19 @@ public class S3TraceQueryProcessor implements TraceQueryProcessor {
     List<Future<Optional<Span>>> futures = new ArrayList<>();
     for (long hb : bucketsFrom(keys)) {
       final String bucket = resolver.bucket();
-      final String key = resolver.keyFor(tenantId, application, hb);
-      futures.add(ecs.submit(() -> findSpanInFile(bucket, key, start, end, spanId, token)));
+      for (String prefix : resolver.keyFor(tenantId, application, hb)) {
+        List<String> objKeys;
+        try {
+          objKeys = lister.list(bucket, prefix);
+        } catch (Exception e) {
+          log.warn("S3 list failed for bucket={}, prefix={}", bucket, prefix, e);
+          continue;
+        }
+        for (String key : objKeys) {
+          futures.add(
+              ecs.submit(() -> findSpanInFile(bucket, key, start, end, spanId, token)));
+        }
+      }
     }
     Span target = null;
     int remaining = futures.size();

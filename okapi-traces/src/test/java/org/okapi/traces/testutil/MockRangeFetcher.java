@@ -37,5 +37,16 @@ public class MockRangeFetcher implements S3TraceQueryProcessor.RangeFetcher {
     System.arraycopy(file, from, out, 0, out.length);
     return out;
   }
-}
 
+  public java.util.List<String> list(String bucket, String prefix) {
+    String pfx = key(bucket, prefix);
+    java.util.List<String> keys = new java.util.ArrayList<>();
+    for (String k : files.keySet()) {
+      if (k.startsWith(pfx)) {
+        // strip the bucket:: prefix to return the object key portion
+        keys.add(k.substring((bucket + "::").length()));
+      }
+    }
+    return keys;
+  }
+}

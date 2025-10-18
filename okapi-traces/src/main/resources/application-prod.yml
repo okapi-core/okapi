@@ -43,7 +43,7 @@ okapi:
     # S3 byte-range cache configuration for the S3QueryProcessor
     s3:
       # Target bucket where tracefiles live (reader) and where uploads go (uploader).
-      bucket: your-bucket-name
+      bucket: okapi-trace-files
       # region
       region: eu-west-2
       # Base key prefix for tracefiles. Effective object keys are: <basePrefix>/<tenant>/<application>/tracefile.<hourBucket>.bin
@@ -57,30 +57,3 @@ logging:
   level:
     root: INFO
     org.okapi.traces: INFO  # Increase to DEBUG for verbose IO and upload logs
-
-# Headers required by the OTLP-compatible endpoints:
-# - X-Okapi-Tenant-Id: the tenant identifier
-# - X-Okapi-App: the application/service name
-# Ingestion endpoints:
-# - POST /v1/traces (application/x-protobuf or application/json): accepts OTLP ExportTraceServiceRequest
-# Query endpoint (returns OTLP Span JSON array):
-# - POST /span/query with body:
-#   {
-#     "startMillis": 1700000000000,
-#     "endMillis": 1700003600000,
-#     "traceId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-#   }
-#   or
-#   {
-#     "startMillis": 1700000000000,
-#     "endMillis": 1700003600000,
-#     "spanId": "1111111111111111"
-#   }
-#   or
-#   {
-#     "startMillis": 1700000000000,
-#     "endMillis": 1700003600000,
-#     "attributeFilter": { "name": "service.name", "value": "orders" }
-#     # or pattern: { "name": "service.name", "pattern": "^pay.*" }
-#   }
-

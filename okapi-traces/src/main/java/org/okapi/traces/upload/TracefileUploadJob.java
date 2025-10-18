@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.util.concurrent.locks.ReentrantLock;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.okapi.traces.NodeIdSupplier;
 import org.okapi.traces.query.S3TracefileKeyResolver;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,6 +19,7 @@ public class TracefileUploadJob {
 
   private final S3Client s3Client;
   private final S3TracefileKeyResolver keyResolver;
+  private final NodeIdSupplier nodeIdSupplier;
 
   @Value("${okapi.traces.baseDir:traces}")
   private Path baseDir;
@@ -52,7 +54,7 @@ public class TracefileUploadJob {
                   String app = rel.getName(rel.getNameCount() - 1).toString();
 
                   String bucket = keyResolver.bucket();
-                  String key = keyResolver.keyFor(tenant, app, hb);
+                  String key = keyResolver.uploadKey(tenant, app, hb, nodeIdSupplier.getNodeId());
                   log.info("Uploading {} to s3://{}/{}", p, bucket, key);
                   new TracefileMultipartUploader(s3Client).upload(p, bucket, key);
                   Files.deleteIfExists(p);

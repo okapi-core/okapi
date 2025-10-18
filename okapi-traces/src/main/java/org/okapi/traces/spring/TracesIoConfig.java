@@ -3,6 +3,7 @@ package org.okapi.traces.spring;
 import java.nio.file.Path;
 import org.okapi.s3.ByteRangeCache;
 import org.okapi.s3.SimpleByteRangeCache;
+import org.okapi.traces.NodeIdSupplier;
 import org.okapi.traces.metrics.NoopMetricsEmitter;
 import org.okapi.traces.page.*;
 import org.okapi.traces.query.*;
@@ -48,7 +49,7 @@ public class TracesIoConfig {
 
   // Query processors
   @Bean
-  public FileTraceQueryProcessor fileTraceQueryProcessor(
+  public TraceFileQueryProcessor fileTraceQueryProcessor(
       @Value("${okapi.traces.baseDir:traces}") String baseDir,
       @Value("${okapi.traces.query.threads:0}") int threads) {
     TraceQueryConfig cfg =
@@ -56,12 +57,13 @@ public class TracesIoConfig {
             .queryThreads(
                 threads > 0 ? threads : Math.max(1, Runtime.getRuntime().availableProcessors()))
             .build();
-    return new FileTraceQueryProcessor(Path.of(baseDir), cfg);
+    return new TraceFileQueryProcessor(Path.of(baseDir), cfg);
   }
 
   @Bean
   public InMemoryTraceQueryProcessor inMemoryTraceQueryProcessor(
-          TraceBufferPoolManager traceBufferPoolManager, @Value("${okapi.traces.query.threads:0}") int threads) {
+      TraceBufferPoolManager traceBufferPoolManager,
+      @Value("${okapi.traces.query.threads:0}") int threads) {
     TraceQueryConfig cfg =
         TraceQueryConfig.builder()
             .queryThreads(
@@ -70,10 +72,6 @@ public class TracesIoConfig {
     return new InMemoryTraceQueryProcessor(traceBufferPoolManager, cfg, new NoopMetricsEmitter());
   }
 
-  @Bean
-  public S3Client s3Client() {
-    return S3Client.create();
-  }
 
   @Bean
   public ByteRangeCache s3ByteRangeCache(
@@ -84,8 +82,7 @@ public class TracesIoConfig {
         (bucket, key, start, endExclusive) ->
             s3Client
                 .getObjectAsBytes(
-                    software.amazon.awssdk.services.s3.model.GetObjectRequest
-                        .builder()
+                    software.amazon.awssdk.services.s3.model.GetObjectRequest.builder()
                         .bucket(bucket)
                         .key(key)
                         .range("bytes=" + start + "-" + (endExclusive - 1))
@@ -107,19 +104,45 @@ public class TracesIoConfig {
   public S3TraceQueryProcessor s3QueryProcessor(
       ByteRangeCache cache,
       S3TracefileKeyResolver resolver,
+      S3Client s3Client,
       @Value("${okapi.traces.query.threads:0}") int threads) {
     TraceQueryConfig cfg =
         TraceQueryConfig.builder()
             .queryThreads(
                 threads > 0 ? threads : Math.max(1, Runtime.getRuntime().availableProcessors()))
             .build();
-    return new S3TraceQueryProcessor(cache, resolver, cfg, new NoopMetricsEmitter());
+    S3TraceQueryProcessor.ObjectLister lister =
+        (bucket, prefix) -> {
+          var req =
+              software.amazon.awssdk.services.s3.model.ListObjectsV2Request.builder()
+                  .bucket(bucket)
+                  .prefix(prefix)
+                  .build();
+          var resp = s3Client.listObjectsV2(req);
+          java.util.List<String> keys = new java.util.ArrayList<>();
+          for (var o : resp.contents()) keys.add(o.key());
+          return keys;
+        };
+    return new S3TraceQueryProcessor(cache, resolver, lister, cfg, new NoopMetricsEmitter());
   }
 
   @Bean
   @org.springframework.context.annotation.Primary
   public MultiplexingTraceQueryProcessor multiplexingTraceQueryProcessor(
-          S3TraceQueryProcessor s3, InMemoryTraceQueryProcessor mem, FileTraceQueryProcessor file) {
+      S3TraceQueryProcessor s3, InMemoryTraceQueryProcessor mem, TraceFileQueryProcessor file) {
     return new MultiplexingTraceQueryProcessor(java.util.List.of(s3, mem, file));
+  }
+
+  @Bean
+  public NodeIdSupplier nodeIdSupplier(@Value("${okapi.traces.nodeId:}") String nodeIdOpt) {
+    String envHost = System.getenv("HOSTNAME");
+    String id =
+        (nodeIdOpt != null && !nodeIdOpt.isBlank())
+            ? nodeIdOpt
+            : (envHost != null && !envHost.isBlank())
+                ? envHost
+                : java.util.UUID.randomUUID().toString();
+    final String fixed = id;
+    return () -> fixed;
   }
 }

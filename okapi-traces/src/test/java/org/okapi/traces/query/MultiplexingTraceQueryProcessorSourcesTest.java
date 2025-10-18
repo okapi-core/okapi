@@ -77,13 +77,15 @@ public class MultiplexingTraceQueryProcessorSourcesTest {
     return new InMemoryTraceQueryProcessor(bpm);
   }
 
-  private FileTraceQueryProcessor mkFileProc(Path base) {
-    return new FileTraceQueryProcessor(base, TraceQueryConfig.builder().queryThreads(1).build());
+  private TraceFileQueryProcessor mkFileProc(Path base) {
+    return new TraceFileQueryProcessor(base, TraceQueryConfig.builder().queryThreads(1).build());
   }
 
   private S3TraceQueryProcessor mkS3Proc(MockRangeFetcher fetcher, String bucket) {
     TraceQueryConfig cfg = TraceQueryConfig.builder().queryThreads(1).build();
-    return new S3TraceQueryProcessor(fetcher, new TestS3Resolver(bucket), cfg, null);
+    var resolver = new TestS3Resolver(bucket);
+    S3TraceQueryProcessor.ObjectLister lister = fetcher::list;
+    return new S3TraceQueryProcessor(fetcher, resolver, lister, cfg, null);
   }
 
   private TraceBufferPoolManager mkBufferPool(Path writerDir) {
@@ -120,7 +122,9 @@ public class MultiplexingTraceQueryProcessorSourcesTest {
     var s3page = SpanPage.newEmpty(1000, 0.01);
     s3page.append(req("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "2222222222222222", null, base + 30, base + 40));
     byte[] s3file = s3page.serialize();
-    s3fetch.putFile("b", new TestS3Resolver("b").keyFor(tenant, app, hb), s3file);
+    var resolver = new TestS3Resolver("b");
+    String key = resolver.uploadKey(tenant, app, hb, "n1");
+    s3fetch.putFile("b", key, s3file);
 
     var mux = new MultiplexingTraceQueryProcessor(List.of(mem, file, s3));
     try {
@@ -158,7 +162,8 @@ public class MultiplexingTraceQueryProcessorSourcesTest {
     var s3 = mkS3Proc(s3fetch, "b");
     var s3page = SpanPage.newEmpty(1000, 0.01);
     s3page.append(req("cccccccccccccccccccccccccccccccc", "3333333333333333", null, base + 50, base + 60));
-    s3fetch.putFile("b", new TestS3Resolver("b").keyFor(tenant, app, hb), s3page.serialize());
+    var resolver = new TestS3Resolver("b");
+    s3fetch.putFile("b", resolver.uploadKey(tenant, app, hb, "n2"), s3page.serialize());
 
     var mux = new MultiplexingTraceQueryProcessor(List.of(mem, file, s3));
     try {
@@ -193,9 +198,10 @@ public class MultiplexingTraceQueryProcessorSourcesTest {
 
     // S3: configured to fail
     var s3fetch = new MockRangeFetcher();
-    var resolver = new TestS3Resolver("b");
-    s3fetch.putFile("b", resolver.keyFor(tenant, app, hb), page.serialize());
-    s3fetch.setFail("b", resolver.keyFor(tenant, app, hb), true);
+    var resolver2 = new TestS3Resolver("b");
+    String key2 = resolver2.uploadKey(tenant, app, hb, "n3");
+    s3fetch.putFile("b", key2, page.serialize());
+    s3fetch.setFail("b", key2, true);
     var s3 = mkS3Proc(s3fetch, "b");
 
     var mux = new MultiplexingTraceQueryProcessor(List.of(mem, file, s3));
@@ -256,7 +262,8 @@ public class MultiplexingTraceQueryProcessorSourcesTest {
     var s3page = SpanPage.newEmpty(1000, 0.01);
     s3page.append(req("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "1111111111111111", null, base + 10, base + 20));
     s3page.append(req("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "2222222222222222", "1111111111111111", base + 30, base + 40));
-    s3fetch.putFile("b", new TestS3Resolver("b").keyFor(tenant, app, hb), s3page.serialize());
+    var resolver3 = new TestS3Resolver("b");
+    s3fetch.putFile("b", resolver3.uploadKey(tenant, app, hb, "n4"), s3page.serialize());
     var s3 = mkS3Proc(s3fetch, "b");
 
     var mux = new MultiplexingTraceQueryProcessor(List.of(mem, s3));
@@ -287,7 +294,8 @@ public class MultiplexingTraceQueryProcessorSourcesTest {
     var s3fetch = new MockRangeFetcher();
     var s3page = SpanPage.newEmpty(1000, 0.01);
     s3page.append(req("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "2222222222222222", null, base + 30, base + 40));
-    s3fetch.putFile("b", new TestS3Resolver("b").keyFor(tenant, app, hb), s3page.serialize());
+    var resolver4 = new TestS3Resolver("b");
+    s3fetch.putFile("b", resolver4.uploadKey(tenant, app, hb, "n5"), s3page.serialize());
     var s3 = mkS3Proc(s3fetch, "b");
 
     var mux = new MultiplexingTraceQueryProcessor(List.of(s3, mem)); // S3 first to prove miss doesn't block others
@@ -300,4 +308,3 @@ public class MultiplexingTraceQueryProcessorSourcesTest {
     }
   }
 }
-

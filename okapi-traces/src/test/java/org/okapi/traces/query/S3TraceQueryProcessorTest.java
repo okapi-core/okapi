@@ -67,8 +67,13 @@ public class S3TraceQueryProcessorTest {
     }
 
     @Override
-    public String keyFor(String t, String a, long hb) {
-      return t + "/" + a + "/" + hb;
+    public java.util.List<String> keyFor(String t, String a, long hb) {
+      return java.util.List.of(t + "/" + a + "/" + hb + "/");
+    }
+
+    @Override
+    public String uploadKey(String t, String a, long hb, String nodeId) {
+      return t + "/" + a + "/" + hb + "/" + nodeId + "/tracefile.bin";
     }
   }
 
@@ -133,7 +138,10 @@ public class S3TraceQueryProcessorTest {
     BytesFetcher fetcher = new BytesFetcher(file);
     CountingMetrics metrics = new CountingMetrics();
     TraceQueryConfig cfg = TraceQueryConfig.builder().queryThreads(1).build();
-    S3TraceQueryProcessor s3 = new S3TraceQueryProcessor(fetcher, new DummyResolver(), cfg, metrics);
+    S3TraceQueryProcessor.ObjectLister lister =
+        (b, p) -> java.util.List.of(p + "node/tracefile.bin");
+    S3TraceQueryProcessor s3 =
+        new S3TraceQueryProcessor(fetcher, new DummyResolver(), lister, cfg, metrics);
 
     // Happy traceId
     List<Span> spans =
@@ -144,7 +152,8 @@ public class S3TraceQueryProcessorTest {
 
     // Bloom miss (unknown trace)
     CountingMetrics metrics2 = new CountingMetrics();
-    S3TraceQueryProcessor s3b = new S3TraceQueryProcessor(fetcher, new DummyResolver(), cfg, metrics2);
+    S3TraceQueryProcessor s3b =
+        new S3TraceQueryProcessor(fetcher, new DummyResolver(), lister, cfg, metrics2);
     List<Span> none =
         s3b.getSpansWithFilter(base, base + 1000, "t", "a", "cccccccccccccccccccccccccccccccc");
     assertTrue(none.isEmpty());
@@ -156,7 +165,8 @@ public class S3TraceQueryProcessorTest {
     corrupt[flip] ^= 0x01;
     BytesFetcher bad = new BytesFetcher(corrupt);
     CountingMetrics metrics3 = new CountingMetrics();
-    S3TraceQueryProcessor s3c = new S3TraceQueryProcessor(bad, new DummyResolver(), cfg, metrics3);
+    S3TraceQueryProcessor s3c =
+        new S3TraceQueryProcessor(bad, new DummyResolver(), lister, cfg, metrics3);
     List<Span> empty =
         s3c.getSpansWithFilter(base, base + 1000, "t", "a", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
     assertTrue(empty.isEmpty());
@@ -164,7 +174,8 @@ public class S3TraceQueryProcessorTest {
 
     // Time window skip: query far ahead
     CountingMetrics metrics4 = new CountingMetrics();
-    S3TraceQueryProcessor s3d = new S3TraceQueryProcessor(fetcher, new DummyResolver(), cfg, metrics4);
+    S3TraceQueryProcessor s3d =
+        new S3TraceQueryProcessor(fetcher, new DummyResolver(), lister, cfg, metrics4);
     List<Span> empty2 =
         s3d.getSpansWithFilter(
             base + 5000, base + 6000, "t", "a", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
@@ -181,8 +192,10 @@ public class S3TraceQueryProcessorTest {
     byte[] file = fileWithPages(page.serialize());
     BytesFetcher fetcher = new BytesFetcher(file);
     TraceQueryConfig cfg = TraceQueryConfig.builder().queryThreads(1).build();
+    S3TraceQueryProcessor.ObjectLister lister =
+        (b, p) -> java.util.List.of(p + "node/tracefile.bin");
     S3TraceQueryProcessor s3 =
-        new S3TraceQueryProcessor(fetcher, new DummyResolver(), cfg, new CountingMetrics());
+        new S3TraceQueryProcessor(fetcher, new DummyResolver(), lister, cfg, new CountingMetrics());
 
     var attr =
         AttributeFilter.withPattern("service.name", ".*"); // no resource attrs in test; expect 0

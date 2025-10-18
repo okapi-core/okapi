@@ -1,5 +1,6 @@
 package org.okapi.traces.testutil;
 
+import java.util.List;
 import org.okapi.traces.query.S3TracefileKeyResolver;
 
 /**
@@ -18,8 +19,12 @@ public class TestS3Resolver implements S3TracefileKeyResolver {
   }
 
   @Override
-  public String keyFor(String tenant, String application, long hourBucket) {
-    return tenant + "/" + application + "/" + hourBucket;
+  public List<String> keyFor(String tenant, String application, long hourBucket) {
+    return java.util.List.of(tenant + "/" + application + "/" + hourBucket + "/");
+  }
+
+  @Override
+  public String uploadKey(String tenant, String application, long hourBucket, String nodeId) {
+    return tenant + "/" + application + "/" + hourBucket + "/" + nodeId + "/tracefile.bin";
   }
 }
-

@@ -30,3 +30,8 @@ stop-test-infra:
 	localstack stop || true
 	docker stop zookeeper || true
 	docker rm zookeeper || true
+
+# Build and package okapi-traces as a Docker image
+okapi-traces:
+	mvn -pl okapi-traces -am -skipTests=true package
+	docker build -t ghcr.io/okapi-core/okapi-traces:latest -f okapi-traces/Dockerfile okapi-traces
