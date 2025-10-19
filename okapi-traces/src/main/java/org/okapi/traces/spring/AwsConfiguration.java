@@ -13,7 +13,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
 
 @Configuration
-public class AwsCredsConfig {
+public class AwsConfiguration {
 
   @Bean
   public Region region(@Value("${okapi.traces.s3.region}") String region) {

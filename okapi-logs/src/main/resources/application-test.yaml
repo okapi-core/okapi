@@ -1,0 +1,4 @@
+okapi:
+  logs:
+    s3:
+      region: eu-west-2

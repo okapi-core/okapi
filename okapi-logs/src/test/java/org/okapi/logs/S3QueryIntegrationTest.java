@@ -18,15 +18,18 @@ import org.okapi.logs.io.LogPageSerializer;
 import org.okapi.logs.query.RegexFilter;
 import org.okapi.logs.query.S3QueryProcessor;
 import org.okapi.logs.query.TraceFilter;
+import org.okapi.logs.spring.AwsConfiguration;
 import org.okapi.protos.logs.LogPayloadProto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import software.amazon.awssdk.services.s3.S3Client;
 
-@SpringBootTest(classes = TestApplication.class)
+@SpringBootTest(classes = {TestApplication.class, AwsConfiguration.class})
 @TestPropertySource(
     properties = {"okapi.logs.s3Bucket=unit-bucket", "okapi.logs.s3BasePrefix=logs"})
+@ActiveProfiles("test")
 class S3QueryIntegrationTest {
   @Autowired LogsConfigProperties cfg;
 
@@ -47,12 +50,11 @@ class S3QueryIntegrationTest {
 
     Map<String, byte[]> store = new HashMap<>();
     long startTs = page.getTsStart();
-    ZonedDateTime z =
-        Instant.ofEpochMilli(startTs).atZone(java.time.ZoneId.of("UTC"));
+    ZonedDateTime z = Instant.ofEpochMilli(startTs).atZone(java.time.ZoneId.of("UTC"));
     String hour =
         String.format(
             "%04d%02d%02d%02d", z.getYear(), z.getMonthValue(), z.getDayOfMonth(), z.getHour());
-    String prefix = cfg.getS3BasePrefix() + "/tenantX/streamY/" + hour;
+    String prefix = cfg.getS3BasePrefix() + "/tenantX/streamY/" + hour + "/node-1";
     store.put(prefix + "/logfile.idx", idx);
     store.put(prefix + "/logfile.bin", bin);
 
@@ -115,6 +117,13 @@ class S3QueryIntegrationTest {
       byte[] r = new byte[length];
       System.arraycopy(all, (int) offset, r, 0, length);
       return r;
+    }
+
+    @Override
+    protected java.util.List<String> listObjectKeys(String bucket, String prefix) {
+      java.util.List<String> keys = new java.util.ArrayList<>();
+      for (String k : store.keySet()) if (k.startsWith(prefix)) keys.add(k);
+      return keys;
     }
   }
 }

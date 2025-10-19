@@ -29,8 +29,8 @@ public final class LogPageSerializer {
   // [24..27] len_levelsInPage (int32)
   // [28..31] len_traceIdSet (int32)
   // [32..35] len_logDocs (int32)
-  // [36..55] reserved (6 * int32 = 24 bytes)
-  // [56..75] reserved (20 bytes)
+  // [36..59] reserved (6 * int32 = 24 bytes)
+  // [60..79] reserved (20 bytes)
   // sections ...
   // [end..end+3] CRC32 of all previous bytes
 

@@ -40,15 +40,18 @@ public class LogPage {
       BloomFilter<CharSequence> traceIdSet,
       @Singular("doc") List<LogPayloadProto> logDocs,
       Integer expectedInsertions) {
-    this.trigramMap = (trigramMap != null) ? trigramMap : new HashMap<>();
-    this.levelsInPage = (levelsInPage != null) ? levelsInPage : new HashMap<>();
+    // Ensure mutable collections even if Lombok @Builder provided unmodifiable ones
+    this.trigramMap =
+        (trigramMap != null) ? new HashMap<>(trigramMap) : new HashMap<>();
+    this.levelsInPage =
+        (levelsInPage != null) ? new HashMap<>(levelsInPage) : new HashMap<>();
     this.traceIdSet =
         (traceIdSet != null)
             ? traceIdSet
             : BloomFilter.create(
                 Funnels.stringFunnel(StandardCharsets.UTF_8),
                 expectedInsertions != null ? expectedInsertions : 20000);
-    this.logDocs = (logDocs != null) ? logDocs : new ArrayList<>();
+    this.logDocs = (logDocs != null) ? new ArrayList<>(logDocs) : new ArrayList<>();
   }
 
   public int sizeInDocs() {

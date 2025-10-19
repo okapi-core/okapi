@@ -8,6 +8,7 @@
     </parent>
     <artifactId>okapi-logs</artifactId>
     <name>okapi-logs</name>
+    <packaging>jar</packaging>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -71,4 +72,13 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>

@@ -15,12 +15,13 @@ import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 @RequiredArgsConstructor
 public class S3LogDumpReader {
+  private static final int HEADER_SIZE = 80; // bytes
   private final S3Client s3;
   private final MeterRegistry meterRegistry;
 
   public Header readHeader(String bucket, String key, long offset) {
-    // Header is fixed 76 bytes
-    byte[] hdr = range(bucket, key, offset, 76);
+    // Header is fixed 80 bytes (see LogPageSerializer)
+    byte[] hdr = range(bucket, key, offset, HEADER_SIZE);
     int pos = 0;
     long tsStart = Longs.fromByteArray(slice(hdr, pos, 8));
     pos += 8;
@@ -40,17 +41,17 @@ public class S3LogDumpReader {
   }
 
   public byte[] readLevelsSection(String bucket, String key, long pageOffset, Header h) {
-    long secOff = pageOffset + 76 + h.lenTri;
+    long secOff = pageOffset + HEADER_SIZE + h.lenTri;
     return range(bucket, key, secOff, h.lenLvl);
   }
 
   public byte[] readBloomSection(String bucket, String key, long pageOffset, Header h) {
-    long secOff = pageOffset + 76 + h.lenTri + h.lenLvl;
+    long secOff = pageOffset + HEADER_SIZE + h.lenTri + h.lenLvl;
     return range(bucket, key, secOff, h.lenBloom);
   }
 
   public byte[] readDocsSizes(String bucket, String key, long pageOffset, Header h) {
-    long secOff = pageOffset + 76 + h.lenTri + h.lenLvl + h.lenBloom;
+    long secOff = pageOffset + HEADER_SIZE + h.lenTri + h.lenLvl + h.lenBloom;
     // First 4 + sizes table (nDocs * 4)
     byte[] head = range(bucket, key, secOff, 4);
     int nDocs = Ints.fromByteArray(head);
@@ -59,7 +60,7 @@ public class S3LogDumpReader {
 
   public List<LogPayloadProto> readDocsByIds(
       String bucket, String key, long pageOffset, Header h, int[] docIds) throws IOException {
-    long docsOff = pageOffset + 76 + h.lenTri + h.lenLvl + h.lenBloom;
+    long docsOff = pageOffset + HEADER_SIZE + h.lenTri + h.lenLvl + h.lenBloom;
     byte[] sizesTable = readDocsSizes(bucket, key, pageOffset, h);
     int pos = 0;
     int nDocs = Ints.fromByteArray(slice(sizesTable, pos, 4));
@@ -103,4 +104,3 @@ public class S3LogDumpReader {
   public record Header(long tsStart, long tsEnd, int maxDocId, int lenTri, int lenLvl, int lenBloom,
       int lenDocs) {}
 }
-

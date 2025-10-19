@@ -29,4 +29,10 @@ public class LogsConfigProperties {
   // S3 settings for querying remote dumps
   private String s3Bucket; // if null/empty, S3 queries are disabled
   private String s3BasePrefix = "logs"; // base prefix for tenant/logStream objects
+
+  // S3 upload scheduler
+  private boolean s3UploadEnabled = false;
+  private long s3UploadIntervalMs = 60_000L; // 1 minute
+  private long s3UploadGraceMs = 120_000L; // 2 minutes past the hour
+  private boolean s3UploadIncludeNodeId = true;
 }
