@@ -2,14 +2,12 @@ package org.okapi.logs.controller;
 
 import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest;
 import io.opentelemetry.proto.logs.v1.LogRecord;
-import io.opentelemetry.proto.logs.v1.ResourceLogs;
-import io.opentelemetry.proto.logs.v1.ScopeLogs;
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicLong;
 import lombok.RequiredArgsConstructor;
 import org.okapi.logs.mappers.OtelToLogMapper;
 import org.okapi.logs.runtime.LogPageBufferPool;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -22,26 +20,26 @@ public class OtelLogsController {
   private final io.micrometer.core.instrument.MeterRegistry meterRegistry;
 
   @PostMapping(path = "/v1/logs", consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-  public String ingestProtobuf(
+  public ResponseEntity<String> ingestProtobuf(
       @RequestHeader("X-Okapi-Tenant-Id") String tenantId,
       @RequestHeader("X-Okapi-Log-Stream") String logStream,
       @RequestBody byte[] body)
       throws IOException {
-    ExportLogsServiceRequest req = ExportLogsServiceRequest.parseFrom(body);
-    AtomicLong count = new AtomicLong();
-    for (ResourceLogs rl : req.getResourceLogsList()) {
-      for (ScopeLogs sl : rl.getScopeLogsList()) {
-        for (LogRecord lr : sl.getLogRecordsList()) {
-          long tsMs = lr.getTimeUnixNano() / 1_000_000L;
-          int level = OtelToLogMapper.mapLevel(lr.getSeverityNumber().getNumber());
-          String traceId = OtelToLogMapper.traceIdToHex(lr.getTraceId());
-          String text = OtelToLogMapper.anyValueToString(lr.getBody());
+    var req = ExportLogsServiceRequest.parseFrom(body);
+    var count = 0;
+    for (var resourceLog : req.getResourceLogsList()) {
+      for (var scopeLogs : resourceLog.getScopeLogsList()) {
+        for (LogRecord logRecord : scopeLogs.getLogRecordsList()) {
+          long tsMs = logRecord.getTimeUnixNano() / 1_000_000L;
+          int level = OtelToLogMapper.mapLevel(logRecord.getSeverityNumber().getNumber());
+          String traceId = OtelToLogMapper.traceIdToHex(logRecord.getTraceId());
+          String text = OtelToLogMapper.anyValueToString(logRecord.getBody());
           bufferPool.consume(tenantId, logStream, tsMs, traceId, level, text);
-          count.incrementAndGet();
+          count++;
         }
       }
     }
-    meterRegistry.counter("okapi.logs.ingest_records_total").increment(count.get());
-    return "ingested=" + count.get();
+    meterRegistry.counter("okapi.logs.ingest_records_total").increment(count);
+    return ResponseEntity.ok("OK");
   }
 }
