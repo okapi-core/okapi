@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.okapi.logs.query.*;
@@ -22,22 +20,24 @@ import org.springframework.web.bind.annotation.RestController;
 public class LogsQueryController {
   private final MultiSourceQueryProcessor processor;
 
-  @PostMapping(path = "/logs/query", consumes = MediaType.APPLICATION_JSON_VALUE,
+  @PostMapping(
+      path = "/logs/query",
+      consumes = MediaType.APPLICATION_JSON_VALUE,
       produces = MediaType.APPLICATION_JSON_VALUE)
   public QueryResponse query(
       @RequestHeader("X-Okapi-Tenant-Id") String tenantId,
       @RequestHeader("X-Okapi-Log-Stream") String logStream,
-      @RequestBody QueryRequest req) throws Exception {
+      @RequestBody QueryRequest req)
+      throws Exception {
     LogFilter filter = toFilter(req.filter);
-    List<LogPayloadProto> all =
-        processor.getLogs(tenantId, logStream, req.start, req.end, filter);
+    List<LogPayloadProto> all = processor.getLogs(tenantId, logStream, req.start, req.end, filter);
 
     // Sort by ts_millis then tie-breaker (level, body hash, traceId)
-    Comparator<LogPayloadProto> cmp = Comparator
-        .comparingLong(LogPayloadProto::getTsMillis)
-        .thenComparingInt(LogPayloadProto::getLevel)
-        .thenComparing(p -> p.getBody(), Comparator.nullsFirst(Comparator.naturalOrder()))
-        .thenComparing(p -> p.getTraceId(), Comparator.nullsFirst(Comparator.naturalOrder()));
+    Comparator<LogPayloadProto> cmp =
+        Comparator.comparingLong(LogPayloadProto::getTsMillis)
+            .thenComparingInt(LogPayloadProto::getLevel)
+            .thenComparing(p -> p.getBody(), Comparator.nullsFirst(Comparator.naturalOrder()))
+            .thenComparing(p -> p.getTraceId(), Comparator.nullsFirst(Comparator.naturalOrder()));
     all.sort(cmp);
 
     // Apply pagination using pageToken: base64 of "ts|level|hash(body)|traceId"
@@ -138,8 +138,11 @@ public class LogsQueryController {
     }
 
     static PageCursor from(LogPayloadProto p) {
-      return new PageCursor(p.getTsMillis(), p.getLevel(),
-          p.getBody() == null ? 0 : p.getBody().hashCode(), p.getTraceId());
+      return new PageCursor(
+          p.getTsMillis(),
+          p.getLevel(),
+          p.getBody() == null ? 0 : p.getBody().hashCode(),
+          p.getTraceId());
     }
 
     String encode() {
@@ -150,8 +153,11 @@ public class LogsQueryController {
     static PageCursor decode(String token) {
       String raw = new String(Base64.getUrlDecoder().decode(token));
       String[] parts = raw.split("\\|", 4);
-      return new PageCursor(Long.parseLong(parts[0]), Integer.parseInt(parts[1]),
-          Integer.parseInt(parts[2]), parts.length > 3 ? parts[3] : "");
+      return new PageCursor(
+          Long.parseLong(parts[0]),
+          Integer.parseInt(parts[1]),
+          Integer.parseInt(parts[2]),
+          parts.length > 3 ? parts[3] : "");
     }
 
     static int compare(LogPayloadProto p, PageCursor c) {
@@ -164,4 +170,3 @@ public class LogsQueryController {
     }
   }
 }
-
