@@ -20,6 +20,7 @@
             <artifactId>okapi-core</artifactId>
             <version>${project.version}</version>
         </dependency>
+
         <dependency>
             <groupId>org.okapi</groupId>
             <artifactId>okapi-otel-protos</artifactId>
@@ -35,6 +36,7 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
+
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
