@@ -31,6 +31,14 @@
             <artifactId>okhttp</artifactId>
         </dependency>
 
+        <!-- K8s discovery (optional, only used under 'k8s' profile) -->
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-client</artifactId>
+            <version>6.12.1</version>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Test dependencies -->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>

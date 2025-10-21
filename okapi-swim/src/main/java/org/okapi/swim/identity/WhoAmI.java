@@ -1,8 +1,13 @@
 package org.okapi.swim.identity;
 
-public interface WhoAmI {
-  String getNodeId();
-  String getNodeIp();
-  int getNodePort();
-}
+import java.util.UUID;
 
+public interface WhoAmI {
+  String getNodeIp();
+
+  int getNodePort();
+
+  default String getNodeId() {
+    return UUID.randomUUID().toString();
+  }
+}

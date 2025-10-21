@@ -100,6 +100,17 @@ okapi:
     dedupe-max-entries: 10000
 ```
 
+## Kubernetes Integration (profile: k8s)
+- Activate: set `spring.profiles.active=k8s`.
+- Provide label selector value for the fixed key `okapi_service`:
+  - `okapi.swim.k8s.okapi-service-label-value=okapi-logs` (or `okapi-traces`, etc.)
+- Ensure uniform `server.port` across pods; SWIM peers use that port.
+- RBAC: the app’s ServiceAccount needs `get,list,watch` on `pods` in the namespace.
+- Beans activated under `k8s`:
+  - `K8sWhoAmI`: uses `$HOSTNAME` (fallback UUID), `$POD_IP`, and `server.port`.
+  - `K8sSeedRegistry`: seeds peers by listing Pods with label `okapi_service=<value>` and resolving `/okapi/swim/meta` to get nodeId.
+  - `K8sPodWatcher`: watches Pods for add/remove and updates `MemberList` in real time.
+
 ## What Happens At Runtime
 - Startup:
   - If a `SeedMembersProvider` bean is present, seeds are added to the `MemberList` automatically.

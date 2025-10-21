@@ -45,9 +45,18 @@
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>
         </dependency>
+
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+        </dependency>
+
+
+        <!-- SWIM membership module -->
+        <dependency>
+            <groupId>org.okapi</groupId>
+            <artifactId>okapi-swim</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <!-- Test deps -->
