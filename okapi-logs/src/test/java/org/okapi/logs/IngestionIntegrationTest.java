@@ -10,6 +10,7 @@ import io.opentelemetry.proto.logs.v1.SeverityNumber;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
@@ -78,20 +79,14 @@ class IngestionIntegrationTest {
   private byte[] buildOtelPayload() {
     long nowNs = Instant.now().toEpochMilli() * 1_000_000L;
     byte[] traceA = new byte[16];
-    java.util.Arrays.fill(traceA, (byte) 0xAA);
+    Arrays.fill(traceA, (byte) 0xAA);
     byte[] traceB = new byte[16];
-    java.util.Arrays.fill(traceB, (byte) 0xBB);
+    Arrays.fill(traceB, (byte) 0xBB);
 
     // Build 10 logs: 5 per trace. Levels: 2 warn, 2 error, 1 debug; remaining are info
-    ExportLogsServiceRequest.Builder req = ExportLogsServiceRequest.newBuilder();
-    ResourceLogs.Builder rl = ResourceLogs.newBuilder();
-    ScopeLogs.Builder sl = ScopeLogs.newBuilder();
-
-    // helper
-    java.util.function.BiConsumer<String, LogRecord> add =
-        (t, lr) -> {
-          sl.addLogRecords(lr);
-        };
+    var req = ExportLogsServiceRequest.newBuilder();
+    var rl = ResourceLogs.newBuilder();
+    var sl = ScopeLogs.newBuilder();
 
     // Trace A (successful checkout)
     sl.addLogRecords(

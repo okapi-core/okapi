@@ -54,8 +54,8 @@ public class MembershipService {
       states.put(nodeId, s);
       return true;
     }
-    if (incarnation > current.incarnation ||
-        (incarnation == current.incarnation && current.status != LivenessStatus.ALIVE)) {
+    if (incarnation > current.incarnation
+        || (incarnation == current.incarnation && current.status != LivenessStatus.ALIVE)) {
       current.status = LivenessStatus.ALIVE;
       current.incarnation = incarnation;
       current.lastUpdated = Instant.now();
@@ -65,7 +65,8 @@ public class MembershipService {
     return false; // no-op
   }
 
-  public synchronized boolean applySuspect(String nodeId, long incarnation, long suspectTimeoutMillis) {
+  public synchronized boolean applySuspect(
+      String nodeId, long incarnation, long suspectTimeoutMillis) {
     State current = states.get(nodeId);
     if (current == null) {
       current = new State(LivenessStatus.SUSPECT, incarnation);
@@ -73,8 +74,8 @@ public class MembershipService {
       current.suspicionExpiresAt = Instant.now().plusMillis(suspectTimeoutMillis);
       return true;
     }
-    if (incarnation > current.incarnation ||
-        (incarnation == current.incarnation && current.status == LivenessStatus.ALIVE)) {
+    if (incarnation > current.incarnation
+        || (incarnation == current.incarnation && current.status == LivenessStatus.ALIVE)) {
       current.status = LivenessStatus.SUSPECT;
       current.incarnation = incarnation;
       current.lastUpdated = Instant.now();
@@ -88,7 +89,9 @@ public class MembershipService {
     var now = Instant.now();
     for (var e : states.entrySet()) {
       State s = e.getValue();
-      if (s.status == LivenessStatus.SUSPECT && s.suspicionExpiresAt != null && !now.isBefore(s.suspicionExpiresAt)) {
+      if (s.status == LivenessStatus.SUSPECT
+          && s.suspicionExpiresAt != null
+          && !now.isBefore(s.suspicionExpiresAt)) {
         s.status = LivenessStatus.DEAD;
         s.lastUpdated = now;
         s.suspicionExpiresAt = null;
@@ -96,4 +99,3 @@ public class MembershipService {
     }
   }
 }
-

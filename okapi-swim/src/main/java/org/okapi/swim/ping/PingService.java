@@ -1,11 +1,12 @@
 package org.okapi.swim.ping;
 
+import static org.okapi.swim.config.SwimConfiguration.SWIM_OK_HTTP;
+
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.*;
-import lombok.RequiredArgsConstructor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -20,10 +21,11 @@ import org.okapi.swim.rest.AliveMessage;
 import org.okapi.swim.rest.PingMessage;
 import org.okapi.swim.rest.PingRequest;
 import org.okapi.swim.rest.SuspectMessage;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class PingService {
 
   private final MemberList memberList;
@@ -33,6 +35,23 @@ public class PingService {
   private final ExecutorService executorService;
   private final MembershipService membershipService;
   private final Disseminator disseminator;
+
+  public PingService(
+      @Autowired MemberList memberList,
+      @Autowired SwimConfig swimConfig,
+      @Autowired Gson gson,
+      @Autowired @Qualifier(SWIM_OK_HTTP) OkHttpClient httpClient,
+      @Autowired ExecutorService executorService,
+      @Autowired MembershipService membershipService,
+      @Autowired Disseminator disseminator) {
+    this.memberList = memberList;
+    this.swimConfig = swimConfig;
+    this.gson = gson;
+    this.httpClient = httpClient;
+    this.executorService = executorService;
+    this.membershipService = membershipService;
+    this.disseminator = disseminator;
+  }
 
   public Optional<AckMessage> pingKIndirect(String nodeId)
       throws ExecutionException, InterruptedException, TimeoutException {

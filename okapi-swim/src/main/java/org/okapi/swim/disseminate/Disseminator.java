@@ -1,14 +1,14 @@
 package org.okapi.swim.disseminate;
 
+import static org.okapi.swim.config.SwimConfiguration.SWIM_OK_HTTP;
+
 import com.google.gson.Gson;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
-import lombok.RequiredArgsConstructor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -23,10 +23,11 @@ import org.okapi.swim.rest.AckMessage;
 import org.okapi.swim.rest.AliveMessage;
 import org.okapi.swim.rest.RegisterMessage;
 import org.okapi.swim.rest.SuspectMessage;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class Disseminator {
   private final MemberList memberList;
   private final OkHttpClient httpClient;
@@ -34,6 +35,21 @@ public class Disseminator {
   private final ExecutorService executorService;
   private final Gson gson;
   private final SwimConfig swimConfig;
+
+  public Disseminator(
+      @Autowired MemberList memberList,
+      @Autowired @Qualifier(SWIM_OK_HTTP) OkHttpClient httpClient,
+      @Autowired WhoAmI whoAmI,
+      @Autowired ExecutorService executorService,
+      @Autowired Gson gson,
+      @Autowired SwimConfig swimConfig) {
+    this.memberList = memberList;
+    this.httpClient = httpClient;
+    this.whoAmI = whoAmI;
+    this.executorService = executorService;
+    this.gson = gson;
+    this.swimConfig = swimConfig;
+  }
 
   public Result<AckMessage, Exception> disseminateUnHealthy(String nodeId) {
     for (Member member : memberList.getAllMembers()) {
@@ -85,8 +101,10 @@ public class Disseminator {
     if (sampledSize == 0) {
       return new BroadcastResult(0, 0, true);
     }
-    int m = swimConfig.getMQuorum() > 0 ? Math.min(swimConfig.getMQuorum(), sampledSize) : sampledSize;
-    long timeoutMs = swimConfig.getBroadcastTimeoutMillis() > 0 ? swimConfig.getBroadcastTimeoutMillis() : 5000;
+    int m =
+        swimConfig.getMQuorum() > 0 ? Math.min(swimConfig.getMQuorum(), sampledSize) : sampledSize;
+    long timeoutMs =
+        swimConfig.getBroadcastTimeoutMillis() > 0 ? swimConfig.getBroadcastTimeoutMillis() : 5000;
 
     List<Future<Boolean>> futures = new ArrayList<>();
     for (Member peer : peers) {
@@ -94,7 +112,9 @@ public class Disseminator {
           executorService.submit(
               () -> {
                 var url = "http://" + peer.getIp() + ":" + peer.getPort() + pathSuffix;
-                var reqBody = RequestBody.create(MediaType.parse("application/json"), gson.toJson(body).getBytes());
+                var reqBody =
+                    RequestBody.create(
+                        MediaType.parse("application/json"), gson.toJson(body).getBytes());
                 var req = new Request.Builder().url(url).put(reqBody).build();
                 try (var call = httpClient.newCall(req).execute()) {
                   return call.code() >= 200 && call.code() < 300;
@@ -110,7 +130,8 @@ public class Disseminator {
       if (remaining <= 0) break;
       try {
         boolean ok = f.get(remaining, TimeUnit.NANOSECONDS);
-        if (ok) success++; else failures++;
+        if (ok) success++;
+        else failures++;
         if (success >= m) {
           // Optionally cancel remaining tasks
           for (Future<Boolean> other : futures) other.cancel(true);

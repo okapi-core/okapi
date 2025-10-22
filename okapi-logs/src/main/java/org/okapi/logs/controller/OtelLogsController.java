@@ -1,11 +1,23 @@
 package org.okapi.logs.controller;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest;
 import io.opentelemetry.proto.logs.v1.LogRecord;
+import io.opentelemetry.proto.logs.v1.ScopeLogs;
 import java.io.IOException;
-import lombok.RequiredArgsConstructor;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import org.okapi.logs.RandomSampler;
+import org.okapi.logs.StaticConfiguration;
+import org.okapi.logs.forwarding.LogForwarder;
 import org.okapi.logs.mappers.OtelToLogMapper;
 import org.okapi.logs.runtime.LogPageBufferPool;
+import org.okapi.swim.identity.WhoAmI;
+import org.okapi.swim.ping.Member;
+import org.okapi.swim.ping.MemberList;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,10 +26,25 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequiredArgsConstructor
 public class OtelLogsController {
   private final LogPageBufferPool bufferPool;
-  private final io.micrometer.core.instrument.MeterRegistry meterRegistry;
+  private final MeterRegistry meterRegistry;
+  private final MemberList memberList;
+  private final WhoAmI whoAmI;
+  private final LogForwarder forwarder;
+
+  public OtelLogsController(
+      LogPageBufferPool bufferPool,
+      MeterRegistry meterRegistry,
+      MemberList memberList,
+      WhoAmI whoAmI,
+      LogForwarder forwarder) {
+    this.bufferPool = bufferPool;
+    this.meterRegistry = meterRegistry;
+    this.memberList = memberList;
+    this.whoAmI = whoAmI;
+    this.forwarder = forwarder;
+  }
 
   @PostMapping(path = "/v1/logs", consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
   public ResponseEntity<String> ingestProtobuf(
@@ -26,20 +53,70 @@ public class OtelLogsController {
       @RequestBody byte[] body)
       throws IOException {
     var req = ExportLogsServiceRequest.parseFrom(body);
+    var myblock = StaticConfiguration.rkHash(whoAmI.getNodeId());
     var count = 0;
+    var outOfBlock = new HashMap<Integer, List<LogRecord>>();
     for (var resourceLog : req.getResourceLogsList()) {
       for (var scopeLogs : resourceLog.getScopeLogsList()) {
         for (LogRecord logRecord : scopeLogs.getLogRecordsList()) {
           long tsMs = logRecord.getTimeUnixNano() / 1_000_000L;
-          int level = OtelToLogMapper.mapLevel(logRecord.getSeverityNumber().getNumber());
-          String traceId = OtelToLogMapper.traceIdToHex(logRecord.getTraceId());
-          String text = OtelToLogMapper.anyValueToString(logRecord.getBody());
-          bufferPool.consume(tenantId, logStream, tsMs, traceId, level, text);
-          count++;
+          var hr = tsMs / 3600_000L;
+          var blockIdx = StaticConfiguration.hashLogStream(tenantId, logStream, hr);
+          if (blockIdx == myblock) {
+            int level = OtelToLogMapper.mapLevel(logRecord.getSeverityNumber().getNumber());
+            String traceId = OtelToLogMapper.traceIdToHex(logRecord.getTraceId());
+            String text = OtelToLogMapper.anyValueToString(logRecord.getBody());
+            bufferPool.consume(tenantId, logStream, tsMs, traceId, level, text);
+            count++;
+          } else {
+            outOfBlock.putIfAbsent(blockIdx, new ArrayList<>());
+            outOfBlock.get(blockIdx).add(logRecord);
+          }
+        }
+      }
+
+      var groupedMembers = new HashMap<Integer, List<Member>>();
+      memberList
+          .getAllMembers()
+          .forEach(
+              member -> {
+                var block = StaticConfiguration.rkHash(member.getNodeId());
+                groupedMembers.putIfAbsent(block, new ArrayList<>());
+                groupedMembers.get(block).add(member);
+              });
+
+      for (var block : outOfBlock.keySet()) {
+        var records = outOfBlock.get(block);
+        var targetBlock = block;
+        // if the current target block is empty, rollover to the non-empty block.
+        while (groupedMembers.getOrDefault(targetBlock, Collections.emptyList()).isEmpty()) {
+          targetBlock = (1 + targetBlock) % StaticConfiguration.N_BLOCKS;
+        }
+        var members = groupedMembers.get(targetBlock);
+        var member = RandomSampler.randomSample(members);
+        if (member.getNodeId().equals(whoAmI.getNodeId())) {
+          for (var record : records) {
+            bufferPool.consume(tenantId, logStream, record);
+          }
+        } else {
+          forwarder.forward(tenantId, logStream, member, records);
         }
       }
     }
     meterRegistry.counter("okapi.logs.ingest_records_total").increment(count);
+    return ResponseEntity.ok("OK");
+  }
+
+  @PostMapping(path = "/v1/logs/bulk", consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+  public ResponseEntity<String> bulkIngest(
+      @RequestHeader("X-Okapi-Tenant-Id") String tenantId,
+      @RequestHeader("X-Okapi-Log-Stream") String logStream,
+      @RequestBody byte[] body)
+      throws InvalidProtocolBufferException {
+    var req = ScopeLogs.parseFrom(body);
+    for (LogRecord logRecord : req.getLogRecordsList()) {
+      bufferPool.consume(tenantId, logStream, logRecord);
+    }
     return ResponseEntity.ok("OK");
   }
 }

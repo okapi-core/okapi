@@ -11,6 +11,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.okapi.logs.config.LogsConfigProperties;
+import org.okapi.logs.forwarding.LogForwarder;
 import org.okapi.logs.io.LogPage;
 import org.okapi.logs.io.LogPageSerializer;
 import org.okapi.logs.query.RegexFilter;
@@ -22,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @SpringBootTest(classes = {TestApplication.class, AwsConfiguration.class})
@@ -32,6 +34,8 @@ class S3QueryIntegrationTest {
   @Autowired LogsConfigProperties cfg;
 
   @Mock S3Client s3Client;
+  @MockitoBean
+  LogForwarder logForwarder;
 
   @Test
   void queryFromS3Dump() throws Exception {

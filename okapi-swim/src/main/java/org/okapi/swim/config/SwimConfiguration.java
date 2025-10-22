@@ -21,7 +21,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @RequiredArgsConstructor
 public class SwimConfiguration {
 
-  @Bean
+  public static final String SWIM_OK_HTTP = "swimOkHttpClient";
+  @Bean(name = SWIM_OK_HTTP)
   public OkHttpClient okHttpClient(SwimConfig swimConfig) {
     var timeout =
         Duration.ofMillis(swimConfig.getTimeoutMillis() > 0 ? swimConfig.getTimeoutMillis() : 5000);

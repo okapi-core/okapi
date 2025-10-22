@@ -28,6 +28,7 @@ public class LogsQueryController {
       @RequestHeader("X-Okapi-Log-Stream") String logStream,
       @RequestBody QueryRequest req)
       throws Exception {
+
     LogFilter filter = toFilter(req.filter);
     List<LogPayloadProto> all = processor.getLogs(tenantId, logStream, req.start, req.end, filter);
 
