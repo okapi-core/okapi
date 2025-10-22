@@ -106,10 +106,11 @@ public class LocalPageReader implements Closeable {
     long secOff = pageOffset + HEADER_SIZE + h.lenTri() + h.lenLvl();
     byte[] sec = range(bin, secOff, h.lenBloom());
     int n = Ints.fromByteArray(slice(sec, 0, 4));
-    try (java.io.ByteArrayInputStream bais =
-        new java.io.ByteArrayInputStream(slice(sec, 4, n))) {
-      var bloom = com.google.common.hash.BloomFilter.readFrom(
-          bais, com.google.common.hash.Funnels.stringFunnel(java.nio.charset.StandardCharsets.UTF_8));
+    try (java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(slice(sec, 4, n))) {
+      var bloom =
+          com.google.common.hash.BloomFilter.readFrom(
+              bais,
+              com.google.common.hash.Funnels.stringFunnel(java.nio.charset.StandardCharsets.UTF_8));
       return bloom.mightContain(traceId);
     }
   }
@@ -122,8 +123,8 @@ public class LocalPageReader implements Closeable {
     return range(bin, secOff, headLen + nDocs * 4);
   }
 
-  public List<LogPayloadProto> readDocsByIds(
-      Path bin, long pageOffset, Header h, int[] docIds) throws IOException {
+  public List<LogPayloadProto> readDocsByIds(Path bin, long pageOffset, Header h, int[] docIds)
+      throws IOException {
     long docsOff = pageOffset + HEADER_SIZE + h.lenTri() + h.lenLvl() + h.lenBloom();
     byte[] sizesTable = readDocsSizes(bin, pageOffset, h);
     int pos = 0;
@@ -173,8 +174,8 @@ public class LocalPageReader implements Closeable {
     channelCache.close();
   }
 
-  public record Header(long tsStart, long tsEnd, int maxDocId, int lenTri, int lenLvl, int lenBloom,
-      int lenDocs) {}
+  public record Header(
+      long tsStart, long tsEnd, int maxDocId, int lenTri, int lenLvl, int lenBloom, int lenDocs) {}
 
   private static final class ChannelCache implements Closeable {
     private final int capacity;
@@ -182,16 +183,20 @@ public class LocalPageReader implements Closeable {
 
     ChannelCache(int capacity) {
       this.capacity = capacity;
-      this.map = new LinkedHashMap<>(16, 0.75f, true) {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<Path, FileChannel> eldest) {
-          if (size() > ChannelCache.this.capacity) {
-            try { eldest.getValue().close(); } catch (IOException ignored) {}
-            return true;
-          }
-          return false;
-        }
-      };
+      this.map =
+          new LinkedHashMap<>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<Path, FileChannel> eldest) {
+              if (size() > ChannelCache.this.capacity) {
+                try {
+                  eldest.getValue().close();
+                } catch (IOException ignored) {
+                }
+                return true;
+              }
+              return false;
+            }
+          };
     }
 
     synchronized FileChannel get(Path path) throws IOException {
@@ -206,7 +211,10 @@ public class LocalPageReader implements Closeable {
     @Override
     public synchronized void close() throws IOException {
       for (FileChannel ch : map.values()) {
-        try { ch.close(); } catch (IOException ignored) {}
+        try {
+          ch.close();
+        } catch (IOException ignored) {
+        }
       }
       map.clear();
     }

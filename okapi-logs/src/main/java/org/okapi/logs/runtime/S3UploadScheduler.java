@@ -3,9 +3,6 @@ package org.okapi.logs.runtime;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,29 +38,27 @@ public class S3UploadScheduler {
     Path base = Path.of(cfg.getDataDir());
     if (!Files.exists(base)) return;
     long nowMs = System.currentTimeMillis();
-    long cutoffHour = floorToHour(nowMs - cfg.getS3UploadGraceMs());
+    long cutoffHour = (nowMs - cfg.getS3UploadGraceMs()) / 3600_000L;
     Files.walk(base, 4)
         .filter(Files::isDirectory)
         .filter(p -> p.getNameCount() >= base.getNameCount() + 3)
         .forEach(
             hourDir -> {
-              String hourStr = hourDir.getFileName().toString();
-              if (!isHourDirName(hourStr)) return;
-              long hourStart = hourToEpochMs(hourStr);
-              if (hourStart > cutoffHour) return; // not finalized yet
+              var hour = Integer.parseInt(hourDir.getFileName().toString());
+              if (hour > cutoffHour) return; // not finalized yet
               try {
                 Path streamDir = hourDir.getParent();
                 Path tenantDir = streamDir.getParent();
                 String tenant = tenantDir.getFileName().toString();
                 String stream = streamDir.getFileName().toString();
-                uploadHourDir(tenant, stream, hourStr, hourDir);
+                uploadHourDir(tenant, stream, hour, hourDir);
               } catch (Exception e) {
                 log.warn("Failed to upload {}", hourDir, e);
               }
             });
   }
 
-  private void uploadHourDir(String tenant, String stream, String hour, Path hourDir)
+  private void uploadHourDir(String tenant, String stream, long hour, Path hourDir)
       throws IOException {
     Path bin = hourDir.resolve("logfile.bin");
     Path idx = hourDir.resolve("logfile.idx");
@@ -71,11 +66,12 @@ public class S3UploadScheduler {
 
     // Idempotency: compare marker
     Path marker = hourDir.resolve(".upload.complete");
-    Map<String, Object> current = Map.of(
-        "binSize", Files.size(bin),
-        "binMtime", Files.getLastModifiedTime(bin).toMillis(),
-        "idxSize", Files.size(idx),
-        "idxMtime", Files.getLastModifiedTime(idx).toMillis());
+    Map<String, Object> current =
+        Map.of(
+            "binSize", Files.size(bin),
+            "binMtime", Files.getLastModifiedTime(bin).toMillis(),
+            "idxSize", Files.size(idx),
+            "idxMtime", Files.getLastModifiedTime(idx).toMillis());
     if (Files.exists(marker)) {
       String content = Files.readString(marker);
       if (content.equals(current.toString())) return; // unchanged
@@ -95,22 +91,4 @@ public class S3UploadScheduler {
     // Write marker
     Files.writeString(marker, current.toString());
   }
-
-  private static boolean isHourDirName(String name) {
-    return name.length() == 10 && name.chars().allMatch(Character::isDigit);
-  }
-
-  private static long hourToEpochMs(String hour) {
-    int year = Integer.parseInt(hour.substring(0, 4));
-    int mon = Integer.parseInt(hour.substring(4, 6));
-    int day = Integer.parseInt(hour.substring(6, 8));
-    int hr = Integer.parseInt(hour.substring(8, 10));
-    return ZonedDateTime.of(year, mon, day, hr, 0, 0, 0, ZoneId.of("UTC")).toInstant().toEpochMilli();
-  }
-
-  private static long floorToHour(long tsMs) {
-    ZonedDateTime z = Instant.ofEpochMilli(tsMs).atZone(ZoneId.of("UTC"));
-    return z.withMinute(0).withSecond(0).withNano(0).toInstant().toEpochMilli();
-  }
 }
-

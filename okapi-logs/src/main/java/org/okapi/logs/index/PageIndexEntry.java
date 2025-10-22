@@ -17,4 +17,3 @@ public class PageIndexEntry {
   private int docCount;
   private int crc32;
 }
-

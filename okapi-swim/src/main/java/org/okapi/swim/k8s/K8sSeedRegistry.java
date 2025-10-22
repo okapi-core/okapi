@@ -50,7 +50,7 @@ public class K8sSeedRegistry implements SeedMembersProvider {
 
   private final Map<String, Entry> cache = new ConcurrentHashMap<>();
 
-  @Value("${server.port:8080}")
+  @Value("${server.port}")
   private int serverPort;
 
   @Override

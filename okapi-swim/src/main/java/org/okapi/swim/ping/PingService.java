@@ -13,7 +13,6 @@ import okhttp3.RequestBody;
 import org.okapi.swim.HttpException;
 import org.okapi.swim.Result;
 import org.okapi.swim.config.SwimConfig;
-// import removed
 import org.okapi.swim.disseminate.Disseminator;
 import org.okapi.swim.membership.MembershipService;
 import org.okapi.swim.rest.AckMessage;
@@ -65,18 +64,14 @@ public class PingService {
       int code = call.code();
       boolean ok = code >= 200 && code < 300;
       if (ok) {
-        if (call.body() != null) {
-          var response = call.body().string();
-          var msg = gson.fromJson(response, AckMessage.class);
-          membershipService.applyAlive(member.getNodeId(), 0L);
-          disseminator.disseminateAlive(
-              new AliveMessage(member.getNodeId(), 0L, swimConfig.getGossipHopCount()));
-          return new Result<>(msg, null);
-        } else {
-          return new Result<>(null, new HttpException(code, null));
-        }
+        var response = call.body().string();
+        var msg = gson.fromJson(response, AckMessage.class);
+        membershipService.applyAlive(member.getNodeId(), 0L);
+        disseminator.disseminateAlive(
+            new AliveMessage(member.getNodeId(), 0L, swimConfig.getGossipHopCount()));
+        return new Result<>(msg, null);
       } else {
-        String body = call.body() != null ? call.body().string() : null;
+        String body = call.body().string();
         membershipService.applySuspect(
             member.getNodeId(), 0L, swimConfig.getSuspectTimeoutMillis());
         disseminator.disseminateSuspect(
@@ -102,18 +97,14 @@ public class PingService {
       int code = call.code();
       boolean ok = code >= 200 && code < 300;
       if (ok) {
-        if (call.body() != null) {
-          var response = call.body().string();
-          var msg = gson.fromJson(response, AckMessage.class);
-          membershipService.applyAlive(member.getNodeId(), 0L);
-          disseminator.disseminateAlive(
-              new AliveMessage(member.getNodeId(), 0L, swimConfig.getGossipHopCount()));
-          return new Result<>(msg, null);
-        } else {
-          return new Result<>(null, new HttpException(code, null));
-        }
+        var response = call.body().string();
+        var msg = gson.fromJson(response, AckMessage.class);
+        membershipService.applyAlive(member.getNodeId(), 0L);
+        disseminator.disseminateAlive(
+            new AliveMessage(member.getNodeId(), 0L, swimConfig.getGossipHopCount()));
+        return new Result<>(msg, null);
       } else {
-        String body = call.body() != null ? call.body().string() : null;
+        String body = call.body().string();
         membershipService.applySuspect(
             member.getNodeId(), 0L, swimConfig.getSuspectTimeoutMillis());
         disseminator.disseminateSuspect(

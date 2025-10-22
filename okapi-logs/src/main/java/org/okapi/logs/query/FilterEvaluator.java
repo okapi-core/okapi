@@ -37,7 +37,7 @@ public final class FilterEvaluator {
         yield RoaringBitmap.and(candidates, bm);
       }
       case TRACE -> {
-        String traceId = ((TraceFilter) filter).getTraceId();
+        var traceId = ((TraceFilter) filter).getTraceId();
         if (!page.getTraceIdSet().mightContain(traceId)) yield new RoaringBitmap();
         RoaringBitmap bm = new RoaringBitmap();
         List<LogPayloadProto> docs = page.getLogDocs();

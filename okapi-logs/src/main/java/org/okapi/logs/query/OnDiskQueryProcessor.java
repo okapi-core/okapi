@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import org.okapi.logs.config.LogsConfigProperties;
 import org.okapi.logs.index.PageIndex;
 import org.okapi.logs.index.PageIndexEntry;
 import org.okapi.logs.io.LocalPageReader;
@@ -29,8 +30,7 @@ public class OnDiskQueryProcessor implements QueryProcessor {
   private final LocalPageReader pageReader;
   private final IndexCache indexCache = new IndexCache(256);
 
-  public OnDiskQueryProcessor(
-      org.okapi.logs.config.LogsConfigProperties cfg, StatsEmitter stats) {
+  public OnDiskQueryProcessor(LogsConfigProperties cfg, StatsEmitter stats) {
     this.writer = new LogFileWriter(cfg);
     this.stats = stats;
     this.pageReader = new LocalPageReader(stats, 32);
@@ -38,7 +38,8 @@ public class OnDiskQueryProcessor implements QueryProcessor {
 
   @Override
   public List<LogPayloadProto> getLogs(
-      String tenantId, String logStream, long start, long end, LogFilter filter) throws IOException {
+      String tenantId, String logStream, long start, long end, LogFilter filter)
+      throws IOException {
     List<LogPayloadProto> out = new ArrayList<>();
     for (HourPartition p : existingHourPartitions(tenantId, logStream, start, end)) {
       Path idx = p.path().resolve("logfile.idx");
@@ -55,12 +56,6 @@ public class OnDiskQueryProcessor implements QueryProcessor {
     return out;
   }
 
-  private long floorToHour(long tsMs) {
-    java.time.ZonedDateTime z = java.time.Instant.ofEpochMilli(tsMs).atZone(java.time.ZoneId.of("UTC"));
-    java.time.ZonedDateTime f = z.withMinute(0).withSecond(0).withNano(0);
-    return f.toInstant().toEpochMilli();
-  }
-
   private record HourPartition(long hourStart, Path path) {}
 
   private List<HourPartition> existingHourPartitions(
@@ -68,20 +63,13 @@ public class OnDiskQueryProcessor implements QueryProcessor {
     Path base = writer.partitionDir(tenantId, logStream);
     if (!Files.exists(base)) return List.of();
     List<HourPartition> hours = new ArrayList<>();
+    var hrStart = start / 3600_000L;
+    var hrEnd = end / 3600_000L;
     try (var dir = Files.newDirectoryStream(base)) {
       for (Path p : dir) {
         String name = p.getFileName().toString();
-        if (name.length() == 10 && name.chars().allMatch(Character::isDigit)) {
-          int year = Integer.parseInt(name.substring(0, 4));
-          int mon = Integer.parseInt(name.substring(4, 6));
-          int day = Integer.parseInt(name.substring(6, 8));
-          int hour = Integer.parseInt(name.substring(8, 10));
-          long ts = java.time.ZonedDateTime.of(year, mon, day, hour, 0, 0, 0, java.time.ZoneId.of("UTC"))
-              .toInstant().toEpochMilli();
-          if (ts >= floorToHour(start) && ts <= floorToHour(end)) {
-            hours.add(new HourPartition(ts, p));
-          }
-        }
+        var hr = Integer.parseInt(name);
+        if (hr >= hrStart && hr <= hrEnd) hours.add(new HourPartition(hr, p));
       }
     }
     Collections.sort(hours, Comparator.comparingLong(HourPartition::hourStart));
@@ -202,7 +190,7 @@ public class OnDiskQueryProcessor implements QueryProcessor {
       }
     }
     if (j == out.length) return out;
-    return java.util.Arrays.copyOf(out, j);
+    return Arrays.copyOf(out, j);
   }
 
   private static final class IndexCache {
@@ -211,12 +199,13 @@ public class OnDiskQueryProcessor implements QueryProcessor {
 
     IndexCache(int capacity) {
       this.capacity = capacity;
-      this.map = new LinkedHashMap<>(16, 0.75f, true) {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<Key, List<PageIndexEntry>> eldest) {
-          return size() > IndexCache.this.capacity;
-        }
-      };
+      this.map =
+          new LinkedHashMap<>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<Key, List<PageIndexEntry>> eldest) {
+              return size() > IndexCache.this.capacity;
+            }
+          };
     }
 
     synchronized List<PageIndexEntry> get(Path idx, long size, long mtime) {

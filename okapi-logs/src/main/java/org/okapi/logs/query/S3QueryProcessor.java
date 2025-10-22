@@ -3,16 +3,17 @@ package org.okapi.logs.query;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.okapi.logs.config.LogsConfigProperties;
+import org.okapi.logs.index.PageIndex;
 import org.okapi.logs.index.PageIndexEntry;
 import org.okapi.logs.io.LogPageSerializer;
 import org.okapi.protos.logs.LogPayloadProto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -32,8 +33,10 @@ public class S3QueryProcessor implements QueryProcessor {
     if (cfg.getS3Bucket() == null || cfg.getS3Bucket().isEmpty()) return List.of();
     String prefix = buildPrefix(tenantId, logStream);
     List<LogPayloadProto> out = new ArrayList<>();
-    for (String hour : hoursBetween(start, end)) {
-      String hourPrefix = prefix + "/" + hour + "/";
+    var hrStart = start / 3600_000L;
+    var hrEnd = end / 3600_000L;
+    for (long hr = hrStart; hr <= hrEnd; hr++) {
+      String hourPrefix = prefix + "/" + hr + "/";
       List<String> keys;
       try {
         keys = listObjectKeys(cfg.getS3Bucket(), hourPrefix);
@@ -50,13 +53,15 @@ public class S3QueryProcessor implements QueryProcessor {
           List<PageIndexEntry> entries = parseIndex(idxBytes);
           for (PageIndexEntry e : entries) {
             if (e.getTsEnd() < start || e.getTsStart() > end) continue;
-            byte[] pageBytes = getRangeBytes(cfg.getS3Bucket(), binKey, e.getOffset(), e.getLength());
+            byte[] pageBytes =
+                getRangeBytes(cfg.getS3Bucket(), binKey, e.getOffset(), e.getLength());
             var page = LogPageSerializer.deserialize(pageBytes);
             out.addAll(FilterEvaluator.apply(page, filter));
           }
         } catch (Exception ex) {
           // Log and skip bad node segment
-          log.info("Skipping node segment due to error for index key {}: {}", idxKey, ex.toString());
+          log.info(
+              "Skipping node segment due to error for index key {}: {}", idxKey, ex.toString());
         }
       }
     }
@@ -66,32 +71,6 @@ public class S3QueryProcessor implements QueryProcessor {
   private String buildPrefix(String tenantId, String logStream) {
     String base = cfg.getS3BasePrefix() == null ? "logs" : cfg.getS3BasePrefix();
     return base + "/" + tenantId + "/" + logStream;
-  }
-
-  private List<String> hoursBetween(long start, long end) {
-    List<String> out = new ArrayList<>();
-    java.time.ZonedDateTime s =
-        java.time.Instant.ofEpochMilli(start)
-            .atZone(java.time.ZoneId.of("UTC"))
-            .withMinute(0)
-            .withSecond(0)
-            .withNano(0);
-    java.time.ZonedDateTime e =
-        java.time.Instant.ofEpochMilli(end)
-            .atZone(java.time.ZoneId.of("UTC"))
-            .withMinute(0)
-            .withSecond(0)
-            .withNano(0);
-    java.time.ZonedDateTime cur = s;
-    while (!cur.isAfter(e)) {
-      String hour =
-          String.format(
-              "%04d%02d%02d%02d",
-              cur.getYear(), cur.getMonthValue(), cur.getDayOfMonth(), cur.getHour());
-      out.add(hour);
-      cur = cur.plusHours(1);
-    }
-    return out;
   }
 
   protected byte[] getObjectBytes(String bucket, String key) throws IOException {
@@ -113,10 +92,11 @@ public class S3QueryProcessor implements QueryProcessor {
   }
 
   protected List<String> listObjectKeys(String bucket, String prefix) {
-    var req = software.amazon.awssdk.services.s3.model.ListObjectsV2Request.builder()
-        .bucket(bucket)
-        .prefix(prefix)
-        .build();
+    var req =
+        software.amazon.awssdk.services.s3.model.ListObjectsV2Request.builder()
+            .bucket(bucket)
+            .prefix(prefix)
+            .build();
     var resp = s3Client.listObjectsV2(req);
     List<String> keys = new ArrayList<>();
     for (var o : resp.contents()) keys.add(o.key());
@@ -125,7 +105,7 @@ public class S3QueryProcessor implements QueryProcessor {
 
   private List<PageIndexEntry> parseIndex(byte[] idxBytes) {
     List<PageIndexEntry> out = new ArrayList<>();
-    int ENTRY_BYTES = org.okapi.logs.index.PageIndex.ENTRY_BYTES;
+    int ENTRY_BYTES = PageIndex.ENTRY_BYTES;
     int pos = 0;
     while (pos + ENTRY_BYTES <= idxBytes.length) {
       byte[] slice = new byte[ENTRY_BYTES];

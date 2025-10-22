@@ -27,11 +27,12 @@ public class MultiSourceQueryProcessor implements QueryProcessor {
 
   @Override
   public List<LogPayloadProto> getLogs(
-      String tenantId, String logStream, long start, long end, LogFilter filter) throws IOException {
-    CompletableFuture<List<LogPayloadProto>> fBuf =
+      String tenantId, String logStream, long start, long end, LogFilter filter)
+      throws IOException {
+    CompletableFuture<List<LogPayloadProto>> fromBuf =
         CompletableFuture.supplyAsync(
             () -> buffer.getLogs(tenantId, logStream, start, end, filter), exec);
-    CompletableFuture<List<LogPayloadProto>> fDisk =
+    CompletableFuture<List<LogPayloadProto>> fromDisk =
         CompletableFuture.supplyAsync(
             () -> {
               try {
@@ -41,7 +42,7 @@ public class MultiSourceQueryProcessor implements QueryProcessor {
               }
             },
             exec);
-    CompletableFuture<List<LogPayloadProto>> fS3 =
+    CompletableFuture<List<LogPayloadProto>> fromS3 =
         CompletableFuture.supplyAsync(
             () -> {
               try {
@@ -54,9 +55,9 @@ public class MultiSourceQueryProcessor implements QueryProcessor {
 
     List<LogPayloadProto> out = new ArrayList<>();
     try {
-      out.addAll(fBuf.join());
-      out.addAll(fDisk.join());
-      out.addAll(fS3.join());
+      out.addAll(fromBuf.join());
+      out.addAll(fromDisk.join());
+      out.addAll(fromS3.join());
     } catch (RuntimeException re) {
       if (re.getCause() instanceof IOException ioe) throw ioe;
       throw re;
@@ -64,4 +65,3 @@ public class MultiSourceQueryProcessor implements QueryProcessor {
     return out;
   }
 }
-

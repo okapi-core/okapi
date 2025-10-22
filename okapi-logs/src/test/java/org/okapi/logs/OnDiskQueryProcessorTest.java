@@ -7,9 +7,9 @@ import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.okapi.logs.config.LogsConfigProperties;
 import org.okapi.logs.io.LogFileWriter;
-import org.okapi.logs.io.LogPage;
 import org.okapi.logs.query.LevelFilter;
 import org.okapi.logs.query.OnDiskQueryProcessor;
 import org.okapi.logs.query.RegexFilter;
@@ -19,11 +19,10 @@ import org.okapi.protos.logs.LogPayloadProto;
 
 class OnDiskQueryProcessorTest {
   private LogsConfigProperties cfg;
-  private Path dataDir;
+  @TempDir private Path dataDir;
 
   @BeforeEach
   void setup() throws Exception {
-    dataDir = Path.of("target/test-logs-odp");
     Files.createDirectories(dataDir);
     cfg = new LogsConfigProperties();
     cfg.setDataDir(dataDir.toString());
@@ -32,13 +31,13 @@ class OnDiskQueryProcessorTest {
 
   @Test
   void query_byLevelTraceRegex_optimized() throws Exception {
-    String tenant = "t1";
-    String stream = "s1";
-    LogPage page = TestCorpus.buildTestPage();
-    LogFileWriter writer = new LogFileWriter(cfg);
+    var tenant = "t1";
+    var stream = "s1";
+    var page = TestCorpus.buildTestPage();
+    var writer = new LogFileWriter(cfg);
     writer.appendPage(tenant, stream, page);
 
-    OnDiskQueryProcessor qp = new OnDiskQueryProcessor(cfg, new NoOpStatsEmitter());
+    var qp = new OnDiskQueryProcessor(cfg, new NoOpStatsEmitter());
 
     long start = page.getTsStart() - 1000;
     long end = page.getTsEnd() + 1000;
@@ -47,12 +46,7 @@ class OnDiskQueryProcessorTest {
     assertEquals(2, warn.size());
 
     List<LogPayloadProto> tA =
-        qp.getLogs(
-            tenant,
-            stream,
-            start,
-            end,
-            new TraceFilter("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
+        qp.getLogs(tenant, stream, start, end, new TraceFilter("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
     assertEquals(5, tA.size());
 
     List<LogPayloadProto> failed =
@@ -60,4 +54,3 @@ class OnDiskQueryProcessorTest {
     assertEquals(2, failed.size());
   }
 }
-

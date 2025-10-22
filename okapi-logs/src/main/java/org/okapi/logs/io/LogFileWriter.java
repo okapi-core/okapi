@@ -1,7 +1,6 @@
 package org.okapi.logs.io;
 
 import com.google.common.primitives.Ints;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -9,7 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
-
 import org.okapi.logs.config.LogsConfigProperties;
 import org.okapi.logs.index.PageIndex;
 import org.okapi.logs.index.PageIndexEntry;
@@ -26,11 +24,8 @@ public class LogFileWriter {
   }
 
   public Path partitionDir(String tenantId, String logStream, long tsMillis) {
-    java.time.ZonedDateTime zdt =
-        java.time.Instant.ofEpochMilli(tsMillis).atZone(java.time.ZoneId.of("UTC"));
-    String hour = String.format("%04d%02d%02d%02d", zdt.getYear(), zdt.getMonthValue(), zdt.getDayOfMonth(),
-        zdt.getHour());
-    return Path.of(cfg.getDataDir(), tenantId, logStream, hour);
+    var hour = tsMillis / 3600_000L;
+    return Path.of(cfg.getDataDir(), tenantId, logStream, Long.toString(hour));
   }
 
   public synchronized PageIndexEntry appendPage(String tenantId, String logStream, LogPage page)
@@ -54,7 +49,7 @@ public class LogFileWriter {
     // Extract crc from the last 4 bytes
     int crc = Ints.fromByteArray(slice(bytes, bytes.length - 4, 4));
 
-    PageIndexEntry entry =
+    var entry =
         PageIndexEntry.builder()
             .offset(offset)
             .length(bytes.length)

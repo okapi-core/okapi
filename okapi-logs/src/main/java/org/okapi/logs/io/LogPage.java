@@ -41,10 +41,8 @@ public class LogPage {
       @Singular("doc") List<LogPayloadProto> logDocs,
       Integer expectedInsertions) {
     // Ensure mutable collections even if Lombok @Builder provided unmodifiable ones
-    this.trigramMap =
-        (trigramMap != null) ? new HashMap<>(trigramMap) : new HashMap<>();
-    this.levelsInPage =
-        (levelsInPage != null) ? new HashMap<>(levelsInPage) : new HashMap<>();
+    this.trigramMap = (trigramMap != null) ? new HashMap<>(trigramMap) : new HashMap<>();
+    this.levelsInPage = (levelsInPage != null) ? new HashMap<>(levelsInPage) : new HashMap<>();
     this.traceIdSet =
         (traceIdSet != null)
             ? traceIdSet

@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
-import java.time.Instant;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,11 +48,8 @@ class S3QueryIntegrationTest {
 
     Map<String, byte[]> store = new HashMap<>();
     long startTs = page.getTsStart();
-    ZonedDateTime z = Instant.ofEpochMilli(startTs).atZone(java.time.ZoneId.of("UTC"));
-    String hour =
-        String.format(
-            "%04d%02d%02d%02d", z.getYear(), z.getMonthValue(), z.getDayOfMonth(), z.getHour());
-    String prefix = cfg.getS3BasePrefix() + "/tenantX/streamY/" + hour + "/node-1";
+    var hr = startTs / 3600_000L;
+    String prefix = cfg.getS3BasePrefix() + "/tenantX/streamY/" + hr + "/node-1";
     store.put(prefix + "/logfile.idx", idx);
     store.put(prefix + "/logfile.bin", bin);
 
