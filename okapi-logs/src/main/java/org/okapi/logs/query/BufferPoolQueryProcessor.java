@@ -17,7 +17,7 @@ public class BufferPoolQueryProcessor implements QueryProcessor {
 
   @Override
   public List<LogPayloadProto> getLogs(
-      String tenantId, String logStream, long start, long end, LogFilter filter) {
+      String tenantId, String logStream, long start, long end, LogFilter filter, QueryConfig cfg) {
     List<LogPayloadProto> out = new ArrayList<>();
     LogPage active = pool.snapshotActivePage(tenantId, logStream);
     if (active == null) return out;

@@ -109,8 +109,30 @@ okapi:
 - Beans activated under `k8s`:
   - `K8sWhoAmI`: uses `$HOSTNAME` (fallback UUID), `$POD_IP`, and `server.port`.
   - `K8sSeedRegistry`: seeds peers by listing Pods with label `okapi_service=<value>` and resolving `/okapi/swim/meta` to get nodeId.
-  - `K8sPodWatcher`: watches Pods for add/remove and updates `MemberList` in real time.
+- `K8sPodWatcher`: watches Pods for add/remove and updates `MemberList` in real time.
 
+### Rendezvous hashing utility
+
+This module provides a reusable rendezvous hashing helper at `org.okapi.swim.hash.RendezvousHasher`.
+It selects a single, deterministic `Member` from a candidate set given an arbitrary key
+(`byte[]`), which can be derived from logical routing inputs (e.g., tenant, stream, hour, block).
+
+Consumers should reuse this utility rather than re-implementing rendezvous hashing to ensure
+consistent selection across services.
+
+### Membership events and timeline
+
+For systems that need to reconstruct membership over time, `okapi-swim` includes:
+
+- `MembershipEventPublisher` + `S3MembershipEventPublisher`: publishes `pod_add` and `pod_delete`
+  events as JSONL files under a deterministic S3 prefix: `[serviceName]/membership/YYYY/MM/DD/HH/`.
+  Configure via `okapi.swim.membershipS3Bucket` and `okapi.swim.serviceName`.
+
+- `TimelineBuilder` + `S3TimelineBuilder`: builds the alive member set for a specific hour by
+  reading events from S3. This is intentionally simple (no caching) and can be optimized later.
+
+Also provided: `PodLifecycle` to emit `pod_delete` on demand (e.g., invoked by other modules after
+their own shutdown sequences complete). A `StartupPodAddEmitter` publishes `pod_add` on startup.
 ## What Happens At Runtime
 - Startup:
   - If a `SeedMembersProvider` bean is present, seeds are added to the `MemberList` automatically.

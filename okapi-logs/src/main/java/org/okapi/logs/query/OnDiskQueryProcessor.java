@@ -38,7 +38,7 @@ public class OnDiskQueryProcessor implements QueryProcessor {
 
   @Override
   public List<LogPayloadProto> getLogs(
-      String tenantId, String logStream, long start, long end, LogFilter filter)
+      String tenantId, String logStream, long start, long end, LogFilter filter, QueryConfig cfg)
       throws IOException {
     List<LogPayloadProto> out = new ArrayList<>();
     for (HourPartition p : existingHourPartitions(tenantId, logStream, start, end)) {

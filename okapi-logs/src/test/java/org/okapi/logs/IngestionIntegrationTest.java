@@ -62,17 +62,23 @@ class IngestionIntegrationTest {
         .untilAsserted(
             () -> {
               List<LogPayloadProto> warn =
-                  onDisk.getLogs(tenant, stream, 0, Long.MAX_VALUE, new LevelFilter(30));
+                  onDisk.getLogs(
+                      tenant, stream, 0, Long.MAX_VALUE, new LevelFilter(30),
+                      org.okapi.logs.query.QueryConfig.defaultConfig());
               assertEquals(2, warn.size());
             });
 
     List<LogPayloadProto> traceA =
         onDisk.getLogs(
-            tenant, stream, 0, Long.MAX_VALUE, new TraceFilter("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
+            tenant, stream, 0, Long.MAX_VALUE,
+            new TraceFilter("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+            org.okapi.logs.query.QueryConfig.defaultConfig());
     assertEquals(5, traceA.size());
 
     List<LogPayloadProto> failed =
-        onDisk.getLogs(tenant, stream, 0, Long.MAX_VALUE, new RegexFilter("failed"));
+        onDisk.getLogs(
+            tenant, stream, 0, Long.MAX_VALUE, new RegexFilter("failed"),
+            org.okapi.logs.query.QueryConfig.defaultConfig());
     assertEquals(2, failed.size());
   }
 

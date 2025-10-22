@@ -28,9 +28,9 @@ public class S3QueryProcessor implements QueryProcessor {
 
   @Override
   public List<LogPayloadProto> getLogs(
-      String tenantId, String logStream, long start, long end, LogFilter filter)
+      String tenantId, String logStream, long start, long end, LogFilter filter, QueryConfig qcfg)
       throws IOException {
-    if (cfg.getS3Bucket() == null || cfg.getS3Bucket().isEmpty()) return List.of();
+    if (this.cfg.getS3Bucket() == null || this.cfg.getS3Bucket().isEmpty()) return List.of();
     String prefix = buildPrefix(tenantId, logStream);
     List<LogPayloadProto> out = new ArrayList<>();
     var hrStart = start / 3600_000L;
@@ -39,7 +39,7 @@ public class S3QueryProcessor implements QueryProcessor {
       String hourPrefix = prefix + "/" + hr + "/";
       List<String> keys;
       try {
-        keys = listObjectKeys(cfg.getS3Bucket(), hourPrefix);
+        keys = listObjectKeys(this.cfg.getS3Bucket(), hourPrefix);
       } catch (Exception ex) {
         continue; // hour may not exist
       }
@@ -49,12 +49,12 @@ public class S3QueryProcessor implements QueryProcessor {
         String idxKey = key;
         String binKey = key.substring(0, key.length() - ".idx".length()) + ".bin";
         try {
-          byte[] idxBytes = getObjectBytes(cfg.getS3Bucket(), idxKey);
+          byte[] idxBytes = getObjectBytes(this.cfg.getS3Bucket(), idxKey);
           List<PageIndexEntry> entries = parseIndex(idxBytes);
           for (PageIndexEntry e : entries) {
             if (e.getTsEnd() < start || e.getTsStart() > end) continue;
             byte[] pageBytes =
-                getRangeBytes(cfg.getS3Bucket(), binKey, e.getOffset(), e.getLength());
+                getRangeBytes(this.cfg.getS3Bucket(), binKey, e.getOffset(), e.getLength());
             var page = LogPageSerializer.deserialize(pageBytes);
             out.addAll(FilterEvaluator.apply(page, filter));
           }

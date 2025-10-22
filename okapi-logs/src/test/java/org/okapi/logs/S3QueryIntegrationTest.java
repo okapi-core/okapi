@@ -64,11 +64,17 @@ class S3QueryIntegrationTest {
             "streamY",
             startTs - 60000,
             startTs + 60000,
-            new TraceFilter("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
+            new TraceFilter("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+            org.okapi.logs.query.QueryConfig.defaultConfig());
     assertEquals(5, traceA.size());
     List<LogPayloadProto> failed =
         qp.getLogs(
-            "tenantX", "streamY", startTs - 60000, startTs + 60000, new RegexFilter("failed"));
+            "tenantX",
+            "streamY",
+            startTs - 60000,
+            startTs + 60000,
+            new RegexFilter("failed"),
+            org.okapi.logs.query.QueryConfig.defaultConfig());
     assertEquals(2, failed.size());
   }
 

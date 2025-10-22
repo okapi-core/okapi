@@ -42,15 +42,23 @@ class OnDiskQueryProcessorTest {
     long start = page.getTsStart() - 1000;
     long end = page.getTsEnd() + 1000;
 
-    List<LogPayloadProto> warn = qp.getLogs(tenant, stream, start, end, new LevelFilter(30));
+    List<LogPayloadProto> warn =
+        qp.getLogs(
+            tenant, stream, start, end, new LevelFilter(30),
+            org.okapi.logs.query.QueryConfig.defaultConfig());
     assertEquals(2, warn.size());
 
     List<LogPayloadProto> tA =
-        qp.getLogs(tenant, stream, start, end, new TraceFilter("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
+        qp.getLogs(
+            tenant, stream, start, end,
+            new TraceFilter("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+            org.okapi.logs.query.QueryConfig.defaultConfig());
     assertEquals(5, tA.size());
 
     List<LogPayloadProto> failed =
-        qp.getLogs(tenant, stream, start, end, new RegexFilter("failed"));
+        qp.getLogs(
+            tenant, stream, start, end, new RegexFilter("failed"),
+            org.okapi.logs.query.QueryConfig.defaultConfig());
     assertEquals(2, failed.size());
   }
 }

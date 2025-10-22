@@ -195,4 +195,32 @@ public class LogPageBufferPool {
           }
         });
   }
+
+  public void flushAllNow() {
+    pages.forEach(
+        (k, ap) -> {
+          ap.lock.lock();
+          try {
+            if (ap.page.sizeInDocs() > 0) {
+              Optional<LogPage> page = ap.rotate();
+              page.ifPresent(p -> flushQueue.offer(new PendingFlush(ap.tenantId, ap.logStream, p)));
+            }
+          } finally {
+            ap.lock.unlock();
+          }
+        });
+  }
+
+  public void awaitFlushQueueEmpty(long timeoutMillis) {
+    long deadline = System.currentTimeMillis() + timeoutMillis;
+    while (System.currentTimeMillis() < deadline) {
+      if (flushQueue.isEmpty()) return;
+      try {
+        Thread.sleep(50);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        return;
+      }
+    }
+  }
 }

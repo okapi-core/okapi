@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import org.okapi.logs.RandomSampler;
 import org.okapi.logs.StaticConfiguration;
 import org.okapi.logs.forwarding.LogForwarder;
+import org.okapi.logs.select.BlockMemberSelector;
 import org.okapi.logs.mappers.OtelToLogMapper;
 import org.okapi.logs.runtime.LogPageBufferPool;
 import org.okapi.swim.identity.WhoAmI;
@@ -32,18 +32,21 @@ public class OtelLogsController {
   private final MemberList memberList;
   private final WhoAmI whoAmI;
   private final LogForwarder forwarder;
+  private final BlockMemberSelector selector;
 
   public OtelLogsController(
       LogPageBufferPool bufferPool,
       MeterRegistry meterRegistry,
       MemberList memberList,
       WhoAmI whoAmI,
-      LogForwarder forwarder) {
+      LogForwarder forwarder,
+      BlockMemberSelector selector) {
     this.bufferPool = bufferPool;
     this.meterRegistry = meterRegistry;
     this.memberList = memberList;
     this.whoAmI = whoAmI;
     this.forwarder = forwarder;
+    this.selector = selector;
   }
 
   @PostMapping(path = "/v1/logs", consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -75,25 +78,11 @@ public class OtelLogsController {
         }
       }
 
-      var groupedMembers = new HashMap<Integer, List<Member>>();
-      memberList
-          .getAllMembers()
-          .forEach(
-              member -> {
-                var block = StaticConfiguration.rkHash(member.getNodeId());
-                groupedMembers.putIfAbsent(block, new ArrayList<>());
-                groupedMembers.get(block).add(member);
-              });
-
       for (var block : outOfBlock.keySet()) {
         var records = outOfBlock.get(block);
-        var targetBlock = block;
-        // if the current target block is empty, rollover to the non-empty block.
-        while (groupedMembers.getOrDefault(targetBlock, Collections.emptyList()).isEmpty()) {
-          targetBlock = (1 + targetBlock) % StaticConfiguration.N_BLOCKS;
-        }
-        var members = groupedMembers.get(targetBlock);
-        var member = RandomSampler.randomSample(members);
+        long firstTsMs = records.get(0).getTimeUnixNano() / 1_000_000L;
+        long hourStart = (firstTsMs / 3600_000L) * 3600_000L;
+        Member member = selector.select(tenantId, logStream, hourStart, block, memberList);
         if (member.getNodeId().equals(whoAmI.getNodeId())) {
           for (var record : records) {
             bufferPool.consume(tenantId, logStream, record);

@@ -16,48 +16,74 @@ public class MultiSourceQueryProcessor implements QueryProcessor {
   private final BufferPoolQueryProcessor buffer;
   private final OnDiskQueryProcessor disk;
   private final S3QueryProcessor s3;
-  private final ExecutorService exec = Executors.newFixedThreadPool(3);
+  private final MemberSetQueryProcessor memberSet;
+  private final ExecutorService exec = Executors.newFixedThreadPool(4);
 
   public MultiSourceQueryProcessor(
-      BufferPoolQueryProcessor buffer, OnDiskQueryProcessor disk, S3QueryProcessor s3) {
+      BufferPoolQueryProcessor buffer,
+      OnDiskQueryProcessor disk,
+      S3QueryProcessor s3,
+      MemberSetQueryProcessor memberSet) {
     this.buffer = buffer;
     this.disk = disk;
     this.s3 = s3;
+    this.memberSet = memberSet;
   }
 
   @Override
   public List<LogPayloadProto> getLogs(
-      String tenantId, String logStream, long start, long end, LogFilter filter)
+      String tenantId, String logStream, long start, long end, LogFilter filter, QueryConfig cfg)
       throws IOException {
+    QueryConfig effective = (cfg == null) ? QueryConfig.defaultConfig() : cfg;
+
     CompletableFuture<List<LogPayloadProto>> fromBuf =
-        CompletableFuture.supplyAsync(
-            () -> buffer.getLogs(tenantId, logStream, start, end, filter), exec);
+        effective.bufferPool
+            ? CompletableFuture.supplyAsync(
+                () -> buffer.getLogs(tenantId, logStream, start, end, filter, effective), exec)
+            : CompletableFuture.completedFuture(List.of());
     CompletableFuture<List<LogPayloadProto>> fromDisk =
-        CompletableFuture.supplyAsync(
-            () -> {
-              try {
-                return disk.getLogs(tenantId, logStream, start, end, filter);
-              } catch (IOException e) {
-                throw new RuntimeException(e);
-              }
-            },
-            exec);
+        effective.disk
+            ? CompletableFuture.supplyAsync(
+                () -> {
+                  try {
+                    return disk.getLogs(tenantId, logStream, start, end, filter, effective);
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                },
+                exec)
+            : CompletableFuture.completedFuture(List.of());
     CompletableFuture<List<LogPayloadProto>> fromS3 =
-        CompletableFuture.supplyAsync(
-            () -> {
-              try {
-                return s3.getLogs(tenantId, logStream, start, end, filter);
-              } catch (IOException e) {
-                throw new RuntimeException(e);
-              }
-            },
-            exec);
+        (effective.s3 && !effective.fanOut)
+            ? CompletableFuture.supplyAsync(
+                () -> {
+                  try {
+                    return s3.getLogs(tenantId, logStream, start, end, filter, effective);
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                },
+                exec)
+            : CompletableFuture.completedFuture(List.of());
+    CompletableFuture<List<LogPayloadProto>> fromMember =
+        (!effective.fanOut)
+            ? CompletableFuture.supplyAsync(
+                () -> {
+                  try {
+                    return memberSet.getLogs(tenantId, logStream, start, end, filter, effective);
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                },
+                exec)
+            : CompletableFuture.completedFuture(List.of());
 
     List<LogPayloadProto> out = new ArrayList<>();
     try {
       out.addAll(fromBuf.join());
       out.addAll(fromDisk.join());
       out.addAll(fromS3.join());
+      out.addAll(fromMember.join());
     } catch (RuntimeException re) {
       if (re.getCause() instanceof IOException ioe) throw ioe;
       throw re;

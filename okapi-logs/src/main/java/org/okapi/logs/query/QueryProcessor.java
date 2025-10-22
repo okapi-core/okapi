@@ -6,6 +6,11 @@ import org.okapi.protos.logs.LogPayloadProto;
 
 public interface QueryProcessor {
   List<LogPayloadProto> getLogs(
-      String tenantId, String logStream, long start, long end, LogFilter filter) throws IOException;
+      String tenantId,
+      String logStream,
+      long start,
+      long end,
+      LogFilter filter,
+      QueryConfig cfg)
+      throws IOException;
 }
-

@@ -13,8 +13,8 @@ public class MembershipScheduler {
 
   @Scheduled(fixedDelayString = "${okapi.swim.suspectSchedulerDelayMillis:5000}")
   public void expireSuspicions() {
-    long timeout = swimConfig.getSuspectTimeoutMillis() > 0 ? swimConfig.getSuspectTimeoutMillis() : 30000;
+    long timeout =
+        swimConfig.getSuspectTimeoutMillis() > 0 ? swimConfig.getSuspectTimeoutMillis() : 30000;
     membershipService.tickExpireSuspicions(timeout);
   }
 }
-

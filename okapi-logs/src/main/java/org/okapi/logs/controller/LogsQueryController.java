@@ -26,18 +26,24 @@ public class LogsQueryController {
   public QueryResponse query(
       @RequestHeader("X-Okapi-Tenant-Id") String tenantId,
       @RequestHeader("X-Okapi-Log-Stream") String logStream,
+      @RequestHeader(value = "X-Okapi-Fan-Out", required = false) String fanOutHeader,
       @RequestBody QueryRequest req)
       throws Exception {
 
     LogFilter filter = toFilter(req.filter);
-    List<LogPayloadProto> all = processor.getLogs(tenantId, logStream, req.start, req.end, filter);
+    boolean isFanOut = fanOutHeader != null && fanOutHeader.equalsIgnoreCase("true");
+    var qcfg = isFanOut ? QueryConfig.fanOutConfig() : QueryConfig.defaultConfig();
+    List<LogPayloadProto> all =
+        processor.getLogs(tenantId, logStream, req.start, req.end, filter, qcfg);
 
     // Sort by ts_millis then tie-breaker (level, body hash, traceId)
     Comparator<LogPayloadProto> cmp =
         Comparator.comparingLong(LogPayloadProto::getTsMillis)
             .thenComparingInt(LogPayloadProto::getLevel)
-            .thenComparing(p -> p.getBody(), Comparator.nullsFirst(Comparator.naturalOrder()))
-            .thenComparing(p -> p.getTraceId(), Comparator.nullsFirst(Comparator.naturalOrder()));
+            .thenComparing(
+                LogPayloadProto::getBody, Comparator.nullsFirst(Comparator.naturalOrder()))
+            .thenComparing(
+                LogPayloadProto::getTraceId, Comparator.nullsFirst(Comparator.naturalOrder()));
     all.sort(cmp);
 
     // Apply pagination using pageToken: base64 of "ts|level|hash(body)|traceId"

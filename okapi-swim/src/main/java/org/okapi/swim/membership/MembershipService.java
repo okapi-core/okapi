@@ -1,7 +1,6 @@
 package org.okapi.swim.membership;
 
 import java.time.Instant;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import lombok.RequiredArgsConstructor;
@@ -29,10 +28,6 @@ public class MembershipService {
   }
 
   private final ConcurrentMap<String, State> states = new ConcurrentHashMap<>();
-
-  public Optional<State> getState(String nodeId) {
-    return Optional.ofNullable(states.get(nodeId));
-  }
 
   public synchronized boolean applyRegister(Member member, long incarnation) {
     // Upsert member address
