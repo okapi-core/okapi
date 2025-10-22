@@ -115,9 +115,7 @@
                 <version>4.5.0</version>
             </dependency>
 
-
             <!-- OkHttp versions are inherited from the BOM above -->
-
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
@@ -439,7 +437,6 @@
                 <artifactId>micrometer-bom</artifactId>
                 <version>1.14.3</version>
             </dependency>
-
 
         </dependencies>
 
