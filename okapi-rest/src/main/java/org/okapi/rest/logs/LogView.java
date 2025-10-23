@@ -9,6 +9,7 @@ public class LogView {
     public int level;
     public String body;
     public String traceId;
+    public String docId;
 
     public static LogView from(LogPayloadProto p) {
         LogView v = new LogView();
@@ -16,6 +17,7 @@ public class LogView {
         v.level = p.getLevel();
         v.body = p.getBody();
         v.traceId = p.hasTraceId() ? p.getTraceId() : null;
+        v.docId = p.getDocId();
         return v;
     }
 }

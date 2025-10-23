@@ -81,10 +81,15 @@ public class MultiSourceQueryProcessor implements QueryProcessor {
 
     List<LogPayloadProto> out = new ArrayList<>();
     try {
-      out.addAll(fromBuf.join());
-      out.addAll(fromDisk.join());
-      out.addAll(fromS3.join());
-      out.addAll(fromMember.join());
+      // Merge and de-duplicate by docId
+      java.util.LinkedHashMap<String, LogPayloadProto> dedup = new java.util.LinkedHashMap<>();
+      for (var l : List.of(fromBuf.join(), fromDisk.join(), fromS3.join(), fromMember.join())) {
+        for (LogPayloadProto p : l) {
+          // Assumption per design: docId is always present
+          dedup.putIfAbsent(p.getDocId(), p);
+        }
+      }
+      out.addAll(dedup.values());
     } catch (RuntimeException re) {
       if (re.getCause() instanceof IOException ioe) throw ioe;
       throw re;

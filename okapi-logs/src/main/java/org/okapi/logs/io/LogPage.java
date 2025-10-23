@@ -62,7 +62,11 @@ public class LogPage {
     this.tsEnd = Math.max(this.tsEnd, tsMillis);
 
     LogPayloadProto.Builder b =
-        LogPayloadProto.newBuilder().setTsMillis(tsMillis).setLevel(level).setBody(body);
+        LogPayloadProto.newBuilder()
+            .setTsMillis(tsMillis)
+            .setLevel(level)
+            .setBody(body)
+            .setDocId(java.util.UUID.randomUUID().toString());
     if (traceId != null && !traceId.isEmpty()) {
       b.setTraceId(traceId);
       this.traceIdSet.put(traceId);

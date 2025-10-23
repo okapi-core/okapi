@@ -133,6 +133,7 @@ public class MemberSetQueryProcessor implements QueryProcessor {
     b.setLevel(v.getLevel());
     if (v.getBody() != null) b.setBody(v.getBody());
     if (v.getTraceId() != null) b.setTraceId(v.getTraceId());
+    if (v.getDocId() != null) b.setDocId(v.getDocId());
     return b.build();
   }
 }

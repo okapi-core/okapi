@@ -11,4 +11,5 @@ message LogPayloadProto {
   int32 level = 2;
   string body = 3;
   optional string trace_id = 4;
+  string doc_id = 5;
 }
