@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 import org.okapi.swim.identity.WhoAmI;
+import org.okapi.swim.membership.MembershipEventPublisher;
 import org.okapi.swim.ping.MemberList;
 import org.okapi.swim.ping.PingService;
 import org.okapi.swim.rest.AckMessage;
@@ -29,6 +30,8 @@ class SwimControllerTest {
 
   // Satisfy Disseminator dependency during component scanning
   @MockitoBean private WhoAmI whoAmI;
+  @MockitoBean
+  MembershipEventPublisher membershipEventPublisher;
 
   @Test
   void ping_shouldReturnOk() {

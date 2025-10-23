@@ -19,6 +19,7 @@ import org.okapi.logs.query.S3QueryProcessor;
 import org.okapi.logs.query.TraceFilter;
 import org.okapi.logs.spring.AwsConfiguration;
 import org.okapi.protos.logs.LogPayloadProto;
+import org.okapi.swim.membership.MembershipEventPublisher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -36,6 +37,8 @@ class S3QueryIntegrationTest {
   @Mock S3Client s3Client;
   @MockitoBean
   LogForwarder logForwarder;
+  @MockitoBean
+  MembershipEventPublisher membershipEventPublisher;
 
   @Test
   void queryFromS3Dump() throws Exception {

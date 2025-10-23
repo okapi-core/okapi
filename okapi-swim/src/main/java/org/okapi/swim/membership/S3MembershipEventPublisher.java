@@ -9,13 +9,10 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.okapi.swim.identity.WhoAmI;
-import org.springframework.stereotype.Component;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
-@Component
-@org.springframework.boot.autoconfigure.condition.ConditionalOnBean(S3Client.class)
 @RequiredArgsConstructor
 @Slf4j
 public class S3MembershipEventPublisher implements MembershipEventPublisher {
@@ -58,7 +55,9 @@ public class S3MembershipEventPublisher implements MembershipEventPublisher {
 
   private static String buildPrefix(String serviceName, long tsMillis) {
     ZonedDateTime z = Instant.ofEpochMilli(tsMillis).atZone(ZoneOffset.UTC);
-    return serviceName + "/membership/" +
-        String.format("%04d/%02d/%02d/%02d", z.getYear(), z.getMonthValue(), z.getDayOfMonth(), z.getHour());
+    return serviceName
+        + "/membership/"
+        + String.format(
+            "%04d/%02d/%02d/%02d", z.getYear(), z.getMonthValue(), z.getDayOfMonth(), z.getHour());
   }
 }

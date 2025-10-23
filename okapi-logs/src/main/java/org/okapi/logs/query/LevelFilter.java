@@ -8,6 +8,10 @@ import lombok.Value;
 public class LevelFilter extends LogFilter {
   int levelCode;
 
+  public int levelCode() {
+    return levelCode;
+  }
+
   @Override
   public Kind kind() {
     return Kind.LEVEL;

@@ -21,12 +21,14 @@ import org.okapi.logs.query.RegexFilter;
 import org.okapi.logs.query.TraceFilter;
 import org.okapi.logs.spring.AwsConfiguration;
 import org.okapi.protos.logs.LogPayloadProto;
+import org.okapi.swim.membership.MembershipEventPublisher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest(classes = {TestApplication.class, AwsConfiguration.class})
 @ActiveProfiles("test")
@@ -49,6 +51,8 @@ class IngestionIntegrationTest {
 
   @Autowired OtelLogsController controller;
   @Autowired OnDiskQueryProcessor onDisk;
+  @MockitoBean
+  MembershipEventPublisher membershipEventPublisher;
 
   @Test
   void ingestOtel_andQueryByRegexTraceLevel() throws Exception {

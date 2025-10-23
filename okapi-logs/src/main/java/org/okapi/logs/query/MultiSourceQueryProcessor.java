@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.okapi.protos.logs.LogPayloadProto;
@@ -48,7 +49,7 @@ public class MultiSourceQueryProcessor implements QueryProcessor {
                   try {
                     return disk.getLogs(tenantId, logStream, start, end, filter, effective);
                   } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    throw new CompletionException(e);
                   }
                 },
                 exec)
@@ -60,7 +61,7 @@ public class MultiSourceQueryProcessor implements QueryProcessor {
                   try {
                     return s3.getLogs(tenantId, logStream, start, end, filter, effective);
                   } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    throw new CompletionException(e);
                   }
                 },
                 exec)
@@ -72,7 +73,7 @@ public class MultiSourceQueryProcessor implements QueryProcessor {
                   try {
                     return memberSet.getLogs(tenantId, logStream, start, end, filter, effective);
                   } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    throw new CompletionException(e);
                   }
                 },
                 exec)

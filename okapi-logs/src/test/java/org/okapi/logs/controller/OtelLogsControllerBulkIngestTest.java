@@ -11,9 +11,11 @@ import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.okapi.logs.TestApplication;
 import org.okapi.logs.runtime.LogPageBufferPool;
+import org.okapi.swim.membership.MembershipEventPublisher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest(classes = {TestApplication.class})
 @ActiveProfiles("test")
@@ -21,6 +23,8 @@ class OtelLogsControllerBulkIngestTest {
 
   @Autowired OtelLogsController controller;
   @Autowired LogPageBufferPool bufferPool;
+  @MockitoBean
+  MembershipEventPublisher membershipEventPublisher;
 
   @Test
   void bulkIngest_writesRecordsToBufferPool() throws Exception {

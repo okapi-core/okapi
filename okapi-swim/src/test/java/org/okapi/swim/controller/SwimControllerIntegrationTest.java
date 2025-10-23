@@ -9,6 +9,7 @@ import org.mockito.ArgumentCaptor;
 import org.okapi.swim.disseminate.Disseminator;
 import org.okapi.swim.identity.WhoAmI;
 import org.okapi.swim.membership.EventDeduper;
+import org.okapi.swim.membership.MembershipEventPublisher;
 import org.okapi.swim.membership.MembershipService;
 import org.okapi.swim.ping.Member;
 import org.okapi.swim.ping.MemberList;
@@ -43,12 +44,14 @@ class SwimControllerIntegrationTest {
   @MockitoBean private MemberList memberList;
 
   @MockitoBean private WhoAmI whoAmI;
+  @MockitoBean MembershipEventPublisher membershipEventPublisher;
 
   // --- Meta ---
   @Test
   void meta_shouldReturnNodeIdFromWhoAmI() {
     when(whoAmI.getNodeId()).thenReturn("self-node");
-    ResponseEntity<MetaResponse> resp = restTemplate.getForEntity("/okapi/swim/meta", MetaResponse.class);
+    ResponseEntity<MetaResponse> resp =
+        restTemplate.getForEntity("/okapi/swim/meta", MetaResponse.class);
     assertEquals(200, resp.getStatusCode().value());
     assertNotNull(resp.getBody());
     assertEquals("self-node", resp.getBody().getNodeId());
@@ -113,7 +116,10 @@ class SwimControllerIntegrationTest {
     RegisterMessage msg = new RegisterMessage("n3", "10.0.0.3", 9100, 3L, 5);
     ResponseEntity<Void> resp =
         restTemplate.exchange(
-            "/okapi/swim/members/n3", HttpMethod.PUT, new HttpEntity<>(msg, new HttpHeaders()), Void.class);
+            "/okapi/swim/members/n3",
+            HttpMethod.PUT,
+            new HttpEntity<>(msg, new HttpHeaders()),
+            Void.class);
 
     assertEquals(204, resp.getStatusCode().value());
     verify(disseminator, never()).disseminateRegister(any());
@@ -212,9 +218,7 @@ class SwimControllerIntegrationTest {
 
     ResponseEntity<AckMessage> resp =
         restTemplate.postForEntity(
-            "/okapi/swim/ping",
-            new PingMessage("fromA", "2.2.2.2", 9001),
-            AckMessage.class);
+            "/okapi/swim/ping", new PingMessage("fromA", "2.2.2.2", 9001), AckMessage.class);
 
     assertEquals(200, resp.getStatusCode().value());
 
@@ -251,4 +255,3 @@ class SwimControllerIntegrationTest {
     verify(disseminator).disseminateAlive(any(AliveMessage.class));
   }
 }
-
