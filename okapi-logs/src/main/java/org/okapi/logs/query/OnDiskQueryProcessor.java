@@ -12,7 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-import org.okapi.logs.config.LogsConfigProperties;
+import org.okapi.logs.config.LogsCfg;
 import org.okapi.logs.index.PageIndex;
 import org.okapi.logs.index.PageIndexEntry;
 import org.okapi.logs.io.LocalPageReader;
@@ -29,11 +29,13 @@ public class OnDiskQueryProcessor implements QueryProcessor {
   private final StatsEmitter stats;
   private final LocalPageReader pageReader;
   private final IndexCache indexCache = new IndexCache(256);
+  private final LogsCfg logsCfg;
 
-  public OnDiskQueryProcessor(LogsConfigProperties cfg, StatsEmitter stats) {
+  public OnDiskQueryProcessor(LogsCfg cfg, StatsEmitter stats) {
     this.writer = new LogFileWriter(cfg);
     this.stats = stats;
     this.pageReader = new LocalPageReader(stats, 32);
+    this.logsCfg = cfg;
   }
 
   @Override
@@ -41,7 +43,7 @@ public class OnDiskQueryProcessor implements QueryProcessor {
       String tenantId, String logStream, long start, long end, LogFilter filter, QueryConfig cfg)
       throws IOException {
     List<LogPayloadProto> out = new ArrayList<>();
-    for (HourPartition p : existingHourPartitions(tenantId, logStream, start, end)) {
+    for (TimePartition p : existingHourPartitions(tenantId, logStream, start, end)) {
       Path idx = p.path().resolve("logfile.idx");
       Path bin = p.path().resolve("logfile.bin");
       List<PageIndexEntry> entries = loadIndex(idx);
@@ -56,23 +58,23 @@ public class OnDiskQueryProcessor implements QueryProcessor {
     return out;
   }
 
-  private record HourPartition(long hourStart, Path path) {}
+  private record TimePartition(long blockStart, Path path) {}
 
-  private List<HourPartition> existingHourPartitions(
+  private List<TimePartition> existingHourPartitions(
       String tenantId, String logStream, long start, long end) throws IOException {
     Path base = writer.partitionDir(tenantId, logStream);
     if (!Files.exists(base)) return List.of();
-    List<HourPartition> hours = new ArrayList<>();
-    var hrStart = start / 3600_000L;
-    var hrEnd = end / 3600_000L;
+    List<TimePartition> hours = new ArrayList<>();
+    var hrStart = start / logsCfg.getIdxExpiryDuration();
+    var hrEnd = end / logsCfg.getIdxExpiryDuration();
     try (var dir = Files.newDirectoryStream(base)) {
       for (Path p : dir) {
         String name = p.getFileName().toString();
         var hr = Integer.parseInt(name);
-        if (hr >= hrStart && hr <= hrEnd) hours.add(new HourPartition(hr, p));
+        if (hr >= hrStart && hr <= hrEnd) hours.add(new TimePartition(hr, p));
       }
     }
-    Collections.sort(hours, Comparator.comparingLong(HourPartition::hourStart));
+    Collections.sort(hours, Comparator.comparingLong(TimePartition::blockStart));
     return hours;
   }
 

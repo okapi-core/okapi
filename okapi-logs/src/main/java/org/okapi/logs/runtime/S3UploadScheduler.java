@@ -6,7 +6,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.okapi.logs.config.LogsConfigProperties;
+import org.okapi.logs.config.LogsCfgImpl;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -19,13 +19,12 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 @RequiredArgsConstructor
 @Slf4j
 public class S3UploadScheduler {
-  private final LogsConfigProperties cfg;
+  private final LogsCfgImpl cfg;
   private final S3Client s3Client;
   private final NodeIdSupplier nodeIdSupplier;
 
   @Scheduled(fixedDelayString = "${okapi.logs.s3UploadIntervalMs:60000}")
   public void onTick() {
-    if (!cfg.isS3UploadEnabled()) return;
     if (cfg.getS3Bucket() == null || cfg.getS3Bucket().isEmpty()) return;
     try {
       scanAndUpload();
@@ -38,7 +37,7 @@ public class S3UploadScheduler {
     Path base = Path.of(cfg.getDataDir());
     if (!Files.exists(base)) return;
     long nowMs = System.currentTimeMillis();
-    long cutoffHour = (nowMs - cfg.getS3UploadGraceMs()) / 3600_000L;
+    long cutoffHour = (nowMs - cfg.getS3UploadGraceMs()) / cfg.getIdxExpiryDuration();
     Files.walk(base, 4)
         .filter(Files::isDirectory)
         .filter(p -> p.getNameCount() >= base.getNameCount() + 3)
@@ -78,8 +77,8 @@ public class S3UploadScheduler {
     }
 
     String basePrefix = (cfg.getS3BasePrefix() == null ? "logs" : cfg.getS3BasePrefix());
-    String nodeSeg = cfg.isS3UploadIncludeNodeId() ? "/" + nodeIdSupplier.getNodeId() : "";
-    String prefix = basePrefix + "/" + tenant + "/" + stream + "/" + hour + nodeSeg;
+    String prefix =
+        basePrefix + "/" + tenant + "/" + stream + "/" + hour + "/" + nodeIdSupplier.getNodeId();
 
     s3Client.putObject(
         PutObjectRequest.builder().bucket(cfg.getS3Bucket()).key(prefix + "/logfile.idx").build(),

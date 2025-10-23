@@ -1,6 +1,5 @@
 package org.okapi.logs.runtime;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -8,7 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.okapi.logs.config.LogsConfigProperties;
+import org.okapi.logs.config.ModifiableCfg;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -21,7 +20,11 @@ class S3UploadServiceTest {
   void uploads_specificHour_whenFilesPresent_andIncludesNodeSegment() throws Exception {
     String tenant = "t";
     String stream = "s";
-    long hour = (System.currentTimeMillis() / 3600_000L) - 1;
+    var cfg = new ModifiableCfg("temp-bucket");
+    cfg.setDataDir(tempDir.toString());
+    cfg.setS3Bucket("bkt");
+    cfg.setS3BasePrefix("logs");
+    long hour = (System.currentTimeMillis() / cfg.getIdxExpiryDuration()) - 1;
 
     Path dir = tempDir.resolve(tenant).resolve(stream).resolve(Long.toString(hour));
     Files.createDirectories(dir);
@@ -29,13 +32,6 @@ class S3UploadServiceTest {
     Path bin = dir.resolve("logfile.bin");
     Files.writeString(idx, "IDX");
     Files.writeString(bin, "BIN");
-
-    LogsConfigProperties cfg = new LogsConfigProperties();
-    cfg.setDataDir(tempDir.toString());
-    cfg.setS3Bucket("bkt");
-    cfg.setS3BasePrefix("logs");
-    cfg.setS3UploadEnabled(true);
-    cfg.setS3UploadIncludeNodeId(true);
 
     S3Client s3 = mock(S3Client.class);
     NodeIdSupplier node = () -> "node-1";
@@ -47,18 +43,17 @@ class S3UploadServiceTest {
 
   @Test
   void skips_whenFilesMissing_orHourMismatch() throws Exception {
-    long hour = (System.currentTimeMillis() / 3600_000L) - 1;
+    var cfg = new ModifiableCfg("temp-bucket");
+    long hour = (System.currentTimeMillis() / cfg.getIdxExpiryDuration()) - 1;
 
     Path dir = tempDir.resolve("t").resolve("s").resolve(Long.toString(hour));
     Files.createDirectories(dir);
     // Only idx file present
     Files.writeString(dir.resolve("logfile.idx"), "IDX");
 
-    LogsConfigProperties cfg = new LogsConfigProperties();
     cfg.setDataDir(tempDir.toString());
     cfg.setS3Bucket("bkt");
     cfg.setS3BasePrefix("logs");
-    cfg.setS3UploadEnabled(true);
 
     S3Client s3 = mock(S3Client.class);
     NodeIdSupplier node = () -> "node-1";
@@ -75,4 +70,3 @@ class S3UploadServiceTest {
     verify(s3, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
   }
 }
-

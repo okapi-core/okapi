@@ -1,6 +1,5 @@
 package org.okapi.logs.runtime;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -8,7 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.okapi.logs.config.LogsConfigProperties;
+import org.okapi.logs.config.ModifiableCfg;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -19,7 +18,8 @@ class S3UploadSchedulerTest {
 
   @Test
   void uploads_oldHour_andSkips_currentHour_andRespectsMarker() throws Exception {
-    long nowHour = System.currentTimeMillis() / 3600_000L;
+    var cfg = new ModifiableCfg("temp-bucket");
+    long nowHour = System.currentTimeMillis() / cfg.getIdxExpiryDuration();
     long oldHour = nowHour - 1;
 
     Path oldDir = tempDir.resolve("t").resolve("s").resolve(Long.toString(oldHour));
@@ -32,11 +32,9 @@ class S3UploadSchedulerTest {
     Files.writeString(curDir.resolve("logfile.idx"), "IDX");
     Files.writeString(curDir.resolve("logfile.bin"), "BIN");
 
-    LogsConfigProperties cfg = new LogsConfigProperties();
     cfg.setDataDir(tempDir.toString());
     cfg.setS3Bucket("bkt");
     cfg.setS3BasePrefix("logs");
-    cfg.setS3UploadEnabled(true);
     // Ensure current hour is not eligible by setting grace to one full hour
     cfg.setS3UploadGraceMs(3_600_000);
 

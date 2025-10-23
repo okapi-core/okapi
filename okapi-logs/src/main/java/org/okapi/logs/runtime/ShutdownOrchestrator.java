@@ -3,6 +3,7 @@ package org.okapi.logs.runtime;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.okapi.logs.config.LogsCfgImpl;
 import org.okapi.swim.membership.PodLifecycle;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 public class ShutdownOrchestrator {
+  private final LogsCfgImpl cfg;
   private final LogPageBufferPool pool;
   private final S3UploadService uploader;
   private final PodLifecycle podLifecycle;
@@ -23,7 +25,7 @@ public class ShutdownOrchestrator {
 
       // 2) Upload current hour
       long now = System.currentTimeMillis();
-      long hour = (now / 3600_000L);
+      long hour = (now / cfg.getIdxExpiryDuration());
       uploader.uploadHour(hour);
     } catch (Exception e) {
       log.warn("Error during shutdown flush/upload", e);
@@ -37,4 +39,3 @@ public class ShutdownOrchestrator {
     }
   }
 }
-

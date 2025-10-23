@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
-import org.okapi.logs.config.LogsConfigProperties;
+import org.okapi.logs.config.LogsCfgImpl;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -16,7 +16,7 @@ public class HourlyFlushScheduler {
   private final LogPageBufferPool pool;
   private final AtomicLong lastHourFlushed;
 
-  public HourlyFlushScheduler(LogsConfigProperties cfg, LogPageBufferPool pool) {
+  public HourlyFlushScheduler(LogsCfgImpl cfg, LogPageBufferPool pool) {
     this.pool = pool;
     this.lastHourFlushed = new AtomicLong(-1);
   }

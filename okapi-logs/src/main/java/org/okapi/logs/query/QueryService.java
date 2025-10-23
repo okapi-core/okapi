@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import org.okapi.logs.config.LogsConfigProperties;
+import org.okapi.logs.config.LogsCfgImpl;
 import org.okapi.logs.index.PageIndex;
 import org.okapi.logs.index.PageIndexEntry;
 import org.okapi.logs.io.LogFileWriter;
@@ -16,11 +16,11 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class QueryService {
-  private final LogsConfigProperties cfg;
+  private final LogsCfgImpl cfg;
   private final LogPageBufferPool pool;
   private final LogFileWriter writer;
 
-  public QueryService(LogsConfigProperties cfg, LogPageBufferPool pool) {
+  public QueryService(LogsCfgImpl cfg, LogPageBufferPool pool) {
     this.cfg = cfg;
     this.pool = pool;
     this.writer = new LogFileWriter(this.cfg);

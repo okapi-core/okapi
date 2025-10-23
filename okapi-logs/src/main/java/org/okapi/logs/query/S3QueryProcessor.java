@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.okapi.logs.config.LogsConfigProperties;
+import org.okapi.logs.config.LogsCfgImpl;
 import org.okapi.logs.index.PageIndex;
 import org.okapi.logs.index.PageIndexEntry;
 import org.okapi.logs.io.LogPageSerializer;
@@ -22,7 +22,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 @RequiredArgsConstructor
 public class S3QueryProcessor implements QueryProcessor {
   private static final Logger log = LoggerFactory.getLogger(S3QueryProcessor.class);
-  private final LogsConfigProperties cfg;
+  private final LogsCfgImpl cfg;
   private final MeterRegistry meterRegistry;
   private final S3Client s3Client;
 
@@ -33,8 +33,8 @@ public class S3QueryProcessor implements QueryProcessor {
     if (this.cfg.getS3Bucket() == null || this.cfg.getS3Bucket().isEmpty()) return List.of();
     String prefix = buildPrefix(tenantId, logStream);
     List<LogPayloadProto> out = new ArrayList<>();
-    var hrStart = start / 3600_000L;
-    var hrEnd = end / 3600_000L;
+    var hrStart = start / cfg.getIdxExpiryDuration();
+    var hrEnd = end / cfg.getIdxExpiryDuration();
     for (long hr = hrStart; hr <= hrEnd; hr++) {
       String hourPrefix = prefix + "/" + hr + "/";
       List<String> keys;

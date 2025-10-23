@@ -8,7 +8,7 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.okapi.logs.config.LogsConfigProperties;
+import org.okapi.logs.config.ModifiableCfg;
 import org.okapi.logs.io.LogFileWriter;
 import org.okapi.logs.query.LevelFilter;
 import org.okapi.logs.query.OnDiskQueryProcessor;
@@ -18,15 +18,14 @@ import org.okapi.logs.stats.NoOpStatsEmitter;
 import org.okapi.protos.logs.LogPayloadProto;
 
 class OnDiskQueryProcessorTest {
-  private LogsConfigProperties cfg;
+  private ModifiableCfg cfg;
   @TempDir private Path dataDir;
 
   @BeforeEach
   void setup() throws Exception {
     Files.createDirectories(dataDir);
-    cfg = new LogsConfigProperties();
+    cfg = new ModifiableCfg("test-bucket");
     cfg.setDataDir(dataDir.toString());
-    cfg.setFsyncOnPageAppend(true);
   }
 
   @Test
@@ -44,20 +43,31 @@ class OnDiskQueryProcessorTest {
 
     List<LogPayloadProto> warn =
         qp.getLogs(
-            tenant, stream, start, end, new LevelFilter(30),
+            tenant,
+            stream,
+            start,
+            end,
+            new LevelFilter(30),
             org.okapi.logs.query.QueryConfig.defaultConfig());
     assertEquals(2, warn.size());
 
     List<LogPayloadProto> tA =
         qp.getLogs(
-            tenant, stream, start, end,
+            tenant,
+            stream,
+            start,
+            end,
             new TraceFilter("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
             org.okapi.logs.query.QueryConfig.defaultConfig());
     assertEquals(5, tA.size());
 
     List<LogPayloadProto> failed =
         qp.getLogs(
-            tenant, stream, start, end, new RegexFilter("failed"),
+            tenant,
+            stream,
+            start,
+            end,
+            new RegexFilter("failed"),
             org.okapi.logs.query.QueryConfig.defaultConfig());
     assertEquals(2, failed.size());
   }

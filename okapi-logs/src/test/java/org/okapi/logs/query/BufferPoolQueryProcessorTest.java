@@ -6,7 +6,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.okapi.logs.config.LogsConfigProperties;
+import org.okapi.logs.config.ModifiableCfg;
 import org.okapi.logs.runtime.LogPageBufferPool;
 import org.okapi.protos.logs.LogPayloadProto;
 
@@ -16,7 +16,7 @@ class BufferPoolQueryProcessorTest {
 
   @BeforeEach
   void setup() {
-    LogsConfigProperties cfg = new LogsConfigProperties();
+    var cfg = new ModifiableCfg("test-bucket");
     cfg.setMaxDocsPerPage(100);
     cfg.setMaxPageBytes(1024 * 1024);
     cfg.setMaxPageWindowMs(60_000);

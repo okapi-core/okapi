@@ -20,7 +20,7 @@ public class PageIndex {
     this.indexPath = indexPath;
   }
 
-  public synchronized void append(PageIndexEntry e, boolean fsync) throws IOException {
+  public synchronized void append(PageIndexEntry e) throws IOException {
     Files.createDirectories(indexPath.getParent());
     try (FileChannel ch =
         FileChannel.open(
@@ -37,7 +37,6 @@ public class PageIndex {
       bb.put(Ints.toByteArray(e.getCrc32()));
       bb.flip();
       ch.write(bb);
-      if (fsync) ch.force(true);
     }
   }
 

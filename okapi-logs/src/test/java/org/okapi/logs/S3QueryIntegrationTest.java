@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.okapi.logs.config.LogsConfigProperties;
+import org.okapi.logs.config.LogsCfgImpl;
 import org.okapi.logs.forwarding.LogForwarder;
 import org.okapi.logs.io.LogPage;
 import org.okapi.logs.io.LogPageSerializer;
@@ -32,13 +32,13 @@ import software.amazon.awssdk.services.s3.S3Client;
     properties = {"okapi.logs.s3Bucket=unit-bucket", "okapi.logs.s3BasePrefix=logs"})
 @ActiveProfiles("test")
 class S3QueryIntegrationTest {
-  @Autowired LogsConfigProperties cfg;
+  @Autowired LogsCfgImpl cfg;
 
   @Mock S3Client s3Client;
-  @MockitoBean
-  LogForwarder logForwarder;
-  @MockitoBean
-  MembershipEventPublisher membershipEventPublisher;
+
+  @MockitoBean LogForwarder logForwarder;
+
+  @MockitoBean MembershipEventPublisher membershipEventPublisher;
 
   @Test
   void queryFromS3Dump() throws Exception {
@@ -55,7 +55,7 @@ class S3QueryIntegrationTest {
 
     Map<String, byte[]> store = new HashMap<>();
     long startTs = page.getTsStart();
-    var hr = startTs / 3600_000L;
+    var hr = startTs / cfg.getIdxExpiryDuration();
     String prefix = cfg.getS3BasePrefix() + "/tenantX/streamY/" + hr + "/node-1";
     store.put(prefix + "/logfile.idx", idx);
     store.put(prefix + "/logfile.bin", bin);
@@ -109,7 +109,7 @@ class S3QueryIntegrationTest {
   static class FakeS3QueryProcessor extends S3QueryProcessor {
     private final Map<String, byte[]> store;
 
-    FakeS3QueryProcessor(LogsConfigProperties cfg, Map<String, byte[]> store, S3Client client) {
+    FakeS3QueryProcessor(LogsCfgImpl cfg, Map<String, byte[]> store, S3Client client) {
       super(cfg, new io.micrometer.core.instrument.simple.SimpleMeterRegistry(), client);
       this.store = store;
     }

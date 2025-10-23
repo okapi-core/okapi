@@ -12,23 +12,23 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
 import lombok.extern.slf4j.Slf4j;
-import org.okapi.logs.config.LogsConfigProperties;
+import org.okapi.logs.config.LogsCfg;
 import org.okapi.logs.io.LogFileWriter;
-import org.okapi.logs.mappers.OtelToLogMapper;
 import org.okapi.logs.io.LogPage;
+import org.okapi.logs.mappers.OtelToLogMapper;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 public class LogPageBufferPool {
-  private final LogsConfigProperties cfg;
+  private final LogsCfg cfg;
   private final LogFileWriter fileWriter;
-  private final io.micrometer.core.instrument.MeterRegistry meterRegistry;
+  private final MeterRegistry meterRegistry;
 
   private final Map<Long, ActivePage> pages = new ConcurrentHashMap<>();
   private final BlockingQueue<PendingFlush> flushQueue = new LinkedBlockingQueue<>();
 
-  public LogPageBufferPool(LogsConfigProperties cfg, MeterRegistry meterRegistry) {
+  public LogPageBufferPool(LogsCfg cfg, MeterRegistry meterRegistry) {
     this.cfg = cfg;
     this.fileWriter = new LogFileWriter(cfg);
     this.meterRegistry = meterRegistry;
@@ -115,13 +115,13 @@ public class LogPageBufferPool {
   private static final class ActivePage {
     private final String tenantId;
     private final String logStream;
-    private final LogsConfigProperties cfg;
+    private final LogsCfg cfg;
     private final ReentrantLock lock = new ReentrantLock();
     private LogPage page;
     private long firstTs = -1L;
     private int approxBytes = 76 + 4; // header + CRC
 
-    ActivePage(String tenantId, String logStream, LogsConfigProperties cfg) {
+    ActivePage(String tenantId, String logStream, LogsCfg cfg) {
       this.tenantId = tenantId;
       this.logStream = logStream;
       this.cfg = cfg;
