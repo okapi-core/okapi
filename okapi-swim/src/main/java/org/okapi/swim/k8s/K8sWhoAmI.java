@@ -1,19 +1,14 @@
 package org.okapi.swim.k8s;
 
+import java.net.InetAddress;
+import java.util.UUID;
 import org.okapi.swim.identity.WhoAmI;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
-import io.fabric8.kubernetes.client.KubernetesClient;
-
-import java.net.InetAddress;
 
 @Component
 @Profile("k8s")
-@ConditionalOnClass(KubernetesClient.class)
-@ConditionalOnMissingBean(WhoAmI.class)
 public class K8sWhoAmI implements WhoAmI {
 
   @Value("${server.port}")
@@ -28,7 +23,7 @@ public class K8sWhoAmI implements WhoAmI {
   public String getNodeId() {
     String host = env("HOSTNAME");
     if (!host.isEmpty()) return host;
-    return java.util.UUID.randomUUID().toString();
+    return UUID.randomUUID().toString();
   }
 
   @Override

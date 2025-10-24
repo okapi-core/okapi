@@ -13,19 +13,16 @@ import org.springframework.stereotype.Component;
 public class SeedMembersInitializer {
   private final MemberList memberList;
 
-  @Autowired(required = false)
-  private SeedMembersProvider seedMembersProvider;
+  @Autowired private SeedMembersProvider seedMembersProvider;
 
   @PostConstruct
-  public void init() {
-    if (seedMembersProvider == null) return;
+  public void init() throws InterruptedException {
     List<Member> seeds = seedMembersProvider.getSeedMembers();
     if (seeds == null || seeds.isEmpty()) return;
-    for (Member m : seeds) {
-      if (m != null && m.getNodeId() != null) {
-        memberList.addMember(m);
+    for (var member : seeds) {
+      if (member != null && member.getNodeId() != null) {
+        memberList.addMember(member);
       }
     }
   }
 }
-

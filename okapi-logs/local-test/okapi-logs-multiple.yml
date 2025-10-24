@@ -1,3 +1,30 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: okapi-pod-reader
+  namespace: okapi
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "pods","endpoints","services" ]
+    verbs: [ "get","list","watch" ]
+  - apiGroups: [ "discovery.k8s.io" ]
+    resources: [ "endpointslices" ]
+    verbs: [ "get","list","watch" ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: okapi-pod-reader-binding
+  namespace: okapi
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: okapi
+roleRef:
+  kind: Role
+  name: okapi-pod-reader
+  apiGroup: rbac.authorization.k8s.io
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -37,9 +64,9 @@ spec:
               value: http://localstack.okapi:4566
             # Localstack accepts any credentials but AWS SDK requires them
             - name: AWS_ACCESS_KEY_ID
-              value: test
+              value: accessKey
             - name: AWS_SECRET_ACCESS_KEY
-              value: test
+              value: secretKey
             # SWIM k8s discovery: select pods via this label value
             - name: OKAPI_SWIM_K8S_OKAPI-SERVICE-LABEL-VALUE
               value: okapi-logs
@@ -48,7 +75,7 @@ spec:
               mountPath: /data
       volumes:
         - name: data
-          emptyDir: {}
+          emptyDir: { }
 ---
 apiVersion: v1
 kind: Service

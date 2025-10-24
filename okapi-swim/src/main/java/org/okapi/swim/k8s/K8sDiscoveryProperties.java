@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "okapi.swim.k8s")
 public class K8sDiscoveryProperties {
   // Value for the fixed label key "okapi_service" to select pods (e.g., okapi-logs, okapi-traces)
-  private String okapiServiceLabelValue;
+  private String svcName;
 
   // Namespace to search in; if null/blank, will derive from serviceaccount namespace
   private String namespace;
@@ -21,4 +21,3 @@ public class K8sDiscoveryProperties {
   private long watchReconnectInitialBackoffMillis = 1000;
   private long watchReconnectMaxBackoffMillis = 15000;
 }
-

@@ -1,9 +1,11 @@
+server:
+  port: 8080
 okapi:
   logs:
     s3:
       region: eu-west-2
       uploadGraceMs: 300000 # 5 min grace period
-      bucket: okapi-logs-bucket
+      bucket: c199eb35-okapi-logs-bucket
       basePrefix: logs
       uploadIntervalMs: 1800000
     dataDir: data-pages
@@ -12,6 +14,8 @@ okapi:
     maxPageWindowMs: 3600000 # 1hr
     idxExpiryDuration: 3600000 # 1hr expiry duration for an index file
   swim:
-    svcName: logs
+    svcName: okapi-logs
+    k8s:
+      svcName: okapi-logs
     s3:
-      bucket: okapi-logs-bucket
+      bucket: c199eb35-okapi-logs-bucket
