@@ -43,12 +43,13 @@ public class AwsConfiguration {
       @Autowired AwsCredentialsProvider credentialsProvider,
       @Autowired Region region,
       @Value("${okapi.logs.s3.bucket}") String s3Bucket,
+      @Value("${okapi.logs.s3.endpoint}") String endpoint,
       @Value("${okapi.swim.s3.bucket}") String swimBucket) {
     var client =
         S3Client.builder()
             .credentialsProvider(credentialsProvider)
             .region(region)
-            .endpointOverride(URI.create("http://localhost:4566"))
+            .endpointOverride(URI.create(endpoint))
             .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build())
             .build();
 
@@ -73,8 +74,7 @@ public class AwsConfiguration {
   public S3Client s3ClientK8s(
       @Autowired AwsCredentialsProvider credentialsProvider,
       @Autowired Region region,
-      @org.springframework.beans.factory.annotation.Value("${okapi.logs.s3.endpoint:}")
-          String endpoint) {
+      @Value("${okapi.logs.s3.endpoint}") String endpoint) {
     var builder = S3Client.builder().credentialsProvider(credentialsProvider).region(region);
     if (endpoint != null && !endpoint.isBlank()) {
       builder =

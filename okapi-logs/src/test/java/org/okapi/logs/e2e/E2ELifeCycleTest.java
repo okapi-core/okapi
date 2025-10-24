@@ -1,7 +1,6 @@
 package org.okapi.logs.e2e;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -9,6 +8,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +34,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 
+@Slf4j
 @SpringBootTest(
     classes = {TestApplication.class, AwsConfiguration.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -44,13 +45,13 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
       "okapi.logs.maxDocsPerPage=2",
       "okapi.logs.maxPageBytes=65536",
       "okapi.logs.maxPageWindowMs=100",
+      "okapi.logs.s3.endpoint=http://localhost:4566",
       // S3 settings wired for Localstack via AwsConfiguration (test profile)
-      "okapi.logs.s3Bucket=e2e-bucket",
-      "okapi.logs.s3BasePrefix=e2e-logs",
+      "okapi.logs.s3.basePrefix=e2e-logs",
       // Fast upload ticks and short time partitioning for test
-      "okapi.logs.s3UploadIntervalMs=200",
+      "okapi.logs.s3.uploadIntervalMs=200",
       "okapi.logs.idxExpiryDuration=1000",
-      "okapi.logs.s3UploadGraceMs=0",
+      "okapi.logs.s3.uploadGraceMs=0",
       // Satisfy region bean
       "okapi.logs.s3.region=us-east-1"
     })
@@ -76,12 +77,6 @@ class E2ELifeCycleTest {
   @BeforeEach
   void setUp() {
     baseUrl = "http://localhost:" + port;
-    // Ensure bucket exists (idempotent)
-    try {
-      s3.createBucket(b -> b.bucket("e2e-bucket"));
-    } catch (software.amazon.awssdk.services.s3.model.S3Exception e) {
-      if (e.statusCode() != 409) throw e;
-    }
   }
 
   @Test
@@ -112,13 +107,16 @@ class E2ELifeCycleTest {
         .atMost(Duration.ofSeconds(10))
         .untilAsserted(
             () -> {
-              assertEquals(
-                  5,
+              var traceACount =
                   queryCount(
-                      tenant, stream, start, end, traceFilter(OtelTestPayloads.TRACE_A_HEX), null));
-              assertEquals(2, queryCount(tenant, stream, start, end, regexFilter("failed"), null));
+                      tenant, stream, start, end, traceFilter(OtelTestPayloads.TRACE_A_HEX), null);
+              log.info("Got traceACount {}", traceACount);
+              assertEquals(5, traceACount);
+              var failedFilterCount =
+                  queryCount(tenant, stream, start, end, regexFilter("failed"), null);
+              log.info("Got failedFilterCount {}", failedFilterCount);
+              assertEquals(2, failedFilterCount);
             });
-
     // Wait at least one idxExpiryDuration to make prior hour eligible (even though base is older)
     try {
       Thread.sleep(idxDur + 300);
@@ -129,10 +127,12 @@ class E2ELifeCycleTest {
     // Await S3 upload for that hour (any node path under the hour prefix)
     long hr = payload.startTsMillis() / cfg.getIdxExpiryDuration();
     String hourPrefix = cfg.getS3BasePrefix() + "/" + tenant + "/" + stream + "/" + hr + "/";
+    log.info("Checking prefix : " + hourPrefix);
     Awaitility.await()
         .atMost(Duration.ofSeconds(20))
         .untilAsserted(
             () -> {
+              log.info("Checking prefix {}", hourPrefix);
               var list =
                   s3.listObjectsV2(
                       ListObjectsV2Request.builder()

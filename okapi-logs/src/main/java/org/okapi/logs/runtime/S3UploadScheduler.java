@@ -23,7 +23,7 @@ public class S3UploadScheduler {
   private final S3Client s3Client;
   private final NodeIdSupplier nodeIdSupplier;
 
-  @Scheduled(fixedDelayString = "${okapi.logs.s3UploadIntervalMs:60000}")
+  @Scheduled(fixedDelayString = "${okapi.logs.s3.uploadIntervalMs}")
   public void onTick() {
     if (cfg.getS3Bucket() == null || cfg.getS3Bucket().isEmpty()) return;
     try {

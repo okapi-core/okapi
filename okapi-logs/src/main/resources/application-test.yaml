@@ -5,6 +5,8 @@ okapi:
       uploadGraceMs: 300000 # 5 min grace period
       bucket: test-bucket
       basePrefix: logs
+      endpoint: http://localhost:4566
+      uploadIntervalMs: 1800000
     dataDir: data-pages
     maxPageBytes: 8388608 # 8 MB by default
     maxDocsPerPage: 1000
