@@ -45,6 +45,7 @@ public class AwsConfiguration {
       @Value("${okapi.logs.s3.bucket}") String s3Bucket,
       @Value("${okapi.logs.s3.endpoint}") String endpoint,
       @Value("${okapi.swim.s3.bucket}") String swimBucket) {
+    log.info("Creating localstack s3 client with endpoint {}", endpoint);
     var client =
         S3Client.builder()
             .credentialsProvider(credentialsProvider)

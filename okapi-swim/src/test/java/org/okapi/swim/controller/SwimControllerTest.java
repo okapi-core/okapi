@@ -19,7 +19,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class SwimControllerTest {
 
   @Autowired private TestRestTemplate restTemplate;
@@ -30,8 +31,7 @@ class SwimControllerTest {
 
   // Satisfy Disseminator dependency during component scanning
   @MockitoBean private WhoAmI whoAmI;
-  @MockitoBean
-  MembershipEventPublisher membershipEventPublisher;
+  @MockitoBean MembershipEventPublisher membershipEventPublisher;
 
   @Test
   void ping_shouldReturnOk() {

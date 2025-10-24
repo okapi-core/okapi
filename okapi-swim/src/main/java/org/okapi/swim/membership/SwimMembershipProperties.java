@@ -1,6 +1,5 @@
 package org.okapi.swim.membership;
 
-
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor

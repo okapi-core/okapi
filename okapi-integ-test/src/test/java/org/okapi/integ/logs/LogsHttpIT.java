@@ -18,14 +18,15 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.okapi.rest.logs.FilterNode;
 import org.okapi.rest.logs.QueryRequest;
 import org.okapi.rest.logs.QueryResponse;
 
+@Slf4j
 public class LogsHttpIT {
   private static String baseUrl;
   private static final HttpClient http = HttpClient.newHttpClient();
@@ -36,6 +37,10 @@ public class LogsHttpIT {
     baseUrl = System.getProperty("okapi.integ.baseUrl");
     if (baseUrl == null || baseUrl.isBlank()) {
       baseUrl = System.getenv("OKAPI_BASE_URL");
+    }
+    if (baseUrl == null) {
+      baseUrl = "http://localhost:8080";
+      log.info("Using default url: {}", baseUrl);
     }
     assertNotNull(baseUrl, "Provide base URL via -Dokapi.integ.baseUrl or OKAPI_BASE_URL");
   }
@@ -66,7 +71,8 @@ public class LogsHttpIT {
     long end = p.firstTsMs + 60_000;
 
     // Poll queries until we observe expected counts or timeout
-    int traceCount = pollCount(tenant, stream, start, end, traceFilter("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), 5);
+    int traceCount =
+        pollCount(tenant, stream, start, end, traceFilter("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), 5);
     assertEquals(5, traceCount);
 
     int failedCount = pollCount(tenant, stream, start, end, regexFilter("failed"), 2);
@@ -91,8 +97,8 @@ public class LogsHttpIT {
     return last;
   }
 
-  private static int queryCount(String tenant, String stream, long start, long end, FilterNode filter)
-      throws Exception {
+  private static int queryCount(
+      String tenant, String stream, long start, long end, FilterNode filter) throws Exception {
     QueryRequest req = new QueryRequest(start, end, 1000, null, filter);
     byte[] json = gson.toJson(req).getBytes(java.nio.charset.StandardCharsets.UTF_8);
     HttpRequest httpReq =
@@ -144,33 +150,58 @@ public class LogsHttpIT {
     var sl = ScopeLogs.newBuilder();
 
     // Trace A (successful checkout)
-    sl.addLogRecords(log(baseNs + 1, 9, traceA, "GET /api/catalog/search?q=running+shoes user=u123")); // INFO
-    sl.addLogRecords(log(baseNs + 2, 5, traceA, "PricingEngine applied discount code=SPRING10 order=1001")); // DEBUG
-    sl.addLogRecords(log(baseNs + 3, 13, traceA, "Inventory low for sku=SHOE-RED-42 remaining=2")); // WARN
-    sl.addLogRecords(log(baseNs + 4, 11, traceA, "Payment authorized order=1001 amount=79.99 provider=stripe")); // INFO
+    sl.addLogRecords(
+        log(baseNs + 1, 9, traceA, "GET /api/catalog/search?q=running+shoes user=u123")); // INFO
+    sl.addLogRecords(
+        log(
+            baseNs + 2,
+            5,
+            traceA,
+            "PricingEngine applied discount code=SPRING10 order=1001")); // DEBUG
+    sl.addLogRecords(
+        log(baseNs + 3, 13, traceA, "Inventory low for sku=SHOE-RED-42 remaining=2")); // WARN
+    sl.addLogRecords(
+        log(
+            baseNs + 4,
+            11,
+            traceA,
+            "Payment authorized order=1001 amount=79.99 provider=stripe")); // INFO
     sl.addLogRecords(log(baseNs + 5, 9, traceA, "Order confirmed order=1001 user=u123")); // INFO
 
     // Trace B (failed checkout)
-    sl.addLogRecords(log(baseNs + 6, 9, traceB, "GET /api/catalog/product/SHOE-BLUE-41 user=u999")); // INFO
-    sl.addLogRecords(log(baseNs + 7, 17, traceB, "Payment authorization failed order=2002 amount=129.00 provider=stripe code=card_declined")); // ERROR
+    sl.addLogRecords(
+        log(baseNs + 6, 9, traceB, "GET /api/catalog/product/SHOE-BLUE-41 user=u999")); // INFO
+    sl.addLogRecords(
+        log(
+            baseNs + 7,
+            17,
+            traceB,
+            "Payment authorization failed order=2002 amount=129.00 provider=stripe code=card_declined")); // ERROR
     sl.addLogRecords(log(baseNs + 8, 13, traceB, "Cart abandoned user=u999 after=2m")); // WARN
-    sl.addLogRecords(log(baseNs + 9, 17, traceB, "Order creation failed order=2002 cause=payment_error")); // ERROR
-    sl.addLogRecords(log(baseNs + 10, 9, traceB, "Retry scheduled for payment order=2002 in=5m")); // INFO
+    sl.addLogRecords(
+        log(
+            baseNs + 9,
+            17,
+            traceB,
+            "Order creation failed order=2002 cause=payment_error")); // ERROR
+    sl.addLogRecords(
+        log(baseNs + 10, 9, traceB, "Retry scheduled for payment order=2002 in=5m")); // INFO
 
     rl.addScopeLogs(sl);
     req.addResourceLogs(rl);
     return new Payload(req.build().toByteArray(), baseTsMillis);
   }
 
-  private static LogRecord log(long timeUnixNano, int severityNumber, byte[] traceIdBytes, String body) {
+  private static LogRecord log(
+      long timeUnixNano, int severityNumber, byte[] traceIdBytes, String body) {
     return LogRecord.newBuilder()
         .setTimeUnixNano(timeUnixNano)
         .setSeverityNumber(SeverityNumber.forNumber(severityNumber))
         .setTraceId(com.google.protobuf.ByteString.copyFrom(traceIdBytes))
-        .setBody(io.opentelemetry.proto.common.v1.AnyValue.newBuilder().setStringValue(body).build())
+        .setBody(
+            io.opentelemetry.proto.common.v1.AnyValue.newBuilder().setStringValue(body).build())
         .build();
   }
 
   private record Payload(byte[] body, long firstTsMs) {}
 }
-
