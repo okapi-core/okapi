@@ -41,6 +41,7 @@
         <module>okapi-otel-protos</module>
         <module>okapi-logs</module>
         <module>okapi-swim</module>
+        <module>okapi-integ-test</module>
     </modules>
     <properties>
         <java.version>21</java.version>

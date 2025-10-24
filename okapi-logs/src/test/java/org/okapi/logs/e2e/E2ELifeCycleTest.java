@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -85,7 +86,7 @@ class E2ELifeCycleTest {
 
   @Test
   void ingest_query_wait_upload_query_again() {
-    String tenant = "tenant-e2e";
+    String tenant = UUID.randomUUID().toString();
     String stream = "stream-e2e";
 
     // Build corpus safely in the past so it's not the current partition hour

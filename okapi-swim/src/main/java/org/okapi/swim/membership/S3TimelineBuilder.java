@@ -15,12 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.okapi.swim.ping.Member;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.CommonPrefix;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 
 @Component
-@org.springframework.boot.autoconfigure.condition.ConditionalOnBean(S3Client.class)
 @RequiredArgsConstructor
 @Slf4j
 public class S3TimelineBuilder implements TimelineBuilder {

@@ -5,13 +5,19 @@ import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.okapi.protos.logs.LogPayloadProto;
 
 class MultiSourceQueryProcessorTest {
 
   private static LogPayloadProto item(String body) {
-    return LogPayloadProto.newBuilder().setTsMillis(1L).setLevel(10).setBody(body).build();
+    return LogPayloadProto.newBuilder()
+        .setDocId(UUID.randomUUID().toString())
+        .setTsMillis(1L)
+        .setLevel(10)
+        .setBody(body)
+        .build();
   }
 
   @Test

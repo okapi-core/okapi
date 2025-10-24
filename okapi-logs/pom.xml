@@ -19,10 +19,12 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.roaringbitmap</groupId>
             <artifactId>RoaringBitmap</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.okapi</groupId>
             <artifactId>okapi-protos</artifactId>

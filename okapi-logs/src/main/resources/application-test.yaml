@@ -2,11 +2,15 @@ okapi:
   logs:
     s3:
       region: eu-west-2
+      uploadGraceMs: 300000 # 5 min grace period
+      bucket: test-bucket
+      basePrefix: logs
     dataDir: data-pages
     maxPageBytes: 8388608 # 8 MB by default
     maxDocsPerPage: 1000
     maxPageWindowMs: 3600000 # 1hr
-    s3Bucket: test-bucket
-    s3BasePrefix: logs
-    s3UploadGraceMs: 300000 # 5 min grace period
     idxExpiryDuration: 3600000 # 1hr expiry duration for an index file
+  swim:
+    svcName: logs
+    s3:
+      bucket: test-bucket

@@ -22,6 +22,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class SwimConfiguration {
 
   public static final String SWIM_OK_HTTP = "swimOkHttpClient";
+
   @Bean(name = SWIM_OK_HTTP)
   public OkHttpClient okHttpClient(SwimConfig swimConfig) {
     var timeout =
@@ -55,7 +56,8 @@ public class SwimConfiguration {
   @Bean
   public EventDeduper eventDeduper(SwimConfig swimConfig) {
     long ttl = swimConfig.getDedupeTtlMillis() > 0 ? swimConfig.getDedupeTtlMillis() : 60000;
-    int maxEntries = swimConfig.getDedupeMaxEntries() > 0 ? swimConfig.getDedupeMaxEntries() : 10000;
+    int maxEntries =
+        swimConfig.getDedupeMaxEntries() > 0 ? swimConfig.getDedupeMaxEntries() : 10000;
     return new EventDeduper(ttl, maxEntries);
   }
 

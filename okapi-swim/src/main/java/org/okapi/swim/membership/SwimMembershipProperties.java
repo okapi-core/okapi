@@ -1,10 +1,9 @@
 package org.okapi.swim.membership;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
-@Configuration
-@ConfigurationProperties(prefix = "okapi.swim")
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
 public class SwimMembershipProperties {
   /** Service name used for S3 prefixing: [serviceName]/membership/ */
   private String serviceName;
@@ -28,4 +27,3 @@ public class SwimMembershipProperties {
     this.membershipS3Bucket = membershipS3Bucket;
   }
 }
-
