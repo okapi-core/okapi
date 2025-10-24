@@ -107,7 +107,7 @@ public class K8sSeedRegistry implements SeedMembersProvider {
       if (call.code() >= 200 && call.code() < 300 && call.body() != null) {
         var body = call.body().string();
         MetaResponse meta = gson.fromJson(body, MetaResponse.class);
-        return meta != null ? meta.getNodeId() : null;
+        return meta != null ? meta.getIAm() : null;
       }
     } catch (IOException ignored) {
     }

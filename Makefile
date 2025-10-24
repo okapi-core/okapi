@@ -33,5 +33,9 @@ stop-test-infra:
 
 # Build and package okapi-traces as a Docker image
 okapi-traces:
-	mvn -pl okapi-traces -am -skipTests=true package
+	mvn -pl okapi-traces -am package
 	docker build -t ghcr.io/okapi-core/okapi-traces:latest -f okapi-traces/Dockerfile okapi-traces
+
+okapi-logs:
+	mvn -pl okapi-logs -am package
+	docker build -t okapi-logs:latest -f okapi-logs/Dockerfile okapi-logs

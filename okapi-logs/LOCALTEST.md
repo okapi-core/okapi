@@ -75,7 +75,7 @@ This deploys okapi-logs with `SPRING_PROFILES_ACTIVE=test` and a Localstack side
 client (which is hardcoded to `http://localhost:4566` in test profile) can reach it.
 
 ```
-cat <<EOF | kubectl apply -n okapi -f okapi-logs/local-test/local-test-file.yaml
+cat <<EOF | kubectl apply -n okapi -f okapi-logs/local-test/okapi-logs-single.yaml
 ```
 
 Get the service URL and run a quick curl check:
@@ -104,123 +104,13 @@ in‑cluster Localstack Service using a new endpoint property.
 First, deploy Localstack (ClusterIP) in the `okapi` namespace:
 
 ```
-cat <<EOF | kubectl apply -n okapi -f -
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: localstack
-  labels:
-    app: localstack
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: localstack
-  template:
-    metadata:
-      labels:
-        app: localstack
-    spec:
-      containers:
-        - name: localstack
-          image: localstack/localstack:2.3
-          ports:
-            - containerPort: 4566
-          env:
-            - name: SERVICES
-              value: s3
-            - name: DEBUG
-              value: "1"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: localstack
-  labels:
-    app: localstack
-spec:
-  selector:
-    app: localstack
-  ports:
-    - name: s3
-      port: 4566
-      targetPort: 4566
-      protocol: TCP
-  type: ClusterIP
-EOF
+kubectl apply -n okapi -f okapi-logs/local-test/localstack.yml
 ```
 
 Now deploy okapi‑logs with 3 replicas (profile `k8s`) and S3 pointing to Localstack via `okapi.logs.s3.endpoint`:
 
 ```
-cat <<EOF | kubectl apply -n okapi -f -
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: okapi-logs
-  labels:
-    app: okapi-logs
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: okapi-logs
-  template:
-    metadata:
-      labels:
-        app: okapi-logs
-        okapi_service: okapi-logs
-    spec:
-      containers:
-        - name: okapi-logs
-          image: okapi-logs:local
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 8080
-          env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: k8s
-            - name: SERVER_PORT
-              value: "8080"
-            # Enable S3 against in‑cluster Localstack
-            - name: OKAPI_LOGS_S3_BUCKET
-              value: okapi-e2e
-            - name: OKAPI_LOGS_S3_BASEPREFIX
-              value: logs
-            - name: OKAPI_LOGS_S3_REGION
-              value: us-east-1
-            - name: OKAPI_LOGS_S3_ENDPOINT
-              value: http://localstack.okapi:4566
-            # Localstack accepts any credentials but AWS SDK requires them
-            - name: AWS_ACCESS_KEY_ID
-              value: test
-            - name: AWS_SECRET_ACCESS_KEY
-              value: test
-            # SWIM k8s discovery: select pods via this label value
-            - name: OKAPI_SWIM_K8S_OKAPI-SERVICE-LABEL-VALUE
-              value: okapi-logs
-          volumeMounts:
-            - name: data
-              mountPath: /data
-      volumes:
-        - name: data
-          emptyDir: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: okapi-logs-svc
-  labels:
-    app: okapi-logs
-spec:
-  selector:
-    app: okapi-logs
-  type: LoadBalancer
-  ports:
-    - name: http
-      port: 8080
-      targetPort: 8080
-EOF
+kubectl apply -n okapi -f okapi-logs/local-test/okapi-logs-multiple.yml
 ```
 
 Wait for rollout and obtain the LoadBalancer URL:

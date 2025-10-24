@@ -54,7 +54,7 @@ class SwimControllerIntegrationTest {
         restTemplate.getForEntity("/okapi/swim/meta", MetaResponse.class);
     assertEquals(200, resp.getStatusCode().value());
     assertNotNull(resp.getBody());
-    assertEquals("self-node", resp.getBody().getNodeId());
+    assertEquals("self-node", resp.getBody().getIAm());
   }
 
   // --- Register ---

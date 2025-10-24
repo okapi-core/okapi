@@ -28,9 +28,19 @@ public class SwimController {
   public AckMessage ping(@RequestBody PingMessage pingMessage) {
     String nodeId = pingMessage.getFrom();
     if (nodeId != null) {
-      if (memberList.getMember(nodeId) == null && pingMessage.getOwnIp() != null && pingMessage.getOwnPort() != 0) {
-        var reg = new RegisterMessage(nodeId, pingMessage.getOwnIp(), pingMessage.getOwnPort(), 0L, swimConfig.getGossipHopCount());
-        membershipService.applyRegister(new org.okapi.swim.ping.Member(nodeId, reg.getIp(), reg.getPort()), reg.getIncarnation());
+      if (memberList.getMember(nodeId) == null
+          && pingMessage.getOwnIp() != null
+          && pingMessage.getOwnPort() != 0) {
+        var reg =
+            new RegisterMessage(
+                nodeId,
+                pingMessage.getOwnIp(),
+                pingMessage.getOwnPort(),
+                0L,
+                swimConfig.getGossipHopCount());
+        membershipService.applyRegister(
+            new org.okapi.swim.ping.Member(nodeId, reg.getIp(), reg.getPort()),
+            reg.getIncarnation());
         disseminator.disseminateRegister(decrementHop(reg));
       }
       membershipService.applyAlive(nodeId, 0L);
@@ -58,7 +68,7 @@ public class SwimController {
 
   @GetMapping("/meta")
   public MetaResponse metaResponse() {
-    return new MetaResponse(whoAmI.getNodeId());
+    return new MetaResponse(whoAmI.getNodeId(), memberList.getAllMembers());
   }
 
   @PutMapping("/members/{nodeId}")
@@ -66,7 +76,10 @@ public class SwimController {
       @PathVariable("nodeId") String nodeId, @RequestBody RegisterMessage message) {
     var key = new EventDeduper.Key("REGISTER", nodeId, message.getIncarnation());
     boolean first = deduper.seenOnce(key);
-    boolean applied = membershipService.applyRegister(new org.okapi.swim.ping.Member(nodeId, message.getIp(), message.getPort()), message.getIncarnation());
+    boolean applied =
+        membershipService.applyRegister(
+            new org.okapi.swim.ping.Member(nodeId, message.getIp(), message.getPort()),
+            message.getIncarnation());
     if (!first || !applied) {
       return org.springframework.http.ResponseEntity.noContent().build();
     }
@@ -103,7 +116,8 @@ public class SwimController {
     var key = new EventDeduper.Key("SUSPECT", nodeId, message.getIncarnation());
     boolean first = deduper.seenOnce(key);
     boolean applied =
-        membershipService.applySuspect(nodeId, message.getIncarnation(), swimConfig.getSuspectTimeoutMillis());
+        membershipService.applySuspect(
+            nodeId, message.getIncarnation(), swimConfig.getSuspectTimeoutMillis());
     if (!first || !applied) {
       return org.springframework.http.ResponseEntity.noContent().build();
     }
