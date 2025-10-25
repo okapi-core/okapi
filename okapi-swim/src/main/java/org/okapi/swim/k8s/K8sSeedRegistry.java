@@ -105,7 +105,6 @@ public class K8sSeedRegistry implements SeedMembersProvider {
       log.info("Adding pod: {} as member with id {}", podIp, nodeId);
       result.add(new Member(nodeId, podIp, serverPort));
     }
-    log.info("DELETE ME: return {} results.", result.size());
     return result;
   }
 

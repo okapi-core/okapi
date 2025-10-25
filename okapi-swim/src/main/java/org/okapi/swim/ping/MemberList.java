@@ -73,12 +73,8 @@ public class MemberList {
   public Member sample() {
     try {
       modifierLock.lock();
-      var sampled = members.keySet().stream().toList();
-      var idx = new ArrayList<Integer>();
-      for (int i = 0; i < sampled.size(); i++) {
-        idx.add(i);
-      }
-      Collections.shuffle(idx);
+      var sampled = new ArrayList<>(members.keySet());
+      Collections.shuffle(sampled);
       return this.members.get(sampled.getFirst());
     } finally {
       modifierLock.unlock();
