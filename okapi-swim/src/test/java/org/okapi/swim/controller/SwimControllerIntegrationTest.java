@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.okapi.swim.bootstrap.SeedMembersProvider;
 import org.okapi.swim.disseminate.Disseminator;
 import org.okapi.swim.identity.WhoAmI;
 import org.okapi.swim.membership.EventDeduper;
@@ -45,13 +46,14 @@ class SwimControllerIntegrationTest {
 
   @MockitoBean private WhoAmI whoAmI;
   @MockitoBean MembershipEventPublisher membershipEventPublisher;
+  @MockitoBean private SeedMembersProvider seedMembersProvider;
 
   // --- Meta ---
   @Test
   void meta_shouldReturnNodeIdFromWhoAmI() {
     when(whoAmI.getNodeId()).thenReturn("self-node");
     ResponseEntity<MetaResponse> resp =
-        restTemplate.getForEntity("/okapi/swim/meta", MetaResponse.class);
+        restTemplate.getForEntity("/fleet/meta", MetaResponse.class);
     assertEquals(200, resp.getStatusCode().value());
     assertNotNull(resp.getBody());
     assertEquals("self-node", resp.getBody().getIAm());
@@ -68,7 +70,7 @@ class SwimControllerIntegrationTest {
     RegisterMessage msg = new RegisterMessage("n1", "1.2.3.4", 8080, 5L, 3);
     ResponseEntity<AckMessage> resp =
         restTemplate.exchange(
-            "/okapi/swim/members/n1",
+            "/fleet/members/n1",
             HttpMethod.PUT,
             new HttpEntity<>(msg, new HttpHeaders()),
             AckMessage.class);
@@ -99,7 +101,7 @@ class SwimControllerIntegrationTest {
     RegisterMessage msg = new RegisterMessage("n2", "10.0.0.2", 9000, 7L, 4);
     ResponseEntity<AckMessage> resp =
         restTemplate.exchange(
-            "/okapi/swim/members/n2",
+            "/fleet/members/n2",
             HttpMethod.PUT,
             new HttpEntity<>(msg, new HttpHeaders()),
             AckMessage.class);
@@ -116,7 +118,7 @@ class SwimControllerIntegrationTest {
     RegisterMessage msg = new RegisterMessage("n3", "10.0.0.3", 9100, 3L, 5);
     ResponseEntity<Void> resp =
         restTemplate.exchange(
-            "/okapi/swim/members/n3",
+            "/fleet/members/n3",
             HttpMethod.PUT,
             new HttpEntity<>(msg, new HttpHeaders()),
             Void.class);
@@ -136,7 +138,7 @@ class SwimControllerIntegrationTest {
     AliveMessage msg = new AliveMessage("n4", 11L, 4);
     ResponseEntity<AckMessage> resp =
         restTemplate.exchange(
-            "/okapi/swim/members/n4/alive",
+            "/fleet/members/n4/alive",
             HttpMethod.PUT,
             new HttpEntity<>(msg, new HttpHeaders()),
             AckMessage.class);
@@ -157,7 +159,7 @@ class SwimControllerIntegrationTest {
     AliveMessage msg = new AliveMessage("n5", 2L, 2);
     ResponseEntity<Void> resp =
         restTemplate.exchange(
-            "/okapi/swim/members/n5/alive",
+            "/fleet/members/n5/alive",
             HttpMethod.PUT,
             new HttpEntity<>(msg, new HttpHeaders()),
             Void.class);
@@ -177,7 +179,7 @@ class SwimControllerIntegrationTest {
     SuspectMessage msg = new SuspectMessage("n6", 13L, 2);
     ResponseEntity<AckMessage> resp =
         restTemplate.exchange(
-            "/okapi/swim/members/n6/suspect",
+            "/fleet/members/n6/suspect",
             HttpMethod.PUT,
             new HttpEntity<>(msg, new HttpHeaders()),
             AckMessage.class);
@@ -198,7 +200,7 @@ class SwimControllerIntegrationTest {
     SuspectMessage msg = new SuspectMessage("n7", 3L, 1);
     ResponseEntity<Void> resp =
         restTemplate.exchange(
-            "/okapi/swim/members/n7/suspect",
+            "/fleet/members/n7/suspect",
             HttpMethod.PUT,
             new HttpEntity<>(msg, new HttpHeaders()),
             Void.class);
@@ -218,7 +220,7 @@ class SwimControllerIntegrationTest {
 
     ResponseEntity<AckMessage> resp =
         restTemplate.postForEntity(
-            "/okapi/swim/ping", new PingMessage("fromA", "2.2.2.2", 9001), AckMessage.class);
+            "/fleet/ping", new PingMessage("fromA", "2.2.2.2", 9001), AckMessage.class);
 
     assertEquals(200, resp.getStatusCode().value());
 
@@ -243,7 +245,7 @@ class SwimControllerIntegrationTest {
 
     ResponseEntity<AckMessage> resp =
         restTemplate.postForEntity(
-            "/okapi/swim/ping",
+            "/fleet/ping",
             // ownIp absent, ownPort 0 -> should not register
             new PingMessage("fromB", null, 0),
             AckMessage.class);

@@ -24,100 +24,39 @@ Conventions
 
 ```
 minikube start --driver=docker
-
-# Enable MetalLB so LoadBalancer works locally
-minikube addons enable metallb
-
-# Configure an address pool for MetalLB (pick an unused range in your local minikube CIDR)
-# Hint: `minikube ip` typically shows e.g. 192.168.49.2; use 192.168.49.100-192.168.49.120
-cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: okapi
----
-apiVersion: metallb.io/v1beta1
-kind: IPAddressPool
-metadata:
-  name: okapi-lb-pool
-  namespace: metallb-system
-spec:
-  addresses:
-    - 192.168.49.100-192.168.49.120
----
-apiVersion: metallb.io/v1beta1
-kind: L2Advertisement
-metadata:
-  name: okapi-lb-adv
-  namespace: metallb-system
-spec:
-  ipAddressPools:
-    - okapi-lb-pool
-EOF
 ```
 
-## 2) Build the okapi-logs image and load to Minikube
+## 2) Build the okapi-logs image, load the docker image and deploy
 
 ```
 # Build artifacts
-mvn -q -DskipTests -pl okapi-logs -am package
-
-# Build image using the module Dockerfile
-docker build -t okapi-logs:local okapi-logs
-
-# Load into Minikube node(s)
-minikube image load okapi-logs:local
+make okapi-logs-local
 ```
 
-## 3) Single‑pod S3 smoke test (Localstack sidecar, profile=test)
-
-This deploys okapi-logs with `SPRING_PROFILES_ACTIVE=test` and a Localstack sidecar in the same Pod so the app’s S3
-client (which is hardcoded to `http://localhost:4566` in test profile) can reach it.
-
-```
-cat <<EOF | kubectl apply -n okapi -f okapi-logs/local-test/okapi-logs-single.yaml
-```
-
-Get the service URL and run a quick curl check:
-
-```
-kubectl -n okapi wait --for=condition=available deploy/okapi-logs-localstack --timeout=120s
-
-minikube service -n okapi okapi-logs-localstack-svc --url
-# export this URL for later
-export OKAPI_BASE_URL=$(minikube service -n okapi okapi-logs-localstack-svc --url)
-
-curl -sS ${OKAPI_BASE_URL}/okapi/swim/meta
-```
-
-Optionally, run the blackbox integration test suite against this endpoint:
-
-```
-mvn -q -pl okapi-integ-test verify -DskipITs=false -Dokapi.integ.baseUrl=${OKAPI_BASE_URL}
-```
-
-## 4) Multi‑pod cluster (3 replicas, profile=k8s) + LoadBalancer + Localstack S3
+## 3) Get a local IP to test the cluster against
 
 This variant uses the `k8s` profile to enable Kubernetes‑aware SWIM discovery and configures S3 to point at an
 in‑cluster Localstack Service using a new endpoint property.
 
-First, deploy Localstack (ClusterIP) in the `okapi` namespace:
+First open a url to connect to NGINX.
 
 ```
-kubectl apply -n okapi -f okapi-logs/local-test/localstack.yml
+minikube service nginx -n okapi --url
 ```
 
-Now deploy okapi‑logs with 3 replicas (profile `k8s`) and S3 pointing to Localstack via `okapi.logs.s3.endpoint`:
+NOTE - this call will block and its required to leave the terminal open.
+The output will look something like this:
 
-```
-kubectl apply -n okapi -f okapi-logs/local-test/okapi-logs-multiple.yml
+```bash
+$ minikube service nginx -n okapi --url
+http://127.0.0.1:62136
 ```
 
 Wait for rollout and obtain the LoadBalancer URL:
 
 ```
 kubectl -n okapi rollout status deploy/okapi-logs --timeout=120s
-export OKAPI_BASE_URL=$(minikube service -n okapi okapi-logs-svc --url)
+export OKAPI_BASE_URL=$(minikube service -n okapi nginx --url)
 echo ${OKAPI_BASE_URL}
 ```
 
@@ -125,11 +64,11 @@ echo ${OKAPI_BASE_URL}
 
 - Pods are labeled `okapi_service=okapi-logs`. The k8s watcher and seed registry will discover peers and add/remove
   members on pod add/delete.
-- Verify unique node IDs across replicas by hitting `/okapi/swim/meta` multiple times (the LoadBalancer will spread
+- Verify unique node IDs across replicas by hitting `/fleet/meta` multiple times (the LoadBalancer will spread
   requests):
 
 ```
-for i in $(seq 1 6); do curl -s ${OKAPI_BASE_URL}/okapi/swim/meta; echo; done
+for i in $(seq 1 6); do curl -s ${OKAPI_BASE_URL}/fleet/meta; echo; done
 ```
 
 You should see varying `nodeId` values over several calls.
@@ -143,7 +82,11 @@ kubectl -n okapi delete pod <one-pod-name>
 
 ### Run blackbox ingestion tests against the LB
 
+Collect the minikube URL from step 3) above.
+Note - we'll need to prefix base url with `/okapi` since NGINX LB is configured to strip this prefix away.
+
 ```
+export OKAPI_BASE_URL=http://127.0.0.1:62136/okapi
 mvn -q -pl okapi-integ-test verify -DskipITs=false -Dokapi.integ.baseUrl=${OKAPI_BASE_URL}
 ```
 
@@ -179,8 +122,8 @@ logs/<tenant>/<stream>/<hour>/<nodeId>/logfile.bin
 ## 5) Cleanup
 
 ```
-kubectl delete ns okapi
-minikube delete
+kubectl delete deployment nginx -n okapi
+kubectl delete deployment okapi-logs -n okapi
 ```
 
 ## Notes & Troubleshooting

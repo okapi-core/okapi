@@ -41,7 +41,12 @@ localstack-k8s:
 okapi-logs-local:
 	mvn -pl okapi-logs -DskipTests=true -am package
 	docker build -t okapi-logs:local -f okapi-logs/Dockerfile okapi-logs
+	# delete okapi deployment
 	kubectl delete -n okapi deployment okapi-logs --ignore-not-found
 	minikube ssh -- docker rmi --force okapi-logs:local
 	minikube image load okapi-logs:local
 	kubectl apply -n okapi -f okapi-logs/local-test/okapi-logs-multiple.yml
+
+	# delete nginx deployment
+	kubectl delete deployment -n okapi nginx
+	kubectl apply -n okapi -f okapi-logs/local-test/nginx-svc.yml

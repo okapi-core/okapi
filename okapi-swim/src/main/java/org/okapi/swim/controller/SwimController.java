@@ -12,7 +12,7 @@ import org.okapi.swim.rest.*;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/okapi/swim")
+@RequestMapping("/fleet")
 @RequiredArgsConstructor
 public class SwimController {
 

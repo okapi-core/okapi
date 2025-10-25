@@ -137,7 +137,7 @@ public class K8sSeedRegistry implements SeedMembersProvider {
       log.info("Try: {} Calling ip: {}", i, ip);
       var req =
           new Request.Builder()
-              .url("http://" + ip + ":" + serverPort + "/okapi/swim/meta")
+              .url("http://" + ip + ":" + serverPort + "/fleet/meta")
               .get()
               .build();
       try (var call = httpClient.newCall(req).execute()) {

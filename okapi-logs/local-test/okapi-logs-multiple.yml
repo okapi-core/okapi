@@ -86,7 +86,7 @@ metadata:
 spec:
   selector:
     app: okapi-logs
-  type: LoadBalancer
+  type: ClusterIP
   ports:
     - name: http
       port: 8080

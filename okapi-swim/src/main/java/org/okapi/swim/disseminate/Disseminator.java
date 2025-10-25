@@ -57,7 +57,7 @@ public class Disseminator {
         continue;
       }
 
-      var url = "http://" + member.getIp() + ":" + member.getPort() + "/okapi/swim/" + nodeId;
+      var url = "http://" + member.getIp() + ":" + member.getPort() + "/fleet/" + nodeId;
       var req = new Request.Builder().url(url).delete().build();
       try (var call = httpClient.newCall(req).execute()) {
         int code = call.code();
@@ -152,17 +152,17 @@ public class Disseminator {
   }
 
   public BroadcastResult disseminateRegister(RegisterMessage msg) {
-    String path = "/okapi/swim/members/" + msg.getNodeId();
+    String path = "/fleet/members/" + msg.getNodeId();
     return broadcastJson(path, msg);
   }
 
   public BroadcastResult disseminateAlive(AliveMessage msg) {
-    String path = "/okapi/swim/members/" + msg.getNodeId() + "/alive";
+    String path = "/fleet/members/" + msg.getNodeId() + "/alive";
     return broadcastJson(path, msg);
   }
 
   public BroadcastResult disseminateSuspect(SuspectMessage msg) {
-    String path = "/okapi/swim/members/" + msg.getNodeId() + "/suspect";
+    String path = "/fleet/members/" + msg.getNodeId() + "/suspect";
     return broadcastJson(path, msg);
   }
 }

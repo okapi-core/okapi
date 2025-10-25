@@ -5,6 +5,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
+import org.okapi.swim.bootstrap.SeedMembersProvider;
 import org.okapi.swim.identity.WhoAmI;
 import org.okapi.swim.membership.MembershipEventPublisher;
 import org.okapi.swim.ping.MemberList;
@@ -19,8 +20,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-@SpringBootTest(
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class SwimControllerTest {
 
   @Autowired private TestRestTemplate restTemplate;
@@ -28,6 +28,7 @@ class SwimControllerTest {
   @MockitoBean private PingService pingIndirectService;
 
   @MockitoBean private MemberList memberList;
+  @MockitoBean private SeedMembersProvider seedMembersProvider;
 
   // Satisfy Disseminator dependency during component scanning
   @MockitoBean private WhoAmI whoAmI;
@@ -37,7 +38,7 @@ class SwimControllerTest {
   void ping_shouldReturnOk() {
     ResponseEntity<AckMessage> response =
         restTemplate.postForEntity(
-            "/okapi/swim/ping",
+            "/fleet/ping",
             new PingMessage(whoAmI.getNodeId(), whoAmI.getNodeIp(), whoAmI.getNodePort()),
             AckMessage.class);
     assertEquals(200, response.getStatusCode().value());
@@ -46,7 +47,7 @@ class SwimControllerTest {
   @Test
   void delete_shouldRemoveMember() {
     ResponseEntity<AckMessage> response =
-        restTemplate.exchange("/okapi/swim/node-z", HttpMethod.DELETE, null, AckMessage.class);
+        restTemplate.exchange("/fleet/node-z", HttpMethod.DELETE, null, AckMessage.class);
     assertEquals(200, response.getStatusCode().value());
     verify(memberList).remove("node-z");
   }
@@ -58,7 +59,7 @@ class SwimControllerTest {
 
     ResponseEntity<AckMessage> response =
         restTemplate.postForEntity(
-            "/okapi/swim/ping-indirect", new PingRequest("n1"), AckMessage.class);
+            "/fleet/ping-indirect", new PingRequest("n1"), AckMessage.class);
     assertEquals(200, response.getStatusCode().value());
   }
 }

@@ -76,7 +76,7 @@ public class PingService {
             MediaType.parse("application/json"), gson.toJson(pingRequest).getBytes());
     var req =
         new Request.Builder()
-            .url("http://" + member.getIp() + ":" + member.getPort() + "/okapi/swim/ping-indirect")
+            .url("http://" + member.getIp() + ":" + member.getPort() + "/fleet/ping-indirect")
             .post(requestBody)
             .build();
     try (var call = httpClient.newCall(req).execute()) {
@@ -109,7 +109,7 @@ public class PingService {
         RequestBody.create(MediaType.parse("application/json"), gson.toJson(pingmsg).getBytes());
     var req =
         new Request.Builder()
-            .url("http://" + member.getIp() + ":" + member.getPort() + "/okapi/swim/ping")
+            .url("http://" + member.getIp() + ":" + member.getPort() + "/fleet/ping")
             .post(requestBody)
             .build();
     try (var call = httpClient.newCall(req).execute()) {
