@@ -85,6 +85,10 @@ public class MemberList {
     }
   }
 
+  public Optional<Member> findByIp(String ip) {
+    return members.values().stream().filter(m -> m.getIp().equals(ip)).findFirst();
+  }
+
   public List<Member> getAllMembers() {
     try {
       modifierLock.lock();

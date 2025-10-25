@@ -84,27 +84,20 @@ public class K8sPodWatcher implements Watcher<Pod> {
         if (!ready) return;
         if (podIp == null || podIp.equals(whoAmI.getNodeIp())) return;
         // if not cached, resolve meta and add
-        var entry = registry.getCache().get(podUid);
-        if (entry == null || !Objects.equals(entry.ip, podIp)) {
-          String nodeId = null;
-          try {
-            log.info("Resolving nodeId for pod: {}", podIp);
-            nodeId = registry.resolveNodeId(podIp);
-            log.info("Got node id: {}", nodeId);
-          } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-          }
+        String nodeId = null;
+        try {
+          log.info("Resolving nodeId for pod: {}", podIp);
+          nodeId = registry.resolveNodeId(podIp);
+          log.info("Got node id: {}", nodeId);
           if (nodeId == null || nodeId.isBlank()) return;
-          var e = new K8sSeedRegistry.Entry(nodeId, podIp);
-          registry.getCache().put(podUid, e);
           memberList.addMember(new Member(nodeId, podIp, serverPort));
+        } catch (InterruptedException e) {
+          throw new RuntimeException(e);
         }
       }
       case DELETED -> {
-        var entry = registry.getCache().remove(podUid);
-        if (entry != null) {
-          memberList.remove(entry.nodeId);
-        }
+        var member = memberList.findByIp(podIp);
+        member.ifPresent(m -> memberList.remove(m.getNodeId()));
       }
       case ERROR -> {
         /* no-op; will handle via onClose */

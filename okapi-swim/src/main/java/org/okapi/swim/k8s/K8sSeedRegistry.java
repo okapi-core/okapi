@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
@@ -40,8 +39,6 @@ public class K8sSeedRegistry implements SeedMembersProvider {
   private final Gson gson;
   private final WhoAmI whoAmI;
   private int serverPort;
-
-  private final Map<String, Entry> cache = new ConcurrentHashMap<>();
 
   public K8sSeedRegistry(
       @Autowired KubernetesClient client,
@@ -95,7 +92,7 @@ public class K8sSeedRegistry implements SeedMembersProvider {
       }
 
       // resolve the node
-      log.info("Resolving nodeid for pod: {}", podIp);
+      log.info("Resolving nodeId for pod: {}", podIp);
       String nodeId = resolveNodeId(podIp);
       if (nodeId == null) {
         log.info("Node id is null for pod with ip: {}", podIp);
@@ -105,10 +102,10 @@ public class K8sSeedRegistry implements SeedMembersProvider {
         log.info("Node id is blank for pod with ip: {}", podIp);
         continue;
       }
-      log.info("Adding pod: {} as member.", podIp);
+      log.info("Adding pod: {} as member with id {}", podIp, nodeId);
       result.add(new Member(nodeId, podIp, serverPort));
-      cache.put(podUid, new Entry(nodeId, podIp));
     }
+    log.info("DELETE ME: return {} results.", result.size());
     return result;
   }
 
@@ -156,9 +153,5 @@ public class K8sSeedRegistry implements SeedMembersProvider {
       Thread.sleep(WAIT_TIME_MILLIS);
     }
     return null;
-  }
-
-  Map<String, Entry> getCache() {
-    return cache;
   }
 }
