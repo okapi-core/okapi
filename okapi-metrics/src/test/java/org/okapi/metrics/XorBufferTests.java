@@ -2,12 +2,6 @@ package org.okapi.metrics;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.okapi.collections.OkapiLists;
-import org.okapi.metrics.storage.*;
-import org.okapi.metrics.storage.buffers.BufferFullException;
-import org.okapi.metrics.storage.buffers.DirectBufferAllocator;
-import org.okapi.metrics.storage.fakes.SharedBufferAllocator;
-import org.okapi.metrics.storage.xor.XorBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -16,13 +10,34 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.okapi.collections.OkapiLists;
+import org.okapi.metrics.storage.*;
+import org.okapi.metrics.storage.buffers.BufferFullException;
+import org.okapi.metrics.storage.buffers.DirectBufferAllocator;
+import org.okapi.metrics.storage.fakes.SharedBufferAllocator;
+import org.okapi.metrics.storage.xor.XorBuffer;
 
 public class XorBufferTests {
+
+  public static Stream<Arguments> bufferSequences() {
+    return Stream.of(
+        Arguments.of(List.of(500.3f)),
+        Arguments.of(List.of(-500.3f)),
+        Arguments.of(Arrays.asList(500.3f, 500.3f)),
+        Arguments.of(Arrays.asList(500.3f, 500.4f, 500.5f)),
+        Arguments.of(Arrays.asList(-500.3f, -500.3f)),
+        Arguments.of(Arrays.asList(Float.MIN_VALUE, Float.MIN_VALUE + 1)),
+        Arguments.of(Arrays.asList(Float.MAX_VALUE, Float.MAX_VALUE - 1)),
+        Arguments.of(Arrays.asList(Float.MAX_VALUE, Float.MIN_VALUE)),
+        Arguments.of(Arrays.asList(-500.3f, -500.4f)),
+        Arguments.of(Arrays.asList(-500.3f, -500.4f, -500.3f)),
+        Arguments.of(Arrays.asList(-5000.3f, -5000.5f, -5000.5f)));
+  }
 
   @Test
   public void testWriteOneFloat() throws BufferFullException {
     var allocator = new SharedBufferAllocator();
-    var valueWriter = new ByteBufferWriter(allocator.allocate( 200));
+    var valueWriter = new ByteBufferWriter(allocator.allocate(200));
     var xorBuffer = new XorBuffer(valueWriter);
     var val = 5000.f;
     xorBuffer.push(val);
@@ -33,7 +48,7 @@ public class XorBufferTests {
   @Test
   public void testWriteAFloatAndZero() throws BufferFullException {
     var allocator = new SharedBufferAllocator();
-    var valueWriter = new ByteBufferWriter(allocator.allocate( 200));
+    var valueWriter = new ByteBufferWriter(allocator.allocate(200));
     var xorBuffer = new XorBuffer(valueWriter);
     var val = 5000.f;
     xorBuffer.push(val);
@@ -47,7 +62,7 @@ public class XorBufferTests {
   @MethodSource("bufferSequences")
   public void testXorBufferSingle(List<Float> sequence) throws BufferFullException {
     var allocator = new DirectBufferAllocator();
-    var valueWriter = new ByteBufferWriter(allocator.allocate( 200));
+    var valueWriter = new ByteBufferWriter(allocator.allocate(200));
     var xorBuffer = new XorBuffer(valueWriter);
     for (var s : sequence) {
       xorBuffer.push(s);
@@ -56,8 +71,6 @@ public class XorBufferTests {
     var allDoubles = OkapiLists.toList(snapshot);
     assertEquals(sequence, allDoubles);
   }
-
-
 
   @Test
   public void testXorBufferTwoValues() throws BufferFullException {
@@ -106,26 +119,11 @@ public class XorBufferTests {
     var values = Arrays.asList(-499.65942f, -499.9441f, -499.84964f);
     var bufferWriter = new ByteBufferWriter(new SharedBufferAllocator().allocate(11));
     var buffer = new XorBuffer(bufferWriter);
-    for(var v: values) {
+    for (var v : values) {
       buffer.push(v);
     }
     var snapshot = buffer.snapshot();
     var allValues = OkapiLists.toList(snapshot);
     assertEquals(values, allValues);
-  }
-
-  public static Stream<Arguments> bufferSequences() {
-    return Stream.of(
-        Arguments.of(List.of(500.3f)),
-        Arguments.of(List.of(-500.3f)),
-        Arguments.of(Arrays.asList(500.3f, 500.3f)),
-        Arguments.of(Arrays.asList(500.3f, 500.4f, 500.5f)),
-        Arguments.of(Arrays.asList(-500.3f, -500.3f)),
-        Arguments.of(Arrays.asList(Float.MIN_VALUE, Float.MIN_VALUE + 1)),
-        Arguments.of(Arrays.asList(Float.MAX_VALUE, Float.MAX_VALUE - 1)),
-        Arguments.of(Arrays.asList(Float.MAX_VALUE, Float.MIN_VALUE)),
-        Arguments.of(Arrays.asList(-500.3f, -500.4f)),
-        Arguments.of(Arrays.asList(-500.3f, -500.4f, -500.3f)),
-        Arguments.of(Arrays.asList(-5000.3f, -5000.5f, -5000.5f)));
   }
 }

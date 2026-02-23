@@ -1,0 +1,20 @@
+{
+  "status": "success",
+  "data": {
+    "resultType": "matrix",
+    "result": [
+      {
+        "metric": {
+          "__name__": "latency",
+          "service": "api"
+        },
+        "values": [
+          [
+            -1,
+            "100"
+          ]
+        ]
+      }
+    ]
+  }
+}

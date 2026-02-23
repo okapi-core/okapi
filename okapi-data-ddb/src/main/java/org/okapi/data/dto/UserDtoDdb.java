@@ -13,47 +13,26 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecon
 @EqualsAndHashCode
 @DynamoDbBean
 public class UserDtoDdb {
+  public enum UserStatus {
+    ACTIVE,
+    INACTIVE,
+  }
   String userId;
   String email;
-  UserDto.UserStatus status;
+  UserStatus status;
   String firstName;
   String lastName;
   String hashedPassword;
-
-  public void setUserId(String userId) {
-    Preconditions.checkNotNull(userId);
-    this.userId = userId;
-  }
-
-  public void setEmail(String email) {
-    Preconditions.checkNotNull(email);
-    this.email = email;
-  }
-
-  public void setStatus(UserDto.UserStatus status) {
-    Preconditions.checkNotNull(status);
-    this.status = status;
-  }
-
-  public void setFirstName(String firstName) {
-    Preconditions.checkNotNull(firstName);
-    this.firstName = firstName;
-  }
-
-  public void setLastName(String lastName) {
-    Preconditions.checkNotNull(lastName);
-    this.lastName = lastName;
-  }
-
-  public void setHashedPassword(String hashedPassword) {
-    Preconditions.checkNotNull(hashedPassword);
-    this.hashedPassword = hashedPassword;
-  }
 
   @DynamoDbAttribute(TableAttributes.USER_ID)
   @DynamoDbPartitionKey
   public String getUserId() {
     return userId;
+  }
+
+  public void setUserId(String userId) {
+    Preconditions.checkNotNull(userId);
+    this.userId = userId;
   }
 
   @DynamoDbSecondaryPartitionKey(indexNames = TablesAndIndexes.USERS_BY_EMAIL_GSI)
@@ -62,9 +41,19 @@ public class UserDtoDdb {
     return email;
   }
 
+  public void setEmail(String email) {
+    Preconditions.checkNotNull(email);
+    this.email = email;
+  }
+
   @DynamoDbAttribute(TableAttributes.USER_STATUS)
-  public UserDto.UserStatus getStatus() {
+  public UserStatus getStatus() {
     return status;
+  }
+
+  public void setStatus(UserStatus status) {
+    Preconditions.checkNotNull(status);
+    this.status = status;
   }
 
   @DynamoDbAttribute(TableAttributes.FIRST_NAME)
@@ -72,13 +61,27 @@ public class UserDtoDdb {
     return firstName;
   }
 
+  public void setFirstName(String firstName) {
+    Preconditions.checkNotNull(firstName);
+    this.firstName = firstName;
+  }
+
   @DynamoDbAttribute(TableAttributes.LAST_NAME)
   public String getLastName() {
     return lastName;
   }
 
+  public void setLastName(String lastName) {
+    this.lastName = lastName;
+  }
+
   @DynamoDbAttribute(TableAttributes.HASHED_PW)
   public String getHashedPassword() {
     return hashedPassword;
+  }
+
+  public void setHashedPassword(String hashedPassword) {
+    Preconditions.checkNotNull(hashedPassword);
+    this.hashedPassword = hashedPassword;
   }
 }

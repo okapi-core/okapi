@@ -1,8 +1,7 @@
 HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+!**/src/main/**/target/ !**/src/test/**/target/
 
 ### STS ###
 .apt_generated
@@ -29,3 +28,22 @@ target/
 **/write.lock
 **/segments_*
 .aider*
+
+# Ignore CH related files
+ch_data/**/*
+ch_logs/**/*
+
+# JTE related files
+**/*.class
+**/Jteget_*.java
+
+# DS stores
+**/*.DS_Store
+
+# Fe setup tools
+fe-setup.json
+
+# Fe copied files
+okapi-web/src/main/resources/public/assets/index-*.js
+okapi-web/src/main/resources/public/assets/index.html
+okapi-web/src/main/resources/public/assets/index-*.css

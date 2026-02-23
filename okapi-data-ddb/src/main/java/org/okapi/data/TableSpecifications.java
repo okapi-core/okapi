@@ -1,93 +1,10 @@
 package org.okapi.data;
 
-import static org.okapi.data.dto.TableAttributes.*;
-import static org.okapi.data.dto.TablesAndIndexes.*;
-
 import com.google.common.collect.Lists;
 import java.util.*;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
 public class TableSpecifications {
-
-  public static CreateTableRequest getUsersTableSpecification() {
-    return makeRequest(
-        USERS_TABLE,
-        USER_ID,
-        null,
-        Arrays.asList(USERS_BY_EMAIL_GSI),
-        Arrays.asList(EMAIL),
-        nullRangeKeys(1));
-  }
-
-  public static CreateTableRequest getUserRelationsDtoSpec() {
-    return makeRequest(
-        USER_ROLE_RELATIONS,
-        USER_ID,
-        USER_ROLE,
-        Lists.newArrayList(ROLE_TO_USER_GSI),
-        Lists.newArrayList(USER_ROLE),
-        nullRangeKeys(1));
-  }
-
-  public static CreateTableRequest getTeamsTableSpecification() {
-    return makeRequest(
-        TEAMS_TABLE,
-        TEAM_ID,
-        null,
-        Lists.newArrayList(ORG_TO_TEAM_GSI),
-        Lists.newArrayList(ORG_ID),
-        nullRangeKeys(1));
-  }
-
-  public static CreateTableRequest getTeamMembersTableSpecification() {
-    return makeRequest(
-        TEAM_MEMBERS_TABLE,
-        TEAM_ID,
-        USER_ID,
-        Collections.emptyList(),
-        Collections.emptyList(),
-        Collections.emptyList());
-  }
-
-  public static CreateTableRequest getAuthorizationTokensTableSpecification() {
-    return makeRequest(
-        AUTHORIZATION_TOKENS_TABLE,
-        AUTHORIZATION_TOKEN_ID,
-        null,
-        Lists.newArrayList(TEAM_TO_AUTHORIZATION_TOKEN_GSI),
-        Lists.newArrayList(TEAM_ID),
-        nullRangeKeys(1));
-  }
-
-  public static CreateTableRequest getOrgsTableSpecification() {
-    return makeRequest(
-        ORGS_TABLE,
-        ORG_ID,
-        null,
-        Collections.emptyList(),
-        Collections.emptyList(),
-        Collections.emptyList());
-  }
-
-  public static CreateTableRequest getDashboardsTableSpec() {
-    return makeRequest(
-        DASHBOARDS_TABLE,
-        DASHBOARD_ID,
-        null,
-        Collections.emptyList(),
-        Collections.emptyList(),
-        Collections.emptyList());
-  }
-
-  public static CreateTableRequest getRelationshipTableSpec() {
-    return makeRequest(
-        RELATIONSHIP_GRAPH_TABLE,
-        ENTITY_ID,
-        RELATED_ENTITY,
-        Collections.emptyList(),
-        Collections.emptyList(),
-        Collections.emptyList());
-  }
 
   public static CreateTableRequest makeRequest(
       String tablename,

@@ -6,10 +6,7 @@ import org.okapi.metrics.rollup.TsReader;
 import org.okapi.metrics.rollup.TsSearcher;
 import org.okapi.metrics.service.web.QueryProcessor;
 import org.okapi.rest.metrics.*;
-import org.okapi.rest.metrics.query.GetMetricsRequest;
-import org.okapi.rest.metrics.query.GetMetricsResponse;
-import org.okapi.rest.metrics.query.ListMetricsRequest;
-import org.okapi.rest.metrics.query.ListMetricsResponse;
+import org.okapi.rest.metrics.query.*;
 import org.okapi.rest.metrics.search.SearchMetricsRequestInternal;
 import org.okapi.rest.metrics.search.SearchMetricsResponse;
 
@@ -22,18 +19,20 @@ public class QueryProcImpl implements QueryProcessor {
   public GetMetricsResponse getMetricsResponse(GetMetricsRequest request) {
     var start = request.getStart();
     var end = request.getEnd();
-    var res = request.getResolution();
+    var res = request.getGaugeQueryConfig().getResolution();
     var path = MetricPaths.convertToUnivPath(request);
-    var agg = request.getAggregation();
+    var agg = request.getGaugeQueryConfig().getAggregation();
     var scanResult = tsReader.scanGauge(path, start, end, agg, res);
     return GetMetricsResponse.builder()
-        .name(request.getMetricName())
+        .metric(request.getMetric())
         .tags(request.getTags())
-        .resolution(request.getResolution())
-        .aggregation(request.getAggregation())
-        .tenant(request.getTenantId())
-        .times(scanResult.getTimestamps())
-        .values(scanResult.getValues())
+        .gaugeResponse(
+            GetGaugeResponse.builder()
+                .resolution(res)
+                .aggregation(agg)
+                .times(scanResult.getTimestamps())
+                .values(scanResult.getValues())
+                .build())
         .build();
   }
 

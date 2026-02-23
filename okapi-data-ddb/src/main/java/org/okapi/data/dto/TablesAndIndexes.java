@@ -1,31 +1,42 @@
 package org.okapi.data.dto;
 
 public class TablesAndIndexes {
-    // ORG
-    public static final String ORGS_TABLE = "OrgsTable";
+  // ORG
+  public static final String ORGS_TABLE = "OrgsTable";
 
-    // User
-    public static final String USERS_TABLE = "UsersTable";
-    public static final String USER_ROLE_RELATIONS = "UserRoleRelationsTable";
-    public static final String USERS_BY_EMAIL_GSI = "UsersEmailGsi";
+  // User
+  public static final String USERS_TABLE = "UsersTable";
+  public static final String USERS_BY_EMAIL_GSI = "UsersEmailGsi";
 
-    // role to user inversions
-    public static final String ROLE_TO_USER_GSI = "RoleToUserGsi";
+  // dashboards table
+  public static final String DASHBOARDS_TABLE = "DashboardsTable";
 
-    // store the teams
-    public static final String TEAMS_TABLE = "TeamsTable";
-    public static final String TEAM_MEMBERS_TABLE = "TeamMembersTable";
+  // dashboars variables table
+  public static final String DASHBOARD_VAR_TABLE = "DashboardVariablesTable";
 
-    //org-to-team relation
-    public static final String ORG_TO_TEAM_GSI = "OrgToTeamGsi";
+  // dashboard rows and panels
+  public static final String DASHBOARD_ROWS_TABLE = "DashboardRowsTable";
+  public static final String DASHBOARD_PANELS_TABLE = "DashboardPanelsTable";
+  public static final String DASHBOARD_VERSIONS_TABLE = "DashboardVersionsTable";
 
-    // authorization table
-    public static final String AUTHORIZATION_TOKENS_TABLE = "AuthorizationTokensTable";
-    public static final String TEAM_TO_AUTHORIZATION_TOKEN_GSI = "TeamToAuthorizationTokenGsi";
+  // graph permissions table
+  public static final String RELATIONSHIP_GRAPH_TABLE = "RelationsGraphTable";
 
-    // dashboards table
-    public static final String DASHBOARDS_TABLE = "DashboardsTable";
+  //
+  public static final String FEDERATED_SOURCES_TABLE = "FederatedSourcesTable";
 
-    // graph permissions table
-    public static final String RELATIONSHIP_GRAPH_TABLE = "RelationsGraphTable";
+  //
+  public static final String USER_ENTITY_RELATIONS_TABLE = "UserEntityRelationsTable";
+
+  // infra entity graph nodes
+  public static final String INFRA_ENTITY_NODES_TABLE = "InfraEntityNodesTable";
+
+  // pending jobs
+  public static final String PENDING_JOBS_TABLE = "PendingJobsTable";
+  public static final String PENDING_JOBS_BY_WORKER_GSI = "PendingJobsByWorkerGsi";
+  public static final String PENDING_JOBS_BY_SOURCE_STATUS_GSI = "PendingJobsBySourceStatusGsi";
+
+  // token metadata
+  public static final String TOKEN_META_TABLE = "TokenMetaTable";
+  public static final String TOKEN_META_BY_ORG_STATUS_GSI = "TokenMetaByOrgStatusGsi";
 }

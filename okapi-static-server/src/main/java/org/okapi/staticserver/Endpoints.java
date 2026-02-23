@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class Endpoints {
-// maybe straightfoward proxy would do ?
+  // maybe straightfoward proxy would do ?
   @Value("${apiEndpoint}")
   private String apiEndpoint;
 
@@ -16,7 +16,6 @@ public class Endpoints {
   public String getSignupEndpoint() {
     return apiEndpoint + "/api/v1/auth/sign-up";
   }
-
 
   public String getSigninEndpoint() {
     return apiEndpoint + "/api/v1/auth/sign-in";

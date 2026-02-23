@@ -1,7 +1,7 @@
 package org.okapi.validation;
 
-import org.okapi.exceptions.BadRequestException;
 import java.util.function.Supplier;
+import org.okapi.exceptions.BadRequestException;
 
 public class OkapiChecks {
 
@@ -11,14 +11,16 @@ public class OkapiChecks {
     }
   }
 
-  public static <T extends  Exception> void checkArgument(boolean condition, Supplier<T> elseThrow) throws T{
-    if(!condition){
+  public static <T extends Exception> void checkArgument(boolean condition, Supplier<T> elseThrow)
+      throws T {
+    if (!condition) {
       throw elseThrow.get();
     }
   }
 
-  public static <T extends  Exception> void throwIf(boolean condition, Supplier<T> elseThrow) throws T{
-    if(condition){
+  public static <T extends Exception> void throwIf(boolean condition, Supplier<T> elseThrow)
+      throws T {
+    if (condition) {
       throw elseThrow.get();
     }
   }

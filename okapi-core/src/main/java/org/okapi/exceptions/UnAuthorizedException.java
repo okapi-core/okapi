@@ -6,5 +6,4 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.UNAUTHORIZED)
 @StandardException
-public class UnAuthorizedException extends UserfacingException {
-}
+public class UnAuthorizedException extends UserfacingException {}

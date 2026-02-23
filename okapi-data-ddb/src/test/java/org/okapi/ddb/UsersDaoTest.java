@@ -8,22 +8,32 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.okapi.data.CreateDynamoDBTables;
 import org.okapi.data.dao.UsersDao;
+import org.okapi.data.ddb.dao.UsersDaoImpl;
 import org.okapi.data.exceptions.UserAlreadyExistsException;
-import org.okapi.data.factory.ResourceFactory;
+import org.okapi.testutils.OkapiTestUtils;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 
 @Slf4j
+@Execution(ExecutionMode.CONCURRENT)
 public class UsersDaoTest {
 
-  ResourceFactory resourceFactory;
   UsersDao usersDao;
 
   @BeforeEach
   public void hydrate() throws UserAlreadyExistsException {
-    resourceFactory = new ResourceFactory();
-    usersDao = resourceFactory.usersDao();
+    CreateDynamoDBTables.createTables(OkapiTestUtils.getLocalStackDynamoDbClient());
+    usersDao =
+        new UsersDaoImpl(
+            DynamoDbEnhancedClient.builder()
+                .dynamoDbClient(OkapiTestUtils.getLocalStackDynamoDbClient())
+                .build());
     try {
-      var created = usersDao.create("First", "Last", "first.last@gmail.com", "VerySecurePassword");
+      var created =
+          usersDao.createIfNotExists("First", "Last", "first.last@gmail.com", "VerySecurePassword");
     } catch (UserAlreadyExistsException e) {
       log.error("Got exception:", e);
     }
@@ -33,7 +43,7 @@ public class UsersDaoTest {
   public void testUserCreated() throws UserAlreadyExistsException {
     var withEmail = usersDao.getWithEmail("first.last@gmail.com");
     Assertions.assertTrue(withEmail.isPresent());
-    var allUsers = Lists.newArrayList(usersDao.list());
+    var allUsers = Lists.newArrayList(usersDao.listAllUsers());
     assertTrue(allUsers.stream().anyMatch(u -> u.getEmail().equals("first.last@gmail.com")));
   }
 
@@ -41,33 +51,41 @@ public class UsersDaoTest {
   public void testCreatingDuplicateUserFails() {
     assertThrows(
         UserAlreadyExistsException.class,
-        () -> usersDao.create("First", "Last", "first.last@gmail.com", "VerySecurePassword"));
+        () ->
+            usersDao.createIfNotExists(
+                "First", "Last", "first.last@gmail.com", "VerySecurePassword"));
   }
 
   @Test
   public void testCreatingUserWithoutEmailFails() {
     assertThrows(
         Exception.class,
-        () -> usersDao.create("First", "Last", "first.last@gmail.com", "VerySecurePassword"));
+        () ->
+            usersDao.createIfNotExists(
+                "First", "Last", "first.last@gmail.com", "VerySecurePassword"));
   }
 
   @Test
   public void testFailsWithoutFirstname() {
     assertThrows(
         Exception.class,
-        () -> usersDao.create(null, "Last", "first.last@gmail.com", "VerySecurePassword"));
+        () ->
+            usersDao.createIfNotExists(null, "Last", "first.last@gmail.com", "VerySecurePassword"));
   }
 
   @Test
   public void testFailsWithoutLastName() {
     assertThrows(
         Exception.class,
-        () -> usersDao.create("First", null, "first.last@gmail.com", "VerySecurePassword"));
+        () ->
+            usersDao.createIfNotExists(
+                "First", null, "first.last@gmail.com", "VerySecurePassword"));
   }
 
   @Test
   public void testFailsWithoutPassword() {
     assertThrows(
-        Exception.class, () -> usersDao.create("First", null, "first.last@gmail.com", null));
+        Exception.class,
+        () -> usersDao.createIfNotExists("First", null, "first.last@gmail.com", null));
   }
 }

@@ -3,6 +3,7 @@ package org.okapi.metrics.service.validations;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.Arrays;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.okapi.exceptions.BadRequestException;
@@ -13,7 +14,7 @@ import org.okapi.rest.metrics.payloads.Histo;
 import org.okapi.rest.metrics.payloads.HistoPoint;
 import org.okapi.rest.metrics.payloads.Sum;
 import org.okapi.rest.metrics.payloads.SumPoint;
-import org.okapi.rest.metrics.payloads.SumType;
+import org.okapi.rest.metrics.payloads.SUM_TEMPORALITY;
 
 public class ValidateSubmitMetricsTests {
 
@@ -21,7 +22,6 @@ public class ValidateSubmitMetricsTests {
   public void gauge_null_payload_throws() {
     var req =
         ExportMetricsRequest.builder()
-            .tenantId("t")
             .metricName("m")
             .tags(Map.of("k", "v"))
             .type(MetricType.GAUGE)
@@ -32,10 +32,9 @@ public class ValidateSubmitMetricsTests {
 
   @Test
   public void gauge_timestamps_too_far_apart_throws() {
-    var gauge = new Gauge(new long[] {0L, 24 * 3_600_001L + 1000L}, new float[] {1.0f, 2.0f});
+    var gauge = new Gauge(Arrays.asList(0L, 24 * 3_600_001L + 1000L), Arrays.asList(1.0f, 2.0f));
     var req =
         ExportMetricsRequest.builder()
-            .tenantId("t")
             .metricName("m")
             .tags(Map.of("k", "v"))
             .type(MetricType.GAUGE)
@@ -47,10 +46,9 @@ public class ValidateSubmitMetricsTests {
 
   @Test
   public void gauge_single_timestamp_passes() {
-    var gauge = new Gauge(new long[] {1L}, new float[] {1.0f});
+    var gauge = new Gauge(Arrays.asList(1L), Arrays.asList(1.0f));
     var req =
         ExportMetricsRequest.builder()
-            .tenantId("t")
             .metricName("m")
             .tags(Map.of("k", "v"))
             .type(MetricType.GAUGE)
@@ -63,7 +61,6 @@ public class ValidateSubmitMetricsTests {
   public void histo_null_payload_throws() {
     var req =
         ExportMetricsRequest.builder()
-            .tenantId("t")
             .metricName("m")
             .tags(Map.of("k", "v"))
             .type(MetricType.HISTO)
@@ -74,11 +71,10 @@ public class ValidateSubmitMetricsTests {
 
   @Test
   public void histo_missing_arrays_throws() {
-    var pt = new HistoPoint(0L, 1000L, null, null);
+    var pt = new HistoPoint(0L, 1000L, HistoPoint.TEMPORALITY.DELTA, null, null);
     var histo = new Histo(java.util.List.of(pt));
     var req =
         ExportMetricsRequest.builder()
-            .tenantId("t")
             .metricName("m")
             .tags(Map.of("k", "v"))
             .type(MetricType.HISTO)
@@ -90,11 +86,12 @@ public class ValidateSubmitMetricsTests {
 
   @Test
   public void histo_unequal_lengths_throws() {
-    var pt = new HistoPoint(0L, 1000L, new float[] {0.1f, 0.2f}, new int[] {1});
+    var pt =
+        new HistoPoint(
+            0L, 1000L, HistoPoint.TEMPORALITY.DELTA, new float[] {0.1f, 0.2f}, new int[] {1});
     var histo = new Histo(java.util.List.of(pt));
     var req =
         ExportMetricsRequest.builder()
-            .tenantId("t")
             .metricName("m")
             .tags(Map.of("k", "v"))
             .type(MetricType.HISTO)
@@ -106,11 +103,16 @@ public class ValidateSubmitMetricsTests {
 
   @Test
   public void histo_negative_value_throws() {
-    var pt = new HistoPoint(0L, 1000L, new float[] {0.1f, 0.2f}, new int[] {1, -1, 2});
+    var pt =
+        new HistoPoint(
+            0L,
+            1000L,
+            HistoPoint.TEMPORALITY.DELTA,
+            new float[] {0.1f, 0.2f},
+            new int[] {1, -1, 2});
     var histo = new Histo(java.util.List.of(pt));
     var req =
         ExportMetricsRequest.builder()
-            .tenantId("t")
             .metricName("m")
             .tags(Map.of("k", "v"))
             .type(MetricType.HISTO)
@@ -122,11 +124,12 @@ public class ValidateSubmitMetricsTests {
 
   @Test
   public void histo_valid_passes() {
-    var pt = new HistoPoint(0L, 1000L, new float[] {0.1f, 0.2f}, new int[] {1, 2, 3});
+    var pt =
+        new HistoPoint(
+            0L, 1000L, HistoPoint.TEMPORALITY.DELTA, new float[] {0.1f, 0.2f}, new int[] {1, 2, 3});
     var histo = new Histo(java.util.List.of(pt));
     var req =
         ExportMetricsRequest.builder()
-            .tenantId("t")
             .metricName("m")
             .tags(Map.of("k", "v"))
             .type(MetricType.HISTO)
@@ -139,7 +142,6 @@ public class ValidateSubmitMetricsTests {
   public void counter_null_payload_throws() {
     var req =
         ExportMetricsRequest.builder()
-            .tenantId("t")
             .metricName("m")
             .tags(Map.of("k", "v"))
             .type(MetricType.COUNTER)
@@ -150,10 +152,9 @@ public class ValidateSubmitMetricsTests {
 
   @Test
   public void counter_valid_passes() {
-    var counter = new Sum(SumType.DELTA, java.util.List.of(new SumPoint(0L, 1000L, 2)));
+    var counter = new Sum(SUM_TEMPORALITY.DELTA, java.util.List.of(new SumPoint(0L, 1000L, 2)));
     var req =
         ExportMetricsRequest.builder()
-            .tenantId("t")
             .metricName("m")
             .tags(Map.of("k", "v"))
             .type(MetricType.COUNTER)
@@ -164,10 +165,9 @@ public class ValidateSubmitMetricsTests {
 
   @Test
   public void counter_missing_points_throws() {
-    var counter = new Sum(SumType.CUMULATIVE, null);
+    var counter = new Sum(SUM_TEMPORALITY.CUMULATIVE, null);
     var req =
         ExportMetricsRequest.builder()
-            .tenantId("t")
             .metricName("m")
             .tags(Map.of("k", "v"))
             .type(MetricType.COUNTER)

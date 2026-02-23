@@ -1,0 +1,33 @@
+receivers:
+  jmx:
+    jar_path: /path/opentelemetry-jmx-scraper.jar
+    endpoint: service:jmx:rmi:///jndi/rmi://kafka:9999/jmxrmi
+    target_system: kafka
+    collection_interval: 10s
+  postgresql:
+    endpoint: localhost:5432
+    username: postgres
+    password: ${env:POSTGRES_PASSWORD}
+    databases: [postgres]
+    collection_interval: 10s
+  clickhouse:
+    endpoint: http://clickhouse:8123
+    username: default
+    password: ${env:CLICKHOUSE_PASSWORD}
+    collection_interval: 10s
+
+processors:
+  batch: {}
+
+exporters:
+  otlphttp:
+    endpoint: http://okapi-ingester:9009
+    headers:
+      x-okapi-metrics-dialect: prometheus
+
+service:
+  pipelines:
+    metrics:
+      receivers: [jmx, postgresql, clickhouse]
+      processors: [batch]
+      exporters: [otlphttp]

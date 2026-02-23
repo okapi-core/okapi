@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import org.okapi.metrics.common.MetricsPathParser;
-import org.okapi.metrics.paths.PathSet;
+import org.okapi.metrics.query.PathSet;
 import org.okapi.promql.eval.VectorData;
 import org.okapi.promql.eval.ts.SeriesDiscovery;
 import org.okapi.promql.parse.LabelMatcher;

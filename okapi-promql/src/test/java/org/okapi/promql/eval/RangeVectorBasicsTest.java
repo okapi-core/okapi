@@ -17,6 +17,61 @@ import org.okapi.promql.parser.PromQLParser;
 
 public class RangeVectorBasicsTest {
 
+  private static SeriesWindow findWindow(
+      RangeVectorResult rv, String metric, String label, String value) {
+    return rv.data().stream()
+        .filter(
+            w -> metric.equals(w.id().metric()) && value.equals(w.id().labels().tags().get(label)))
+        .findFirst()
+        .orElseThrow(
+            () ->
+                new AssertionError(
+                    "missing window for " + metric + "{" + label + "=\"" + value + "\"}"));
+  }
+
+  private static void assertHasPointAvg(SeriesWindow w, long ts, float expectedAvg) {
+    var scan = w.scan();
+    if (!(scan instanceof org.okapi.metrics.pojos.results.GaugeScan gs)) {
+      throw new AssertionError("expected GaugeScan for series " + w.id());
+    }
+    var tsList = gs.getTimestamps();
+    var valList = gs.getValues();
+    int idx = -1;
+    for (int i = 0; i < tsList.size(); i++) {
+      if (tsList.get(i) == ts) {
+        idx = i;
+        break;
+      }
+    }
+    if (idx == -1) {
+      throw new AssertionError("missing point @ ts=" + ts + " in " + w.id());
+    }
+    assertEquals(expectedAvg, valList.get(idx), 1e-4, "unexpected avg at ts=" + ts);
+  }
+
+  private static Set<String> presentSet(RangeVectorResult rv) {
+    var set = new java.util.HashSet<String>();
+    for (var w : rv.data()) {
+      var inst = w.id().labels().tags().get("instance");
+      if (inst != null) {
+        set.add(key(w.id().metric(), "instance", inst));
+      } else {
+        set.add(key(w.id().metric())); // <-- plain metric when no "instance" label
+      }
+    }
+    return set;
+  }
+
+  // ---------- helpers ----------
+
+  private static String key(String metric) {
+    return metric;
+  }
+
+  private static String key(String metric, String k, String v) {
+    return metric + "{" + k + "=\"" + v + "\"}";
+  }
+
   @Test
   void cpuUsage_matrixSelector_returnsRangeVector_withExpectedPoints() throws EvaluationException {
     // Arrange shared mocks/data (cpu_usage has two instances with 4 minute buckets t0..t3)
@@ -116,60 +171,5 @@ public class RangeVectorBasicsTest {
     var found = presentSet(rv);
     assertTrue(found.contains(key("cpu_usage", "instance", "i1")));
     assertTrue(found.contains(key("cpu_usage", "instance", "i2")));
-  }
-
-  // ---------- helpers ----------
-
-  private static SeriesWindow findWindow(
-      RangeVectorResult rv, String metric, String label, String value) {
-    return rv.data().stream()
-        .filter(
-            w -> metric.equals(w.id().metric()) && value.equals(w.id().labels().tags().get(label)))
-        .findFirst()
-        .orElseThrow(
-            () ->
-                new AssertionError(
-                    "missing window for " + metric + "{" + label + "=\"" + value + "\"}"));
-  }
-
-  private static void assertHasPointAvg(SeriesWindow w, long ts, float expectedAvg) {
-    var scan = w.scan();
-    if (!(scan instanceof org.okapi.metrics.pojos.results.GaugeScan gs)) {
-      throw new AssertionError("expected GaugeScan for series " + w.id());
-    }
-    var tsList = gs.getTimestamps();
-    var valList = gs.getValues();
-    int idx = -1;
-    for (int i = 0; i < tsList.size(); i++) {
-      if (tsList.get(i) == ts) {
-        idx = i;
-        break;
-      }
-    }
-    if (idx == -1) {
-      throw new AssertionError("missing point @ ts=" + ts + " in " + w.id());
-    }
-    assertEquals(expectedAvg, valList.get(idx), 1e-4, "unexpected avg at ts=" + ts);
-  }
-
-  private static Set<String> presentSet(RangeVectorResult rv) {
-    var set = new java.util.HashSet<String>();
-    for (var w : rv.data()) {
-      var inst = w.id().labels().tags().get("instance");
-      if (inst != null) {
-        set.add(key(w.id().metric(), "instance", inst));
-      } else {
-        set.add(key(w.id().metric())); // <-- plain metric when no "instance" label
-      }
-    }
-    return set;
-  }
-
-  private static String key(String metric) {
-    return metric;
-  }
-
-  private static String key(String metric, String k, String v) {
-    return metric + "{" + k + "=\"" + v + "\"}";
   }
 }

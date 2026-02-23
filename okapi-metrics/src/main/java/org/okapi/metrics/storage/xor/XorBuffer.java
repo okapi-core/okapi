@@ -1,13 +1,12 @@
 package org.okapi.metrics.storage.xor;
 
+import java.io.IOException;
+import java.io.InputStream;
+import org.okapi.io.OkapiIo;
+import org.okapi.io.StreamReadingException;
 import org.okapi.metrics.storage.*;
 import org.okapi.metrics.storage.buffers.AppendOnlyByteBuffer;
 import org.okapi.metrics.storage.buffers.BufferFullException;
-import org.okapi.metrics.io.OkapiIo;
-import org.okapi.metrics.io.StreamReadingException;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * XorBuffer implements semantics for storing a sequence of values. It can be used to directly store
@@ -16,14 +15,25 @@ import java.io.InputStream;
 public class XorBuffer {
   ByteBufferWriter bufferWriter;
   ValueWriter valueWriter;
-
+  int prevValBits;
+  int total = 0;
   public XorBuffer(ByteBufferWriter bufferWriter) {
     this.bufferWriter = bufferWriter;
     this.valueWriter = new BitValueWriter(bufferWriter);
   }
 
-  int prevValBits;
-  int total = 0;
+  public static XorBuffer initialize(InputStream is, AppendOnlyByteBuffer byteBuffer)
+      throws StreamReadingException, IOException {
+    OkapiIo.checkMagicNumber(is, XorBufferSnapshot.MAGIC_NUMBER);
+    var total = OkapiIo.readInt(is);
+    var lastValueBits = OkapiIo.readInt(is);
+    var writer = ByteBufferWriter.initialize(is, byteBuffer);
+    OkapiIo.checkMagicNumber(is, XorBufferSnapshot.MAGIC_NUMBER_END);
+    var buffer = new XorBuffer(writer);
+    buffer.total = total;
+    buffer.prevValBits = lastValueBits;
+    return buffer;
+  }
 
   public void push(float val) throws BufferFullException {
     // blocks
@@ -87,20 +97,6 @@ public class XorBuffer {
 
   private int toInt(float val) {
     return Float.floatToIntBits(val);
-  }
-
-  public static XorBuffer initialize(
-      InputStream is, AppendOnlyByteBuffer byteBuffer)
-      throws StreamReadingException, IOException {
-    OkapiIo.checkMagicNumber(is, XorBufferSnapshot.MAGIC_NUMBER);
-    var total = OkapiIo.readInt(is);
-    var lastValueBits = OkapiIo.readInt(is);
-    var writer = ByteBufferWriter.initialize(is, byteBuffer);
-    OkapiIo.checkMagicNumber(is, XorBufferSnapshot.MAGIC_NUMBER_END);
-    var buffer = new XorBuffer(writer);
-    buffer.total = total;
-    buffer.prevValBits = lastValueBits;
-    return buffer;
   }
 
   public XorBufferSnapshot snapshot() {

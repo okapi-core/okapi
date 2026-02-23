@@ -1,0 +1,13 @@
+package org.okapi.traces.ch;
+
+import lombok.Builder;
+import lombok.Value;
+
+@Value
+@Builder
+public class ChSpansAttributeHintsQueryTemplate {
+  String table;
+  Long tsStartNs;
+  Long tsEndNs;
+  Integer limit;
+}

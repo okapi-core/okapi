@@ -1,11 +1,11 @@
 package org.okapi.exceptions;
 
+public class UserfacingException extends RuntimeException {
+  public UserfacingException() {
+    super();
+  }
 
-public class UserfacingException extends Exception{
-    public UserfacingException(){
-        super();
-    }
-    public UserfacingException(String msg){
-        super(msg);
-    }
+  public UserfacingException(String msg) {
+    super(msg);
+  }
 }

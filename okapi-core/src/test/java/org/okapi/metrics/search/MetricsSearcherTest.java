@@ -2,13 +2,12 @@ package org.okapi.metrics.search;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.okapi.metrics.common.MetricsPathParser.MetricsRecord;
 import java.util.*;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.okapi.metrics.search.MetricsSearcher;
+import org.okapi.metrics.common.MetricsPathParser.MetricsRecord;
 
 public class MetricsSearcherTest {
 
@@ -22,19 +21,6 @@ public class MetricsSearcherTest {
           "tenantA:cpu_usage{core=1,region=us-west}",
           "tenantA:disk_io{device=sda1,region=us-east}",
           "tenantC:http_401{service=db,region=us-west}");
-
-  @ParameterizedTest(name = "{index}: {3}")
-  @MethodSource("testCases")
-  void testSearchMatchingMetrics(
-      String pattern, String tenantId, Set<String> expected, String description) {
-    List<MetricsRecord> result =
-        MetricsSearcher.searchMatchingMetrics(tenantId, SAMPLE_METRICS, pattern);
-    Set<String> actual = new HashSet<>();
-    for (MetricsRecord r : result) {
-      actual.add(r.tenantId() + ":" + r.name() + formatTags(r.tags()));
-    }
-    assertEquals(expected, actual);
-  }
 
   private static Stream<Arguments> testCases() {
     return Stream.of(
@@ -108,5 +94,18 @@ public class MetricsSearcherTest {
         .map(e -> e.getKey() + "=" + e.getValue())
         .collect(() -> new StringJoiner(",", "{", "}"), StringJoiner::add, StringJoiner::merge)
         .toString();
+  }
+
+  @ParameterizedTest(name = "{index}: {3}")
+  @MethodSource("testCases")
+  void testSearchMatchingMetrics(
+      String pattern, String tenantId, Set<String> expected, String description) {
+    List<MetricsRecord> result =
+        MetricsSearcher.searchMatchingMetrics(tenantId, SAMPLE_METRICS, pattern);
+    Set<String> actual = new HashSet<>();
+    for (MetricsRecord r : result) {
+      actual.add(r.tenantId() + ":" + r.name() + formatTags(r.tags()));
+    }
+    assertEquals(expected, actual);
   }
 }

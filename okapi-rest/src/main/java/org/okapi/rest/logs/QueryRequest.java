@@ -8,9 +8,8 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class QueryRequest {
-    public long start;
-    public long end;
-    public int limit;
-    public String pageToken;
-    public FilterNode filter;
+  public long start;
+  public long end;
+  public int limit;
+  public FilterNode filter;
 }

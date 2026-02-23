@@ -15,6 +15,14 @@ import org.okapi.promql.parser.PromQLParser;
 
 public class LabelMatchTest {
 
+  private static List<VectorData.SeriesId> find(
+      ExpressionEvaluator evaluator, String selector, long start, long end) {
+    var lexer = new PromQLLexer(CharStreams.fromString(selector));
+    var tokens = new CommonTokenStream(lexer);
+    var parser = new PromQLParser(tokens);
+    return evaluator.find(parser, start, end);
+  }
+
   @Test
   public void testLabelMatch() {
     var commonMocks = TestFixtures.buildCommonMocks();
@@ -30,14 +38,6 @@ public class LabelMatchTest {
     var parser = new PromQLParser(tokens);
     var list = evaluator.find(parser, commonMocks.t0, commonMocks.t3);
     assertFalse(list.isEmpty());
-  }
-
-  private static List<VectorData.SeriesId> find(
-      ExpressionEvaluator evaluator, String selector, long start, long end) {
-    var lexer = new PromQLLexer(CharStreams.fromString(selector));
-    var tokens = new CommonTokenStream(lexer);
-    var parser = new PromQLParser(tokens);
-    return evaluator.find(parser, start, end);
   }
 
   @Test

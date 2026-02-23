@@ -1,0 +1,14 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/okapi-core/okapi-web
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8080
+
+springOverrides:
+  server:
+    port: 8080

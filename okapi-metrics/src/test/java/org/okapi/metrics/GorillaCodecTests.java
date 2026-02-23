@@ -2,10 +2,6 @@ package org.okapi.metrics;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.okapi.metrics.codec.GorillaCodec;
-import org.okapi.metrics.storage.*;
-import org.okapi.metrics.storage.buffers.BufferFullException;
-import org.okapi.metrics.storage.fakes.SharedBufferAllocator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -15,8 +11,34 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.okapi.metrics.codec.GorillaCodec;
+import org.okapi.metrics.storage.*;
+import org.okapi.metrics.storage.buffers.BufferFullException;
+import org.okapi.metrics.storage.fakes.SharedBufferAllocator;
 
 public class GorillaCodecTests {
+
+  public static Stream<Arguments> boundaryValues() {
+    return Stream.of(
+        Arguments.of(Arrays.asList(0, 0, 0)),
+        Arguments.of(Arrays.asList(1, 0, 1)),
+        Arguments.of(Arrays.asList(10, 20)),
+        Arguments.of(Arrays.asList(-10, 20)),
+        Arguments.of(Arrays.asList(-10, 20)),
+        Arguments.of(Arrays.asList(-2048, 2048)),
+        Arguments.of(
+            Arrays.asList(
+                -64,
+                64,
+                -255,
+                256,
+                -256,
+                -2048,
+                2047,
+                2048,
+                Integer.MIN_VALUE + 1,
+                Integer.MAX_VALUE)));
+  }
 
   @Test
   public void testGorillaEncoding() throws BufferFullException {
@@ -110,27 +132,5 @@ public class GorillaCodecTests {
     var read = new ArrayList<Integer>();
     var snapshotReader = new ByteBufferReader(byteBufferedWriter.snapshot());
     var bitValueReader = new BitValueReader(snapshotReader);
-  }
-
-  public static Stream<Arguments> boundaryValues() {
-    return Stream.of(
-        Arguments.of(Arrays.asList(0, 0, 0)),
-        Arguments.of(Arrays.asList(1, 0, 1)),
-        Arguments.of(Arrays.asList(10, 20)),
-        Arguments.of(Arrays.asList(-10, 20)),
-        Arguments.of(Arrays.asList(-10, 20)),
-        Arguments.of(Arrays.asList(-2048, 2048)),
-        Arguments.of(
-            Arrays.asList(
-                -64,
-                64,
-                -255,
-                256,
-                -256,
-                -2048,
-                2047,
-                2048,
-                Integer.MIN_VALUE + 1,
-                Integer.MAX_VALUE)));
   }
 }

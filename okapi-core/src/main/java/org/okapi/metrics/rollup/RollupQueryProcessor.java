@@ -10,6 +10,19 @@ import org.okapi.metrics.query.QueryProcessor;
 import org.okapi.metrics.query.QueryRecords;
 
 public class RollupQueryProcessor implements QueryProcessor {
+  private static long getIncrement(RES_TYPE resType) {
+    return switch (resType) {
+      case SECONDLY -> 1000L;
+      case MINUTELY -> 60 * 1000L;
+      case HOURLY -> 60 * 60 * 1000L;
+    };
+  }
+
+  private static long discretizeAndBack(long ts, RES_TYPE resType) {
+    var inc = getIncrement(resType);
+    return inc * (ts / inc);
+  }
+
   @Override
   public QueryRecords.QueryResult scan(TsReader rollupSeries, QueryRecords.Slice slice) {
     var scanResult =
@@ -189,18 +202,5 @@ public class RollupQueryProcessor implements QueryProcessor {
     var windowSize = slice.from() - slice.to();
     return movingWindowTransform(
         rollupSeries, slice, Duration.of(windowSize, ChronoUnit.MILLIS), (sum, count) -> sum);
-  }
-
-  private static long getIncrement(RES_TYPE resType) {
-    return switch (resType) {
-      case SECONDLY -> 1000L;
-      case MINUTELY -> 60 * 1000L;
-      case HOURLY -> 60 * 60 * 1000L;
-    };
-  }
-
-  private static long discretizeAndBack(long ts, RES_TYPE resType) {
-    var inc = getIncrement(resType);
-    return inc * (ts / inc);
   }
 }

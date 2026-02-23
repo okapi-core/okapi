@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.okapi.metrics.io.StreamReadingException;
+import org.okapi.io.StreamReadingException;
 import org.okapi.metrics.storage.ByteBufferReader;
 import org.okapi.metrics.storage.ByteBufferWriter;
 import org.okapi.metrics.storage.buffers.BufferSnapshot;
@@ -21,6 +21,20 @@ import org.okapi.metrics.storage.buffers.HeapBufferAllocator;
 import org.okapi.metrics.storage.fakes.SharedBufferAllocator;
 
 public class ByteBufferWriterTests {
+
+  private static Stream<Arguments> booleanSeqs() {
+    return java.util.stream.Stream.of(
+        Arguments.of(Arrays.asList(true)),
+        Arguments.of(Arrays.asList(true, false)),
+        Arguments.of(Arrays.asList(true, false, true)),
+        Arguments.of(Arrays.asList(true, true, true, true, true, true, true, true, false)),
+        Arguments.of(
+            Arrays.asList(true, false, true, false, true, false, true, false, true, false)),
+        Arguments.of(
+            Arrays.asList(
+                true, false, true, false, true, false, true, false, true, false, true, false, true,
+                false, true, false, true, false, true, false)));
+  }
 
   @ParameterizedTest
   @MethodSource("booleanSeqs")
@@ -133,7 +147,7 @@ public class ByteBufferWriterTests {
       restoredWriter = ByteBufferWriter.initialize(is, directAllocator.allocate(200));
     }
     var restoredSnapshot = restoredWriter.snapshot();
-    var expectedParital = (byte)((1 << 7));
+    var expectedParital = (byte) ((1 << 7));
     assertEquals(expectedParital, restoredSnapshot.partial());
     checkMatch(Arrays.asList(true), restoredSnapshot);
   }
@@ -160,7 +174,9 @@ public class ByteBufferWriterTests {
     }
     ByteBufferWriter restoredWriter = null;
     try (var is = Files.newInputStream(tempFile)) {
-      assertThrows(BufferOverflowException.class, () -> ByteBufferWriter.initialize(is, directAllocator.allocate(0)));
+      assertThrows(
+          BufferOverflowException.class,
+          () -> ByteBufferWriter.initialize(is, directAllocator.allocate(0)));
     }
   }
 
@@ -172,19 +188,5 @@ public class ByteBufferWriterTests {
       readSeq.add(bufferReader.nextBit());
     }
     assertEquals(seq, readSeq);
-  }
-
-  private static Stream<Arguments> booleanSeqs() {
-    return java.util.stream.Stream.of(
-        Arguments.of(Arrays.asList(true)),
-        Arguments.of(Arrays.asList(true, false)),
-        Arguments.of(Arrays.asList(true, false, true)),
-        Arguments.of(Arrays.asList(true, true, true, true, true, true, true, true, false)),
-        Arguments.of(
-            Arrays.asList(true, false, true, false, true, false, true, false, true, false)),
-        Arguments.of(
-            Arrays.asList(
-                true, false, true, false, true, false, true, false, true, false, true, false, true,
-                false, true, false, true, false, true, false)));
   }
 }

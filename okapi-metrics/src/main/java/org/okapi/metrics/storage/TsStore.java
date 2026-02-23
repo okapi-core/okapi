@@ -1,8 +1,5 @@
 package org.okapi.metrics.storage;
 
-import org.okapi.metrics.io.OkapiIo;
-import org.okapi.metrics.io.StreamReadingException;
-import org.okapi.metrics.storage.snapshots.TimeSeriesSnapshot;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -13,6 +10,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import org.okapi.io.OkapiIo;
+import org.okapi.io.StreamReadingException;
+import org.okapi.metrics.storage.snapshots.TimeSeriesSnapshot;
 
 public class TsStore {
 
@@ -22,21 +22,6 @@ public class TsStore {
   BufferAllocator bufferAllocator;
   int timeBufferSize;
   int valBufferSize;
-
-  public void checkpoint(Path filePath) throws IOException {
-    try (var fos = new FileOutputStream(filePath.toFile())) {
-      OkapiIo.writeInt(fos, tsMap.size());
-      OkapiIo.writeInt(fos, timeBufferSize);
-      OkapiIo.writeInt(fos, valBufferSize);
-      var keys = new ArrayList<>(tsMap.keySet());
-      for (var key : keys) {
-        var snap = tsMap.get(key).snapshot();
-        // sequentially laid out shards
-        snap.write(fos);
-      }
-      fos.getChannel().force(true);
-    }
-  }
 
   public TsStore(BufferAllocator allocator, int timeBufferSize, int valBufferSize) {
     this.bufferAllocator = allocator;
@@ -58,7 +43,44 @@ public class TsStore {
     this.tsMapModifier = new ReentrantLock();
   }
 
-  public record WriteResult(Exception e, int written) {}
+  public static TsStore restore(Path filePath, BufferAllocator bufferAllocator)
+      throws IOException, StreamReadingException {
+    // on a graceful shutdown and restart cycle, tsStore will be recreated using
+    // tsStore.restore(checkpointPath).
+    // restore should succeed before events consumption continues -> this is important to receive
+    // software updates
+    try (var fis = new FileInputStream(filePath.toFile())) {
+      var nShards = OkapiIo.readInt(fis);
+      var timeBufferSize = OkapiIo.readInt(fis);
+      var valBufferSize = OkapiIo.readInt(fis);
+      var tsMap = new HashMap<String, FullResTimeSeries>();
+      for (int i = 0; i < nShards; i++) {
+        var ts = FullResTimeSeries.restore(fis, bufferAllocator);
+        tsMap.put(ts.getShardId(), ts);
+      }
+      return new TsStore(bufferAllocator, timeBufferSize, valBufferSize, tsMap);
+    }
+  }
+
+  public static String getShardId(String series, long ts) {
+    var _2hBlock = ts / 1000 / 7200;
+    return series + ":" + _2hBlock;
+  }
+
+  public void checkpoint(Path filePath) throws IOException {
+    try (var fos = new FileOutputStream(filePath.toFile())) {
+      OkapiIo.writeInt(fos, tsMap.size());
+      OkapiIo.writeInt(fos, timeBufferSize);
+      OkapiIo.writeInt(fos, valBufferSize);
+      var keys = new ArrayList<>(tsMap.keySet());
+      for (var key : keys) {
+        var snap = tsMap.get(key).snapshot();
+        // sequentially laid out shards
+        snap.write(fos);
+      }
+      fos.getChannel().force(true);
+    }
+  }
 
   public RangeScanResult shardsInRange(String series, long from, long to) {
     // which shards are in range
@@ -105,25 +127,6 @@ public class TsStore {
     }
   }
 
-  public static TsStore restore(Path filePath, BufferAllocator bufferAllocator)
-      throws IOException, StreamReadingException {
-    // on a graceful shutdown and restart cycle, tsStore will be recreated using
-    // tsStore.restore(checkpointPath).
-    // restore should succeed before events consumption continues -> this is important to receive
-    // software updates
-    try (var fis = new FileInputStream(filePath.toFile())) {
-      var nShards = OkapiIo.readInt(fis);
-      var timeBufferSize = OkapiIo.readInt(fis);
-      var valBufferSize = OkapiIo.readInt(fis);
-      var tsMap = new HashMap<String, FullResTimeSeries>();
-      for (int i = 0; i < nShards; i++) {
-        var ts = FullResTimeSeries.restore(fis, bufferAllocator);
-        tsMap.put(ts.getShardId(), ts);
-      }
-      return new TsStore(bufferAllocator, timeBufferSize, valBufferSize, tsMap);
-    }
-  }
-
   public WriteResult write(String series, long time, float val) {
     // hash the pts -> key = hash(series, time);
     // convert time to 2h window ->
@@ -135,11 +138,6 @@ public class TsStore {
     } catch (CouldNotWrite e) {
       return new WriteResult(e, 0);
     }
-  }
-
-  public static String getShardId(String series, long ts) {
-    var _2hBlock = ts / 1000 / 7200;
-    return series + ":" + _2hBlock;
   }
 
   public Optional<TimeSeriesSnapshot> snapshot(String shardId) {
@@ -166,4 +164,6 @@ public class TsStore {
       tsMapModifier.unlock();
     }
   }
+
+  public record WriteResult(Exception e, int written) {}
 }

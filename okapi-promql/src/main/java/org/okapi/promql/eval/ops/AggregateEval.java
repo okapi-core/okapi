@@ -13,6 +13,25 @@ import org.okapi.promql.eval.nodes.AggregateExpr;
 public class AggregateEval implements Evaluable {
   private final AggregateExpr node;
 
+  private static GroupKey groupKey(
+      boolean isBy, List<String> groupLabels, Map<String, String> src) {
+    Map<String, String> m = new HashMap<>();
+    if (groupLabels == null || groupLabels.isEmpty()) {
+      for (var e : src.entrySet())
+        if (!"__name__".equals(e.getKey())) m.put(e.getKey(), e.getValue());
+      return new GroupKey(m);
+    }
+    if (isBy) {
+      for (String k : groupLabels) {
+        if (src.containsKey(k)) m.put(k, src.get(k));
+      }
+    } else {
+      for (var e : src.entrySet())
+        if (!groupLabels.contains(e.getKey())) m.put(e.getKey(), e.getValue());
+    }
+    return new GroupKey(m);
+  }
+
   @Override
   public ExpressionResult eval(EvalContext ctx) throws EvaluationException {
     if (node.args.isEmpty()) throw new IllegalArgumentException("aggregation expects arguments");
@@ -146,23 +165,4 @@ public class AggregateEval implements Evaluable {
   }
 
   private record GroupKey(Map<String, String> labels) {}
-
-  private static GroupKey groupKey(
-      boolean isBy, List<String> groupLabels, Map<String, String> src) {
-    Map<String, String> m = new HashMap<>();
-    if (groupLabels == null || groupLabels.isEmpty()) {
-      for (var e : src.entrySet())
-        if (!"__name__".equals(e.getKey())) m.put(e.getKey(), e.getValue());
-      return new GroupKey(m);
-    }
-    if (isBy) {
-      for (String k : groupLabels) {
-        if (src.containsKey(k)) m.put(k, src.get(k));
-      }
-    } else {
-      for (var e : src.entrySet())
-        if (!groupLabels.contains(e.getKey())) m.put(e.getKey(), e.getValue());
-    }
-    return new GroupKey(m);
-  }
 }

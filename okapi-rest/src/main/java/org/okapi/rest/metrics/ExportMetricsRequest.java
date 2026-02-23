@@ -1,6 +1,5 @@
 package org.okapi.rest.metrics;
 
-import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import java.util.Map;
 import java.util.TreeMap;
@@ -9,13 +8,11 @@ import org.okapi.rest.metrics.payloads.Gauge;
 import org.okapi.rest.metrics.payloads.Histo;
 import org.okapi.rest.metrics.payloads.Sum;
 
-@Builder(toBuilder = true)
 @NoArgsConstructor
 @Getter
+@ToString
 public class ExportMetricsRequest {
-  @NotNull(message = "Unknown tenant.")
-  @Setter
-  String tenantId;
+  @Setter String resource;
 
   @NotNull(message = "Metrics name must be supplied.")
   @Setter
@@ -28,25 +25,20 @@ public class ExportMetricsRequest {
   @Setter
   MetricType type;
 
-  @Nullable Gauge gauge;
-  @Nullable Histo histo;
-  @Nullable Sum sum;
+  Gauge gauge;
+  Histo histo;
+  Sum sum;
 
-  // Ensure tags are always sorted when set via setter (e.g., JSON deserialization)
-  public void setTags(Map<String, String> tags) {
-    this.tags = (tags == null) ? null : new TreeMap<>(tags);
-  }
-
-  // Ensure compatibility with existing constructor usage while sorting tags
+  @Builder(toBuilder = true)
   public ExportMetricsRequest(
-      String tenantId,
+      String resource,
       String metricName,
-      Map<String, String> tags,
+      @Singular Map<String, String> tags,
       MetricType type,
-      @Nullable Gauge gauge,
-      @Nullable Histo histo,
-      @Nullable Sum sum) {
-    this.tenantId = tenantId;
+      Gauge gauge,
+      Histo histo,
+      Sum sum) {
+    this.resource = resource;
     this.metricName = metricName;
     this.tags = (tags == null) ? null : new TreeMap<>(tags);
     this.type = type;
@@ -55,11 +47,23 @@ public class ExportMetricsRequest {
     this.sum = sum;
   }
 
-  // Customize Lombok builder to always sort tags
-  public static class ExportMetricsRequestBuilder {
-    public ExportMetricsRequestBuilder tags(Map<String, String> tags) {
-      this.tags = (tags == null) ? null : new TreeMap<>(tags);
-      return this;
-    }
+  public ExportMetricsRequest(
+      String metricName,
+      Map<String, String> tags,
+      MetricType type,
+      Gauge gauge,
+      Histo histo,
+      Sum sum) {
+    this.metricName = metricName;
+    this.tags = (tags == null) ? null : new TreeMap<>(tags);
+    this.type = type;
+    this.gauge = gauge;
+    this.histo = histo;
+    this.sum = sum;
+  }
+
+  // Ensure tags are always sorted when set via setter (e.g., JSON deserialization)
+  public void setTags(Map<String, String> tags) {
+    this.tags = (tags == null) ? null : new TreeMap<>(tags);
   }
 }

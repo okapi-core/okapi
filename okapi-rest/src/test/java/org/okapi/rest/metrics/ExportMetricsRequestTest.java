@@ -3,11 +3,7 @@ package org.okapi.rest.metrics;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import org.junit.jupiter.api.Test;
 import org.okapi.rest.metrics.payloads.Gauge;
 
@@ -29,11 +25,10 @@ public class ExportMetricsRequestTest {
   public void builderSortsTags() {
     ExportMetricsRequest r =
         ExportMetricsRequest.builder()
-            .tenantId("t")
             .metricName("m")
             .type(MetricType.GAUGE)
             .tags(unsortedTags())
-            .gauge(Gauge.builder().ts(new long[] {1}).value(new float[] {1.0f}).build())
+            .gauge(Gauge.builder().ts(List.of(1L)).value(List.of(1.0f)).build())
             .build();
 
     assertNotNull(r.getTags());
@@ -44,7 +39,6 @@ public class ExportMetricsRequestTest {
   @Test
   public void setterSortsTags() {
     ExportMetricsRequest r = new ExportMetricsRequest();
-    r.setTenantId("t");
     r.setMetricName("m");
     r.setType(MetricType.GAUGE);
     r.setTags(unsortedTags());
@@ -57,7 +51,7 @@ public class ExportMetricsRequestTest {
   @Test
   public void allArgsConstructorSortsTags() {
     ExportMetricsRequest r =
-        new ExportMetricsRequest("t", "m", unsortedTags(), MetricType.GAUGE, null, null, null);
+        new ExportMetricsRequest("m", unsortedTags(), MetricType.GAUGE, null, null, null);
     assertNotNull(r.getTags());
     assertTrue(r.getTags() instanceof TreeMap);
     assertEquals(List.of("a", "b", "c"), keys(r.getTags()));
@@ -67,7 +61,6 @@ public class ExportMetricsRequestTest {
   public void jsonDeserializationUsesSortedTags() throws Exception {
     String json =
         "{"
-            + "\"tenantId\":\"t\","
             + "\"metricName\":\"m\","
             + "\"type\":\"GAUGE\","
             + "\"tags\":{\"b\":\"2\",\"a\":\"1\",\"c\":\"3\"}"

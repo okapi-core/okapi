@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NETWORK_NAME="testnetwork"
+NETWORK_NAME=$1
 
 if ! docker network inspect "$NETWORK_NAME" >/dev/null 2>&1; then
   echo "Creating network: $NETWORK_NAME"

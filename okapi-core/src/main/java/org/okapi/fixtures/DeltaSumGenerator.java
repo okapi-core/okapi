@@ -8,12 +8,9 @@ import lombok.Getter;
 
 public class DeltaSumGenerator {
 
-  public record Sum(int count, long start, long end) {}
-
   int maxCount;
   @Getter Duration windowSize;
   @Getter List<Sum> readings;
-
   public DeltaSumGenerator(int maxCount, Duration windowSize) {
     this.maxCount = maxCount;
     this.readings = new ArrayList<>();
@@ -43,4 +40,6 @@ public class DeltaSumGenerator {
     }
     return sumList;
   }
+
+  public record Sum(int count, long start, long end) {}
 }

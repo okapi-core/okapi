@@ -1,10 +1,10 @@
 package org.okapi.staticserver;
 
 import com.google.gson.Gson;
-import org.okapi.staticserver.exceptions.BadRequestException;
 import java.io.IOException;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import org.okapi.staticserver.exceptions.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

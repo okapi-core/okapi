@@ -1,6 +1,5 @@
 package org.okapi.promql.eval;
 
-// eval/EvalContext.java
 import java.util.concurrent.*;
 import org.okapi.promql.eval.ts.RESOLUTION;
 import org.okapi.promql.eval.ts.SeriesDiscovery;

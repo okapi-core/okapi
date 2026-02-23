@@ -1,6 +1,5 @@
 package org.okapi.metrics.rollup;
 
-import static com.google.api.client.util.Preconditions.checkNotNull;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -13,10 +12,10 @@ import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.okapi.clock.Clock;
 import org.okapi.exceptions.ExceptionUtils;
+import org.okapi.io.OkapiIo;
 import org.okapi.metrics.SharedMessageBox;
 import org.okapi.metrics.WriteBackRequest;
 import org.okapi.metrics.common.MetricsContext;
-import org.okapi.metrics.io.OkapiIo;
 import org.okapi.metrics.stats.StatisticsFrozenException;
 import org.okapi.metrics.stats.UpdatableStatistics;
 
@@ -38,16 +37,6 @@ public class RollupSeries<T extends UpdatableStatistics> {
     this.newStatsSupplier = newStatsSupplier;
     this.shard = shard;
     this.createTime = new ConcurrentHashMap<>();
-  }
-
-  public void startFreezing(
-      SharedMessageBox<WriteBackRequest> messageBox,
-      ScheduledExecutorService scheduler,
-      WriteBackSettings writeBackSettings) {
-    this.messageBox = checkNotNull(messageBox);
-    this.scheduledExecutorService = checkNotNull(scheduler);
-    checkNotNull(writeBackSettings);
-    startFreezer(writeBackSettings.getClock(), writeBackSettings.getHotWindow());
   }
 
   protected void put(String k, T s) {

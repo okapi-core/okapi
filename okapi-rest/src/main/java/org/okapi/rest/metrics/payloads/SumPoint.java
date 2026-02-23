@@ -1,14 +1,12 @@
 package org.okapi.rest.metrics.payloads;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @AllArgsConstructor
 @Setter
 @NoArgsConstructor
 @Getter
+@ToString
 public class SumPoint {
   Long start;
   Long end;

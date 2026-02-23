@@ -11,15 +11,14 @@ import lombok.Getter;
 import org.okapi.metrics.pojos.RES_TYPE;
 
 public class GaugeGenerator {
+  public static final Duration ONE_MIN = Duration.of(1, ChronoUnit.MINUTES);
+  public static final Duration ONE_HUNDRED_MILLIS = Duration.of(100, ChronoUnit.MILLIS);
   @Getter List<Float> values = new ArrayList<>();
   @Getter List<Long> timestamps = new ArrayList<>();
   @Getter Duration tickerInterval;
   @Getter int minutes;
   @Getter Map<Long, List<Float>> groups;
   double gapFraction;
-
-  public static final Duration ONE_MIN = Duration.of(1, ChronoUnit.MINUTES);
-  public static final Duration ONE_HUNDRED_MILLIS = Duration.of(100, ChronoUnit.MILLIS);
 
   public GaugeGenerator(Duration tickerInterval, int minutes) {
     this.tickerInterval = tickerInterval;
@@ -160,11 +159,11 @@ public class GaugeGenerator {
   public Long groupKey(long ts, RES_TYPE res) {
     switch (res) {
       case SECONDLY:
-        return ts / 1000; // convert to minutes
+        return ts / 1000; // convert to seconds
       case MINUTELY:
-        return ts / 1000 / 60; // convert to hours
+        return ts / 1000 / 60; // convert to minutes
       case HOURLY:
-        return ts / 1000 / 3600; // convert to days
+        return ts / 1000 / 3600; // convert to hours
       default:
         throw new IllegalArgumentException("Unsupported resolution: " + res);
     }

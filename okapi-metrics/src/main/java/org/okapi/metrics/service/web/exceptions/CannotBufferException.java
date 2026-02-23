@@ -6,4 +6,4 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 @StandardException
-public class CannotBufferException extends Exception{}
+public class CannotBufferException extends Exception {}

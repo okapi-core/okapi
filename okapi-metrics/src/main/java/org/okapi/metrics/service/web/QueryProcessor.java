@@ -8,13 +8,12 @@ import org.okapi.rest.metrics.query.ListMetricsRequest;
 import org.okapi.rest.metrics.query.ListMetricsResponse;
 import org.okapi.rest.metrics.search.SearchMetricsRequestInternal;
 import org.okapi.rest.metrics.search.SearchMetricsResponse;
-import org.rocksdb.RocksDBException;
 
 public interface QueryProcessor {
   GetMetricsResponse getMetricsResponse(GetMetricsRequest request) throws Exception;
 
   SearchMetricsResponse searchMetricsResponse(SearchMetricsRequestInternal searchMetricsRequest)
-      throws BadRequestException, RocksDBException, IOException;
+      throws BadRequestException, IOException;
 
   ListMetricsResponse listMetricsResponse(ListMetricsRequest request);
 }

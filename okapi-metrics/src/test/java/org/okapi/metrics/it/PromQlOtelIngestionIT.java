@@ -2,7 +2,6 @@ package org.okapi.metrics.it;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -20,12 +19,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.okapi.metrics.OkapiMetricsConsumer;
-import org.okapi.metrics.cas.migration.CreateMetricsTableStep;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.*;
@@ -39,38 +35,25 @@ import org.springframework.web.client.RestTemplate;
 @TestPropertySource(
     properties = {
       "spring.profiles.active=integration-test",
-      "cas.contact.point=127.0.0.1:9042",
-      "cas.contact.datacenter=datacenter1",
-      "cas.metrics.keyspace=okapi_telemetry",
-      "cas.async.threads=2",
       "promQl.evalThreads=1",
       "aws.region=us-east-1"
     })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PromQlOtelIngestionIT {
 
-  @LocalServerPort int port;
-
-  @Value("${cas.contact.point}")
-  String contactPoint;
-
-  @Value("${cas.contact.datacenter}")
-  String datacenter;
-
   final Gson gson = new Gson();
-
+  @LocalServerPort int port;
   RestTemplate rest = new RestTemplate(List.of(new ProtobufHttpMessageConverter()));
 
-  @BeforeAll
-  void ensureSchema() {
-    var parts = contactPoint.split(":");
-    try (var session =
-        CqlSession.builder()
-            .withLocalDatacenter(datacenter)
-            .addContactPoint(new java.net.InetSocketAddress(parts[0], Integer.parseInt(parts[1])))
-            .build()) {
-      new CreateMetricsTableStep(session).doStep();
-    }
+  private static List<KeyValue> toKvList(Map<String, String> tags) {
+    return tags.entrySet().stream()
+        .map(
+            e ->
+                KeyValue.newBuilder()
+                    .setKey(e.getKey())
+                    .setValue(AnyValue.newBuilder().setStringValue(e.getValue()).build())
+                    .build())
+        .toList();
   }
 
   @Test
@@ -146,17 +129,6 @@ public class PromQlOtelIngestionIT {
     assertEquals("scalar", sumData.get("resultType").getAsString());
     JsonArray scalar = sumData.getAsJsonArray("result");
     assertEquals("0.7", scalar.get(1).getAsString());
-  }
-
-  private static List<KeyValue> toKvList(Map<String, String> tags) {
-    return tags.entrySet().stream()
-        .map(
-            e ->
-                KeyValue.newBuilder()
-                    .setKey(e.getKey())
-                    .setValue(AnyValue.newBuilder().setStringValue(e.getValue()).build())
-                    .build())
-        .toList();
   }
 
   private String queryInstant(String base, String tenant, String expr) {

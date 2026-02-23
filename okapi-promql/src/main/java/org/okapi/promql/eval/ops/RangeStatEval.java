@@ -15,17 +15,6 @@ import org.okapi.promql.eval.ts.StatisticsMerger;
 
 @AllArgsConstructor
 public class RangeStatEval implements Evaluable {
-  enum Kind {
-    AVG,
-    MIN,
-    MAX,
-    SUM,
-    COUNT,
-    QUANTILE,
-    LAST,
-    PRESENT
-  }
-
   private final FunctionExpr fn;
   private final Kind kind;
   private final StatisticsMerger merger;
@@ -137,5 +126,16 @@ public class RangeStatEval implements Evaluable {
     if (arg instanceof RangeSelectorExpr r) return r.rangeMs;
     if (arg instanceof SubqueryExpr sq) return sq.rangeMs;
     throw new IllegalStateException("Range function requires range selector or subquery");
+  }
+
+  enum Kind {
+    AVG,
+    MIN,
+    MAX,
+    SUM,
+    COUNT,
+    QUANTILE,
+    LAST,
+    PRESENT
   }
 }

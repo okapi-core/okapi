@@ -8,13 +8,13 @@ public class GorillaCodec {
 
   public static boolean writeInteger(int X, ValueWriter writer) throws BufferFullException {
     if (X == 0) {
-      if(!writer.canWriteBits(1)){
+      if (!writer.canWriteBits(1)) {
         throw new BufferFullException();
       }
       writer.writeInteger(0, 1);
       return true;
     } else if (X >= -64 && X < 64) {
-      if(!writer.canWriteBits(9)){
+      if (!writer.canWriteBits(9)) {
         throw new BufferFullException();
       }
       writer.writeBit(true);
@@ -22,7 +22,7 @@ public class GorillaCodec {
       writer.writeInteger(X, 7);
       return true;
     } else if (X >= -256 && X < 256) {
-      if(!writer.canWriteBits(12)){
+      if (!writer.canWriteBits(12)) {
         throw new BufferFullException();
       }
       writer.writeBit(true);
@@ -31,7 +31,7 @@ public class GorillaCodec {
       writer.writeInteger(X, 9);
       return true;
     } else if (X >= -2048 && X < 2048) {
-      if(!writer.canWriteBits(16)){
+      if (!writer.canWriteBits(16)) {
         throw new BufferFullException();
       }
       writer.writeBit(true);
@@ -41,7 +41,7 @@ public class GorillaCodec {
       writer.writeInteger(X, 12);
       return true;
     } else {
-      if(!writer.canWriteBits(36)){
+      if (!writer.canWriteBits(36)) {
         throw new BufferFullException();
       }
       writer.writeBit(true);

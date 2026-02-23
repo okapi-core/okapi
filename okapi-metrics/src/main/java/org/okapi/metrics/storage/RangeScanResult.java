@@ -1,8 +1,8 @@
 package org.okapi.metrics.storage;
 
-import org.okapi.metrics.storage.snapshots.TimeSeriesSnapshot;
 import java.util.Collections;
 import java.util.List;
+import org.okapi.metrics.storage.snapshots.TimeSeriesSnapshot;
 
 public class RangeScanResult {
   private List<TimeSeriesSnapshot> snapshots;
@@ -11,7 +11,7 @@ public class RangeScanResult {
     this.snapshots = Collections.unmodifiableList(snapshots);
   }
 
-  public TimeSeriesSnapshot get(int i){
-      return snapshots.get(i);
+  public TimeSeriesSnapshot get(int i) {
+    return snapshots.get(i);
   }
 }

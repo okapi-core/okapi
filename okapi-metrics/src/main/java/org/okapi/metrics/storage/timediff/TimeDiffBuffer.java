@@ -1,25 +1,20 @@
 package org.okapi.metrics.storage.timediff;
 
+import java.io.IOException;
+import java.io.InputStream;
+import lombok.Getter;
+import org.okapi.io.OkapiIo;
+import org.okapi.io.StreamReadingException;
 import org.okapi.metrics.storage.ByteBufferWriter;
 import org.okapi.metrics.storage.buffers.AppendOnlyByteBuffer;
 import org.okapi.metrics.storage.buffers.BufferFullException;
-import org.okapi.metrics.io.OkapiIo;
-import org.okapi.metrics.io.StreamReadingException;
-import lombok.Getter;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 public class TimeDiffBuffer {
   int total;
-  @Getter
-  long first;
-  @Getter
-  long second;
-  @Getter
-  long previous;
-  @Getter
-  long beforePrevious;
+  @Getter long first;
+  @Getter long second;
+  @Getter long previous;
+  @Getter long beforePrevious;
   GorillaBuffer gorillaBuffer;
 
   public TimeDiffBuffer(AppendOnlyByteBuffer buffer) {
@@ -27,6 +22,26 @@ public class TimeDiffBuffer {
   }
 
   private TimeDiffBuffer() {}
+
+  public static TimeDiffBuffer initialize(InputStream is, AppendOnlyByteBuffer buffer)
+      throws StreamReadingException, IOException {
+    OkapiIo.checkMagicNumber(is, TimeDiffBufferSnapshot.MAGIC_START);
+    var total = OkapiIo.readInt(is);
+    var first = OkapiIo.readLong(is);
+    var second = OkapiIo.readLong(is);
+    var beforePrevious = OkapiIo.readLong(is);
+    var previous = OkapiIo.readLong(is);
+    var gorillaSnap = GorillaBuffer.fromSnapshot(is, buffer);
+    var restored = new TimeDiffBuffer();
+    restored.previous = previous;
+    restored.beforePrevious = beforePrevious;
+    restored.total = total;
+    restored.gorillaBuffer = gorillaSnap;
+    restored.first = first;
+    restored.second = second;
+    OkapiIo.checkMagicNumber(is, TimeDiffBufferSnapshot.MAGIC_END);
+    return restored;
+  }
 
   protected GorillaBuffer getGorillaBuffer() {
     return gorillaBuffer;
@@ -62,26 +77,7 @@ public class TimeDiffBuffer {
 
   public TimeDiffBufferSnapshot snapshot() {
     // O(1) snapshot + contention time
-    return new TimeDiffBufferSnapshot(first, second, beforePrevious, previous, total, gorillaBuffer.snapshot());
-  }
-
-  public static TimeDiffBuffer initialize(InputStream is, AppendOnlyByteBuffer buffer)
-      throws StreamReadingException, IOException {
-    OkapiIo.checkMagicNumber(is, TimeDiffBufferSnapshot.MAGIC_START);
-    var total = OkapiIo.readInt(is);
-    var first = OkapiIo.readLong(is);
-    var second = OkapiIo.readLong(is);
-    var beforePrevious = OkapiIo.readLong(is);
-    var previous = OkapiIo.readLong(is);
-    var gorillaSnap = GorillaBuffer.fromSnapshot(is, buffer);
-    var restored = new TimeDiffBuffer();
-    restored.previous = previous;
-    restored.beforePrevious = beforePrevious;
-    restored.total = total;
-    restored.gorillaBuffer = gorillaSnap;
-    restored.first = first;
-    restored.second = second;
-    OkapiIo.checkMagicNumber(is, TimeDiffBufferSnapshot.MAGIC_END);
-    return restored;
+    return new TimeDiffBufferSnapshot(
+        first, second, beforePrevious, previous, total, gorillaBuffer.snapshot());
   }
 }

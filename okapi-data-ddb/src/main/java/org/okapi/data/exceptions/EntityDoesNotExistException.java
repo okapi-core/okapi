@@ -1,0 +1,8 @@
+package org.okapi.data.exceptions;
+
+// Checked exception to signal a referenced entity is missing.
+public class EntityDoesNotExistException extends Exception {
+  public EntityDoesNotExistException() {}
+  public EntityDoesNotExistException(String message) { super(message); }
+}
+

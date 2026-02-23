@@ -20,21 +20,6 @@ public class HistoStats {
     this.bucketCounts = bucketCounts;
   }
 
-  public byte[] serialize() {
-    var n = buckets.length;
-    var byteStream = new ByteArrayOutputStream();
-    byteStream.writeBytes(Ints.toByteArray(n));
-    for (var bucket : buckets) {
-      var val = Ints.toByteArray(Float.floatToIntBits(bucket));
-      byteStream.writeBytes(val);
-    }
-    for (var count : bucketCounts) {
-      var val = Ints.toByteArray(count);
-      byteStream.writeBytes(val);
-    }
-    return byteStream.toByteArray();
-  }
-
   public static HistoStats deserialize(byte[] bytes) {
     if (bytes.length < 4) {
       throw new IllegalArgumentException("Expected atleast 4 bytes in the array.");
@@ -72,5 +57,20 @@ public class HistoStats {
               bytes[off + bytesOffset + 3]);
     }
     return new HistoStats(buckets, bucketCounts);
+  }
+
+  public byte[] serialize() {
+    var n = buckets.length;
+    var byteStream = new ByteArrayOutputStream();
+    byteStream.writeBytes(Ints.toByteArray(n));
+    for (var bucket : buckets) {
+      var val = Ints.toByteArray(Float.floatToIntBits(bucket));
+      byteStream.writeBytes(val);
+    }
+    for (var count : bucketCounts) {
+      var val = Ints.toByteArray(count);
+      byteStream.writeBytes(val);
+    }
+    return byteStream.toByteArray();
   }
 }

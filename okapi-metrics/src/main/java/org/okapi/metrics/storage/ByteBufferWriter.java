@@ -1,15 +1,15 @@
 package org.okapi.metrics.storage;
 
-import static org.okapi.metrics.io.OkapiIo.checkMagicNumber;
+import static org.okapi.io.OkapiIo.checkMagicNumber;
 
-import org.okapi.metrics.annotations.NotThreadSafe;
-import org.okapi.metrics.storage.buffers.AppendOnlyByteBuffer;
-import org.okapi.metrics.storage.buffers.BufferSnapshot;
-import org.okapi.metrics.io.OkapiIo;
-import org.okapi.metrics.io.StreamReadingException;
 import java.io.IOException;
 import java.io.InputStream;
 import lombok.Getter;
+import org.okapi.io.OkapiIo;
+import org.okapi.io.StreamReadingException;
+import org.okapi.metrics.annotations.NotThreadSafe;
+import org.okapi.metrics.storage.buffers.AppendOnlyByteBuffer;
+import org.okapi.metrics.storage.buffers.BufferSnapshot;
 
 @NotThreadSafe
 // todo: refactor writer should have an allocated buffer

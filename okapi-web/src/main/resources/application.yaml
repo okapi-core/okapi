@@ -1,0 +1,36 @@
+orgId: testOrg
+spring:
+  mvc:
+    converters:
+      preferred-json-mapper: gson
+
+clusterEndpoint: http://localhost:9009
+cookies:
+  secure: false
+
+server:
+  port: 9001
+
+query:
+  threads: 10
+  nParallel: 5
+  timeout: 3000
+
+okapi:
+  s3:
+    bucket: okapi-data-bucket
+    resultsPrefix: query-results
+
+  aws:
+    creds: env
+    region: us-west-2
+    endpoint: http://localhost:4566
+
+  federation:
+    agent:
+      http:
+        endpoint: http://localhost:9002
+
+    polling-task:
+      initial-delay-ms: 1000
+      max-attempts: 5

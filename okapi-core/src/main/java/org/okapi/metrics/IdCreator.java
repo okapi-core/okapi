@@ -7,10 +7,6 @@ public class IdCreator {
   public static final int INT_TOSSES = 20;
   public static final int ROUNDS = 3;
 
-  public interface ClashDetector {
-    boolean isAClash(String id);
-  }
-
   public static String getTenantId(String orgId, String teamId) {
     return orgId + "_" + teamId;
   }
@@ -46,7 +42,12 @@ public class IdCreator {
     return increasinglyLargeRandomStrings(4, detector);
   }
 
-  public static String generateTeamId(ClashDetector clashDetector) throws IdCreationFailedException {
+  public static String generateUniqueId(ClashDetector clashDetector)
+      throws IdCreationFailedException {
     return increasinglyLargeRandomStrings(4, clashDetector);
+  }
+
+  public interface ClashDetector {
+    boolean isAClash(String id);
   }
 }

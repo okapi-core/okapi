@@ -1,0 +1,105 @@
+syntax = "proto3";
+package org.okapi.sre;
+
+message TimeSeriesQuery {
+  string query_id = 10;
+  string path_pattern = 20;
+  int64 start_timestamp = 30;
+  int64 end_timestamp = 40;
+  map<string, string> tags_pattern = 50;
+}
+
+message SpanQuery {
+  string name_pattern = 1;
+  int64 start_timestamp = 2;
+  int64 end_timestamp = 3;
+  map<string, string> tags_pattern = 4;
+  string query_id = 5;
+}
+
+message LogsQuery {
+  string name_pattern = 1;
+  int64 start_timestamp = 2;
+  int64 end_timestamp = 3;
+  map<string, string> labels_pattern = 4;
+  string query_id = 5;
+}
+
+message TimeSeries {
+  string path = 1;
+  repeated int64 timestamps = 2;
+  repeated double values = 3;
+  map<string, string> labels = 4;
+}
+
+message TimeSeriesBatch {
+  repeated TimeSeries series = 1;
+}
+
+message ApplicationLog {
+  reserved 1 to 9;
+  string message = 10;
+  int64 timestamp = 11;
+  map<string, AnyValue> labels = 12;
+}
+
+message ApplicationLogBatch {
+  repeated ApplicationLog logs = 1;
+}
+
+message ApplicationLogRecord {
+  reserved 1 to 9;
+  ApplicationLogBatch log_batch = 10;
+}
+
+message ApplicationSpan {
+  reserved 1 to 9;
+  string trace_id = 10;
+  string span_id = 11;
+  string parent_span_id = 12;
+  string name = 13;
+  int64 start_timestamp = 14;
+  int64 end_timestamp = 15;
+  map<string, string> labels = 16;
+  map<string, AnyValue> attributes = 17;
+}
+
+message ApplicationSpanBatch {
+  reserved 1 to 9;
+  repeated ApplicationSpan spans = 10;
+}
+
+message StringList {
+  repeated string values = 1;
+}
+
+message IntList {
+  repeated int64 values = 1;
+}
+
+message DoubleList {
+  repeated double values = 1;
+}
+
+message AnyValue {
+  oneof value {
+    string str_value = 1;
+    int64 int_value = 2;
+    double double_value = 3;
+    bool bool_value = 4;
+    bytes bytes_value = 5;
+    StringList str_list = 6;
+    IntList int_list = 7;
+    DoubleList double_list = 8;
+  }
+}
+
+message SreRecord {
+  reserved 1 to 9;
+
+  oneof body {
+    TimeSeriesBatch ts_batch = 10;
+    ApplicationLogBatch log_batch = 11;
+    ApplicationSpanBatch span = 12;
+  }
+}

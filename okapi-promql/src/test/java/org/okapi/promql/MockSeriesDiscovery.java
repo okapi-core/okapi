@@ -15,17 +15,6 @@ public final class MockSeriesDiscovery implements SeriesDiscovery {
     this.known = List.copyOf(known);
   }
 
-  @Override
-  public List<SeriesId> expand(
-      String metricOrNull, List<LabelMatcher> matchers, long st, long end) {
-    List<SeriesId> out = new ArrayList<>();
-    for (SeriesId s : known) {
-      if (metricOrNull != null && !metricOrNull.equals(s.metric())) continue;
-      if (matchesAll(s.metric(), s.labels().tags(), matchers)) out.add(s);
-    }
-    return out;
-  }
-
   private static boolean matchesAll(
       String metricOrNull, Map<String, String> labels, List<LabelMatcher> matchers) {
     if (matchers == null || matchers.isEmpty()) return true;
@@ -48,5 +37,16 @@ public final class MockSeriesDiscovery implements SeriesDiscovery {
       }
     }
     return true;
+  }
+
+  @Override
+  public List<SeriesId> expand(
+      String metricOrNull, List<LabelMatcher> matchers, long st, long end) {
+    List<SeriesId> out = new ArrayList<>();
+    for (SeriesId s : known) {
+      if (metricOrNull != null && !metricOrNull.equals(s.metric())) continue;
+      if (matchesAll(s.metric(), s.labels().tags(), matchers)) out.add(s);
+    }
+    return out;
   }
 }

@@ -10,4 +10,9 @@ public class KllSketchRestorer implements QuantileRestorer {
     var mem = Memory.wrap(bytes);
     return KllFloatsSketch.heapify(mem);
   }
+
+  public static KllFloatsSketch restoreFromBytes(byte[] bytes){
+    var mem = Memory.wrap(bytes);
+    return KllFloatsSketch.heapify(mem);
+  }
 }

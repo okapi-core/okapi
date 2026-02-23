@@ -1,117 +1,98 @@
 package org.okapi.s3;
 
-import static org.okapi.metrics.MetadataFields.CHECKSUM_HEADER;
-
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import java.io.IOException;
-import java.time.Duration;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import lombok.Locked;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class S3ByteRangeCache {
 
-  public record DataPage(
-      String bucket, String key, long pageNumber, byte[] contents, String parentChecksum) {}
+  final Long thresholdBytes;
+  Map<String, DataPage> byteRangeCache = new ConcurrentHashMap<>();
+  Map<String, Long> lastAccessed = new HashMap<>();
+  TreeMap<Long, Set<String>> accessTimes = new TreeMap<>();
+  long totalCached = 0L;
 
-  private final LoadingCache<String, DataPage> bufferPool;
-  private final S3Client amazonS3;
-  private final long pageSize;
-  private final Duration expiryDuration;
-  Map<String, String> checksums;
-
-  public S3ByteRangeCache(S3Client amazonS3, int maxCachedPages, Duration expiryDuration) {
-    this(amazonS3, maxCachedPages, 16 * 1024, expiryDuration); // default to 16 KB
+  public String getCacheKey(String bucket, String key, long start, long end) {
+    return bucket + ":" + key + ":" + start + "-" + end;
   }
 
-  public S3ByteRangeCache(
-      S3Client amazonS3, int maxCachedPages, long pageSize, Duration expiryDuration) {
-    this.amazonS3 = amazonS3;
-    this.pageSize = pageSize;
-    this.expiryDuration = expiryDuration;
-    this.checksums = new ConcurrentHashMap<>();
-    this.bufferPool =
-        CacheBuilder.<String, DataPage>newBuilder()
-            .maximumSize(maxCachedPages)
-            .expireAfterAccess(expiryDuration)
-            .build(
-                new CacheLoader<String, DataPage>() {
-                  @Override
-                  public DataPage load(String key) throws Exception {
-                    String[] parts = key.split("::");
-                    long pageNumber = Long.parseLong(parts[2]);
-                    byte[] contents = getPage(parts[0], parts[1], pageNumber);
-                    var bucketName = parts[0];
-                    var s3Prefix = parts[1];
-                    var headRequest =
-                        HeadObjectRequest.builder().bucket(bucketName).key(s3Prefix).build();
-                    var metadata = amazonS3.headObject(headRequest);
-                    var checkSum = metadata.metadata().get(CHECKSUM_HEADER);
-                    return new DataPage(bucketName, s3Prefix, pageNumber, contents, checkSum);
-                  }
-                });
-  }
-
-  private String getCacheKey(String bucket, String key, long page) {
-    return bucket + "::" + key + "::" + page;
-  }
-
-  public byte[] getRange(String bucket, String key, long start, long end)
-      throws ExecutionException {
+  @Locked.Write
+  public byte[] possiblyCache(
+      String bucket, String key, long start, long end, byte[] contents, String etag) {
     if (end <= start) {
       throw new IllegalArgumentException("End must be greater than start");
     }
-
-    long[] pagedRange = getPagedRange(start, end);
-    long pageBoundary = start;
-    int nBytes = Math.toIntExact(end - start);
-    byte[] buffer = new byte[nBytes];
-    int bufferBoundary = 0;
-
-    for (long pageNum = pagedRange[0]; pageNum < pagedRange[1]; pageNum++) {
-      long pageStart = pageSize * pageNum;
-      long pageEnd = pageStart + pageSize;
-      String cacheKey = getCacheKey(bucket, key, pageNum);
-      DataPage page = bufferPool.get(cacheKey);
-
-      long copyStart = pageBoundary - pageStart;
-      long toCopy = Math.min(end, pageEnd) - pageBoundary;
-
-      System.arraycopy(
-          page.contents(),
-          Math.toIntExact(copyStart),
-          buffer,
-          bufferBoundary,
-          Math.toIntExact(toCopy));
-
-      bufferBoundary += toCopy;
-      pageBoundary += toCopy;
+    var cacheKey = getCacheKey(bucket, key, start, end);
+    updateAccessTime(cacheKey);
+    if (byteRangeCache.containsKey(cacheKey)) {
+      return contents;
     }
-
-    return buffer;
+    evict();
+    byteRangeCache.put(cacheKey, new DataPage(contents, etag));
+    totalCached += contents.length;
+    return contents;
   }
 
-  private long[] getPagedRange(long start, long end) {
-    long pageStart = start / pageSize;
-    long pageEnd = (end + pageSize - 1) / pageSize;
-    return new long[] {pageStart, pageEnd};
+  private Optional<String> getEvictionTarget() {
+    var oldestEntry = accessTimes.firstKey();
+    if (oldestEntry == null) {
+      return Optional.empty();
+    }
+    var candidates = accessTimes.get(oldestEntry);
+    if (candidates == null || candidates.isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(candidates.iterator().next());
   }
 
-  private byte[] getPage(String bucket, String key, long page) throws IOException {
-    long pageStart = page * pageSize;
-    long pageEndInclusive = pageStart + pageSize - 1;
-
-    GetObjectRequest request =
-        GetObjectRequest.builder()
-            .bucket(bucket)
-            .key(key)
-            .range("bytes=" + pageStart + "-" + pageEndInclusive)
-            .build();
-    return amazonS3.getObject(request).readAllBytes();
+  private void evict() {
+    if (totalCached >= thresholdBytes) {
+      getEvictionTarget().ifPresent(this::evictKey);
+    }
   }
+
+  private void evictKey(String cacheKey) {
+    var evicted = byteRangeCache.remove(cacheKey);
+    if (evicted != null) {
+      totalCached -= evicted.contents().length;
+      var accessed = lastAccessed.remove(cacheKey);
+      accessTimes.get(accessed).remove(cacheKey);
+      if (accessTimes.get(accessed).isEmpty()) {
+        accessTimes.remove(accessed);
+      }
+    }
+  }
+
+  private void updateAccessTime(String cacheKey) {
+    var oldAccessTime = lastAccessed.get(cacheKey);
+    if (oldAccessTime != null) {
+      accessTimes.get(oldAccessTime).remove(cacheKey);
+      if (accessTimes.get(oldAccessTime).isEmpty()) {
+        accessTimes.remove(oldAccessTime);
+      }
+    }
+    long newAccessTime = System.nanoTime();
+    lastAccessed.put(cacheKey, newAccessTime);
+    accessTimes.computeIfAbsent(newAccessTime, k -> new HashSet<>()).add(cacheKey);
+  }
+
+  @Locked.Read
+  public Optional<byte[]> getCachedRange(
+      String bucket, String key, long start, long end, String etag) {
+    String cacheKey = getCacheKey(bucket, key, start, end);
+    var val = byteRangeCache.get(cacheKey);
+    if (val != null && val.etag().equals(etag)) {
+      updateAccessTime(cacheKey);
+      return Optional.of(val.contents());
+    } else if (val != null) {
+      evictKey(cacheKey);
+      return Optional.empty();
+    } else {
+      return Optional.empty();
+    }
+  }
+
+  public record DataPage(byte[] contents, String etag) {}
 }

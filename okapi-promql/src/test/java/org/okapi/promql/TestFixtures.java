@@ -6,35 +6,6 @@ import lombok.AllArgsConstructor;
 import org.okapi.promql.eval.VectorData.*;
 
 public class TestFixtures {
-  @AllArgsConstructor
-  public static final class CommonMocks {
-    public final MockTimeSeriesClient client;
-    public final MockSeriesDiscovery discovery;
-
-    // Time anchors (1-minute step)
-    public final long t0, t1, t2, t3;
-    public final long step;
-
-    // Series
-    public final SeriesId httpRequestsCounterApi;
-    public final Map<String, String> httpRequestsCounterApiTags;
-
-    // cpu usage
-    public final SeriesId cpuUsageApiI1;
-    public final Map<String, String> cpuUsageApiI1Tags;
-
-    public final SeriesId cpuUsageApiI2;
-    public final Map<String, String> cpuUsageApiI2Tags;
-
-    // memory usage
-    public final SeriesId memI1;
-    public final Map<String, String> memI1Tags;
-
-    // replicas
-    public final SeriesId replicas;
-    public final Map<String, String> repTags;
-  }
-
   /** Builds a consistent minute-bucket dataset for tests. */
   public static CommonMocks buildCommonMocks() {
     var client = new MockTimeSeriesClient();
@@ -107,5 +78,34 @@ public class TestFixtures {
         memI1Tags,
         replicas,
         repTags);
+  }
+
+  @AllArgsConstructor
+  public static final class CommonMocks {
+    public final MockTimeSeriesClient client;
+    public final MockSeriesDiscovery discovery;
+
+    // Time anchors (1-minute step)
+    public final long t0, t1, t2, t3;
+    public final long step;
+
+    // Series
+    public final SeriesId httpRequestsCounterApi;
+    public final Map<String, String> httpRequestsCounterApiTags;
+
+    // cpu usage
+    public final SeriesId cpuUsageApiI1;
+    public final Map<String, String> cpuUsageApiI1Tags;
+
+    public final SeriesId cpuUsageApiI2;
+    public final Map<String, String> cpuUsageApiI2Tags;
+
+    // memory usage
+    public final SeriesId memI1;
+    public final Map<String, String> memI1Tags;
+
+    // replicas
+    public final SeriesId replicas;
+    public final Map<String, String> repTags;
   }
 }

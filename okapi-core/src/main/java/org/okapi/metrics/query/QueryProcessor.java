@@ -4,11 +4,6 @@ import java.time.Duration;
 import org.okapi.metrics.rollup.TsReader;
 
 public interface QueryProcessor {
-  public enum TRANSFORM {
-    LOG,
-    SIGMOID
-  }
-
   QueryRecords.QueryResult scan(TsReader reader, QueryRecords.Slice slice);
 
   QueryRecords.QueryResult scale(TsReader reader, QueryRecords.Slice slice, float scaleFactor);
@@ -29,4 +24,9 @@ public interface QueryProcessor {
   QueryRecords.QueryResult firstDerivative(TsReader reader, QueryRecords.Slice slice);
 
   QueryRecords.QueryResult aggregateSum(TsReader reader, QueryRecords.Slice slice);
+
+  public enum TRANSFORM {
+    LOG,
+    SIGMOID
+  }
 }

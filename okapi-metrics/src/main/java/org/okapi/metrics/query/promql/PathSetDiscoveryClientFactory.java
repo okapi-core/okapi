@@ -1,8 +1,9 @@
 package org.okapi.metrics.query.promql;
 
 import lombok.AllArgsConstructor;
-import org.okapi.metrics.paths.PathSet;
+import org.okapi.metrics.query.PathSet;
 import org.okapi.promql.eval.ts.SeriesDiscovery;
+import org.okapi.promql.runtime.SeriesDiscoveryFactory;
 
 @AllArgsConstructor
 public class PathSetDiscoveryClientFactory implements SeriesDiscoveryFactory {

@@ -1,0 +1,24 @@
+server:
+  port: 9009
+okapi:
+  clickhouse:
+    migrateOnStartup: false
+    host: localhost
+    port: 8123
+    username: default
+    password: okapi_testing_password
+    chMetricsWalCfg:
+      segmentSize: 1024
+    chLogsCfg:
+      segmentSize: 1024
+    chTracesWalCfg:
+      segmentSize: 1024
+    chMetricsWal: ${user.home}/ch-wal/metrics
+    chLogsWal: ${user.home}/ch-wal/logs
+    chTracesWal: ${user.home}/ch-wal/traces
+
+  metrics:
+    otel:
+      converter:
+        excludeTags: [ success,type,service.name ]
+        excludeTagPrefixes: [ telemetry.sdk ]

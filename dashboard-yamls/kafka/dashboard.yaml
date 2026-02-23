@@ -1,0 +1,76 @@
+version: 1
+dashboard:
+  id: kafka-monitoring
+  title: Kafka Monitoring
+  description: Kafka request latency, partitions, controller, and log flush metrics.
+  tags: [kafka, monitoring]
+  vars:
+    - name: svc
+      type: SVC
+    - name: service_instance_id
+      type: TAG_VALUE
+      tag: service_instance_id
+  rows:
+    - id: kafka-core
+      title: Kafka Core
+      panels:
+        - id: request-time-50p
+          title: Request Time 50p
+          queries:
+            - query: >
+                {"svc":"$__{svc}","metric":"kafka_request_time_50p","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: request-time-99p
+          title: Request Time 99p
+          queries:
+            - query: >
+                {"svc":"$__{svc}","metric":"kafka_request_time_99p","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: request-time-avg
+          title: Request Time Avg
+          queries:
+            - query: >
+                {"svc":"$__{svc}","metric":"kafka_request_time_avg","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: request-queue
+          title: Request Queue
+          queries:
+            - query: >
+                {"svc":"$__{svc}","metric":"kafka_request_queue","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: purgatory-size
+          title: Purgatory Size
+          queries:
+            - query: >
+                {"svc":"$__{svc}","metric":"kafka_purgatory_size","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: partition-count
+          title: Partition Count
+          queries:
+            - query: >
+                {"svc":"$__{svc}","metric":"kafka_partition_count","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: partition-offline
+          title: Partition Offline
+          queries:
+            - query: >
+                {"svc":"$__{svc}","metric":"kafka_partition_offline","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: partition-under-replicated
+          title: Partition Under Replicated
+          queries:
+            - query: >
+                {"svc":"$__{svc}","metric":"kafka_partition_under_replicated","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: max-lag
+          title: Max Lag
+          queries:
+            - query: >
+                {"svc":"$__{svc}","metric":"kafka_max_lag","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: controller-active-count
+          title: Controller Active Count
+          queries:
+            - query: >
+                {"svc":"$__{svc}","metric":"kafka_controller_active_count","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: logs-flush-time-50p
+          title: Logs Flush Time 50p
+          queries:
+            - query: >
+                {"svc":"$__{svc}","metric":"kafka_logs_flush_time_50p","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: logs-flush-time-99p
+          title: Logs Flush Time 99p
+          queries:
+            - query: >
+                {"svc":"$__{svc}","metric":"kafka_logs_flush_time_99p","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}

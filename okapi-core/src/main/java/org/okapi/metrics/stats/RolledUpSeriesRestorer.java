@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.function.Function;
-import org.okapi.metrics.io.StreamReadingException;
+import org.okapi.io.StreamReadingException;
 import org.okapi.metrics.rollup.RollupSeries;
 
 public class RolledUpSeriesRestorer implements RollupSeriesRestorer<UpdatableStatistics> {

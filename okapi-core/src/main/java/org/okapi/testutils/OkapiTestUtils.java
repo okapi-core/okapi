@@ -1,13 +1,15 @@
 package org.okapi.testutils;
 
+import java.net.URI;
 import java.util.*;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.okapi.Statistics;
 import org.okapi.metrics.rollup.RollupSeries;
 import org.okapi.metrics.rollup.TsReader;
 import org.okapi.metrics.stats.KllSketchRestorer;
 import org.okapi.metrics.stats.RolledUpStatistics;
 import org.okapi.metrics.stats.UpdatableStatistics;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.s3.S3Client;
 
 public class OkapiTestUtils {
 
@@ -17,10 +19,6 @@ public class OkapiTestUtils {
       l.add(genSingle(base, scale));
     }
     return l;
-  }
-
-  public static String smallId(int n) {
-    return RandomStringUtils.insecure().next(n, true, false);
   }
 
   public static float genSingle(float base, float scale) {
@@ -123,10 +121,6 @@ public class OkapiTestUtils {
     }
   }
 
-  public <T> String dedup(Class<T> clazz, String id) {
-    return clazz.getSimpleName() + "AND" + id;
-  }
-
   public static boolean checkMatchesReferenceFuzzy(
       RollupSeries<UpdatableStatistics> ref, TsReader tsReader) throws InterruptedException {
     for (var key : ref.getKeys()) {
@@ -156,5 +150,46 @@ public class OkapiTestUtils {
           : "Serialized stats for key " + key + " do not match";
     }
     return true;
+  }
+
+  public static S3Client getLocalstackS3Client() {
+    return S3Client.builder()
+        .endpointOverride(URI.create("http://localhost:4566"))
+        .forcePathStyle(true)
+        .region(software.amazon.awssdk.regions.Region.US_EAST_1)
+        .credentialsProvider(
+            software.amazon.awssdk.auth.credentials.StaticCredentialsProvider.create(
+                software.amazon.awssdk.auth.credentials.AwsBasicCredentials.create("test", "test")))
+        .build();
+  }
+
+  public static DynamoDbClient getLocalStackDynamoDbClient() {
+    return DynamoDbClient.builder()
+        .endpointOverride(URI.create("http://localhost:4566"))
+        .region(software.amazon.awssdk.regions.Region.US_EAST_1)
+        .credentialsProvider(
+            software.amazon.awssdk.auth.credentials.StaticCredentialsProvider.create(
+                software.amazon.awssdk.auth.credentials.AwsBasicCredentials.create("test", "test")))
+        .build();
+  }
+
+  public static final String getTestId(Class<?> clazz) {
+    return UUID.randomUUID().toString().replace("-", "");
+  }
+
+  public <T> String dedup(Class<T> clazz, String id) {
+    return clazz.getSimpleName() + "AND" + id;
+  }
+
+  public byte[] stringToStream(String s) {
+    return s.getBytes();
+  }
+
+  public static <T> void assertListEquals(List<T> A, List<T> B) {
+    assert A.size() == B.size() : "Lists are of different sizes: " + A.size() + " and " + B.size();
+    for (int i = 0; i < A.size(); i++) {
+      assert A.get(i).equals(B.get(i))
+          : "List elements at index " + i + " do not match: " + A.get(i) + " and " + B.get(i);
+    }
   }
 }

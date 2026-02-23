@@ -10,15 +10,17 @@ import org.okapi.beans.Configurations;
 import org.okapi.clock.Clock;
 import org.okapi.clock.SystemClock;
 import org.okapi.fake.FakeClock;
-import org.okapi.ip.Ec2IpSupplier;
-import org.okapi.ip.FixedIpSupplier;
-import org.okapi.ip.IpSupplier;
+import org.okapi.nodes.Ec2IpSupplier;
+import org.okapi.nodes.FixedIpSupplier;
+import org.okapi.nodes.IpSupplier;
 import org.okapi.metrics.*;
 import org.okapi.metrics.aws.NoOpCredentials;
-import org.okapi.metrics.common.sharding.ConsistentHashedAssignerFactory;
-import org.okapi.metrics.common.sharding.ShardsAndSeriesAssignerFactory;
 import org.okapi.metrics.query.QueryProcImpl;
-import org.okapi.metrics.query.promql.*;
+import org.okapi.metrics.query.promql.PathSetDiscoveryClientFactory;
+import org.okapi.metrics.query.promql.PromQlQueryProcessor;
+import org.okapi.metrics.query.promql.RollupStatsMerger;
+import org.okapi.promql.runtime.SeriesDiscoveryFactory;
+import org.okapi.promql.runtime.TsClientFactory;
 import org.okapi.metrics.rollup.*;
 import org.okapi.metrics.service.web.QueryProcessor;
 import org.okapi.metrics.stats.*;
@@ -66,15 +68,10 @@ public class OkapiMetricsConsumerConfig {
   }
 
   @Bean
-  public ShardsAndSeriesAssignerFactory shardsAndSeriesAssignerFactory() {
-    return new ConsistentHashedAssignerFactory();
-  }
-
-  @Bean
-  public IpSupplier ipSupplier(@Autowired ENV_TYPE envType, @Value("${server.port}") int port) {
+  public IpSupplier ipSupplier(@Autowired ENV_TYPE envType) {
     return switch (envType) {
-      case TEST, INTEG_TEST, ISO -> new FixedIpSupplier("localhost", port);
-      case PROD -> new Ec2IpSupplier(port);
+      case TEST, INTEG_TEST, ISO -> new FixedIpSupplier("localhost");
+      case PROD -> new Ec2IpSupplier();
     };
   }
 

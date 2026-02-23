@@ -75,7 +75,7 @@ public class PromQlController {
       @RequestParam(value = "match[]", required = false) List<String> matchers,
       @RequestHeader(CookiesAndHeaders.HEADER_OKAPI_TENANT) String tenantId)
       throws BadRequestException {
-    var result = promQlQueryProcessor.queryMatchApi(tenantId, matchers, start, end);
+    var result = promQlQueryProcessor.queryLabelNamesApi(tenantId, matchers, start, end);
     var responseBody = promQlSerializer.toJson(result);
     return ResponseEntity.ok(responseBody);
   }

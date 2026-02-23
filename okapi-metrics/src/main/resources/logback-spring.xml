@@ -32,7 +32,26 @@
         <root level="INFO">
             <appender-ref ref="STDOUT"/>
         </root>
-        <logger name="org.springframework" level="INFO">
+        <logger name="org.springframework" level="DEBUG">
+            <appender-ref ref="STDOUT"/>
+        </logger>
+        <logger name="org.okapi" level="INFO">
+            <appender-ref ref="STDOUT"/>
+        </logger>
+        <logger name="org.apache" level="INFO">
+            <appender-ref ref="STDOUT"/>
+        </logger>
+        <logger name="com.amazonaws" level="INFO">
+            <appender-ref ref="STDOUT"/>
+        </logger>
+    </springProfile>
+
+    <springProfile name="chtest">
+
+        <root level="INFO">
+            <appender-ref ref="STDOUT"/>
+        </root>
+        <logger name="org.springframework" level="DEBUG">
             <appender-ref ref="STDOUT"/>
         </logger>
         <logger name="org.okapi" level="INFO">

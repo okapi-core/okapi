@@ -1,0 +1,15 @@
+server:
+  port: 8081
+feature-flags:
+  word-count-sentence-size: 10000
+  char-vocab: alphanumeric
+  regex-gain-honeypot: true
+  regex-gain-honeypot-timeout-ms: 2000
+  regex-gain-is-on: true
+
+otel:
+  service:
+    name: okapi-demo-server
+  exporter:
+    otlp:
+      endpoint: http://localhost:4317

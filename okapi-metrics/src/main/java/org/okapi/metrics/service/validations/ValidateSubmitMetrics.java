@@ -29,11 +29,11 @@ public class ValidateSubmitMetrics {
     checkArgument(
         gauge != null, () -> new BadRequestException(UserFacingMessages.GAUGE_PAYLOAD_MISSING));
     var ts = gauge.getTs();
-    if (ts == null || ts.length <= 1) {
+    if (ts == null || ts.size() <= 1) {
       return;
     }
-    long min = ts[0];
-    long max = ts[0];
+    long min = ts.get(0);
+    long max = ts.get(0);
     for (long t : ts) {
       if (t < min) min = t;
       if (t > max) max = t;

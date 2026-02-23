@@ -1,7 +1,7 @@
 package org.okapi.metrics.storage;
 
-import org.okapi.metrics.annotations.NotThreadSafe;
 import lombok.AllArgsConstructor;
+import org.okapi.metrics.annotations.NotThreadSafe;
 
 @NotThreadSafe
 @AllArgsConstructor

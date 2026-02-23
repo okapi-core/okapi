@@ -1,19 +1,18 @@
 package org.okapi.metrics.storage.timediff;
 
-import org.okapi.testutils.OkapiTestUtils;
-import org.okapi.collections.OkapiLists;
-import org.okapi.metrics.storage.buffers.BufferFullException;
-import org.okapi.metrics.storage.buffers.DirectBufferAllocator;
-import org.okapi.metrics.io.StreamReadingException;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
+import org.okapi.collections.OkapiLists;
+import org.okapi.io.StreamReadingException;
+import org.okapi.metrics.storage.buffers.BufferFullException;
+import org.okapi.metrics.storage.buffers.DirectBufferAllocator;
+import org.okapi.testutils.OkapiTestUtils;
 
 public class TimeDiffBufferRestorationTests {
 

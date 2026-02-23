@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "okapi-cp"
+version = "0.1.0"
+description = "CLI to deploy okapi and its dependencies."
+authors = ["Your Name <you@example.com>"]
+license = "Apache-2"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+click = "^8.3.1"
+
+[tool.poetry.scripts]
+okapi-cp = "okapi_cp.cli:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

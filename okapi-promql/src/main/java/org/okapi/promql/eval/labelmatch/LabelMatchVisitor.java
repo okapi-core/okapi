@@ -20,13 +20,21 @@ public class LabelMatchVisitor extends PromQLParserBaseVisitor<LabelMatchCtx> {
 
   // ---- Entry points ---------------------------------------------------------
 
+  private static String stripQuotes(String s) {
+    if (s == null) return null;
+    if (s.length() >= 2 && s.charAt(0) == '"' && s.charAt(s.length() - 1) == '"') {
+      return s.substring(1, s.length() - 1);
+    }
+    return s;
+  }
+
+  // ---- Accept only plain selectors (possibly wrapped in parens/offset/range) --
+
   @Override
   public LabelMatchCtx visitExpression(PromQLParser.ExpressionContext ctx) {
     // expression : vectorOperation EOF ;
     return visit(ctx.vectorOperation());
   }
-
-  // ---- Accept only plain selectors (possibly wrapped in parens/offset/range) --
 
   @Override
   public LabelMatchCtx visitVecInstant(PromQLParser.VecInstantContext ctx) {
@@ -53,14 +61,14 @@ public class LabelMatchVisitor extends PromQLParserBaseVisitor<LabelMatchCtx> {
     }
   }
 
+  // ---- Explicit rejections for non-selector vectors -------------------------
+
   @Override
   public LabelMatchCtx visitVecParens(PromQLParser.VecParensContext ctx) {
     // vector : parens ; parens : '(' vectorOperation ')'
     // Just unwrap the parentheses and keep visiting down to a selector.
     return visit(ctx.parens().vectorOperation());
   }
-
-  // ---- Explicit rejections for non-selector vectors -------------------------
 
   @Override
   public LabelMatchCtx visitVecFunc(PromQLParser.VecFuncContext ctx) {
@@ -138,11 +146,11 @@ public class LabelMatchVisitor extends PromQLParserBaseVisitor<LabelMatchCtx> {
     return null;
   }
 
+  // ---- Selector + label matcher extraction ----------------------------------
+
   private void rejectOp() {
     throw new IllegalArgumentException("match[] must be a single vector selector (no operators)");
   }
-
-  // ---- Selector + label matcher extraction ----------------------------------
 
   @Override
   public LabelMatchCtx visitInstantSelector(PromQLParser.InstantSelectorContext context) {
@@ -178,6 +186,8 @@ public class LabelMatchVisitor extends PromQLParserBaseVisitor<LabelMatchCtx> {
     return new LabelCondition(new LabelMatcher(name, op, value));
   }
 
+  // ---- helpers ---------------------------------------------------------------
+
   public LabelOp getType(PromQLParser.LabelMatcherOperatorContext operatorContext) {
     if (operatorContext.NE() != null) {
       return LabelOp.NE;
@@ -189,15 +199,5 @@ public class LabelMatchVisitor extends PromQLParserBaseVisitor<LabelMatchCtx> {
       return LabelOp.NRE;
     }
     throw new IllegalArgumentException("Unexpected label matcher operator");
-  }
-
-  // ---- helpers ---------------------------------------------------------------
-
-  private static String stripQuotes(String s) {
-    if (s == null) return null;
-    if (s.length() >= 2 && s.charAt(0) == '"' && s.charAt(s.length() - 1) == '"') {
-      return s.substring(1, s.length() - 1);
-    }
-    return s;
   }
 }

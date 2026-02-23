@@ -37,6 +37,11 @@ public class MetricsSearcher {
     return true;
   }
 
+  private static String wildcardToRegex(String pattern) {
+    if (pattern == null || pattern.isEmpty()) return ".*"; // match all
+    return "^" + Pattern.quote(pattern).replace("*", "\\E.*\\Q") + "$";
+  }
+
   public static class PatternInfo {
     private final Pattern metricNamePattern;
     private final List<LabelFilter> labelFilters;
@@ -106,17 +111,9 @@ public class MetricsSearcher {
   }
 
   private static class LabelFilter {
-    enum Type {
-      EXACT,
-      VALUE_PREFIX,
-      KEY_PREFIX,
-      ANY
-    }
-
     final Type type;
     final String key;
     final String value;
-
     private LabelFilter(Type type, String key, String value) {
       this.type = type;
       this.key = key;
@@ -147,10 +144,12 @@ public class MetricsSearcher {
         case ANY -> labels.containsKey(key);
       };
     }
-  }
 
-  private static String wildcardToRegex(String pattern) {
-    if (pattern == null || pattern.isEmpty()) return ".*"; // match all
-    return "^" + Pattern.quote(pattern).replace("*", "\\E.*\\Q") + "$";
+    enum Type {
+      EXACT,
+      VALUE_PREFIX,
+      KEY_PREFIX,
+      ANY
+    }
   }
 }

@@ -14,8 +14,9 @@ public class AppendOnlyByteBuffer {
   }
 
   public byte get(int idx) {
-    if(idx >= capacity){
-      throw new IndexOutOfBoundsException("Index " + idx + " is out of bounds for buffer of capacity " + capacity);
+    if (idx >= capacity) {
+      throw new IndexOutOfBoundsException(
+          "Index " + idx + " is out of bounds for buffer of capacity " + capacity);
     }
     return byteBuffer.get(idx);
   }

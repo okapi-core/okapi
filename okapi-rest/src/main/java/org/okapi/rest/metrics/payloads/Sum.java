@@ -9,6 +9,6 @@ import lombok.*;
 @Setter
 @Builder
 public class Sum {
-  SumType sumType;
+  SUM_TEMPORALITY temporality;
   List<SumPoint> sumPoints;
 }

@@ -5,5 +5,5 @@ import java.io.OutputStream;
 import java.util.Iterator;
 
 public interface BufferSnapshot<T> extends Iterator<T> {
-    void write(OutputStream os) throws IOException;
+  void write(OutputStream os) throws IOException;
 }

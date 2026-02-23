@@ -1,17 +1,21 @@
 package org.okapi.rest.metrics.payloads;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @AllArgsConstructor
 @Setter
 @Getter
 @NoArgsConstructor
+@Builder
 public final class HistoPoint {
+  public enum TEMPORALITY {
+    DELTA,
+    CUMULATIVE
+  }
+
   long start;
   long end;
+  TEMPORALITY temporality;
   float[] buckets;
   // bucketCounts.length = 1 + buckets.length
   int[] bucketCounts;

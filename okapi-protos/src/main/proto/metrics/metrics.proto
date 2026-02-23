@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package org.okapi.protos.metrics;
+
+option java_multiple_files = true;
+option java_package = "org.okapi.protos.metrics";
+option java_outer_classname = "MetricsProtos";
+
+
+
+message OffsetEntry {
+  int64 secondlyOffset = 1;
+  int32 secondlyLen = 2;
+  int64 minutelyOffset = 3;
+  int32 minutelyLen = 4;
+  int64 hourlyOffset = 5;
+  int32 hourlyLen = 6;
+}
+
+enum METRIC_TYPE {
+  METRIC_TYPE_UNSPECIFIED = 0;
+  METRIC_TYPE_GAUGE = 1;
+  METRIC_TYPE_COUNTER = 2;
+  METRIC_TYPE_HISTOGRAM = 3;
+  METRIC_TYPE_SUMMARY = 4;
+}
+
+message OffsetAndLen {
+  int64 offset = 1;
+  int32 len = 2;
+  METRIC_TYPE metricType = 3;
+}

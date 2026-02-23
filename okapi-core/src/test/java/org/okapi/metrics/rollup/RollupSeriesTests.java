@@ -20,9 +20,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.okapi.Statistics;
 import org.okapi.collections.OkapiLists;
 import org.okapi.fixtures.GaugeGenerator;
+import org.okapi.io.StreamReadingException;
 import org.okapi.metrics.OutsideWindowException;
 import org.okapi.metrics.common.MetricsContext;
-import org.okapi.metrics.io.StreamReadingException;
 import org.okapi.metrics.stats.*;
 import org.okapi.testutils.OkapiTestUtils;
 
@@ -33,6 +33,15 @@ public class RollupSeriesTests {
   Supplier<UpdatableStatistics> statisticsSupplier;
   RollupSeriesRestorer<UpdatableStatistics> restorer;
   Function<Integer, RollupSeries<UpdatableStatistics>> seriesFunction;
+
+  public static Stream<Arguments> testRestoreFuzzyArgs() {
+    return Stream.of(
+        Arguments.of(Duration.of(10, ChronoUnit.MILLIS), 5),
+        Arguments.of(Duration.of(10, ChronoUnit.MILLIS), 50),
+        Arguments.of(Duration.of(20, ChronoUnit.MILLIS), 120),
+        Arguments.of(Duration.of(20, ChronoUnit.MILLIS), 24 * 60),
+        Arguments.of(Duration.of(10, ChronoUnit.MILLIS), 24 * 60));
+  }
 
   @BeforeEach
   public void setupSeries() {
@@ -93,15 +102,6 @@ public class RollupSeriesTests {
     assertTrue(fileSize > 0, "Checkpoint file should not be empty");
     var restored = restorer.restore(0, checkpointPath);
     OkapiTestUtils.checkEquals(series, restored);
-  }
-
-  public static Stream<Arguments> testRestoreFuzzyArgs() {
-    return Stream.of(
-        Arguments.of(Duration.of(10, ChronoUnit.MILLIS), 5),
-        Arguments.of(Duration.of(10, ChronoUnit.MILLIS), 50),
-        Arguments.of(Duration.of(20, ChronoUnit.MILLIS), 120),
-        Arguments.of(Duration.of(20, ChronoUnit.MILLIS), 24 * 60),
-        Arguments.of(Duration.of(10, ChronoUnit.MILLIS), 24 * 60));
   }
 
   public RollupSeries write(RollupSeries series, String timeSeries, List<Long> ts, List<Float> vals)

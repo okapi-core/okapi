@@ -2,7 +2,6 @@ package org.okapi.metrics.it;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -11,11 +10,9 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import org.awaitility.Awaitility;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.okapi.metrics.OkapiMetricsConsumer;
-import org.okapi.metrics.cas.migration.CreateMetricsTableStep;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -39,33 +36,17 @@ import org.springframework.web.client.RestTemplate;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PromQlInternalIngestionIT {
 
+  final Gson gson = new Gson();
   @LocalServerPort int port;
-
   @Value("${cas.contact.point}")
   String contactPoint;
-
   @Value("${cas.contact.datacenter}")
   String datacenter;
-
-  final Gson gson = new Gson();
-
   RestTemplate rest = new RestTemplate();
 
   // variables that we capture
   Long now;
   Long dataStart;
-
-  @BeforeAll
-  void ensureSchema() {
-    var parts = contactPoint.split(":");
-    try (var session =
-        CqlSession.builder()
-            .withLocalDatacenter(datacenter)
-            .addContactPoint(new java.net.InetSocketAddress(parts[0], Integer.parseInt(parts[1])))
-            .build()) {
-      new CreateMetricsTableStep(session).doStep();
-    }
-  }
 
   @Test
   void internalIngest_thenPromQlQueries_work() {

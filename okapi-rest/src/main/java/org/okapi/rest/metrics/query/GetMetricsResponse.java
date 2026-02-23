@@ -1,22 +1,18 @@
 package org.okapi.rest.metrics.query;
 
-import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import org.okapi.metrics.pojos.AGG_TYPE;
-import org.okapi.metrics.pojos.RES_TYPE;
 
 @AllArgsConstructor
 @Builder
 @Getter
 public class GetMetricsResponse {
-  String tenant;
-  String name;
+  String resource;
+  String metric;
   Map<String, String> tags;
-  RES_TYPE resolution;
-  AGG_TYPE aggregation;
-  List<Long> times;
-  List<Float> values;
+  GetGaugeResponse gaugeResponse;
+  GetHistogramResponse histogramResponse;
+  GetSumsResponse sumsResponse;
 }

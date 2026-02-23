@@ -1,6 +1,5 @@
 package org.okapi.metrics.sharding.fakes;
 
-
 import java.util.HashMap;
 import java.util.Map;
 

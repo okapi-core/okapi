@@ -4,15 +4,6 @@ import java.util.*;
 
 public class MetricsPathParser {
 
-  public record MetricsRecord(String tenantId, String name, Map<String, String> tags) {}
-
-  public record PartialRecord(String tenantId, String serializedMetricPaths) {}
-
-  public record ParsedMetricName(String tenantId, String name) {}
-
-  public record ParsedHashKey(
-      String tenantId, String name, Map<String, String> tags, String resolution, long value) {}
-
   public static Optional<ParsedMetricName> parseMetricsName(String universalName) {
     var parts = universalName.split(":");
     if (parts.length < 2) {
@@ -104,4 +95,13 @@ public class MetricsPathParser {
       return Optional.empty();
     }
   }
+
+  public record MetricsRecord(String tenantId, String name, Map<String, String> tags) {}
+
+  public record PartialRecord(String tenantId, String serializedMetricPaths) {}
+
+  public record ParsedMetricName(String tenantId, String name) {}
+
+  public record ParsedHashKey(
+      String tenantId, String name, Map<String, String> tags, String resolution, long value) {}
 }

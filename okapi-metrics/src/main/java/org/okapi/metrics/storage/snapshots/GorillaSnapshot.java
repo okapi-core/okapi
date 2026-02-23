@@ -1,15 +1,15 @@
 package org.okapi.metrics.storage.snapshots;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import lombok.AllArgsConstructor;
+import org.okapi.io.OkapiIo;
 import org.okapi.metrics.codec.GorillaCodec;
 import org.okapi.metrics.storage.BitValueReader;
 import org.okapi.metrics.storage.ByteBufferReader;
 import org.okapi.metrics.storage.ValueReader;
 import org.okapi.metrics.storage.buffers.BufferSnapshot;
-import org.okapi.metrics.io.OkapiIo;
 import org.okapi.metrics.storage.timediff.GorillaBuffer;
-import java.io.IOException;
-import java.io.OutputStream;
-import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public class GorillaSnapshot implements org.okapi.metrics.storage.BufferSnapshot<Integer> {

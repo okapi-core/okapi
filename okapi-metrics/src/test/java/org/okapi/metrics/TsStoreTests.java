@@ -4,12 +4,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
-import org.assertj.core.util.Files;
 import org.junit.jupiter.api.Test;
 import org.okapi.fixtures.GaugeGenerator;
-import org.okapi.metrics.io.StreamReadingException;
+import org.okapi.io.StreamReadingException;
 import org.okapi.metrics.storage.ByteBufferWriter;
 import org.okapi.metrics.storage.TsStore;
 import org.okapi.metrics.storage.buffers.BufferFullException;
@@ -125,16 +125,16 @@ public class TsStoreTests {
     for (var ts : expectedTs) {
       timeDiffBuffer.push(ts);
     }
-    var valTempFile = Files.newTemporaryFile();
-    try (var fos = new FileOutputStream(valTempFile)) {
+    var valTempFile = Files.createTempFile("checkpoint", ".vals");
+    try (var fos = new FileOutputStream(valTempFile.toFile())) {
       var start = System.currentTimeMillis();
       xorBuffer.snapshot().write(fos);
       var end = System.currentTimeMillis();
       System.out.println("Checkpointing vals took:  " + (end - start));
     }
 
-    var timeTempFile = Files.newTemporaryFile();
-    try (var fos = new FileOutputStream(timeTempFile)) {
+    var timeTempFile = Files.createTempFile("checkpoint", ".times");
+    try (var fos = new FileOutputStream(timeTempFile.toFile())) {
       var start = System.currentTimeMillis();
       timeDiffBuffer.snapshot().write(fos);
       var end = System.currentTimeMillis();
@@ -144,12 +144,8 @@ public class TsStoreTests {
 
   private TsStore checkpointAndRestore(TsStore store) throws IOException, StreamReadingException {
     var buffer = new DirectBufferAllocator();
-    var filePath = Files.newTemporaryFile();
-    var start = System.currentTimeMillis();
-    store.checkpoint(filePath.toPath());
-    var end = System.currentTimeMillis();
-    System.out.println("Time taken in checkpointing.." + (end - start));
-    System.out.println("File size: " + (0. + filePath.length() / (1024L * 1024L) + " MB"));
-    return TsStore.restore(filePath.toPath(), buffer);
+    var filePath = Files.createTempFile("fpath", ".ckpt");
+    store.checkpoint(filePath);
+    return TsStore.restore(filePath, buffer);
   }
 }

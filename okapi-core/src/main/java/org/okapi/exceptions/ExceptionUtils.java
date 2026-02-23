@@ -6,10 +6,10 @@ import java.io.Writer;
 
 public class ExceptionUtils {
 
-    public static String debugFriendlyMsg(Exception e){
-        Writer buffer = new StringWriter();
-        PrintWriter pw = new PrintWriter(buffer);
-        e.printStackTrace(pw);
-        return buffer.toString();
-    }
+  public static String debugFriendlyMsg(Exception e) {
+    Writer buffer = new StringWriter();
+    PrintWriter pw = new PrintWriter(buffer);
+    e.printStackTrace(pw);
+    return buffer.toString();
+  }
 }

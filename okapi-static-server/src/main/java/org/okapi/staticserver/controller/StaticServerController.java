@@ -14,18 +14,6 @@ public class StaticServerController {
   @Value("${cookies.httpOnly}")
   boolean httpOnlyCookies;
 
-  @GetMapping("/static/app.js")
-  public void app(HttpServletResponse servletResponse) throws IOException {
-    servletResponse.setContentType("application/javascript");
-    sendFile(servletResponse, "dist/app.js");
-  }
-
-  @GetMapping("/")
-  public void index(HttpServletResponse servletResponse) throws IOException {
-    servletResponse.setContentType("text/html");
-    sendFile(servletResponse, "dist/index.html");
-  }
-
   private static void sendFile(HttpServletResponse servletResponse, String filePath)
       throws IOException {
     try (var is = new FileInputStream(filePath)) {
@@ -37,5 +25,17 @@ public class StaticServerController {
     } catch (FileNotFoundException e) {
       servletResponse.sendError(HttpServletResponse.SC_NOT_FOUND, "File not found: " + filePath);
     }
+  }
+
+  @GetMapping("/static/app.js")
+  public void app(HttpServletResponse servletResponse) throws IOException {
+    servletResponse.setContentType("application/javascript");
+    sendFile(servletResponse, "dist/app.js");
+  }
+
+  @GetMapping("/")
+  public void index(HttpServletResponse servletResponse) throws IOException {
+    servletResponse.setContentType("text/html");
+    sendFile(servletResponse, "dist/index.html");
   }
 }

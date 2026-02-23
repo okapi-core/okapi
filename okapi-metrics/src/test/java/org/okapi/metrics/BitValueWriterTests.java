@@ -1,24 +1,67 @@
 package org.okapi.metrics;
 
-import org.okapi.metrics.storage.*;
-import org.okapi.metrics.storage.fakes.SharedBufferAllocator;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.okapi.metrics.storage.*;
+import org.okapi.metrics.storage.fakes.SharedBufferAllocator;
 
 public class BitValueWriterTests {
 
-  record VarInt(int x, int bits) {}
+  public static Stream<Arguments> intSequences() {
+    return Stream.of(
+        Arguments.of(Arrays.asList(new VarInt(-10, 5))),
+        Arguments.of(Arrays.asList(new VarInt(10, 5))),
+        Arguments.of(Arrays.asList(new VarInt(10, 5), new VarInt(33, 7))),
+        Arguments.of(Arrays.asList(new VarInt(10, 5), new VarInt(33, 7), new VarInt(13, 5))),
+        Arguments.of(
+            Arrays.asList(new VarInt(Integer.MIN_VALUE, 32), new VarInt(Integer.MAX_VALUE, 32))),
+        Arguments.of(
+            Arrays.asList(
+                new VarInt(Integer.MIN_VALUE, 32),
+                new VarInt(Integer.MIN_VALUE + 1, 32),
+                new VarInt(Integer.MIN_VALUE + 2, 32),
+                new VarInt(Integer.MIN_VALUE + 3, 32),
+                new VarInt(Integer.MIN_VALUE + 4, 32))),
+        Arguments.of(
+            Arrays.asList(
+                new VarInt(10, 5),
+                new VarInt(33, 7),
+                new VarInt(13, 5),
+                new VarInt(32, 7),
+                new VarInt((1 << 31) | (1 << 30), 33))));
+  }
 
-  record VarLong(long x, int bits) {}
+  public static Stream<Arguments> unsignedInts() {
+    return Stream.of(
+        Arguments.of(Arrays.asList(new VarInt(10, 5))),
+        Arguments.of(Arrays.asList(new VarInt(10, 5), new VarInt(33, 7))),
+        Arguments.of(Arrays.asList(new VarInt(10, 5), new VarInt(33, 7), new VarInt(13, 5))),
+        Arguments.of(
+            Arrays.asList(
+                new VarInt(10, 5),
+                new VarInt(33, 7),
+                new VarInt(13, 5),
+                new VarInt(32, 7),
+                new VarInt((1 << 31) | (1 << 30), 33))));
+  }
+
+  public static Stream<Arguments> longSequences() {
+    return Stream.of(
+        Arguments.of(Arrays.asList(new VarLong(-10L, 5))),
+        Arguments.of(Arrays.asList(new VarLong(10L, 5))),
+        Arguments.of(Arrays.asList(new VarLong(Long.MIN_VALUE, 64))),
+        Arguments.of(
+            Arrays.asList(new VarLong(Long.MIN_VALUE, 64), new VarLong(Long.MAX_VALUE, 64))),
+        Arguments.of(Arrays.asList(new VarLong(10L, 5), new VarLong(33L, 7))));
+  }
 
   @ParameterizedTest
   @MethodSource("intSequences")
@@ -70,26 +113,6 @@ public class BitValueWriterTests {
     assertEquals("10", stringBitWriter.toString());
   }
 
-  @ParameterizedTest
-  @MethodSource("unsignedInts")
-  public void testUIntWriting(List<VarInt> varInts) {
-    var bufferAllocator = new SharedBufferAllocator();
-    var bitWriter = new ByteBufferWriter(bufferAllocator.allocate(20));
-    var bufferWriter = new BitValueWriter(bitWriter);
-    for (var i : varInts) {
-      bufferWriter.writeInteger(i.x(), i.bits());
-    }
-    var bufferReader = new ByteBufferReader(bitWriter.snapshot());
-    var bitValueReader = new BitValueReader(bufferReader);
-    var decompressed = new ArrayList<Integer>();
-    for (var i : varInts) {
-      decompressed.add(bitValueReader.readInteger(i.bits()));
-    }
-
-    var expected = varInts.stream().map(VarInt::x).toList();
-    assertEquals(expected, decompressed);
-  }
-
   //  @ParameterizedTest
   //  @MethodSource("longSequences")
   //  public void testLongWriting(List<VarLong> longs) {
@@ -110,51 +133,27 @@ public class BitValueWriterTests {
   //    }
   //  }
 
-  public static Stream<Arguments> intSequences() {
-    return Stream.of(
-        Arguments.of(Arrays.asList(new VarInt(-10, 5))),
-        Arguments.of(Arrays.asList(new VarInt(10, 5))),
-        Arguments.of(Arrays.asList(new VarInt(10, 5), new VarInt(33, 7))),
-        Arguments.of(Arrays.asList(new VarInt(10, 5), new VarInt(33, 7), new VarInt(13, 5))),
-        Arguments.of(
-            Arrays.asList(new VarInt(Integer.MIN_VALUE, 32), new VarInt(Integer.MAX_VALUE, 32))),
-        Arguments.of(
-            Arrays.asList(
-                new VarInt(Integer.MIN_VALUE, 32),
-                new VarInt(Integer.MIN_VALUE + 1, 32),
-                new VarInt(Integer.MIN_VALUE + 2, 32),
-                new VarInt(Integer.MIN_VALUE + 3, 32),
-                new VarInt(Integer.MIN_VALUE + 4, 32))),
-        Arguments.of(
-            Arrays.asList(
-                new VarInt(10, 5),
-                new VarInt(33, 7),
-                new VarInt(13, 5),
-                new VarInt(32, 7),
-                new VarInt((1 << 31) | (1 << 30), 33))));
+  @ParameterizedTest
+  @MethodSource("unsignedInts")
+  public void testUIntWriting(List<VarInt> varInts) {
+    var bufferAllocator = new SharedBufferAllocator();
+    var bitWriter = new ByteBufferWriter(bufferAllocator.allocate(20));
+    var bufferWriter = new BitValueWriter(bitWriter);
+    for (var i : varInts) {
+      bufferWriter.writeInteger(i.x(), i.bits());
+    }
+    var bufferReader = new ByteBufferReader(bitWriter.snapshot());
+    var bitValueReader = new BitValueReader(bufferReader);
+    var decompressed = new ArrayList<Integer>();
+    for (var i : varInts) {
+      decompressed.add(bitValueReader.readInteger(i.bits()));
+    }
+
+    var expected = varInts.stream().map(VarInt::x).toList();
+    assertEquals(expected, decompressed);
   }
 
-  public static Stream<Arguments> unsignedInts() {
-    return Stream.of(
-        Arguments.of(Arrays.asList(new VarInt(10, 5))),
-        Arguments.of(Arrays.asList(new VarInt(10, 5), new VarInt(33, 7))),
-        Arguments.of(Arrays.asList(new VarInt(10, 5), new VarInt(33, 7), new VarInt(13, 5))),
-        Arguments.of(
-            Arrays.asList(
-                new VarInt(10, 5),
-                new VarInt(33, 7),
-                new VarInt(13, 5),
-                new VarInt(32, 7),
-                new VarInt((1 << 31) | (1 << 30), 33))));
-  }
+  record VarInt(int x, int bits) {}
 
-  public static Stream<Arguments> longSequences() {
-    return Stream.of(
-        Arguments.of(Arrays.asList(new VarLong(-10L, 5))),
-        Arguments.of(Arrays.asList(new VarLong(10L, 5))),
-        Arguments.of(Arrays.asList(new VarLong(Long.MIN_VALUE, 64))),
-        Arguments.of(
-            Arrays.asList(new VarLong(Long.MIN_VALUE, 64), new VarLong(Long.MAX_VALUE, 64))),
-        Arguments.of(Arrays.asList(new VarLong(10L, 5), new VarLong(33L, 7))));
-  }
+  record VarLong(long x, int bits) {}
 }

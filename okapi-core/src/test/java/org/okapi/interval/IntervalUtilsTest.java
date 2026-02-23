@@ -1,15 +1,14 @@
 package org.okapi.interval;
 
-import org.okapi.intervals.IntervalUtils;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
-import java.util.Optional;
-import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.okapi.intervals.IntervalUtils;
 
 public class IntervalUtilsTest {
 
@@ -22,13 +21,6 @@ public class IntervalUtilsTest {
         Arguments.of(10, 20, 19, Optional.of(new IntervalUtils.Interval(10, 20))));
   }
 
-  @ParameterizedTest
-  @MethodSource("clipBeforeCases")
-  void testClipBefore(long start, long end, long ref, Optional<IntervalUtils.Interval> expected) {
-    Optional<IntervalUtils.Interval> result = IntervalUtils.clipBefore(start, end, ref);
-    assertEquals(expected, result);
-  }
-
   static Stream<Arguments> clipAfterCases() {
     return Stream.of(
         Arguments.of(10, 20, 15, Optional.of(new IntervalUtils.Interval(15, 20))),
@@ -36,6 +28,13 @@ public class IntervalUtilsTest {
         Arguments.of(10, 20, 25, Optional.empty()),
         Arguments.of(10, 20, 20, Optional.empty()),
         Arguments.of(10, 20, 10, Optional.of(new IntervalUtils.Interval(10, 20))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("clipBeforeCases")
+  void testClipBefore(long start, long end, long ref, Optional<IntervalUtils.Interval> expected) {
+    Optional<IntervalUtils.Interval> result = IntervalUtils.clipBefore(start, end, ref);
+    assertEquals(expected, result);
   }
 
   @ParameterizedTest
@@ -57,5 +56,14 @@ public class IntervalUtilsTest {
     assertEquals(5, new IntervalUtils.Interval(3, 8).length());
     assertEquals(0, new IntervalUtils.Interval(5, 5).length());
     assertEquals(-5, new IntervalUtils.Interval(10, 5).length());
+  }
+
+  @Test
+  void testIsOverlapping() {
+    assertTrue(IntervalUtils.isOverlapping(10, 20, 15, 25));
+    assertTrue(IntervalUtils.isOverlapping(10, 20, 5, 15));
+    assertFalse(IntervalUtils.isOverlapping(10, 20, 20, 30));
+    assertFalse(IntervalUtils.isOverlapping(10, 20, 0, 10));
+    assertTrue(IntervalUtils.isOverlapping(10, 20, 10, 20));
   }
 }

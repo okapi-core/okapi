@@ -6,23 +6,34 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Stream;
-import org.assertj.core.util.Files;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.okapi.metrics.io.StreamReadingException;
+import org.okapi.io.StreamReadingException;
 import org.okapi.metrics.storage.buffers.HeapBufferAllocator;
 import org.okapi.metrics.storage.timediff.TimeDiffBufferSnapshot;
 import org.okapi.metrics.storage.xor.XorBufferSnapshot;
 import org.okapi.testutils.OkapiTestUtils;
 
 public class FullResTimeSeriesTests {
+
+  public static Stream<Arguments> fuzzArgs() {
+    return Stream.of(
+        Arguments.of(2, 500.f, 0.1f, 1),
+        Arguments.of(4, 500.f, 0.1f, 3),
+        Arguments.of(4, -500.f, 0.1f, 3),
+        Arguments.of(20, 500.f, 0.1f, 11),
+        Arguments.of(20, -500.f, 0.1f, 11),
+        Arguments.of(20, -500.f, 1f, 19),
+        Arguments.of(200, -100.f, 10f, 19));
+  }
 
   @Test
   public void testStoreSingleValue() throws CouldNotWrite {
@@ -287,24 +298,13 @@ public class FullResTimeSeriesTests {
 
   private FullResTimeSeries checkpointAndRestore(FullResTimeSeries ref, BufferAllocator allocator)
       throws IOException, StreamReadingException {
-    var file = Files.newTemporaryFile();
-    try (var fos = new FileOutputStream(file)) {
+    var file = Files.createTempFile("checkpoint", ".file");
+    try (var fos = new FileOutputStream(file.toFile())) {
       ref.snapshot().write(fos);
     }
-    try (var is = new FileInputStream(file)) {
+    try (var is = new FileInputStream(file.toFile())) {
       return FullResTimeSeries.restore(is, allocator);
     }
-  }
-
-  public static Stream<Arguments> fuzzArgs() {
-    return Stream.of(
-        Arguments.of(2, 500.f, 0.1f, 1),
-        Arguments.of(4, 500.f, 0.1f, 3),
-        Arguments.of(4, -500.f, 0.1f, 3),
-        Arguments.of(20, 500.f, 0.1f, 11),
-        Arguments.of(20, -500.f, 0.1f, 11),
-        Arguments.of(20, -500.f, 1f, 19),
-        Arguments.of(200, -100.f, 10f, 19));
   }
 
   public void checkValues(List<XorBufferSnapshot> xors, List<Float> expectedValues) {

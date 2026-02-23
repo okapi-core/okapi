@@ -6,11 +6,8 @@ import java.util.Random;
 import lombok.Getter;
 
 public class CsumGenerator {
-  public record Csum(long start, long end, int sum) {}
-
   int maxCount;
   @Getter List<Csum> readings;
-
   public CsumGenerator(int maxCount) {
     this.maxCount = maxCount;
     this.readings = new ArrayList<>();
@@ -36,4 +33,6 @@ public class CsumGenerator {
     }
     return new Csum(start, end, overlapValue);
   }
+
+  public record Csum(long start, long end, int sum) {}
 }

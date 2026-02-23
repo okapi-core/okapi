@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.2</version>
+        <version>4.0.0</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>org.okapi</groupId>
@@ -13,7 +13,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>okapi</name>
-    <description>Okapi - observability with open formats</description>
+    <description>Okapi - play nice telemetry</description>
     <url/>
     <licenses>
         <license/>
@@ -24,24 +24,23 @@
     <modules>
         <module>okapi-protos</module>
         <module>okapi-core</module>
-        <module>okapi-data</module>
         <module>okapi-static-server</module>
         <module>okapi-metrics</module>
-        <module>okapi-metrics-proxy</module>
+        <module>okapi-web</module>
         <module>okapi-rest</module>
         <module>okapi-pojos</module>
-        <module>okapi-data-sql</module>
         <module>okapi-data-ddb</module>
         <module>okapi-wal</module>
-        <module>okapi-constants</module>
-        <module>okapi-avros</module>
         <module>okapi-promql</module>
         <module>okapi-statistics</module>
-        <module>okapi-traces</module>
         <module>okapi-otel-protos</module>
-        <module>okapi-logs</module>
-        <module>okapi-swim</module>
-        <module>okapi-integ-test</module>
+        <module>okapi-ingester</module>
+        <module>okapi-cloud-web-dtos</module>
+        <module>okapi-agent-dtos</module>
+        <module>okapi-agent-main</module>
+        <module>okapi-demo-server</module>
+        <module>okapi-datagen</module>
+        <module>okapi-ops</module>
     </modules>
     <properties>
         <java.version>21</java.version>
@@ -60,43 +59,24 @@
         <datasketches-java.version>8.0.0</datasketches-java.version>
         <antlr4.version>4.13.1</antlr4.version>
         <grpc.version>1.65.0</grpc.version>
+        <testcontainers.version>1.19.8</testcontainers.version>
     </properties>
 
     <repositories>
         <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
+            <id>central</id>
+            <name>Maven Central Repository</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
     </repositories>
-    <dependencies>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-websocket</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-messaging</artifactId>
-        </dependency>
-    </dependencies>
     <dependencyManagement>
         <dependencies>
-            <!-- Align all OkHttp artifacts via BOM -->
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>okhttp-bom</artifactId>
@@ -104,11 +84,19 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <dependency>
+                <groupId>gg.jte</groupId>
+                <artifactId>jte</artifactId>
+                <version>3.2.2</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <version>1.18.38</version>
             </dependency>
+
 
             <dependency>
                 <groupId>com.auth0</groupId>
@@ -123,32 +111,6 @@
                 <version>33.4.0-jre</version>
             </dependency>
 
-            <!-- https://mvnrepository.com/artifact/com.google.api-client/google-api-client -->
-            <dependency>
-                <groupId>com.google.api-client</groupId>
-                <artifactId>google-api-client</artifactId>
-                <version>2.7.2</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.google.auth</groupId>
-                <artifactId>google-auth-library-oauth2-http</artifactId>
-                <version>1.33.1</version>
-            </dependency>
-
-
-            <dependency>
-                <groupId>com.google.oauth-client</groupId>
-                <artifactId>google-oauth-client-jetty</artifactId>
-                <version>1.34.1</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.google.api-client</groupId>
-                <artifactId>google-api-client</artifactId>
-                <version>2.7.2</version>
-            </dependency>
-
             <!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
             <dependency>
                 <groupId>com.google.code.gson</groupId>
@@ -156,33 +118,6 @@
                 <version>2.13.0</version>
             </dependency>
 
-            <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-api</artifactId>
-                <version>5.11.4</version>
-                <scope>test</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.glassfish.jersey.core</groupId>
-                <artifactId>jersey-common</artifactId>
-                <version>2.27</version>
-            </dependency>
-
-            <!-- https://mvnrepository.com/artifact/org.apache.lucene/lucene-core -->
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-core</artifactId>
-                <version>10.1.0</version>
-            </dependency>
-
-            <!-- https://mvnrepository.com/artifact/org.apache.lucene/lucene-queryparser -->
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-queryparser</artifactId>
-                <version>10.1.0</version>
-            </dependency>
 
             <dependency>
                 <groupId>software.amazon.awssdk</groupId>
@@ -192,13 +127,6 @@
                 <scope>import</scope>
             </dependency>
 
-
-            <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-compress -->
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-compress</artifactId>
-                <version>1.27.1</version>
-            </dependency>
 
             <!-- https://mvnrepository.com/artifact/org.jsoup/jsoup -->
             <dependency>
@@ -215,12 +143,6 @@
                 <version>2.18.0</version>
             </dependency>
 
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-params</artifactId>
-                <version>5.11.0</version>
-                <scope>test</scope>
-            </dependency>
 
 
             <!-- https://mvnrepository.com/artifact/org.awaitility/awaitility -->
@@ -235,26 +157,6 @@
                 <groupId>info.picocli</groupId>
                 <artifactId>picocli</artifactId>
                 <version>4.7.5</version> <!-- or latest -->
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.kafka</groupId>
-                <artifactId>kafka-clients</artifactId>
-                <version>4.0.0</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.skyscreamer</groupId>
-                <artifactId>jsonassert</artifactId>
-                <version>2.0-rc1</version>
-                <scope>test</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.pastalab.fray</groupId>
-                <artifactId>fray-junit</artifactId>
-                <version>0.5.1</version>
-                <scope>test</scope>
             </dependency>
 
             <dependency>
@@ -281,34 +183,22 @@
             <dependency>
                 <groupId>org.apache.curator</groupId>
                 <artifactId>curator-framework</artifactId>
-                <version>5.8.0</version>
+                <version>5.9.0</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.apache.curator</groupId>
+                <artifactId>curator-test</artifactId>
+                <version>5.9.0</version>
+                <scope>test</scope>
+            </dependency>
+
 
             <!-- https://mvnrepository.com/artifact/org.apache.curator/curator-recipes -->
             <dependency>
                 <groupId>org.apache.curator</groupId>
                 <artifactId>curator-recipes</artifactId>
                 <version>5.8.0</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.mapstruct</groupId>
-                <artifactId>mapstruct</artifactId>
-                <version>${org.mapstruct.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.google.auto.service</groupId>
-                <artifactId>auto-service-annotations</artifactId>
-                <version>1.1.1</version>
-                <scope>provided</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>com.google.auto.service</groupId>
-                <artifactId>auto-service</artifactId>
-                <version>1.1.1</version>
-                <scope>provided</scope>
             </dependency>
 
             <dependency>
@@ -323,53 +213,6 @@
                 <version>${protobuf.version}</version>
             </dependency>
 
-            <!-- Parquet + Avro bridge -->
-            <dependency>
-                <groupId>org.apache.parquet</groupId>
-                <artifactId>parquet-avro</artifactId>
-                <version>${parquet.version}</version>
-            </dependency>
-
-            <!-- Parquet Hadoop writer (Path, FS impls). Pulls Hadoop common. -->
-            <dependency>
-                <groupId>org.apache.parquet</groupId>
-                <artifactId>parquet-hadoop</artifactId>
-                <version>${parquet.version}</version>
-            </dependency>
-
-            <!-- Minimal Hadoop bits required by parquet-hadoop -->
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-common</artifactId>
-                <version>${hadoop.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-reload4j</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-mapreduce-client-core</artifactId>
-                <version>${hadoop.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-reload4j</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>org.rocksdb</groupId>
-                <artifactId>rocksdbjni</artifactId>
-                <version>9.10.0</version>
-            </dependency>
-
-
-            <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-math3 -->
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-math3</artifactId>
@@ -395,39 +238,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.foundationdb</groupId>
-                <artifactId>fdb-java</artifactId>
-                <version>7.3.68</version>
-            </dependency>
-
-
-            <dependency>
-                <groupId>org.apache.cassandra</groupId>
-                <artifactId>java-driver-core</artifactId>
-                <version>${cassandra-driver.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.cassandra</groupId>
-                <artifactId>java-driver-query-builder</artifactId>
-                <version>${cassandra-driver.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.cassandra</groupId>
-                <artifactId>java-driver-mapper-runtime</artifactId>
-                <version>${cassandra-driver.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.cassandra</groupId>
-                <artifactId>java-driver-mapper-processor</artifactId>
-                <version>${cassandra-driver.version}</version>
-                <scope>provided</scope>
-            </dependency>
-
-            <!-- https://mvnrepository.com/artifact/org.roaringbitmap/RoaringBitmap -->
-            <dependency>
                 <groupId>org.roaringbitmap</groupId>
                 <artifactId>RoaringBitmap</artifactId>
                 <version>1.3.0</version>
@@ -440,12 +250,107 @@
             </dependency>
 
             <dependency>
-                <groupId>io.fabric8</groupId>
-                <artifactId>kubernetes-client</artifactId>
-                <version>6.12.1</version>
+                <groupId>com.github.luben</groupId>
+                <artifactId>zstd-jni</artifactId>
+                <version>1.5.7-6</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-yaml</artifactId>
+                <version>2.17.2</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers</artifactId>
+                <version>${testcontainers.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${testcontainers.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>net.datafaker</groupId>
+                <artifactId>datafaker</artifactId>
+                <version>2.5.2</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>kafka</artifactId>
+                <version>${testcontainers.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.okapi</groupId>
+                <artifactId>agent-data-types</artifactId>
+                <version>0.0.2-SNAPSHOT</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>4.2.7.Final</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.inject</groupId>
+                <artifactId>guice</artifactId>
+                <version>7.0.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.openai</groupId>
+                <artifactId>openai-java</artifactId>
+                <version>4.11.0</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.squareup.okhttp3</groupId>
+                        <artifactId>okhttp-jvm</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.jayway.jsonpath</groupId>
+                <artifactId>json-path</artifactId>
+                <version>2.9.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.datadoghq</groupId>
+                <artifactId>dd-trace-api</artifactId>
+                <version>1.44.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.datadoghq</groupId>
+                <artifactId>dd-trace-ot</artifactId>
+                <version>1.44.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.langchain4j</groupId>
+                <artifactId>langchain4j-bom</artifactId>
+                <version>1.9.1</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+
+            <dependency>
+                <groupId>com.clickhouse</groupId>
+                <artifactId>client-v2</artifactId>
+                <version>0.8.6</version>
+            </dependency>
         </dependencies>
+
 
     </dependencyManagement>
 
@@ -510,6 +415,10 @@
                     <artifactId>antlr4-maven-plugin</artifactId>
                     <version>${antlr4.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -552,25 +461,6 @@
                         </googleJavaFormat>
                     </java>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.12</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>report</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
 
         </plugins>

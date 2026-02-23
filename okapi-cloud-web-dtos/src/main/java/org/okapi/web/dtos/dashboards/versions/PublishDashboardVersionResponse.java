@@ -1,0 +1,16 @@
+package org.okapi.web.dtos.dashboards.versions;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Builder
+public class PublishDashboardVersionResponse {
+  String dashboardId;
+  String versionId;
+  String status;
+}

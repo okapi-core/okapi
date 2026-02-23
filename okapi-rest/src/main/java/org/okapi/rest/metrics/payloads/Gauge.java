@@ -1,13 +1,22 @@
 package org.okapi.rest.metrics.payloads;
 
+import java.util.Collections;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Getter;
+import lombok.ToString;
 
 @AllArgsConstructor
-@Value
 @Builder
+@Getter
+@ToString
 public class Gauge {
-  long[] ts;
-  float[] value;
+  private List<Long> ts;
+  private List<Float> value;
+
+  public void lock() {
+    ts = Collections.unmodifiableList(ts);
+    value = Collections.unmodifiableList(value);
+  }
 }

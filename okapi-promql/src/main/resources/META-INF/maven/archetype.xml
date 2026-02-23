@@ -1,9 +1,9 @@
 <archetype>
-  <id>okapi-promql</id>
-  <sources>
-    <source>src/main/java/App.java</source>
-  </sources>
-  <testSources>
-    <source>src/test/java/AppTest.java</source>
-  </testSources>
+    <id>okapi-promql</id>
+    <sources>
+        <source>src/main/java/App.java</source>
+    </sources>
+    <testSources>
+        <source>src/test/java/AppTest.java</source>
+    </testSources>
 </archetype>

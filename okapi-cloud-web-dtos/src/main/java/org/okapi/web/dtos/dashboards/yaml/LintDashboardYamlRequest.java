@@ -1,0 +1,15 @@
+package org.okapi.web.dtos.dashboards.yaml;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Builder
+public class LintDashboardYamlRequest {
+  String dashboardId;
+  String yaml;
+}

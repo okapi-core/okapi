@@ -3,12 +3,12 @@ package org.okapi.staticserver.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import org.okapi.headers.CookiesAndHeaders;
-import org.okapi.rest.auth.AuthRequest;
-import org.okapi.rest.auth.TokenResponse;
 import org.okapi.staticserver.AuthenticationServer;
 import org.okapi.staticserver.CookieConfig;
 import org.okapi.staticserver.ProxyServer;
 import org.okapi.staticserver.exceptions.BadRequestException;
+import org.okapi.web.dtos.auth.CreateUserRequest;
+import org.okapi.web.dtos.auth.TokenResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpCookie;
@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 public class ApiProxyController {
 
   @Autowired AuthenticationServer authenticationServer;
-
   @Autowired ProxyServer proxyServer;
 
   @Value("${cookies.secureOnly}")
@@ -32,9 +31,9 @@ public class ApiProxyController {
   boolean httpOnlyCookies;
 
   @PostMapping("/auth/sign-up")
-  public ResponseEntity<String> signUp(@RequestBody AuthRequest authRequest)
+  public ResponseEntity<String> signUp(@RequestBody CreateUserRequest createUserRequest)
       throws IOException, BadRequestException {
-    var response = authenticationServer.signUp(authRequest);
+    var response = authenticationServer.signUp(createUserRequest);
     var tokenResponse = response.getData();
     HttpCookie httpCookie =
         ResponseCookie.from(CookiesAndHeaders.COOKIE_LOGIN_TOKEN, tokenResponse.get().getToken())
@@ -47,9 +46,9 @@ public class ApiProxyController {
   }
 
   @PostMapping("/auth/sign-in")
-  public ResponseEntity<String> signIn(@RequestBody AuthRequest authRequest)
+  public ResponseEntity<String> signIn(@RequestBody CreateUserRequest createUserRequest)
       throws IOException, BadRequestException {
-    var response = authenticationServer.signIn(authRequest);
+    var response = authenticationServer.signIn(createUserRequest);
     var tokenResponse = response.getData();
     HttpCookie httpCookie =
         ResponseCookie.from(CookiesAndHeaders.COOKIE_LOGIN_TOKEN, tokenResponse.get().getToken())

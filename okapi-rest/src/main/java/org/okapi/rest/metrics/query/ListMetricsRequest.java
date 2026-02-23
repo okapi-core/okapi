@@ -8,8 +8,8 @@ import lombok.Value;
 @Value
 @Getter
 public class ListMetricsRequest {
-  String app;
   String tenantId;
+  String app;
   long start;
   long end;
 }

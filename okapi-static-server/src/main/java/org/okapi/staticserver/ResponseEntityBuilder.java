@@ -1,8 +1,8 @@
 package org.okapi.staticserver;
 
-import org.okapi.staticserver.exceptions.BadRequestException;
 import java.io.IOException;
 import okhttp3.Response;
+import org.okapi.staticserver.exceptions.BadRequestException;
 
 public class ResponseEntityBuilder {
 

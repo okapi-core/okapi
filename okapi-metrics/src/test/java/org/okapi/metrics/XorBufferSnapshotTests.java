@@ -2,24 +2,36 @@ package org.okapi.metrics;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.okapi.metrics.storage.ByteBufferWriter;
-import org.okapi.collections.OkapiLists;
-import org.okapi.metrics.storage.buffers.AppendOnlyByteBuffer;
-import org.okapi.metrics.storage.buffers.BufferFullException;
-import org.okapi.metrics.storage.buffers.HeapBufferAllocator;
-import org.okapi.metrics.io.StreamReadingException;
-import org.okapi.metrics.storage.xor.XorBuffer;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import org.okapi.testutils.OkapiTestUtils;
 import org.junit.jupiter.api.Test;
+import org.okapi.collections.OkapiLists;
+import org.okapi.io.StreamReadingException;
+import org.okapi.metrics.storage.ByteBufferWriter;
+import org.okapi.metrics.storage.buffers.AppendOnlyByteBuffer;
+import org.okapi.metrics.storage.buffers.BufferFullException;
+import org.okapi.metrics.storage.buffers.HeapBufferAllocator;
+import org.okapi.metrics.storage.xor.XorBuffer;
+import org.okapi.testutils.OkapiTestUtils;
 
 public class XorBufferSnapshotTests {
+
+  private static XorBuffer checkpointAndRestore(
+      XorBuffer ref, AppendOnlyByteBuffer appendOnlyByteBuffer)
+      throws IOException, StreamReadingException {
+    var snapshot = ref.snapshot();
+    var tempFile = Files.createTempFile("xorSnapshot", ".tmp");
+    try (var fos = new FileOutputStream(tempFile.toFile())) {
+      snapshot.write(fos);
+    }
+    try (var fis = new FileInputStream(tempFile.toFile())) {
+      return XorBuffer.initialize(fis, appendOnlyByteBuffer);
+    }
+  }
 
   @Test
   public void testXorSnapshotRestore()
@@ -61,18 +73,5 @@ public class XorBufferSnapshotTests {
           }
         };
     assertEquals(newList, restoredList);
-  }
-
-  private static XorBuffer checkpointAndRestore(
-      XorBuffer ref, AppendOnlyByteBuffer appendOnlyByteBuffer)
-      throws IOException, StreamReadingException {
-    var snapshot = ref.snapshot();
-    var tempFile = Files.createTempFile("xorSnapshot", ".tmp");
-    try (var fos = new FileOutputStream(tempFile.toFile())) {
-      snapshot.write(fos);
-    }
-    try (var fis = new FileInputStream(tempFile.toFile())) {
-      return XorBuffer.initialize(fis, appendOnlyByteBuffer);
-    }
   }
 }

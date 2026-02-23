@@ -1,18 +1,16 @@
 package org.okapi.staticserver;
 
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.Optional;
-
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class ApiResponse<T> {
-  @Getter
-  int code;
+  @Getter int code;
   T data;
   String error;
 

@@ -1,7 +1,7 @@
 package org.okapi.metrics.storage;
 
-import org.okapi.metrics.annotations.NotThreadSafe;
 import lombok.AllArgsConstructor;
+import org.okapi.metrics.annotations.NotThreadSafe;
 
 @NotThreadSafe
 @AllArgsConstructor
@@ -16,7 +16,7 @@ public class BitValueReader implements ValueReader {
       var nextBit = bitReader.nextBit();
       r = (r << 1) | (nextBit ? 1 : 0);
     }
-    return (negative) ? (r == 0 ? (- (1 << (bits - 1))) : -r) : r;
+    return (negative) ? (r == 0 ? (-(1 << (bits - 1))) : -r) : r;
   }
 
   @Override
@@ -33,5 +33,4 @@ public class BitValueReader implements ValueReader {
   public boolean readBit() {
     return bitReader.nextBit();
   }
-
 }

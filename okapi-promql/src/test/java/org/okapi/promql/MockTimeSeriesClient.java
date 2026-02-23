@@ -9,28 +9,6 @@ import org.okapi.promql.eval.ts.TsClient;
 
 public final class MockTimeSeriesClient implements TsClient {
 
-  public static final class Key {
-    public final String metric;
-    public final Map<String, String> tags;
-
-    public Key(String metric, Map<String, String> tags) {
-      this.metric = metric;
-      this.tags = Collections.unmodifiableMap(new HashMap<>(tags));
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (!(o instanceof Key k)) return false;
-      return Objects.equals(metric, k.metric) && Objects.equals(tags, k.tags);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(metric, tags);
-    }
-  }
-
   // Backing store: (metric,tags) -> timestamp -> float value (value means:
   //  - for gauges: the gauge value at timestamp
   //  - for counters: the count observed over the bucket starting at timestamp)
@@ -101,6 +79,28 @@ public final class MockTimeSeriesClient implements TsClient {
           .timestamps(Collections.unmodifiableList(ts))
           .values(Collections.unmodifiableList(vals))
           .build();
+    }
+  }
+
+  public static final class Key {
+    public final String metric;
+    public final Map<String, String> tags;
+
+    public Key(String metric, Map<String, String> tags) {
+      this.metric = metric;
+      this.tags = Collections.unmodifiableMap(new HashMap<>(tags));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (!(o instanceof Key k)) return false;
+      return Objects.equals(metric, k.metric) && Objects.equals(tags, k.tags);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(metric, tags);
     }
   }
 }

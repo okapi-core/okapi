@@ -8,14 +8,10 @@ import java.util.Random;
 import lombok.Getter;
 
 public class HistoGenerator {
-  public record Histo(List<Integer> counts, long start, long end) {}
-
   List<Float> buckets;
   int maxCount;
-
   @Getter List<Histo> readings;
   Duration window;
-
   public HistoGenerator(List<Float> buckets, int maxCount, Duration window) {
     this.buckets = buckets;
     this.maxCount = maxCount;
@@ -52,4 +48,6 @@ public class HistoGenerator {
     }
     return new Histo(Ints.asList(counts), start, end);
   }
+
+  public record Histo(List<Integer> counts, long start, long end) {}
 }

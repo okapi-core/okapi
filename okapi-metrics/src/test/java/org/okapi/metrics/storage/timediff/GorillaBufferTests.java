@@ -2,13 +2,6 @@ package org.okapi.metrics.storage.timediff;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.okapi.collections.OkapiLists;
-import org.okapi.metrics.io.StreamReadingException;
-import org.okapi.metrics.storage.ByteBufferWriter;
-import org.okapi.metrics.storage.buffers.BufferFullException;
-import org.okapi.metrics.storage.buffers.HeapBufferAllocator;
-import org.okapi.metrics.storage.fakes.SharedBufferAllocator;
-import org.okapi.metrics.storage.snapshots.GorillaSnapshot;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -17,6 +10,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
+import org.okapi.collections.OkapiLists;
+import org.okapi.io.StreamReadingException;
+import org.okapi.metrics.storage.ByteBufferWriter;
+import org.okapi.metrics.storage.buffers.BufferFullException;
+import org.okapi.metrics.storage.buffers.HeapBufferAllocator;
+import org.okapi.metrics.storage.fakes.SharedBufferAllocator;
+import org.okapi.metrics.storage.snapshots.GorillaSnapshot;
 
 public class GorillaBufferTests {
 
@@ -88,7 +88,6 @@ public class GorillaBufferTests {
     assertEquals(expected.subList(0, 101), OkapiLists.toList(snapAt100));
   }
 
-
   @Test
   public void testSnapshotImmutability_fuzzy() throws BufferFullException {
     var allocator = new HeapBufferAllocator();
@@ -109,12 +108,16 @@ public class GorillaBufferTests {
     }
 
     for (int bound = 1; bound < fuzzLimit; bound++) {
-      assertEquals(testCase.subList(0, bound), OkapiLists.toList(snapshots.get(bound - 1)), String.format("Fuzz failed for bound: %s", bound));
+      assertEquals(
+          testCase.subList(0, bound),
+          OkapiLists.toList(snapshots.get(bound - 1)),
+          String.format("Fuzz failed for bound: %s", bound));
     }
   }
 
   @Test
-  public void testCheckpointRestore() throws BufferFullException, IOException, StreamReadingException {
+  public void testCheckpointRestore()
+      throws BufferFullException, IOException, StreamReadingException {
     var allocator = new HeapBufferAllocator();
     var bufferCapacity = 4500;
     var bufferWriter = new ByteBufferWriter(allocator.allocate(bufferCapacity));
@@ -130,16 +133,15 @@ public class GorillaBufferTests {
 
     var snapshot = gorillaBuffer.snapshot();
     var tempFile = Files.createTempFile("gorilla", ".tmp");
-    try (var fos = new FileOutputStream(tempFile.toFile())){
+    try (var fos = new FileOutputStream(tempFile.toFile())) {
       snapshot.write(fos);
     }
     var secondBuffer = allocator.allocate(bufferCapacity);
-    try (var is = new FileInputStream(tempFile.toFile())){
+    try (var is = new FileInputStream(tempFile.toFile())) {
       var restored = GorillaBuffer.fromSnapshot(is, secondBuffer);
       var snapshotFromRestored = restored.snapshot();
       var allIntegers = OkapiLists.toList(snapshotFromRestored);
       assertEquals(testCase, allIntegers);
-    } 
+    }
   }
-
 }

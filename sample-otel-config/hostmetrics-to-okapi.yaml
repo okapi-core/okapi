@@ -2,15 +2,15 @@ receivers:
   hostmetrics:
     collection_interval: 10s
     scrapers:
-      cpu: {}
-      memory: {}
-      disk: {}
-      filesystem: {}
-      load: {}
-      network: {}
+      cpu: { }
+      memory: { }
+      disk: { }
+      filesystem: { }
+      load: { }
+      network: { }
 
 processors:
-  batch: {}
+  batch: { }
 
 exporters:
   otlphttp/okapi:
@@ -23,7 +23,7 @@ exporters:
 service:
   pipelines:
     metrics:
-      receivers: [hostmetrics]
-      processors: [batch]
-      exporters: [otlphttp/okapi]
+      receivers: [ hostmetrics ]
+      processors: [ batch ]
+      exporters: [ otlphttp/okapi ]
 

@@ -4,18 +4,18 @@ import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 
 public class NoOpCredentials implements AwsCredentialsProvider {
-    @Override
-    public AwsCredentials resolveCredentials() {
-        return new AwsCredentials() {
-            @Override
-            public String accessKeyId() {
-                return "";
-            }
+  @Override
+  public AwsCredentials resolveCredentials() {
+    return new AwsCredentials() {
+      @Override
+      public String accessKeyId() {
+        return "";
+      }
 
-            @Override
-            public String secretAccessKey() {
-                return "";
-            }
-        };
-    }
+      @Override
+      public String secretAccessKey() {
+        return "";
+      }
+    };
+  }
 }

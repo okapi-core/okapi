@@ -15,6 +15,14 @@ import org.okapi.promql.parser.PromQLParser;
 
 public class SetOpsVectorMatchingTest {
 
+  private static Set<String> labelInstances(InstantVectorResult iv) {
+    var set = new java.util.HashSet<String>();
+    for (var s : iv.data()) {
+      set.add(s.series().labels().tags().get("instance"));
+    }
+    return set;
+  }
+
   @Test
   void and_unless_on_instance() throws EvaluationException {
     var cm = TestFixtures.buildCommonMocks();
@@ -53,13 +61,5 @@ public class SetOpsVectorMatchingTest {
     // Only instance i2 should remain in "unless"
     var instancesUnless = labelInstances(ivUnless);
     assertEquals(Set.of("i2"), instancesUnless);
-  }
-
-  private static Set<String> labelInstances(InstantVectorResult iv) {
-    var set = new java.util.HashSet<String>();
-    for (var s : iv.data()) {
-      set.add(s.series().labels().tags().get("instance"));
-    }
-    return set;
   }
 }

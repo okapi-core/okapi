@@ -5,20 +5,17 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import org.okapi.metrics.pojos.AGG_TYPE;
-import org.okapi.metrics.pojos.RES_TYPE;
 
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @Getter
 public class GetMetricsRequest {
-  @NotNull(message = "Unknown tenant.")
-  @Getter
-  String tenantId;
+  @NotNull(message = "Service name must be supplied.")
+  String svc;
 
   @NotNull(message = "Metrics name must be supplied.")
   @Getter
-  String metricName;
+  String metric;
 
   @NotNull(message = "Tags must be supplied")
   @Getter
@@ -30,11 +27,8 @@ public class GetMetricsRequest {
   @NotNull(message = "End time is required.")
   long end;
 
-  // some representation for query parameters
-
-  @NotNull(message = "resolution is required.")
-  RES_TYPE resolution;
-
-  @NotNull(message = "aggregation is required.")
-  AGG_TYPE aggregation;
+  METRIC_TYPE metricType;
+  GaugeQueryConfig gaugeQueryConfig;
+  HistoQueryConfig histoQueryConfig;
+  GetSumsQueryConfig sumsQueryConfig;
 }

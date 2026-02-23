@@ -1,11 +1,10 @@
 package org.okapi.metrics.storage.timediff;
 
-import org.okapi.metrics.storage.BufferSnapshot;
-import org.okapi.metrics.io.OkapiIo;
-import org.okapi.metrics.storage.snapshots.GorillaSnapshot;
-
 import java.io.IOException;
 import java.io.OutputStream;
+import org.okapi.io.OkapiIo;
+import org.okapi.metrics.storage.BufferSnapshot;
+import org.okapi.metrics.storage.snapshots.GorillaSnapshot;
 
 public class TimeDiffBufferSnapshot implements BufferSnapshot<Long> {
   public static final String MAGIC_START = "TimeDiff";
@@ -23,7 +22,12 @@ public class TimeDiffBufferSnapshot implements BufferSnapshot<Long> {
   long beforeLast;
 
   public TimeDiffBufferSnapshot(
-      long first, long second, long beforeLast, long last, int total, GorillaSnapshot gorillaSnapshot) {
+      long first,
+      long second,
+      long beforeLast,
+      long last,
+      int total,
+      GorillaSnapshot gorillaSnapshot) {
     this.total = total;
     this.beforePrevious = first;
     this.previous = second;
@@ -31,10 +35,10 @@ public class TimeDiffBufferSnapshot implements BufferSnapshot<Long> {
     this.first = first;
     this.second = second;
     this.last = last;
-    this.beforeLast  = beforeLast;
+    this.beforeLast = beforeLast;
   }
 
-  public int size(){
+  public int size() {
     return total;
   }
 
