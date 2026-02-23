@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.agent.dto;
 
 import jakarta.validation.constraints.NotNull;
@@ -9,7 +13,5 @@ import lombok.*;
 @NoArgsConstructor
 @Builder(toBuilder = true)
 public class ListPendingJobsResponse {
-  @NotNull
-  @Singular
-  private List<PendingJob> pendingJobs;
+  @NotNull @Singular private List<PendingJob> pendingJobs;
 }

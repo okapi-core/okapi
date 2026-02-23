@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.data.migrations;
 
 import static org.okapi.data.TableSpecifications.makeRequest;
@@ -8,8 +12,8 @@ import static org.okapi.data.dto.TablesAndIndexes.USERS_BY_EMAIL_GSI;
 import static org.okapi.data.dto.TablesAndIndexes.USERS_TABLE;
 
 import java.util.Arrays;
-import org.okapi.data.dto.UserDtoDdb;
 import org.okapi.data.TableSpec;
+import org.okapi.data.dto.UserDtoDdb;
 import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest;
 
 public class UsersTableSpec implements TableSpec<UserDtoDdb> {

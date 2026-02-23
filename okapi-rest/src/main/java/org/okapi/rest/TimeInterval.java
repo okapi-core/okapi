@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.rest;
 
 import lombok.AllArgsConstructor;
@@ -10,6 +14,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class TimeInterval {
-    long start;
-    long end;
+  long start;
+  long end;
 }

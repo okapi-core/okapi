@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.service.query;
 
 import lombok.experimental.StandardException;
@@ -6,4 +10,4 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 @StandardException
 @ResponseStatus(HttpStatus.BAD_REQUEST)
-public class MalformedQueryException extends Exception{}
+public class MalformedQueryException extends Exception {}

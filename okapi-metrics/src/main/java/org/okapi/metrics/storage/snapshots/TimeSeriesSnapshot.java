@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.storage.snapshots;
 
 import java.io.IOException;
@@ -27,6 +31,7 @@ public class TimeSeriesSnapshot implements TimeSeriesBatchDecoder {
   int g; // where are we in the respective buffers
   int v;
   int served = 0;
+
   public TimeSeriesSnapshot(
       List<TimeDiffBufferSnapshot> gorillaSnapshots,
       List<XorBufferSnapshot> xorBufferSnapshots,

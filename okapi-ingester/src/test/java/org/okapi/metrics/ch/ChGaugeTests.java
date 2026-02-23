@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.ch;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -188,7 +192,8 @@ public class ChGaugeTests {
     var qp = injector.getInstance(ChMetricsQueryProcessor.class);
 
     ingester.ingestOtelProtobuf(
-        buildGaugeRequest("svc-5", "metric_same_bucket", List.of(1_000L, 1_050L), List.of(1.0, 3.0)));
+        buildGaugeRequest(
+            "svc-5", "metric_same_bucket", List.of(1_000L, 1_050L), List.of(1.0, 3.0)));
     driver.onTick();
 
     var req =

@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.ddb;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -5,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -70,7 +73,9 @@ public class DashboardVersionDaoTest {
     var listed = dao.list(orgId, dashboardId);
     assertEquals(2, listed.size());
     var ids =
-        listed.stream().map(DashboardVersion::getVersionId).collect(java.util.stream.Collectors.toSet());
+        listed.stream()
+            .map(DashboardVersion::getVersionId)
+            .collect(java.util.stream.Collectors.toSet());
     assertTrue(ids.containsAll(Set.of(version1, version2)));
 
     var fetched = dao.get(orgId, dashboardId, version1);

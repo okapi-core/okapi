@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.service.dashboards;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,7 +19,6 @@ import org.okapi.web.auth.UserManager;
 import org.okapi.web.dtos.auth.CreateUserRequest;
 import org.okapi.web.dtos.auth.SignInRequest;
 import org.okapi.web.dtos.dashboards.yaml.ApplyDashboardYamlRequest;
-import org.okapi.web.service.dashboards.DashboardVersionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -79,8 +82,7 @@ public class DashboardVersionServiceIT extends AbstractIT {
             adminTempToken, ApplyDashboardYamlRequest.builder().yaml(yaml).build());
     assertTrue(apply.isOk());
 
-    var publish =
-        versionService.publish(adminTempToken, dashboardId, apply.getVersionId());
+    var publish = versionService.publish(adminTempToken, dashboardId, apply.getVersionId());
     assertEquals("PUBLISHED", publish.getStatus());
 
     var dash = dashboardDao.get(orgId, dashboardId).get();

@@ -1,12 +1,15 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.io;
 
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
-import lombok.Getter;
-
 import java.util.Objects;
 import java.util.Optional;
 import java.util.zip.CRC32;
+import lombok.Getter;
 
 public class OkapiBufferDecoder implements CheckedBufferDecoder {
 

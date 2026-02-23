@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.fixtures;
 
 import java.util.ArrayList;
@@ -8,6 +12,7 @@ import lombok.Getter;
 public class CsumGenerator {
   int maxCount;
   @Getter List<Csum> readings;
+
   public CsumGenerator(int maxCount) {
     this.maxCount = maxCount;
     this.readings = new ArrayList<>();

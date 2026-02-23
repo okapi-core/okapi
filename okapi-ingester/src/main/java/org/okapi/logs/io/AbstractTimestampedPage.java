@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.logs.io;
 
 import java.util.Optional;
@@ -21,7 +25,7 @@ public abstract class AbstractTimestampedPage {
     return getBlockMetadata().getTsEnd();
   }
 
-  public boolean isTimeRangeFull(long expectedRangeMs){
+  public boolean isTimeRangeFull(long expectedRangeMs) {
     long actualRange = getTsEnd() - getTsStart();
     return actualRange >= expectedRangeMs;
   }

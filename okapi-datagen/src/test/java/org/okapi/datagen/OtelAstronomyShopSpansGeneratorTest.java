@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.datagen;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -87,8 +91,7 @@ public class OtelAstronomyShopSpansGeneratorTest {
     var out = generator.generate();
     var spans = allSpans(out);
 
-    var spanById =
-        spans.stream().collect(Collectors.toMap(Span::getSpanId, s -> s, (a, b) -> a));
+    var spanById = spans.stream().collect(Collectors.toMap(Span::getSpanId, s -> s, (a, b) -> a));
 
     boolean hasParent = spans.stream().anyMatch(span -> !span.getParentSpanId().isEmpty());
     boolean parentExists =
@@ -110,14 +113,14 @@ public class OtelAstronomyShopSpansGeneratorTest {
             .latency(LatencyConfig.builder().minMs(1).maxMs(1).timeoutPenaltyMs(1).build())
             .build();
     var systemState =
-        SystemState.builder().name("error").weight(1.0).components(Map.of("frontend", errorState)).build();
+        SystemState.builder()
+            .name("error")
+            .weight(1.0)
+            .components(Map.of("frontend", errorState))
+            .build();
     var journey =
         Journey.builder()
-            .rootStep(
-                Step.builder()
-                    .spanName("frontend/purchase")
-                    .component("frontend")
-                    .build())
+            .rootStep(Step.builder().spanName("frontend/purchase").component("frontend").build())
             .build();
     var config =
         SpansGeneratorConfig.builder()

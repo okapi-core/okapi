@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.fixtures;
 
 import com.google.common.primitives.Ints;
@@ -12,6 +16,7 @@ public class HistoGenerator {
   int maxCount;
   @Getter List<Histo> readings;
   Duration window;
+
   public HistoGenerator(List<Float> buckets, int maxCount, Duration window) {
     this.buckets = buckets;
     this.maxCount = maxCount;

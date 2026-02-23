@@ -1,4 +1,7 @@
-// eval/ops/BinaryOpEval.java
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.promql.eval.ops;
 
 import java.util.*;

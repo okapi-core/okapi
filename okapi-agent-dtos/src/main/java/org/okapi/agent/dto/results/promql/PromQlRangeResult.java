@@ -1,18 +1,21 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.agent.dto.results.promql;
 
+import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.List;
-import java.util.Map;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 public class PromQlRangeResult {
-    Map<String, String> metric;
-    List<List<Object>> values;
+  Map<String, String> metric;
+  List<List<Object>> values;
 }

@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.ai.tools;
 
 import lombok.AllArgsConstructor;
@@ -9,5 +13,4 @@ public class AiSreSession {
   public String orgId() {
     return orgId;
   }
-
 }

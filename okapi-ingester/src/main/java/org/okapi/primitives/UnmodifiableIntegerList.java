@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.primitives;
 
 import java.util.Iterator;
@@ -74,7 +78,10 @@ public class UnmodifiableIntegerList extends AbstractUnmodifiableList<Integer> {
   @Override
   public <T> T[] toArray(@NotNull T[] a) {
     int n = size();
-    T[] arr = a.length >= n ? a : (T[]) java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), n);
+    T[] arr =
+        a.length >= n
+            ? a
+            : (T[]) java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), n);
     for (int i = 0; i < n; i++) {
       arr[i] = (T) get(i);
     }

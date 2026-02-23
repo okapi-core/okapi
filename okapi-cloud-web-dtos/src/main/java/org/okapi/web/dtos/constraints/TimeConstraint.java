@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.dtos.constraints;
 
 import lombok.AllArgsConstructor;
@@ -8,6 +12,6 @@ import lombok.Getter;
 @AllArgsConstructor
 @Builder
 public class TimeConstraint {
-    long start;
-    long end;
+  long start;
+  long end;
 }

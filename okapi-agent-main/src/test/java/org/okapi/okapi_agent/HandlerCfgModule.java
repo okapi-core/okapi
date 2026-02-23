@@ -1,11 +1,14 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.okapi_agent;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import org.okapi.okapi_agent.jobhandler.HandlerCfg;
-
 import java.nio.file.Path;
+import org.okapi.okapi_agent.jobhandler.HandlerCfg;
 
 public class HandlerCfgModule extends AbstractModule {
   Path handlerFile;

@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.dtos.tools;
 
 import java.io.File;
@@ -13,8 +17,8 @@ import java.util.Locale;
  * This tool helps create CRUD objects for a new resource. Usage: java CreateResourceCrudObjects
  * <ResourceName> Example: java CreateResourceCrudObjects User
  *
- * It generates the following classes inside okapi-cloud-web-dtos under
- * package org.okapi.web.dtos.<resourcename> (lowercase resource name):
+ * <p>It generates the following classes inside okapi-cloud-web-dtos under package
+ * org.okapi.web.dtos.<resourcename> (lowercase resource name):
  *
  * <ul>
  *   <li>CreateUserRequest.java

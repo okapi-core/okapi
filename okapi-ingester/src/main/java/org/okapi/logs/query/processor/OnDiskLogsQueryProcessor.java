@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.logs.query.processor;
 
 import java.nio.file.Files;
@@ -31,7 +35,6 @@ public class OnDiskLogsQueryProcessor implements LogsQueryProcessor {
     this.diskLogBinPaths = diskLogBinPaths;
     this.maxQueryRange = maxQueryWindow.toMillis();
   }
-
 
   public void checkQueryWindow(long start, long end) {
     if (end - start > maxQueryRange) {

@@ -1,11 +1,14 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.auth;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;
-import org.springframework.stereotype.Service;
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import org.springframework.stereotype.Service;
 
 @Service
 public class JwtFactory {

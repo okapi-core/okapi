@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.data.ddb.dao;
 
 import com.google.common.collect.Lists;
@@ -34,8 +38,7 @@ public class TokenMetaDaoDdbImpl implements TokenMetaDao {
 
   @Override
   public TokenMetaDdb getTokenMetadata(String orgId, String tokenId) {
-    return tokenMetaTable.getItem(
-        Key.builder().partitionValue(orgId).sortValue(tokenId).build());
+    return tokenMetaTable.getItem(Key.builder().partitionValue(orgId).sortValue(tokenId).build());
   }
 
   @Override

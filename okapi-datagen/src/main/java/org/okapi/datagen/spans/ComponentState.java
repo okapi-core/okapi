@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.datagen.spans;
 
 import java.util.Map;
@@ -12,9 +16,9 @@ public class ComponentState {
   double successRate;
   @Singular Map<ErrorType, Double> errorRates;
   @Singular Map<ErrorType, String> errorMessages;
+
   @Builder.Default
-  LatencyConfig latency =
-      LatencyConfig.builder().minMs(5).maxMs(20).timeoutPenaltyMs(40).build();
+  LatencyConfig latency = LatencyConfig.builder().minMs(5).maxMs(20).timeoutPenaltyMs(40).build();
 
   public static ComponentState defaultState() {
     return ComponentState.builder()

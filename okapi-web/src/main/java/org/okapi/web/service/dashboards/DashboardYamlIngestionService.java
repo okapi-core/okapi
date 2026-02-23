@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.service.dashboards;
 
 import java.util.ArrayList;
@@ -14,8 +18,8 @@ import org.okapi.data.ddb.attributes.PanelQueryConfig;
 import org.okapi.data.dto.DashboardDdb;
 import org.okapi.data.dto.DashboardPanel;
 import org.okapi.data.dto.DashboardRow;
-import org.okapi.data.dto.DashboardVersion;
 import org.okapi.data.dto.DashboardVariable;
+import org.okapi.data.dto.DashboardVersion;
 import org.okapi.data.exceptions.ResourceNotFoundException;
 import org.okapi.exceptions.UnAuthorizedException;
 import org.okapi.ids.UuidV7;
@@ -192,7 +196,9 @@ public class DashboardYamlIngestionService {
       var panelSpec = rowSpec.getPanels().get(j);
       if (panelSpec == null) continue;
       var panelId =
-          isBlank(panelSpec.getId()) ? ("panel-" + (rowIndex + 1) + "-" + (j + 1)) : panelSpec.getId();
+          isBlank(panelSpec.getId())
+              ? ("panel-" + (rowIndex + 1) + "-" + (j + 1))
+              : panelSpec.getId();
       var panel =
           DashboardPanel.builder()
               .panelId(panelId)

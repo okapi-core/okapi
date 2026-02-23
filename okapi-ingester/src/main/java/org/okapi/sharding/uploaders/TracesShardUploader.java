@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.sharding.uploaders;
 
 import org.okapi.runtime.spans.TraceFilesS3Uploader;
@@ -10,7 +14,7 @@ import org.springframework.stereotype.Service;
 @Profile(Profiles.PROFILE_OKAPI_ENGINE)
 public class TracesShardUploader extends AbstractBinPathsShardUploader {
   public TracesShardUploader(
-          HashingShardAssigner shardAssigner, TraceFilesS3Uploader traceFilesS3Uploader) {
+      HashingShardAssigner shardAssigner, TraceFilesS3Uploader traceFilesS3Uploader) {
     super(shardAssigner, traceFilesS3Uploader);
   }
 }

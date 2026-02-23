@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.wal.frame;
 
 import org.junit.jupiter.api.Assertions;
@@ -57,5 +61,4 @@ public class WalEntryTests {
     System.arraycopy(serialized, 0, truncated, 0, truncated.length);
     Assertions.assertThrows(CorruptedRecordException.class, () -> WalEntry.deserialize(truncated));
   }
-
 }

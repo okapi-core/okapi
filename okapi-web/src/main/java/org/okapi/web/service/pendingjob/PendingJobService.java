@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.service.pendingjob;
 
 import com.google.gson.Gson;
@@ -65,8 +69,7 @@ public class PendingJobService {
     }
   }
 
-  public PendingJob submitJobResult(
-      String apiToken, String jobId, QueryResult result)
+  public PendingJob submitJobResult(String apiToken, String jobId, QueryResult result)
       throws IllegalJobStateTransition {
     var authorizedEntity = authorizationHeaderValidator.getAuthorizedEntity(apiToken);
     authorizedEntity.hasPermission(Permissions.AGENT_JOBS_UPDATE);
@@ -75,8 +78,7 @@ public class PendingJobService {
     return Mappers.mapPendingJobDtoToResponse(job);
   }
 
-  public PendingJob submitPendingJobError(
-      String apiToken, String jobId, QueryResult errorResult)
+  public PendingJob submitPendingJobError(String apiToken, String jobId, QueryResult errorResult)
       throws IllegalJobStateTransition {
     var authorizedEntity = authorizationHeaderValidator.getAuthorizedEntity(apiToken);
     authorizedEntity.hasPermission(Permissions.AGENT_JOBS_UPDATE);

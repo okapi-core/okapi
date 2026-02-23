@@ -1,11 +1,15 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.auth.tx;
 
 import static org.okapi.data.ddb.attributes.ENTITY_TYPE.ORG;
 
 import lombok.AllArgsConstructor;
 import org.okapi.data.dao.RelationGraphDao;
-import org.okapi.data.ddb.attributes.EntityId;
 import org.okapi.data.ddb.attributes.ENTITY_TYPE;
+import org.okapi.data.ddb.attributes.EntityId;
 import org.okapi.data.ddb.attributes.RELATION_TYPE;
 import org.okapi.web.auth.GraphTx;
 

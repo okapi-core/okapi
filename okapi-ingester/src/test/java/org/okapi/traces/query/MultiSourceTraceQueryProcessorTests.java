@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.traces.query;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -35,12 +39,11 @@ public class MultiSourceTraceQueryProcessorTests {
     var disk = mock(OnDiskTraceQueryProcessor.class);
     var s3 = mock(S3TraceQueryProcessor.class);
     var member = mock(PeersTraceQueryProcessor.class);
-    when(buffer.getTraces( any(), anyLong(), anyLong(), any(), any()))
+    when(buffer.getTraces(any(), anyLong(), anyLong(), any(), any()))
         .thenReturn(List.of(item("buf")));
     when(disk.getTraces(any(), anyLong(), anyLong(), any(), any()))
         .thenReturn(List.of(item("disk")));
-    when(s3.getTraces(any(), anyLong(), anyLong(), any(), any()))
-        .thenReturn(List.of(item("s3")));
+    when(s3.getTraces(any(), anyLong(), anyLong(), any(), any())).thenReturn(List.of(item("s3")));
     when(member.getTraces(any(), anyLong(), anyLong(), any(), any()))
         .thenReturn(List.of(item("member")));
 
@@ -48,24 +51,20 @@ public class MultiSourceTraceQueryProcessorTests {
 
     var bufResult =
         qp.getTraces(
-             "s", 0, 10, new SpanPageTraceFilter("buf".getBytes()), QueryConfig.allSources());
+            "s", 0, 10, new SpanPageTraceFilter("buf".getBytes()), QueryConfig.allSources());
     Assertions.assertEquals(1, bufResult.size());
     var diskResult =
         qp.getTraces(
-             "s", 0, 10, new SpanPageTraceFilter("disk".getBytes()), QueryConfig.allSources());
+            "s", 0, 10, new SpanPageTraceFilter("disk".getBytes()), QueryConfig.allSources());
     Assertions.assertEquals(1, diskResult.size());
 
     var s3Result =
         qp.getTraces(
-             "s", 0, 10, new SpanPageTraceFilter("s3".getBytes()), QueryConfig.allSources());
+            "s", 0, 10, new SpanPageTraceFilter("s3".getBytes()), QueryConfig.allSources());
     Assertions.assertEquals(1, s3Result.size());
     var memberResult =
         qp.getTraces(
-            "s",
-            0,
-            10,
-            new SpanPageTraceFilter("member".getBytes()),
-            QueryConfig.allSources());
+            "s", 0, 10, new SpanPageTraceFilter("member".getBytes()), QueryConfig.allSources());
     Assertions.assertEquals(1, memberResult.size());
   }
 
@@ -75,13 +74,12 @@ public class MultiSourceTraceQueryProcessorTests {
     var disk = mock(OnDiskTraceQueryProcessor.class);
     var s3 = mock(S3TraceQueryProcessor.class);
     var member = mock(PeersTraceQueryProcessor.class);
-    when(buffer.getTraces( any(), anyLong(), anyLong(), any(), any()))
+    when(buffer.getTraces(any(), anyLong(), anyLong(), any(), any()))
         .thenReturn(List.of(item("common-trace")));
-    when(disk.getTraces( any(), anyLong(), anyLong(), any(), any()))
+    when(disk.getTraces(any(), anyLong(), anyLong(), any(), any()))
         .thenReturn(List.of(item("common-trace")));
-    when(s3.getTraces( any(), anyLong(), anyLong(), any(), any()))
-        .thenReturn(List.of(item("s3")));
-    when(member.getTraces( any(), anyLong(), anyLong(), any(), any()))
+    when(s3.getTraces(any(), anyLong(), anyLong(), any(), any())).thenReturn(List.of(item("s3")));
+    when(member.getTraces(any(), anyLong(), anyLong(), any(), any()))
         .thenReturn(List.of(item("member")));
 
     var qp = getQueryProcessor(buffer, s3, member, disk);
@@ -101,13 +99,11 @@ public class MultiSourceTraceQueryProcessorTests {
     var disk = mock(OnDiskTraceQueryProcessor.class);
     var s3 = mock(S3TraceQueryProcessor.class);
     var member = mock(PeersTraceQueryProcessor.class);
-    when(buffer.getTraces( any(), anyLong(), anyLong(), any(), any()))
+    when(buffer.getTraces(any(), anyLong(), anyLong(), any(), any()))
         .thenReturn(List.of(item("common-trace")));
-    when(disk.getTraces( any(), anyLong(), anyLong(), any(), any()))
-        .thenThrow(Exception.class);
-    when(s3.getTraces( any(), anyLong(), anyLong(), any(), any()))
-        .thenReturn(List.of(item("s3")));
-    when(member.getTraces( any(), anyLong(), anyLong(), any(), any()))
+    when(disk.getTraces(any(), anyLong(), anyLong(), any(), any())).thenThrow(Exception.class);
+    when(s3.getTraces(any(), anyLong(), anyLong(), any(), any())).thenReturn(List.of(item("s3")));
+    when(member.getTraces(any(), anyLong(), anyLong(), any(), any()))
         .thenReturn(List.of(item("member")));
     var qp = getQueryProcessor(buffer, s3, member, disk);
     Assertions.assertThrows(

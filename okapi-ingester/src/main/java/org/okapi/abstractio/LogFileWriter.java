@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.abstractio;
 
 import java.io.IOException;
@@ -13,7 +17,8 @@ import org.okapi.streams.StreamIdentifier;
 
 @Slf4j
 @AllArgsConstructor
-/// todo: rename this to DiskPageWriter (pages could we written out to other persistent mediums as well)
+/// todo: rename this to DiskPageWriter (pages could we written out to other persistent mediums as
+// well)
 public class LogFileWriter<P extends AppendOnlyPage<?, S, M, B>, S, M, B, Id>
     implements PageWriter<P, S, M, B, Id> {
   private final Codec<P, S, M, B> codec;

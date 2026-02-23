@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.wal.factory;
 
 import java.io.IOException;
@@ -35,8 +39,7 @@ public class WalResourcesFactory {
     }
 
     var latestCommit = walDir.getLatestCommit().map(WalCommit::getLsn).orElse(lastFlushedLsn);
-    var walReader =
-        new WalReader(walManager, walDir, latestCommit, walWriter::getLastWrittenLsn);
+    var walReader = new WalReader(walManager, walDir, latestCommit, walWriter::getLastWrittenLsn);
     var lsnSupplier = new MonoticLsnSupplier(walManager.getLastWrittenLsn().getNumber());
     return WalResourceBundle.builder()
         .manager(walManager)

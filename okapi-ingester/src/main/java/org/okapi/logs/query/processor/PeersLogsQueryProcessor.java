@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.logs.query.processor;
 
 import com.google.gson.Gson;
@@ -96,7 +100,8 @@ public class PeersLogsQueryProcessor
         LogStreamIdentifier.of(logStream), start, end, logsCfg.getIdxExpiryDuration(), filter, cfg);
   }
 
-  /// todo: fixme - should redirect queries to nodes which are holding candidate shards and aggregate results.
+  /// todo: fixme - should redirect queries to nodes which are holding candidate shards and
+  // aggregate results.
   @Override
   public List<BinaryLogRecordV1> queryPeer(
       String ip,

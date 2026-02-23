@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.ai.tools.datadog;
 
 import com.google.gson.Gson;
@@ -7,8 +11,6 @@ import com.google.gson.JsonParseException;
 import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
 import org.okapi.web.ai.tools.results.GaugeResult;
 import org.okapi.web.ai.tools.results.HistogramResult;
 import org.okapi.web.ai.tools.results.MetricResult;
@@ -47,7 +49,8 @@ public class MetricResultTypeAdapterFactory implements TypeAdapterFactory {
     }
 
     @Override
-    public void write(com.google.gson.stream.JsonWriter out, MetricResult src) throws java.io.IOException {
+    public void write(com.google.gson.stream.JsonWriter out, MetricResult src)
+        throws java.io.IOException {
       if (src instanceof GaugeResult gr) {
         JsonObject obj = gson.toJsonTree(gr).getAsJsonObject();
         obj.addProperty("@type", "gauge");

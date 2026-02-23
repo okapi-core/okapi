@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.tools;
 
 import com.google.gson.Gson;
@@ -60,8 +64,7 @@ class TokenCliSupport {
   }
 
   private String signIn(String email, String password) throws IOException {
-    var signInRequest =
-        SignInRequest.builder().email(email).password(password).build();
+    var signInRequest = SignInRequest.builder().email(email).password(password).build();
     var response = postJson("/api/v1/users/signin", signInRequest, null, TokenResponse.class);
     return Objects.requireNonNull(response, "Empty sign-in response").getToken();
   }
@@ -70,7 +73,9 @@ class TokenCliSupport {
     var headers = Headers.of(RequestHeaders.LOGIN_TOKEN, loginToken);
     var orgsResponse = getJson("/api/v1/orgs", headers, ListOrgsResponse.class);
     List<GetOrgUserView> orgs =
-        orgsResponse == null ? List.of() : Objects.requireNonNullElse(orgsResponse.getOrgs(), List.of());
+        orgsResponse == null
+            ? List.of()
+            : Objects.requireNonNullElse(orgsResponse.getOrgs(), List.of());
     if (orgs.isEmpty()) {
       throw new IOException("No orgs found for the user.");
     }
@@ -80,8 +85,7 @@ class TokenCliSupport {
   private String createTempToken(String loginToken, String orgId) throws IOException {
     var headers = Headers.of(RequestHeaders.LOGIN_TOKEN, loginToken);
     var response =
-        postJson(
-            "/api/v1/auth/" + orgId + "/session", "{}", headers, TokenResponse.class);
+        postJson("/api/v1/auth/" + orgId + "/session", "{}", headers, TokenResponse.class);
     return Objects.requireNonNull(response, "Empty temp token response").getToken();
   }
 
@@ -97,8 +101,7 @@ class TokenCliSupport {
     }
 
     RequestBody requestBody = RequestBody.create(jsonPayload, JSON);
-    Request.Builder builder =
-        new Request.Builder().url(endpoint + path).post(requestBody);
+    Request.Builder builder = new Request.Builder().url(endpoint + path).post(requestBody);
     if (headers != null) {
       builder.headers(headers);
     }
@@ -118,12 +121,7 @@ class TokenCliSupport {
       String responseBody = response.body() != null ? response.body().string() : "";
       if (!response.isSuccessful()) {
         throw new IOException(
-            "Request failed for "
-                + path
-                + " (status "
-                + response.code()
-                + "): "
-                + responseBody);
+            "Request failed for " + path + " (status " + response.code() + "): " + responseBody);
       }
       if (clazz == null || clazz == Void.class) {
         return null;

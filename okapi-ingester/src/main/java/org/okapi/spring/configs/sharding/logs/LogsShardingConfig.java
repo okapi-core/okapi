@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.spring.configs.sharding.logs;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -28,8 +32,7 @@ public class LogsShardingConfig {
       @Autowired LogsShardUploader shardUploader,
       @Autowired @Qualifier(Qualifiers.LOGS_WAL_CONSUMER_CONTROLLERS)
           WalConsumerControllers walConsumerControllers,
-      @Autowired ShardMoveCfg moveCfg
-  ) {
+      @Autowired ShardMoveCfg moveCfg) {
     return new ShardMoveOrchestrator(
         shardUploader,
         walConsumerControllers,
@@ -48,13 +51,9 @@ public class LogsShardingConfig {
           ShardOrchestrator logsShardOrchestrator,
       @Autowired @Qualifier(Qualifiers.LOGS_NS_ZK_CLIENT) NamespacedZkClient zkClient,
       @Autowired CuratorFramework curatorFramework,
-      @Autowired ZkPaths zkPaths
-  ) {
+      @Autowired ZkPaths zkPaths) {
     return new ShardUpdateListener(
-        logsShardOrchestrator,
-        zkClient,
-        curatorFramework,
-        zkPaths.getShardsPath(ZkPaths.APP.LOGS));
+        logsShardOrchestrator, zkClient, curatorFramework, zkPaths.getShardsPath(ZkPaths.APP.LOGS));
   }
 
   @Bean

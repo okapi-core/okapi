@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.ai.utils;
 
 import java.util.List;
@@ -50,30 +54,30 @@ public class TagContentsExtractorTests {
   }
 
   @Test
-  void pathExtract(){
+  void pathExtract() {
     var content = "<a><b><c>value-1</c><c>value-2</c></b></a><a><b><c>value-3</c></b></a>";
-    var extracted = TagContentsExtractor.getContentsInPath(content, List.of("a","b","c"));
-    Assertions.assertEquals(List.of("value-1","value-2","value-3"), extracted);
+    var extracted = TagContentsExtractor.getContentsInPath(content, List.of("a", "b", "c"));
+    Assertions.assertEquals(List.of("value-1", "value-2", "value-3"), extracted);
   }
 
   @Test
-  void pathExtract_noMatch(){
+  void pathExtract_noMatch() {
     var content = "<a><b><c>value-1</c><c>value-2</c></b></a><a><b><c>value-3</c></b></a>";
-    var extracted = TagContentsExtractor.getContentsInPath(content, List.of("a","x","c"));
+    var extracted = TagContentsExtractor.getContentsInPath(content, List.of("a", "x", "c"));
     Assertions.assertTrue(extracted.isEmpty());
   }
 
   @Test
-  void pathExtract_partialMatch(){
+  void pathExtract_partialMatch() {
     var content = "<a><b><c>value-1</c><c>value-2</c></b></a><a><b><c>value-3</c></b></a>";
-    var extracted = TagContentsExtractor.getContentsInPath(content, List.of("a","b","x"));
+    var extracted = TagContentsExtractor.getContentsInPath(content, List.of("a", "b", "x"));
     Assertions.assertTrue(extracted.isEmpty());
   }
 
   @Test
-  void pathExtract_multipleBlocks(){
+  void pathExtract_multipleBlocks() {
     var content = "<a><b><c>value-1</c><c>value-2</c></b></a><a><b><c>value-3</c></b></a>";
-    var extracted = TagContentsExtractor.getContentsInPath(content, List.of("a","b"));
-    Assertions.assertEquals(List.of("<c>value-1</c><c>value-2</c>","<c>value-3</c>"), extracted);
+    var extracted = TagContentsExtractor.getContentsInPath(content, List.of("a", "b"));
+    Assertions.assertEquals(List.of("<c>value-1</c><c>value-2</c>", "<c>value-3</c>"), extracted);
   }
 }

@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.testmodules.guice;
 
 import com.google.inject.AbstractModule;
@@ -126,7 +130,8 @@ public class TestMetricsModule extends AbstractModule {
   @Provides
   @Singleton
   MetricsWalConsumerDriver provideMetricsWalConsumerDriver(
-      MetricsShardWalConsumer metricsShardWalConsumer, WalConsumerController walConsumerController) {
+      MetricsShardWalConsumer metricsShardWalConsumer,
+      WalConsumerController walConsumerController) {
     return new MetricsWalConsumerDriver(metricsShardWalConsumer, walConsumerController);
   }
 }

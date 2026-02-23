@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.promql.eval.nodes;
 
 // eval/match/MatchSpec.java
@@ -9,6 +13,7 @@ public final class MatchSpec {
   public final boolean groupLeft;
   public final boolean groupRight;
   public final List<String> include; // extra labels to include in expansion (optional)
+
   public MatchSpec(
       Mode mode, List<String> labels, boolean groupLeft, boolean groupRight, List<String> include) {
     this.mode = mode;

@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.investigation.ctx;
 
 import java.io.PrintWriter;
@@ -8,7 +12,6 @@ import lombok.Getter;
 @AllArgsConstructor
 @Builder
 @Getter
-// todo: remove for an effective agent, simpler prompt = better
 public class RootInvestigationCtx implements PrintableContext {
   ToplineInstruction toplineInstruction;
   InvestigationTopicCtx investigationTopicCtx;

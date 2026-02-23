@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.testmodules.guice;
 
 import com.google.inject.AbstractModule;
@@ -13,6 +17,9 @@ import org.okapi.abstractio.ShardToStringFlyweights;
 import org.okapi.abstractio.StreamIdFactory;
 import org.okapi.abstractio.WalResourcesPerStream;
 import org.okapi.identity.MemberList;
+import org.okapi.pages.Codec;
+import org.okapi.sharding.ShardAssigner;
+import org.okapi.sharding.ShardRegistry;
 import org.okapi.testmodules.FakeTraceForwarder;
 import org.okapi.testmodules.LoggingTracesBufferPool;
 import org.okapi.traces.TracesBufferPool;
@@ -28,9 +35,6 @@ import org.okapi.traces.service.TracesConsumerDriver;
 import org.okapi.traces.service.TracesIngester;
 import org.okapi.traces.service.TracesShardWalConsumer;
 import org.okapi.wal.consumer.WalConsumerController;
-import org.okapi.sharding.ShardAssigner;
-import org.okapi.sharding.ShardRegistry;
-import org.okapi.pages.Codec;
 
 public class TestTracesModule extends AbstractModule {
   private final TracesCfg cfg;

@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.traces.ch;
 
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
@@ -18,8 +22,6 @@ public final class ChTracesValidator {
   private static boolean hasSpans(ExportTraceServiceRequest request) {
     return request.getResourceSpansList().stream()
         .anyMatch(
-            rs ->
-                rs.getScopeSpansList().stream()
-                    .anyMatch(ss -> !ss.getSpansList().isEmpty()));
+            rs -> rs.getScopeSpansList().stream().anyMatch(ss -> !ss.getSpansList().isEmpty()));
   }
 }

@@ -1,5 +1,8 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.ai.tools.backends.datadog;
-
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

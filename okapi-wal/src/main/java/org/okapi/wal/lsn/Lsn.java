@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.wal.lsn;
 
 import lombok.EqualsAndHashCode;
@@ -42,7 +46,7 @@ public class Lsn implements Comparable<Lsn> {
     return cmp <= 0 ? a : b;
   }
 
-  public static Lsn zeroLsn(){
+  public static Lsn zeroLsn() {
     return START;
   }
 }

@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.auth;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,8 +44,7 @@ public class TokenManagerIT extends AbstractIT {
   @Autowired RelationGraphDao relationGraphDao;
   @Autowired TokenManager tokenManager;
   @Autowired TokenDecoder decoder;
-  @Autowired
-  Algorithm algorithm;
+  @Autowired Algorithm algorithm;
   String testInstance = UUID.randomUUID().toString();
   String userEmail = dedup("user@example.com", this.getClass());
 
@@ -65,7 +68,8 @@ public class TokenManagerIT extends AbstractIT {
   public void testIssueLoginToken() throws UnAuthorizedException {
     String userId = "test-user-id";
     String loginToken = tokenManager.issueLoginToken(userId);
-    String extractedUserId = decoder.checkClaimOrThrow(loginToken, JwtClaims.CLAIM_USER_ID, algorithm);
+    String extractedUserId =
+        decoder.checkClaimOrThrow(loginToken, JwtClaims.CLAIM_USER_ID, algorithm);
     assertEquals(
         userId, extractedUserId, "The extracted user ID should match the original user ID");
   }

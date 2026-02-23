@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.traces.query;
 
 import java.io.IOException;
@@ -81,8 +85,7 @@ public class S3TraceQueryProcessor implements TraceQueryProcessor {
     return new ArrayList<>(qp.getMatchingRecords());
   }
 
-  public List<String> getMatchingPartitions(
-      String logStream, long start, long end) {
+  public List<String> getMatchingPartitions(String logStream, long start, long end) {
     var matchingPrefixes = new ArrayList<String>();
     for (long ts = start; ts <= end; ts += cfg.getIdxExpiryDuration()) {
       var part = ts / cfg.getIdxExpiryDuration();

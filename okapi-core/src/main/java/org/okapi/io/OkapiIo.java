@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.io;
 
 import com.google.common.primitives.Ints;
@@ -108,7 +112,8 @@ public class OkapiIo {
     return readNBytes(is, length);
   }
 
-  public static byte[] readNBytes(InputStream is, int n) throws IOException, StreamReadingException {
+  public static byte[] readNBytes(InputStream is, int n)
+      throws IOException, StreamReadingException {
     byte[] bytes = new byte[n];
     int read = is.read(bytes);
     if (read != n) {

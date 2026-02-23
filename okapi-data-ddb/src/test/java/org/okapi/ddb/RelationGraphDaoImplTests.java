@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.ddb;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -66,14 +70,11 @@ public class RelationGraphDaoImplTests {
     dao.addRelationship(makeEntityId(USER, userB), makeEntityId(ORG, orgB), ORG_MEMBER);
 
     // anyone in orgA has read access to dashA and edit access to dashB
-    dao.addRelationship(
-        makeEntityId(ORG, orgA), makeEntityId(DASHBOARD, dashRead), DASHBOARD_READ);
-    dao.addRelationship(
-        makeEntityId(ORG, orgA), makeEntityId(DASHBOARD, dashEdit), DASHBOARD_EDIT);
+    dao.addRelationship(makeEntityId(ORG, orgA), makeEntityId(DASHBOARD, dashRead), DASHBOARD_READ);
+    dao.addRelationship(makeEntityId(ORG, orgA), makeEntityId(DASHBOARD, dashEdit), DASHBOARD_EDIT);
 
     // dashB is only accessible by orgB members with read access
-    dao.addRelationship(
-        makeEntityId(ORG, orgB), makeEntityId(DASHBOARD, dashB), DASHBOARD_READ);
+    dao.addRelationship(makeEntityId(ORG, orgB), makeEntityId(DASHBOARD, dashB), DASHBOARD_READ);
 
     // globalUser is member of orgA and orgB
     dao.addRelationship(new EntityId(USER, globalUser), makeEntityId(ORG, orgA), ORG_MEMBER);

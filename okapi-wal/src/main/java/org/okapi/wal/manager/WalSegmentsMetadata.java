@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.wal.manager;
 
 import java.util.List;
@@ -19,7 +23,8 @@ public class WalSegmentsMetadata {
   }
 
   public void upsertMetadata(WalSegmentMetadata segmentMetadata) {
-    this.segmentMetadata.removeIf(meta -> meta.getSegmentNumber() == segmentMetadata.getSegmentNumber());
+    this.segmentMetadata.removeIf(
+        meta -> meta.getSegmentNumber() == segmentMetadata.getSegmentNumber());
     this.segmentMetadata.add(segmentMetadata);
   }
 
@@ -32,9 +37,9 @@ public class WalSegmentsMetadata {
     return new WalSegmentsMetadata();
   }
 
-  public static WalSegmentsMetadata fromExisting(WalSegmentsMetadata metadata){
+  public static WalSegmentsMetadata fromExisting(WalSegmentsMetadata metadata) {
     var data = new WalSegmentsMetadata();
-    for(var meta: metadata.getSegmentMetadata()){
+    for (var meta : metadata.getSegmentMetadata()) {
       data.addMetadata(meta);
     }
     return data;

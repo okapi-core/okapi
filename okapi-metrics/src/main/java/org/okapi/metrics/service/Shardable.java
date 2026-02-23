@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.service;
 
 /** 2pc lifecycle for a resource that can be scaled up and down on demand. */

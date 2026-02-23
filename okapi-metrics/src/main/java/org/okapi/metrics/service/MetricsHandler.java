@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.service;
 
 /** register() -> register itself to the consumer farm freeze() -> freeze metrics consumption */

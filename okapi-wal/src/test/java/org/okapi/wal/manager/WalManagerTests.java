@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.wal.manager;
 
 import java.io.IOException;
@@ -69,7 +73,8 @@ public class WalManagerTests {
   }
 
   @Test
-  void testRotationIfPreviousNotFull_existingSegment() throws IOException, IllegalWalEntryException {
+  void testRotationIfPreviousNotFull_existingSegment()
+      throws IOException, IllegalWalEntryException {
     var walDir = new WalDirectory(tempDir);
     try (var walManager = new WalManager(tempDir, sampleConfig());
         var walWriter = new WalWriter(walManager, walDir)) {

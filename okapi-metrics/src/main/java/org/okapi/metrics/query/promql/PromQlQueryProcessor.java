@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.query.promql;
 
 import java.util.*;
@@ -99,8 +103,7 @@ public class PromQlQueryProcessor {
       now = instant.get();
     }
     var result = queryPointInTime(tenantId, promQl, now);
-    return PromQlResponseMapper.toResult(
-        result, PromQlResponseMapper.RETURN_TYPE.VECTOR_OR_SCALAR);
+    return PromQlResponseMapper.toResult(result, PromQlResponseMapper.RETURN_TYPE.VECTOR_OR_SCALAR);
   }
 
   public Set<VectorData.SeriesId> getMatches(

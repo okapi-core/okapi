@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.logs.api;
 
 import lombok.RequiredArgsConstructor;
@@ -29,8 +33,7 @@ public class LogsQueryController {
       consumes = MediaType.APPLICATION_JSON_VALUE,
       produces = MediaType.APPLICATION_JSON_VALUE)
   public QueryResponse query(
-      @RequestHeader("X-Okapi-Log-Stream") String logStream,
-      @RequestBody QueryRequest req)
+      @RequestHeader("X-Okapi-Log-Stream") String logStream, @RequestBody QueryRequest req)
       throws Exception {
     return logsQueryService.queryAllSources(logStream, req, maxQueryLimit);
   }
@@ -40,8 +43,7 @@ public class LogsQueryController {
       consumes = MediaType.APPLICATION_JSON_VALUE,
       produces = MediaType.APPLICATION_JSON_VALUE)
   public QueryResponse queryLocal(
-      @RequestHeader("X-Okapi-Log-Stream") String logStream,
-      @RequestBody QueryRequest req)
+      @RequestHeader("X-Okapi-Log-Stream") String logStream, @RequestBody QueryRequest req)
       throws Exception {
     return logsQueryService.queryDiskAndBufferPool(logStream, req, maxQueryLimit);
   }

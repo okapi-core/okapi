@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.dtos.org;
 
 import jakarta.validation.constraints.NotNull;
@@ -13,6 +17,5 @@ import org.okapi.web.dtos.users.GetOrgUserView;
 @NoArgsConstructor
 @Builder(toBuilder = true)
 public class ListOrgsResponse {
-  @NotNull
-  private List<GetOrgUserView> orgs;
+  @NotNull private List<GetOrgUserView> orgs;
 }

@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.data.ddb.dao;
 
 import com.google.common.base.Preconditions;
@@ -20,7 +24,7 @@ public class DashboardDaoImpl implements DashboardDao {
 
   @Inject
   public DashboardDaoImpl(DynamoDbEnhancedClient enhancedClient) {
-   
+
     this.table =
         enhancedClient.table(
             TablesAndIndexes.DASHBOARDS_TABLE, TableSchema.fromBean(DashboardDdb.class));

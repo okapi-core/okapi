@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.primitives;
 
 import java.io.ByteArrayOutputStream;
@@ -11,7 +15,8 @@ import org.okapi.protos.metrics.OffsetAndLen;
 
 public class OffsetTableSerializer {
 
-  public static byte[] serializeOffsetTable(Map<String, OffsetAndLen> offsetTable) throws IOException {
+  public static byte[] serializeOffsetTable(Map<String, OffsetAndLen> offsetTable)
+      throws IOException {
     var os = new ByteArrayOutputStream();
     var writer = new OkapiCheckedCountingWriter(os);
     writer.writeInt(offsetTable.size());

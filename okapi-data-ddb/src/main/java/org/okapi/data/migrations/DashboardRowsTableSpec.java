@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.data.migrations;
 
 import static org.okapi.data.TableSpecifications.makeRequest;
@@ -6,8 +10,8 @@ import static org.okapi.data.dto.TableAttributes.ROW_ID;
 import static org.okapi.data.dto.TablesAndIndexes.DASHBOARD_ROWS_TABLE;
 
 import java.util.Collections;
-import org.okapi.data.dto.DashboardRow;
 import org.okapi.data.TableSpec;
+import org.okapi.data.dto.DashboardRow;
 import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest;
 
 public class DashboardRowsTableSpec implements TableSpec<DashboardRow> {
@@ -27,4 +31,3 @@ public class DashboardRowsTableSpec implements TableSpec<DashboardRow> {
     return DASHBOARD_ROWS_TABLE;
   }
 }
-

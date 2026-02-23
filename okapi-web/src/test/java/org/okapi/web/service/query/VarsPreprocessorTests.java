@@ -1,9 +1,12 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.service.query;
 
+import java.util.Map;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.util.Map;
 
 public class VarsPreprocessorTests {
 
@@ -24,13 +27,16 @@ public class VarsPreprocessorTests {
   @Test
   void malformedVar() {
     var template = "hello $__{value";
-    Assertions.assertThrows(MalformedQueryException.class, () -> VarsPreprocessor.substituteVars(template, Map.of("value", "world")));
+    Assertions.assertThrows(
+        MalformedQueryException.class,
+        () -> VarsPreprocessor.substituteVars(template, Map.of("value", "world")));
   }
 
   @Test
   void twoVars() throws MalformedQueryException {
     var template = "hello $__{value1} $__{value2}";
-    var resub = VarsPreprocessor.substituteVars(template, Map.of("value1", "world", "value2", "again"));
+    var resub =
+        VarsPreprocessor.substituteVars(template, Map.of("value1", "world", "value2", "again"));
     Assertions.assertEquals("hello world again", resub);
   }
 

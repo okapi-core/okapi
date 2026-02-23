@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.service.federation.dispatcher;
 
 import java.time.Instant;
@@ -14,16 +18,13 @@ public class HttpDispatcherImpl implements JobDispatcher {
   PendingJobsDao jobsDao;
   PendingJobPoller pendingJobPoller;
 
-  public HttpDispatcherImpl(
-      PendingJobsDao jobsDao,
-      PendingJobPoller pendingJobPoller) {
+  public HttpDispatcherImpl(PendingJobsDao jobsDao, PendingJobPoller pendingJobPoller) {
     this.jobsDao = jobsDao;
     this.pendingJobPoller = pendingJobPoller;
   }
 
   @Override
-  public CompletableFuture<QueryResult> dispatchJob(
-      String orgId, PendingJob job) {
+  public CompletableFuture<QueryResult> dispatchJob(String orgId, PendingJob job) {
     var jobDdb =
         PendingJobDdb.builder()
             .orgId(orgId)

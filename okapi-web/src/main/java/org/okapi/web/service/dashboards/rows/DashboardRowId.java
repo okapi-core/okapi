@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.service.dashboards.rows;
 
 import lombok.Getter;
@@ -10,7 +14,6 @@ public class DashboardRowId {
   String orgId;
   String dashboardId;
   String rowId;
-
 
   public DashboardRowId(String fqId) {
     this.fqId = fqId;

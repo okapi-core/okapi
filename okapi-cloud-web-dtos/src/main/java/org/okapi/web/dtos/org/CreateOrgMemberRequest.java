@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.dtos.org;
 
 import jakarta.validation.constraints.NotNull;
@@ -10,9 +14,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 public class CreateOrgMemberRequest {
-  @NotNull
-  private String orgId;
-  @NotNull
-  private String email;
+  @NotNull private String orgId;
+  @NotNull private String email;
   @Setter private boolean admin;
 }

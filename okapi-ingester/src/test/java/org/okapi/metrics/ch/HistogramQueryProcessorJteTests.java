@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.ch;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,10 +21,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.okapi.ch.CreateChTablesSpec;
+import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.HistoQueryConfig;
 import org.okapi.rest.metrics.query.METRIC_TYPE;
-import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
 import org.okapi.testmodules.guice.TestChMetricsModule;
 
 /** Sanity test for the JTE-based histogram query execution path. */

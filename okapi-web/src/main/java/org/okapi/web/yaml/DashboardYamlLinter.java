@@ -1,8 +1,11 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.yaml;
 
 import com.google.gson.JsonParser;
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.okapi.web.dtos.dashboards.yaml.LintDashboardYamlResponse;
 import org.okapi.web.dtos.dashboards.yaml.ResolvedPanelId;
@@ -41,14 +44,22 @@ public class DashboardYamlLinter {
       for (int i = 0; i < dashboard.getVars().size(); i++) {
         var varSpec = dashboard.getVars().get(i);
         if (varSpec == null || isBlank(varSpec.getName())) {
-          errors.add(issue("VAR_NAME_MISSING", "Variable name is required", "$.dashboard.vars[" + i + "]"));
+          errors.add(
+              issue(
+                  "VAR_NAME_MISSING", "Variable name is required", "$.dashboard.vars[" + i + "]"));
           continue;
         }
         if (!declaredVars.add(varSpec.getName())) {
-          errors.add(issue("VAR_DUPLICATE", "Duplicate variable: " + varSpec.getName(), "$.dashboard.vars[" + i + "]"));
+          errors.add(
+              issue(
+                  "VAR_DUPLICATE",
+                  "Duplicate variable: " + varSpec.getName(),
+                  "$.dashboard.vars[" + i + "]"));
         }
         if ("TAG_VALUE".equalsIgnoreCase(varSpec.getType()) && isBlank(varSpec.getTag())) {
-          errors.add(issue("VAR_TAG_MISSING", "TAG_VALUE requires tag", "$.dashboard.vars[" + i + "].tag"));
+          errors.add(
+              issue(
+                  "VAR_TAG_MISSING", "TAG_VALUE requires tag", "$.dashboard.vars[" + i + "].tag"));
         }
       }
     }
@@ -64,18 +75,29 @@ public class DashboardYamlLinter {
       var rowId = isBlank(row.getId()) ? ("row-" + (i + 1)) : row.getId();
       var resolvedPanels = new ArrayList<ResolvedPanelId>();
       if (row.getPanels() == null || row.getPanels().isEmpty()) {
-        errors.add(issue("PANELS_MISSING", "Row must contain panels", "$.dashboard.rows[" + i + "].panels"));
+        errors.add(
+            issue(
+                "PANELS_MISSING", "Row must contain panels", "$.dashboard.rows[" + i + "].panels"));
       } else {
         for (int j = 0; j < row.getPanels().size(); j++) {
           var panel = row.getPanels().get(j);
           if (panel == null) {
-            errors.add(issue("PANEL_MISSING", "Panel is required", "$.dashboard.rows[" + i + "].panels[" + j + "]"));
+            errors.add(
+                issue(
+                    "PANEL_MISSING",
+                    "Panel is required",
+                    "$.dashboard.rows[" + i + "].panels[" + j + "]"));
             continue;
           }
-          var panelId = isBlank(panel.getId()) ? ("panel-" + (i + 1) + "-" + (j + 1)) : panel.getId();
+          var panelId =
+              isBlank(panel.getId()) ? ("panel-" + (i + 1) + "-" + (j + 1)) : panel.getId();
           resolvedPanels.add(ResolvedPanelId.builder().id(panelId).build());
           if (panel.getQueries() == null || panel.getQueries().isEmpty()) {
-            errors.add(issue("QUERIES_MISSING", "Panel must contain queries", "$.dashboard.rows[" + i + "].panels[" + j + "].queries"));
+            errors.add(
+                issue(
+                    "QUERIES_MISSING",
+                    "Panel must contain queries",
+                    "$.dashboard.rows[" + i + "].panels[" + j + "].queries"));
             continue;
           }
           for (int k = 0; k < panel.getQueries().size(); k++) {
@@ -102,7 +124,8 @@ public class DashboardYamlLinter {
     return response(errors.isEmpty(), errors, warnings, resolved);
   }
 
-  private void validateVars(String query, Set<String> declared, List<YamlLintIssue> errors, String path) {
+  private void validateVars(
+      String query, Set<String> declared, List<YamlLintIssue> errors, String path) {
     var matcher = VAR_PATTERN.matcher(query);
     while (matcher.find()) {
       var name = matcher.group(1);

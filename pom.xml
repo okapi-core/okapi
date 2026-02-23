@@ -437,7 +437,6 @@
                 <artifactId>spotless-maven-plugin</artifactId>
                 <version>${spotless.version}</version>
                 <configuration>
-                    <ratchetFrom>origin/main</ratchetFrom>
                     <formats>
                         <format>
                             <includes>
@@ -451,8 +450,54 @@
                                 <spacesPerTab>2</spacesPerTab>
                             </indent>
                         </format>
+                        <format>
+                            <includes>
+                                <include>**/*.proto</include>
+                                <include>**/*.sql</include>
+                                <include>**/*.g4</include>
+                                <include>**/*.cql</include>
+                            </includes>
+                            <excludes>
+                                <exclude>**/target/**</exclude>
+                                <exclude>**/build/**</exclude>
+                                <exclude>**/out/**</exclude>
+                            </excludes>
+                            <licenseHeader>
+                                <file>${maven.multiModuleProjectDirectory}/build-scripts/spotless/license-header-block.txt</file>
+                                <delimiter>\A</delimiter>
+                            </licenseHeader>
+                        </format>
+                        <format>
+                            <includes>
+                                <include>**/*.sh</include>
+                                <include>**/*.py</include>
+                                <include>**/*.yaml</include>
+                                <include>**/*.yml</include>
+                                <include>**/*.properties</include>
+                                <include>**/*.toml</include>
+                                <include>Dockerfile</include>
+                            </includes>
+                            <excludes>
+                                <exclude>**/target/**</exclude>
+                                <exclude>**/build/**</exclude>
+                                <exclude>**/out/**</exclude>
+                            </excludes>
+                            <licenseHeader>
+                                <file>${maven.multiModuleProjectDirectory}/build-scripts/spotless/license-header-hash.txt</file>
+                                <delimiter>\A</delimiter>
+                                <skipLinesMatching>^#!.*</skipLinesMatching>
+                            </licenseHeader>
+                        </format>
                     </formats>
                     <java>
+                        <excludes>
+                            <exclude>**/target/**</exclude>
+                            <exclude>**/build/**</exclude>
+                            <exclude>**/out/**</exclude>
+                        </excludes>
+                        <licenseHeader>
+                            <file>${maven.multiModuleProjectDirectory}/build-scripts/spotless/license-header-block.txt</file>
+                        </licenseHeader>
                         <googleJavaFormat>
                             <version>${googleFormat.version}</version>
                             <style>GOOGLE</style>

@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.service;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -5,7 +9,6 @@ import static org.okapi.web.auth.TestCommons.addToOrg;
 
 import java.util.List;
 import java.util.UUID;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
@@ -14,9 +17,9 @@ import org.okapi.data.dao.DashboardDao;
 import org.okapi.data.dao.DashboardPanelDao;
 import org.okapi.data.dao.DashboardRowDao;
 import org.okapi.data.dao.RelationGraphDao;
+import org.okapi.data.ddb.attributes.ResourceOrder;
 import org.okapi.data.ddb.dao.ResourceIdCreator;
 import org.okapi.data.dto.DashboardPanel;
-import org.okapi.data.ddb.attributes.ResourceOrder;
 import org.okapi.web.auth.AbstractIT;
 import org.okapi.web.auth.OrgManager;
 import org.okapi.web.auth.TokenManager;
@@ -75,7 +78,7 @@ public class DashboardRowServiceIT extends AbstractIT {
     // create a dashboard
     var dashRes =
         dashboardService.create(
-                DashboardAccessContext.of(adminTempToken),
+            DashboardAccessContext.of(adminTempToken),
             new CreateDashboardRequest("dashNote", "dashTitle", List.of()));
     var dashboardId = dashRes.getDashboardId();
     var versionId = dashRes.getActiveVersion();
@@ -105,11 +108,7 @@ public class DashboardRowServiceIT extends AbstractIT {
         dashboardId,
         rowId,
         versionId,
-        DashboardPanel.builder()
-            .panelId("p1")
-            .title("Panel 1")
-            .note("Note 1")
-            .build());
+        DashboardPanel.builder().panelId("p1").title("Panel 1").note("Note 1").build());
 
     // read row and verify panel returned
     var read =
@@ -151,7 +150,9 @@ public class DashboardRowServiceIT extends AbstractIT {
     // delete
     rowService.delete(
         ProtectedResourceContext.of(
-            adminTempToken, ResourceIdCreator.createResourceId(orgId, dashboardId, rowId), versionId));
+            adminTempToken,
+            ResourceIdCreator.createResourceId(orgId, dashboardId, rowId),
+            versionId));
 
     var rowOpt = rowDao.get(orgId, dashboardId, versionId, rowId);
     assertTrue(rowOpt.isEmpty());

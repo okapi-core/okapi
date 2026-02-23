@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.datagen.spans;
 
 import io.opentelemetry.proto.common.v1.AnyValue;
@@ -20,10 +24,10 @@ public final class OtelShorthand {
         .build();
   }
 
-  public static KeyValue kvDouble(String key, double value){
+  public static KeyValue kvDouble(String key, double value) {
     return KeyValue.newBuilder()
-            .setKey(key)
-            .setValue(AnyValue.newBuilder().setDoubleValue(value).build())
-            .build();
+        .setKey(key)
+        .setValue(AnyValue.newBuilder().setDoubleValue(value).build())
+        .build();
   }
 }

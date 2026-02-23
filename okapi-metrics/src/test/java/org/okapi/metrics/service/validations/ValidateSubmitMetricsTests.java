@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.service.validations;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -12,9 +16,9 @@ import org.okapi.rest.metrics.MetricType;
 import org.okapi.rest.metrics.payloads.Gauge;
 import org.okapi.rest.metrics.payloads.Histo;
 import org.okapi.rest.metrics.payloads.HistoPoint;
+import org.okapi.rest.metrics.payloads.SUM_TEMPORALITY;
 import org.okapi.rest.metrics.payloads.Sum;
 import org.okapi.rest.metrics.payloads.SumPoint;
-import org.okapi.rest.metrics.payloads.SUM_TEMPORALITY;
 
 public class ValidateSubmitMetricsTests {
 

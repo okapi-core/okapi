@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.agent.dto.results.promql;
 
 import lombok.AllArgsConstructor;
@@ -10,9 +14,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class PromQlData<T> extends AbstractPromQlData {
-    T[] result;
+  T[] result;
 
-    public PromQlData(String resultType) {
-        super(resultType);
-    }
+  public PromQlData(String resultType) {
+    super(resultType);
+  }
 }

@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.demo.tracing;
 
 import io.opentelemetry.api.trace.Span;
@@ -50,11 +54,7 @@ public class TracingHelper {
   public Span startServerSpan(HttpServletRequest request, String spanName) {
     Context parent = propagator.extract(Context.current(), request, SERVLET_GETTER);
     var span =
-        tracer
-            .spanBuilder(spanName)
-            .setSpanKind(SpanKind.SERVER)
-            .setParent(parent)
-            .startSpan();
+        tracer.spanBuilder(spanName).setSpanKind(SpanKind.SERVER).setParent(parent).startSpan();
     span.setAttribute("http.method", request.getMethod());
     span.setAttribute("http.route", request.getRequestURI());
     return span;

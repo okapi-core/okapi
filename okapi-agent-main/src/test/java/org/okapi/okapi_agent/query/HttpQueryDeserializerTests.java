@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.okapi_agent.query;
 
 import java.util.List;
@@ -31,7 +35,7 @@ public class HttpQueryDeserializerTests {
                 """
                 POST /payload HTTP/1.1
                 Content-Type: text/plain
-                Header : Value 
+                Header : Value
 
                 payload-body
                 """,
@@ -53,7 +57,8 @@ public class HttpQueryDeserializerTests {
 
     for (int i = 0; i < samples.size(); i++) {
       var sample = samples.get(i);
-      DeserializationResult result = deserializer.readQuery(new QuerySpec(toCrLf(sample.payload())));
+      DeserializationResult result =
+          deserializer.readQuery(new QuerySpec(toCrLf(sample.payload())));
       Assertions.assertTrue(result.success(), "Expected success for sample index " + i);
       Assertions.assertNotNull(result.query());
 

@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.ddb;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -9,10 +13,10 @@ import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.okapi.data.CreateDynamoDBTables;
 import org.okapi.data.dao.DashboardDao;
-import org.okapi.data.ddb.dao.DashboardDaoImpl;
-import org.okapi.data.dto.DashboardDdb;
 import org.okapi.data.ddb.attributes.ResourceOrder;
 import org.okapi.data.ddb.attributes.TagsList;
+import org.okapi.data.ddb.dao.DashboardDaoImpl;
+import org.okapi.data.dto.DashboardDdb;
 import org.okapi.testutils.OkapiTestUtils;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 
@@ -42,7 +46,7 @@ public class DashboardDaoImplTest {
             .dashboardId(dashId)
             .title("Title")
             .desc("Desc")
-            .tags(TagsList.of("a","b"))
+            .tags(TagsList.of("a", "b"))
             .rowOrder(new ResourceOrder(List.of("a", "b", "c")))
             .build();
     dao.save(dto);

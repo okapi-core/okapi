@@ -1,12 +1,15 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.query;
-
-import lombok.AllArgsConstructor;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
+import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public class ParrallelAggregator<R> {

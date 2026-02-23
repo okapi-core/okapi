@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.search;
 
 import java.util.*;
@@ -114,6 +118,7 @@ public class MetricsSearcher {
     final Type type;
     final String key;
     final String value;
+
     private LabelFilter(Type type, String key, String value) {
       this.type = type;
       this.key = key;

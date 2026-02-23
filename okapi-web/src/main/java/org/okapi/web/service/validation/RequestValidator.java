@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.service.validation;
 
 import org.okapi.data.exceptions.ResourceNotFoundException;
@@ -16,5 +20,4 @@ public interface RequestValidator<Ctx, ValidatedCtx, Req, UpdateReq> {
 
   ValidatedCtx validateDelete(Ctx ctx)
       throws BadRequestException, UnAuthorizedException, ResourceNotFoundException;
-
 }

@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.it;
 
 import static org.awaitility.Awaitility.await;
@@ -167,8 +171,7 @@ public class PrometheusCompatibleIngestIT {
   }
 
   private JsonObject getPromJson(String path) {
-    String json =
-        restClient.get().uri(baseUrl + path).retrieve().body(String.class);
+    String json = restClient.get().uri(baseUrl + path).retrieve().body(String.class);
     assertNotNull(json);
     return gson.fromJson(json, JsonObject.class);
   }

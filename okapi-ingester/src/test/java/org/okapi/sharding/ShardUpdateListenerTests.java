@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.sharding;
 
 import java.nio.file.Path;
@@ -38,9 +42,7 @@ public class ShardUpdateListenerTests {
             .retryPolicy(new ExponentialBackoffRetry(1000, 3))
             .build();
     curatorFramework.start();
-    listener =
-        new ShardUpdateListener(
-            shardOrchestrator, zkClient, curatorFramework, shardRoot);
+    listener = new ShardUpdateListener(shardOrchestrator, zkClient, curatorFramework, shardRoot);
     Mockito.when(zkClient.getShardState(Mockito.eq(1))).thenReturn(getSteadyShard());
     Mockito.when(zkClient.getShardState(Mockito.eq(2))).thenReturn(getMovingShardMetadata());
     Mockito.when(zkClient.getShardState(Mockito.eq(3))).thenReturn(getShardWithHandoffOffset());

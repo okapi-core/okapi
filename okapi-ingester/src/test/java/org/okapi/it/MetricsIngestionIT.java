@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.it;
 
 import static org.awaitility.Awaitility.await;
@@ -139,9 +143,7 @@ public class MetricsIngestionIT {
         buildOtelGauge(svc, gaugeMetric, List.of(numberPointAt(t1 + 500, 0.6, tagsProd)));
     var gaugePayloadOtherSvc =
         buildOtelGauge(
-            otherSvc,
-            gaugeMetricOtherSvc,
-            List.of(numberPointAt(t1 + 1000, 0.9, tagsOtherSvc)));
+            otherSvc, gaugeMetricOtherSvc, List.of(numberPointAt(t1 + 1000, 0.9, tagsOtherSvc)));
 
     postOtel(gaugePayload);
     postOtel(sumPayload);
@@ -300,10 +302,7 @@ public class MetricsIngestionIT {
             AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA,
             List.of(sumPoint(t1, t2, 2.0, tags))));
     postOtel(
-        buildOtelGauge(
-            otherSvc,
-            "cpu_hint_other",
-            List.of(numberPointAt(t1, 0.5, tagsOtherSvc))));
+        buildOtelGauge(otherSvc, "cpu_hint_other", List.of(numberPointAt(t1, 0.5, tagsOtherSvc))));
 
     await()
         .atMost(10, TimeUnit.SECONDS)
@@ -328,10 +327,7 @@ public class MetricsIngestionIT {
 
               var nullFilterReq =
                   new GetMetricNameHints(
-                      svc,
-                      "cpu_",
-                      new TimeInterval(nowMs - 70_000, nowMs + 5_000),
-                      null);
+                      svc, "cpu_", new TimeInterval(nowMs - 70_000, nowMs + 5_000), null);
               GetMetricsHintsResponse nullFilterResp =
                   restClient
                       .post()

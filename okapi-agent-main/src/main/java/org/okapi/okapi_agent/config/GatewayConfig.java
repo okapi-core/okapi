@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.okapi_agent.config;
 
 import jakarta.validation.constraints.NotBlank;
@@ -16,11 +20,7 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @AllArgsConstructor
 public class GatewayConfig {
-    @NotNull
-    @NotBlank
-    String endpoint;
+  @NotNull @NotBlank String endpoint;
 
-    @NotNull
-    @NotBlank
-    String gatewayToken;
+  @NotNull @NotBlank String gatewayToken;
 }

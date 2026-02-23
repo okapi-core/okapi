@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.spring;
 
 import com.google.gson.Gson;
@@ -10,21 +14,20 @@ import org.okapi.beans.Configurations;
 import org.okapi.clock.Clock;
 import org.okapi.clock.SystemClock;
 import org.okapi.fake.FakeClock;
-import org.okapi.nodes.Ec2IpSupplier;
-import org.okapi.nodes.FixedIpSupplier;
-import org.okapi.nodes.IpSupplier;
 import org.okapi.metrics.*;
 import org.okapi.metrics.aws.NoOpCredentials;
 import org.okapi.metrics.query.QueryProcImpl;
-import org.okapi.metrics.query.promql.PathSetDiscoveryClientFactory;
 import org.okapi.metrics.query.promql.PromQlQueryProcessor;
 import org.okapi.metrics.query.promql.RollupStatsMerger;
-import org.okapi.promql.runtime.SeriesDiscoveryFactory;
-import org.okapi.promql.runtime.TsClientFactory;
 import org.okapi.metrics.rollup.*;
 import org.okapi.metrics.service.web.QueryProcessor;
 import org.okapi.metrics.stats.*;
+import org.okapi.nodes.Ec2IpSupplier;
+import org.okapi.nodes.FixedIpSupplier;
+import org.okapi.nodes.IpSupplier;
 import org.okapi.profiles.ENV_TYPE;
+import org.okapi.promql.runtime.SeriesDiscoveryFactory;
+import org.okapi.promql.runtime.TsClientFactory;
 import org.okapi.rest.promql.Sample;
 import org.okapi.rest.promql.SampleAdapter;
 import org.springframework.beans.factory.annotation.Autowired;

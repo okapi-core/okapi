@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.pages;
 
 import java.util.Optional;
@@ -13,7 +17,8 @@ public final class ActivePage<P extends AppendOnlyPage<I, S, M, B>, I, S, M, B, 
   private final Function<StreamIdentifier<Id>, P> pageFactory;
   private P page;
 
-  public ActivePage(StreamIdentifier<Id> streamIdentifier, Function<StreamIdentifier<Id>, P> pageFactory) {
+  public ActivePage(
+      StreamIdentifier<Id> streamIdentifier, Function<StreamIdentifier<Id>, P> pageFactory) {
     this.streamIdentifier = streamIdentifier;
     this.pageFactory = pageFactory;
     this.page = pageFactory.apply(streamIdentifier);

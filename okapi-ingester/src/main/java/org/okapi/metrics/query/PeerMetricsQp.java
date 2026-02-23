@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.query;
 
 import java.time.Duration;
@@ -38,11 +42,7 @@ public class PeerMetricsQp implements MetricsQueryProcessor {
 
   @Override
   public List<TimestampedReadonlySketch> getGaugeSketches(
-      String metricName,
-      Map<String, String> paths,
-      RES_TYPE resType,
-      long startTime,
-      long endTime)
+      String metricName, Map<String, String> paths, RES_TYPE resType, long startTime, long endTime)
       throws Exception {
     var localPath = MetricPaths.localPath(metricName, paths);
     var streamIdentifier = new MetricsStreamIdentifier(localPath);
@@ -61,8 +61,7 @@ public class PeerMetricsQp implements MetricsQueryProcessor {
         var qEnd = Math.min(endTime, range[1]);
         suppliers.add(
             () -> {
-              return client.queryGaugeSketches(
-                  nodeId, metricName, paths, resType, qStart, qEnd);
+              return client.queryGaugeSketches(nodeId, metricName, paths, resType, qStart, qEnd);
             });
       }
     }
@@ -72,8 +71,7 @@ public class PeerMetricsQp implements MetricsQueryProcessor {
 
   @Override
   public List<ReadonlyHistogram> getHistograms(
-      String metricName, Map<String, String> paths, long startTime, long endTime)
-      throws Exception {
+      String metricName, Map<String, String> paths, long startTime, long endTime) throws Exception {
     var idxExpiryDurationMs = cfg.getIdxExpiryDuration();
     var localPath = MetricPaths.localPath(metricName, paths);
     var streamIdentifier = new MetricsStreamIdentifier(localPath);
@@ -89,8 +87,7 @@ public class PeerMetricsQp implements MetricsQueryProcessor {
       for (var range : memberRanges) {
         var qStart = Math.max(startTime, range[0]);
         var qEnd = Math.min(endTime, range[1]);
-        suppliers.add(
-            () -> client.queryHistograms(nodeId,  metricName, paths, qStart, qEnd));
+        suppliers.add(() -> client.queryHistograms(nodeId, metricName, paths, qStart, qEnd));
       }
     }
     var aggregator = new ParrallelAggregator<ReadonlyHistogram>(executorService);

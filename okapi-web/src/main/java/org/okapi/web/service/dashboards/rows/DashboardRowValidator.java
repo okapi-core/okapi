@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.service.dashboards.rows;
 
 import lombok.AllArgsConstructor;
@@ -42,8 +46,7 @@ public class DashboardRowValidator
     var orgMemberContext = orgMemberValidator.checkOrgMember(context.getToken());
     var dashboard = getDashboardOrThrow(request.getOrgId(), request.getDashboardId());
     validateVersionExists(request.getOrgId(), request.getDashboardId(), request.getVersionId());
-    return new DashboardRowAccessContext(
-        orgMemberContext, null, dashboard, request.getVersionId());
+    return new DashboardRowAccessContext(orgMemberContext, null, dashboard, request.getVersionId());
   }
 
   @Override

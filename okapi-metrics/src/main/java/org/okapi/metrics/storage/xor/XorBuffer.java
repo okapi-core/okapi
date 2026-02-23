@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.storage.xor;
 
 import java.io.IOException;
@@ -17,6 +21,7 @@ public class XorBuffer {
   ValueWriter valueWriter;
   int prevValBits;
   int total = 0;
+
   public XorBuffer(ByteBufferWriter bufferWriter) {
     this.bufferWriter = bufferWriter;
     this.valueWriter = new BitValueWriter(bufferWriter);

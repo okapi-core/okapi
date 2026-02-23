@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.promql;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,13 +26,13 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.okapi.Constants;
 import org.okapi.ch.CreateChTablesSpec;
 import org.okapi.metrics.ch.ChConstants;
 import org.okapi.metrics.ch.ChMetricsIngester;
 import org.okapi.metrics.ch.ChMetricsWalConsumerDriver;
 import org.okapi.promql.eval.InstantVectorResult;
 import org.okapi.promql.eval.VectorData;
-import org.okapi.Constants;
 import org.okapi.promql.query.PromQlQueryProcessor;
 import org.okapi.testmodules.guice.TestChMetricsModule;
 

@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.query;
 
 import com.google.inject.Inject;
@@ -68,8 +72,7 @@ public class OnDiskMetricsQueryProcessor implements MetricsQueryProcessor {
       }
       try (var byteSupplier = new DiskByteRangeSupplier(path); ) {
         histograms.addAll(
-            metricsByteRangeQp.getHistograms(
-                metricName, paths, startTime, endTime, byteSupplier));
+            metricsByteRangeQp.getHistograms(metricName, paths, startTime, endTime, byteSupplier));
       }
     }
     return histograms;

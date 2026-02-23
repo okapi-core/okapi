@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.json;
 
 import com.google.gson.JsonArray;
@@ -8,9 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * A Json extractor that parses once and allows repeated lookups without reparsing.
- */
+/** A Json extractor that parses once and allows repeated lookups without reparsing. */
 public class StatefulJsonExtractor {
   private final JsonElement root;
 
@@ -23,9 +25,7 @@ public class StatefulJsonExtractor {
   }
 
   public Optional<JsonObject> getObject(Iterable<String> path) {
-    return navigate(path)
-        .filter(JsonElement::isJsonObject)
-        .map(JsonElement::getAsJsonObject);
+    return navigate(path).filter(JsonElement::isJsonObject).map(JsonElement::getAsJsonObject);
   }
 
   public Optional<JsonArray> getArray(Iterable<String> path) {

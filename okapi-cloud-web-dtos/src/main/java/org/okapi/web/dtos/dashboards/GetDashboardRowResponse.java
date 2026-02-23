@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.dtos.dashboards;
 
 import jakarta.validation.constraints.NotNull;
@@ -12,8 +16,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Builder
 public class GetDashboardRowResponse {
-  @NotNull
-  String rowId;
+  @NotNull String rowId;
   String title;
   String description;
   List<GetDashboardPanelResponse> panels;

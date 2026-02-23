@@ -1,12 +1,10 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.ch;
-
-
 
 import java.util.Map;
 
 public record ChSumSample(
-    long tsStart,
-    long tsEnd,
-    long value,
-    CH_SUM_TYPE sumType,
-    Map<String, String> tags) {}
+    long tsStart, long tsEnd, long value, CH_SUM_TYPE sumType, Map<String, String> tags) {}

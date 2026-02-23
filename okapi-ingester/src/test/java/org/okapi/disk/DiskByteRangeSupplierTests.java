@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.disk;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,7 +36,7 @@ public class DiskByteRangeSupplierTests {
     assertEquals(0, noBytes.length);
     diskSupplier.close();
   }
-  
+
   @AfterEach
   void teardDown() throws IOException {
     Files.delete(fp);

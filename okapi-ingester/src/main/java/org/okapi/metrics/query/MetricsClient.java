@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.query;
 
 import java.util.List;
@@ -16,9 +20,5 @@ public interface MetricsClient {
       long qEnd);
 
   List<ReadonlyHistogram> queryHistograms(
-      String nodeId,
-      String metricName,
-      Map<String, String> paths,
-      long qStart,
-      long qEnd);
+      String nodeId, String metricName, Map<String, String> paths, long qStart, long qEnd);
 }

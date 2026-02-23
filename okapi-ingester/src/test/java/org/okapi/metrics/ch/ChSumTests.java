@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.ch;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -58,9 +62,7 @@ public class ChSumTests {
             metric,
             tags,
             AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA,
-            List.of(
-                numberPoint(1_000L, 2_000L, 3.0),
-                numberPoint(2_000L, 3_000L, 4.0)));
+            List.of(numberPoint(1_000L, 2_000L, 3.0), numberPoint(2_000L, 3_000L, 4.0)));
 
     ingester.ingestOtelProtobuf(req);
     driver.onTick();

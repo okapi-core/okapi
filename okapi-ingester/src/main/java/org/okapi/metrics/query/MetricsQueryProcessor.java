@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.query;
 
 import java.util.List;
@@ -12,6 +16,5 @@ public interface MetricsQueryProcessor {
       throws Exception;
 
   List<ReadonlyHistogram> getHistograms(
-      String metricName, Map<String, String> paths, long startTime, long endTime)
-      throws Exception;
+      String metricName, Map<String, String> paths, long startTime, long endTime) throws Exception;
 }

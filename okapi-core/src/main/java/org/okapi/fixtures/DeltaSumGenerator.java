@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.fixtures;
 
 import java.time.Duration;
@@ -11,6 +15,7 @@ public class DeltaSumGenerator {
   int maxCount;
   @Getter Duration windowSize;
   @Getter List<Sum> readings;
+
   public DeltaSumGenerator(int maxCount, Duration windowSize) {
     this.maxCount = maxCount;
     this.readings = new ArrayList<>();

@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.logs.service;
 
 import io.opentelemetry.proto.logs.v1.LogRecord;

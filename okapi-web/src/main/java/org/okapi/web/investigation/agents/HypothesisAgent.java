@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.investigation.agents;
 
 import dev.langchain4j.data.message.UserMessage;
@@ -17,8 +21,7 @@ public class HypothesisAgent {
 You are an SRE. You are provided with a set of tools. Use the right tools to collect data.
         """;
     var model =
-        OpenAiChatModel.builder()
-                .modelName(modelName).apiKey(apiKey).user(template).build();
+        OpenAiChatModel.builder().modelName(modelName).apiKey(apiKey).user(template).build();
     var issueTemplate =
 """
 Issue Description:

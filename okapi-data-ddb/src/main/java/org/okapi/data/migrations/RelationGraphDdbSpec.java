@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.data.migrations;
 
 import static org.okapi.data.TableSpecifications.makeRequest;
@@ -6,8 +10,8 @@ import static org.okapi.data.dto.TableAttributes.RELATED_ENTITY;
 import static org.okapi.data.dto.TablesAndIndexes.RELATIONSHIP_GRAPH_TABLE;
 
 import java.util.Collections;
-import org.okapi.data.dto.RelationGraphNodeDdb;
 import org.okapi.data.TableSpec;
+import org.okapi.data.dto.RelationGraphNodeDdb;
 import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest;
 
 public class RelationGraphDdbSpec implements TableSpec<RelationGraphNodeDdb> {
@@ -15,7 +19,7 @@ public class RelationGraphDdbSpec implements TableSpec<RelationGraphNodeDdb> {
   public CreateTableRequest getSpec() {
     return makeRequest(
         RELATIONSHIP_GRAPH_TABLE,
-            EDGE_ID,
+        EDGE_ID,
         RELATED_ENTITY,
         Collections.emptyList(),
         Collections.emptyList(),

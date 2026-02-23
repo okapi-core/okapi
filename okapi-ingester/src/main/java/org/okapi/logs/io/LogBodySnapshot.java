@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.logs.io;
 
 import java.util.List;
@@ -8,5 +12,5 @@ import org.okapi.primitives.BinaryLogRecordV1;
 @AllArgsConstructor
 @Getter
 public class LogBodySnapshot {
-    List<BinaryLogRecordV1> logDocs;
+  List<BinaryLogRecordV1> logDocs;
 }

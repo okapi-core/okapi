@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.ddb;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -86,8 +90,7 @@ public class TokenMetaDaoDdbImplIT {
     dao.createTokenMetadata(other);
 
     var activeResult = dao.listTokensByOrgAndStatus(orgId, TOKEN_STATUS.ACTIVE);
-    var ids =
-        activeResult.stream().map(TokenMetaDdb::getTokenId).toList();
+    var ids = activeResult.stream().map(TokenMetaDdb::getTokenId).toList();
     assertTrue(ids.containsAll(activeTokens));
     assertFalse(ids.containsAll(inactiveTokens));
     assertFalse(ids.contains("other-token"));

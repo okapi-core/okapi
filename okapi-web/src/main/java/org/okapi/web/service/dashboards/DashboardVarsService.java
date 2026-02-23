@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.service.dashboards;
 
 import lombok.AllArgsConstructor;
@@ -66,5 +70,4 @@ public class DashboardVarsService {
       case TAG_VALUE -> DashboardVariable.DASHBOARD_VAR_TYPE.TAG;
     };
   }
-
 }

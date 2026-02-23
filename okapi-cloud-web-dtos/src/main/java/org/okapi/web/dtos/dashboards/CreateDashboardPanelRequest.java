@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.dtos.dashboards;
 
 import jakarta.validation.constraints.NotNull;
@@ -19,6 +23,5 @@ public class CreateDashboardPanelRequest {
   @NotNull String panelId;
   String title;
   String note;
-  @NotNull
-  List<PanelQueryConfigWDto> queryConfig;
+  @NotNull List<PanelQueryConfigWDto> queryConfig;
 }

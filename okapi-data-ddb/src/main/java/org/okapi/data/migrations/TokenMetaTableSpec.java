@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.data.migrations;
 
 import static org.okapi.data.TableSpecifications.makeRequest;
@@ -8,8 +12,8 @@ import static org.okapi.data.dto.TablesAndIndexes.TOKEN_META_BY_ORG_STATUS_GSI;
 import static org.okapi.data.dto.TablesAndIndexes.TOKEN_META_TABLE;
 
 import java.util.Arrays;
-import org.okapi.data.dto.TokenMetaDdb;
 import org.okapi.data.TableSpec;
+import org.okapi.data.dto.TokenMetaDdb;
 import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest;
 
 public class TokenMetaTableSpec implements TableSpec<TokenMetaDdb> {

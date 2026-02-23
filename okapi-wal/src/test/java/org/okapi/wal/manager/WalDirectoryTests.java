@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.wal.manager;
 
 import java.io.IOException;
@@ -54,10 +58,8 @@ public class WalDirectoryTests {
     Files.createFile(walDirectory.getWalSegment(2));
     Files.createFile(walDirectory.getWalSegment(5));
 
-    Assertions.assertEquals(
-        2, walDirectory.getSegmentImmediatelyAfter(0).orElseThrow());
-    Assertions.assertEquals(
-        5, walDirectory.getSegmentImmediatelyAfter(2).orElseThrow());
+    Assertions.assertEquals(2, walDirectory.getSegmentImmediatelyAfter(0).orElseThrow());
+    Assertions.assertEquals(5, walDirectory.getSegmentImmediatelyAfter(2).orElseThrow());
     Assertions.assertTrue(walDirectory.getSegmentImmediatelyAfter(5).isEmpty());
   }
 }

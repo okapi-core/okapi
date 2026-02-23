@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.service.federation.dispatcher;
 
 import jakarta.annotation.PreDestroy;
@@ -47,9 +51,7 @@ public class PendingJobPoller {
               } else if (job.getJobStatus() == JOB_STATUS.FAILED) {
                 var jobError = jobsDao.getRawResult(jobId.orgId(), jobId.jobId());
                 return new PollingTask.PollStatus<>(PollingTask.POLL_STATUS.DONE, jobError.get());
-              } else
-                return new PollingTask.PollStatus<>(
-                    PollingTask.POLL_STATUS.PENDING, null);
+              } else return new PollingTask.PollStatus<>(PollingTask.POLL_STATUS.PENDING, null);
             },
             new PollingTask.RunConfig(config.getMaxAttempts(), config.getInitialDelayMs()),
             scheduler);

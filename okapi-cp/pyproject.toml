@@ -12,6 +12,7 @@ click = "^8.3.1"
 
 [tool.poetry.scripts]
 okapi-cp = "okapi_cp.cli:main"
+okapi-cp-add-license = "okapi_cp.tools.add_license:main"
 
 [build-system]
 requires = ["poetry-core"]

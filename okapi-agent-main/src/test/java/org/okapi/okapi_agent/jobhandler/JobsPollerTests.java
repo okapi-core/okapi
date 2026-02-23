@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.okapi_agent.jobhandler;
 
 import java.util.ArrayList;
@@ -52,7 +56,7 @@ public class JobsPollerTests {
     Mockito.verify(mockGatewayClient, Mockito.times(1))
         .submitResult(Mockito.eq("job-0"), Mockito.eq(successfulResponse()));
     Mockito.verify(mockGatewayClient, Mockito.times(1))
-            .submitResult(Mockito.eq("job-3"), Mockito.eq(successfulResponse()));
+        .submitResult(Mockito.eq("job-3"), Mockito.eq(successfulResponse()));
     Mockito.verify(mockGatewayClient, Mockito.times(1))
         .submitError(Mockito.eq("job-2"), Mockito.eq(errorResponse()));
   }

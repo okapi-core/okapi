@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.secrets;
 
 import static org.okapi.web.secrets.SecretPaths.SECRETS_BASE_PATH;

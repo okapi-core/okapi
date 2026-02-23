@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.spring.configs.properties;
 
 import lombok.Data;
@@ -17,5 +21,4 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "okapi.logs")
 @Component
 @Validated
-public class LogsCfgImpl extends AbstractBaseTelemetryConfig implements LogsCfg {
-}
+public class LogsCfgImpl extends AbstractBaseTelemetryConfig implements LogsCfg {}

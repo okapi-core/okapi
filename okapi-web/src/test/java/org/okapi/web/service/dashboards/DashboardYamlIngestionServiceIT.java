@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.service.dashboards;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -90,8 +94,7 @@ public class DashboardYamlIngestionServiceIT extends AbstractIT {
 
     var apply =
         ingestionService.apply(
-            adminTempToken,
-            ApplyDashboardYamlRequest.builder().yaml(yaml).note("test").build());
+            adminTempToken, ApplyDashboardYamlRequest.builder().yaml(yaml).note("test").build());
     assertTrue(apply.isOk());
     assertEquals(dashboardId, apply.getDashboardId());
     assertNotNull(apply.getVersionId());
@@ -103,8 +106,7 @@ public class DashboardYamlIngestionServiceIT extends AbstractIT {
 
     var rows = dashboardRowDao.getAll(orgId, dashboardId, apply.getVersionId());
     assertEquals(1, rows.size());
-    var panels =
-        dashboardPanelDao.getAll(orgId, dashboardId, "row-1", apply.getVersionId());
+    var panels = dashboardPanelDao.getAll(orgId, dashboardId, "row-1", apply.getVersionId());
     assertEquals(1, panels.size());
     var vars = dashboardVarDao.list(orgId, dashboardId, apply.getVersionId());
     assertEquals(1, vars.size());

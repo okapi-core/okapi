@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.waltester;
 
 import java.io.IOException;
@@ -30,6 +34,7 @@ public class WalResourcesTestFactory {
     }
     return resources;
   }
+
   public static WalResourcesPerStream<String> singleStreamSetup(Path dir) throws IOException {
     return WalResourcesTestFactory.createResources(dir, Set.of("0"));
   }

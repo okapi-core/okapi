@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics;
 
 import java.util.Arrays;
@@ -101,7 +105,7 @@ public class MetricsPageTests {
   }
 
   @Test
-  void testPageWithoutAppendIsMarkedEmpty(){
+  void testPageWithoutAppendIsMarkedEmpty() {
     var metricsPage = new MetricsPage(1000L, 1000L, 1000, 0.01);
     Assertions.assertTrue(metricsPage.isEmpty());
     Assertions.assertFalse(metricsPage.isFull());

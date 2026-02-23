@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.promql;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -69,7 +73,8 @@ public class PromQlMetadataServiceTests {
             histoMetric,
             tags,
             AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA,
-            List.of(point(tags, nowMs() - 1_000, nowMs(), List.of(10.0, 20.0), List.of(1L, 0L, 0L)))));
+            List.of(
+                point(tags, nowMs() - 1_000, nowMs(), List.of(10.0, 20.0), List.of(1L, 0L, 0L)))));
     driver.onTick();
 
     var resp = service.getMetadata(null, 100);

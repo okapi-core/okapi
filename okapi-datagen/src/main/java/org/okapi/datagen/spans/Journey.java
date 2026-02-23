@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.datagen.spans;
 
 import io.opentelemetry.proto.trace.v1.Span.SpanKind;

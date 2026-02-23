@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.sharding.uploaders;
 
 import org.okapi.runtime.logs.LogsFilesS3Uploader;
@@ -9,7 +13,8 @@ import org.springframework.stereotype.Service;
 @Profile(Profiles.PROFILE_OKAPI_ENGINE)
 @Service
 public class LogsShardUploader extends AbstractBinPathsShardUploader {
-  public LogsShardUploader(HashingShardAssigner shardAssigner, LogsFilesS3Uploader logsFilesS3Uploader) {
+  public LogsShardUploader(
+      HashingShardAssigner shardAssigner, LogsFilesS3Uploader logsFilesS3Uploader) {
     super(shardAssigner, logsFilesS3Uploader);
   }
 }

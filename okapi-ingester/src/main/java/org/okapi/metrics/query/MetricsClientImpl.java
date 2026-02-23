@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.query;
 
 import com.google.gson.Gson;
@@ -64,11 +68,7 @@ public class MetricsClientImpl implements MetricsClient {
 
   @Override
   public List<ReadonlyHistogram> queryHistograms(
-      String nodeId,
-      String metricName,
-      Map<String, String> paths,
-      long qStart,
-      long qEnd) {
+      String nodeId, String metricName, Map<String, String> paths, long qStart, long qEnd) {
     if (nodeId.equals(whoAmI.getNodeId())) {
       return List.of();
     }

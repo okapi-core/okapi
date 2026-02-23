@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.service.dashboards;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -102,7 +106,7 @@ public class DashboardServiceIT extends AbstractIT {
     // create dashboard
     var dash =
         dashboardService.create(
-                DashboardAccessContext.of(adminTempToken),
+            DashboardAccessContext.of(adminTempToken),
             new CreateDashboardRequest("note", "title", List.of("tag1", "tag2")));
     var dashboardId = dash.getDashboardId();
     var versionId = dash.getActiveVersion();
@@ -175,11 +179,11 @@ public class DashboardServiceIT extends AbstractIT {
   public void updates_title_and_description() throws Exception {
     var dash =
         dashboardService.create(
-                DashboardAccessContext.of(adminTempToken),
+            DashboardAccessContext.of(adminTempToken),
             new CreateDashboardRequest("note", "title", List.of("tag1", "tag2")));
     var dashboardId = dash.getDashboardId();
     dashboardService.update(
-            DashboardAccessContext.of(adminTempToken, dashboardId),
+        DashboardAccessContext.of(adminTempToken, dashboardId),
         UpdateDashboardRequest.builder().desc("NewDesc").title("NewTitle").build());
     var after = dashboardService.read(DashboardAccessContext.of(adminTempToken, dashboardId));
     assertEquals("NewTitle", after.getTitle());
@@ -190,7 +194,7 @@ public class DashboardServiceIT extends AbstractIT {
   public void viewed_timestamps_updated_for_two_users() throws Exception {
     var dash =
         dashboardService.create(
-                DashboardAccessContext.of(adminTempToken),
+            DashboardAccessContext.of(adminTempToken),
             new CreateDashboardRequest("note", "title", List.of("tag1")));
     var dashboardId = dash.getDashboardId();
 
@@ -218,7 +222,7 @@ public class DashboardServiceIT extends AbstractIT {
   public void favorite_toggle_via_update_request() throws Exception {
     var dash =
         dashboardService.create(
-                DashboardAccessContext.of(adminTempToken),
+            DashboardAccessContext.of(adminTempToken),
             new CreateDashboardRequest("note", "title", List.of("tag1")));
     var dashboardId = dash.getDashboardId();
 
@@ -228,14 +232,14 @@ public class DashboardServiceIT extends AbstractIT {
     // Mark as favorite
     var afterFav =
         dashboardService.update(
-                DashboardAccessContext.of(memberTempToken, dashboardId),
+            DashboardAccessContext.of(memberTempToken, dashboardId),
             UpdateDashboardRequest.builder().isFavorite(true).build());
     assertTrue(afterFav.isFavorite());
 
     // Unmark favorite
     var afterUnfav =
         dashboardService.update(
-                DashboardAccessContext.of(memberTempToken, dashboardId),
+            DashboardAccessContext.of(memberTempToken, dashboardId),
             UpdateDashboardRequest.builder().isFavorite(false).build());
     assertFalse(afterUnfav.isFavorite());
   }

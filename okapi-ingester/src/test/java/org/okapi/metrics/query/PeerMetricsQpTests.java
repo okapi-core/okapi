@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.query;
 
 import java.time.Duration;
@@ -24,8 +28,7 @@ public class PeerMetricsQpTests {
     var client = Mockito.mock(MetricsClient.class);
     var qp = getQp(router, client);
     // 5 blocks -> give a particular peer all 5
-    Mockito.when(router.getNodesForReading(Mockito.any(), Mockito.anyLong()))
-        .thenReturn("peer1");
+    Mockito.when(router.getNodesForReading(Mockito.any(), Mockito.anyLong())).thenReturn("peer1");
     Mockito.when(
             client.queryGaugeSketches(
                 Mockito.eq("peer1"),
@@ -35,8 +38,7 @@ public class PeerMetricsQpTests {
                 Mockito.anyLong(),
                 Mockito.anyLong()))
         .thenReturn(Arrays.asList(getSketch(100L, 10f, 5f, 2f)));
-    var gauges =
-        qp.getGaugeSketches( "metricA", Map.of("A", "B"), RES_TYPE.SECONDLY, 0, 1000L);
+    var gauges = qp.getGaugeSketches("metricA", Map.of("A", "B"), RES_TYPE.SECONDLY, 0, 1000L);
     Mockito.verify(client, Mockito.times(1))
         .queryGaugeSketches(
             Mockito.eq("peer1"),

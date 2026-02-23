@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.service.pendingjob;
 
 import lombok.AllArgsConstructor;
@@ -9,6 +13,6 @@ import org.okapi.web.service.context.OrgMemberContext;
 @Getter
 @Builder
 public class PendingJobResourceContext {
-    OrgMemberContext orgMemberContext;
-    String jobId;
+  OrgMemberContext orgMemberContext;
+  String jobId;
 }

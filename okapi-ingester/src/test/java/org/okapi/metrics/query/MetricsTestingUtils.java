@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.query;
 
 import java.util.ArrayList;
@@ -36,7 +40,8 @@ public final class MetricsTestingUtils {
     return Histo.builder().histoPoints(List.of(points)).build();
   }
 
-  public static ExportMetricsRequest exportReq(String metric, Map<String, String> tags, Gauge gauge, Histo histo) {
+  public static ExportMetricsRequest exportReq(
+      String metric, Map<String, String> tags, Gauge gauge, Histo histo) {
     return ExportMetricsRequest.builder()
         .metricName(metric)
         .tags(tags)

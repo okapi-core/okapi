@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.promql.ch;
 
 import com.clickhouse.client.api.Client;
@@ -99,7 +103,12 @@ public class ChPromQlTsClient implements TsClient {
   }
 
   private List<SumPoint> scanSumSamples(
-      String resource, String metric, Map<String, String> tags, long startMs, long endMs, String type) {
+      String resource,
+      String metric,
+      Map<String, String> tags,
+      long startMs,
+      long endMs,
+      String type) {
     TemplateOutput output = new StringOutput();
     templateEngine.render(
         ChJteTemplateFiles.GET_SUM_SAMPLES,
@@ -119,9 +128,7 @@ public class ChPromQlTsClient implements TsClient {
     for (var record : records) {
       points.add(
           new SumPoint(
-              record.getLong("ts_start_ms"),
-              record.getLong("ts_end_ms"),
-              record.getLong("value")));
+              record.getLong("ts_start_ms"), record.getLong("ts_end_ms"), record.getLong("value")));
     }
     points.sort(Comparator.comparingLong(SumPoint::endMs));
     return points;
@@ -159,7 +166,12 @@ public class ChPromQlTsClient implements TsClient {
   }
 
   private List<HistogramSeries.HistogramPoint> scanHistoSamples(
-      String resource, String metric, Map<String, String> tags, long startMs, long endMs, String type) {
+      String resource,
+      String metric,
+      Map<String, String> tags,
+      long startMs,
+      long endMs,
+      String type) {
     TemplateOutput output = new StringOutput();
     templateEngine.render(
         ChJteTemplateFiles.GET_HISTO_SAMPLES,
@@ -181,10 +193,7 @@ public class ChPromQlTsClient implements TsClient {
       int[] counts = readIntArray(record, "counts");
       points.add(
           new HistogramSeries.HistogramPoint(
-              record.getLong("ts_start_ms"),
-              record.getLong("ts_end_ms"),
-              buckets,
-              counts));
+              record.getLong("ts_start_ms"), record.getLong("ts_end_ms"), buckets, counts));
     }
     points.sort(Comparator.comparingLong(HistogramSeries.HistogramPoint::endMs));
     return points;
@@ -204,7 +213,8 @@ public class ChPromQlTsClient implements TsClient {
             int d = counts[i] - prevCounts[i];
             delta[i] = d < 0 ? counts[i] : d;
           }
-          out.add(new HistogramSeries.HistogramPoint(p.startMs(), p.endMs(), p.upperBounds(), delta));
+          out.add(
+              new HistogramSeries.HistogramPoint(p.startMs(), p.endMs(), p.upperBounds(), delta));
         } else {
           out.add(p);
         }

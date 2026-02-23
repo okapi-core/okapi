@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,7 +50,7 @@ public class HistoBlockTests {
             null,
             Histogram.TEMPORALITY.CUMULATIVE,
             new int[] {3, 1, 0, 0},
-          new float[] {0.3f, 0.5f, 0.7f});
+            new float[] {0.3f, 0.5f, 0.7f});
     var histo = new HistoBlock();
     histo.updateHistogram(2000L, refA);
     histo.updateHistogram(3000L, refB);

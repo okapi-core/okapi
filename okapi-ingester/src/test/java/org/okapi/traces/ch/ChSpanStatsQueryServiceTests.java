@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.traces.ch;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -246,7 +250,6 @@ public class ChSpanStatsQueryServiceTests {
             RES_TYPE.SECONDLY,
             List.of(NumericPoint.builder().bucketStartMs(4_000L).value(100.0).build())));
   }
-
 
   private AttributeDistributionSummary findDistributionSummary(
       SpansQueryStatsResponse response, String attribute) {

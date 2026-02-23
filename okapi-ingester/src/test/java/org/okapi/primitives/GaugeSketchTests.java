@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.primitives;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -30,7 +34,8 @@ public class GaugeSketchTests {
     var readonlyDeserialized = deserializedSketch.getWithQuantiles();
     assertEquals(readonlyRef.getMean(), readonlyDeserialized.getMean());
     assertEquals(readonlyRef.getCount(), readonlyDeserialized.getCount());
-    assertEquals(readonlyRef.getSumOfDeviationsSquared(), readonlyDeserialized.getSumOfDeviationsSquared());
+    assertEquals(
+        readonlyRef.getSumOfDeviationsSquared(), readonlyDeserialized.getSumOfDeviationsSquared());
   }
 
   @Test
@@ -78,7 +83,7 @@ public class GaugeSketchTests {
           0.21237656f
         };
     var sum = 0f;
-    for(var s: samples){
+    for (var s : samples) {
       sum += s;
       gaugeSketch.update(s);
     }
@@ -97,5 +102,4 @@ public class GaugeSketchTests {
     assertEquals(readonly.getQuantile(0.5), readonlyActual.getQuantile(0.5));
     assertEquals(readonly.getQuantile(1.0), readonlyActual.getQuantile(1.0));
   }
-
 }

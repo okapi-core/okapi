@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.service.dashboards;
 
 import static org.okapi.data.ddb.attributes.ENTITY_TYPE.*;
@@ -119,7 +123,7 @@ public class DashboardService
     var orgEditTx = new GrantOrgEditToDashboard(orgId, dashboardId);
     orgEditTx.doTx(relationGraphDao);
     // Seed the dashboard with a sample row and panel.
-//    dashboardHydrator.hydrate(orgId, dashboardId, versionId);
+    //    dashboardHydrator.hydrate(orgId, dashboardId, versionId);
     // get details of creator
     var creator = userDetailsManager.getUserPersonalName(userId);
     var lastEditor = userDetailsManager.getUserPersonalName(userId);

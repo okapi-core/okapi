@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.rest.traces;
 
 import lombok.*;
@@ -7,5 +11,5 @@ import lombok.*;
 @NoArgsConstructor
 @Getter
 public class PercentileAgg {
-    double percentile;
+  double percentile;
 }

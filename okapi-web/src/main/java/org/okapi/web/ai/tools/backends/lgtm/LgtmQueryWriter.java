@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.ai.tools.backends.lgtm;
 
 import static org.okapi.web.ai.tools.HttpQuerySerializer.serialize;
@@ -19,10 +23,7 @@ public class LgtmQueryWriter {
 
     var path =
         buildPath(
-            "/api/v1/query_range",
-            query.getPathName(),
-            query.getStartTime(),
-            query.getEndTime());
+            "/api/v1/query_range", query.getPathName(), query.getStartTime(), query.getEndTime());
     var httpQuery = new AgentQueryRecords.HttpQuery(HTTP_METHOD.GET, path, Map.of(), null);
     return serialize(httpQuery);
   }

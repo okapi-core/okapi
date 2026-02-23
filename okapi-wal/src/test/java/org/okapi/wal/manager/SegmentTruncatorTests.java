@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.wal.manager;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,7 +23,8 @@ public class SegmentTruncatorTests {
   @TempDir Path dir;
 
   @Test
-  void truncatorKeepsConsistentEntries() throws IOException, CorruptedRecordException, IllegalWalEntryException {
+  void truncatorKeepsConsistentEntries()
+      throws IOException, CorruptedRecordException, IllegalWalEntryException {
     var segment = dir.resolve("segment_0_log");
     var entry1 = new WalEntry(Lsn.fromNumber(10), "one".getBytes());
     var entry2 = new WalEntry(Lsn.fromNumber(20), "two".getBytes());
@@ -48,7 +53,8 @@ public class SegmentTruncatorTests {
   }
 
   @Test
-  void truncatorRemovesTornTail() throws IOException, CorruptedRecordException, IllegalWalEntryException {
+  void truncatorRemovesTornTail()
+      throws IOException, CorruptedRecordException, IllegalWalEntryException {
     var segment = dir.resolve("segment_0_log");
     var entry1 = new WalEntry(Lsn.fromNumber(10), "one".getBytes());
     var entry2 = new WalEntry(Lsn.fromNumber(20), "two".getBytes());
@@ -71,5 +77,4 @@ public class SegmentTruncatorTests {
       assertEquals(entry1, r1.get());
     }
   }
-
 }

@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.logs.testutil;
 
 import com.google.protobuf.ByteString;
@@ -20,6 +24,7 @@ public final class OtelTestPayloads {
   public static final String TRACE_B_HEX = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
   public static final byte[] TRACE_A_BYTES = new byte[] {(byte) 0xAA, (byte) 0xAA};
   public static final byte[] TRACE_B_BYTES = new byte[] {(byte) 0xBB, (byte) 0xBB};
+
   private OtelTestPayloads() {}
 
   public static Result traceCheckoutScenario(long baseTsMillis) {

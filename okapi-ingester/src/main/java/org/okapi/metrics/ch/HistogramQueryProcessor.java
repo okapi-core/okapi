@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.ch;
 
 import com.clickhouse.client.api.Client;
@@ -11,9 +15,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.okapi.ch.ChJteTemplateFiles;
-import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
 import org.okapi.ds.HistogramMerger;
 import org.okapi.ds.TwoAtATimeMerger;
+import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
 import org.okapi.rest.metrics.query.CannedResponses;
 import org.okapi.rest.metrics.query.GetHistogramResponse;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
@@ -115,7 +119,10 @@ public class HistogramQueryProcessor {
             .end(chHistoSample.getTsEnd())
             .count(chHistoSample.getCount())
             .sum(chHistoSample.getSum())
-            .counts(chHistoSample.getCounts() == null ? List.of() : Ints.asList(chHistoSample.getCounts()))
+            .counts(
+                chHistoSample.getCounts() == null
+                    ? List.of()
+                    : Ints.asList(chHistoSample.getCounts()))
             .buckets(
                 chHistoSample.getBuckets() == null
                     ? List.of()
@@ -165,7 +172,8 @@ public class HistogramQueryProcessor {
         counts = record.getIntArray("counts");
       } catch (Exception e) {
         var list = record.getList("counts");
-        counts = list == null ? null : list.stream().mapToInt(o -> ((Number) o).intValue()).toArray();
+        counts =
+            list == null ? null : list.stream().mapToInt(o -> ((Number) o).intValue()).toArray();
       }
       long totalCount = 0L;
       if (counts != null) {

@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.parallel;
 
 import java.io.Closeable;
@@ -12,10 +16,11 @@ public class ParallelExecutor implements Closeable {
   int throttleLimit;
   ExecutorService executorService;
 
-  public ParallelExecutor(int throttleLimit, int poolSize){
-      this.throttleLimit =throttleLimit;
-      this.executorService =Executors.newFixedThreadPool(poolSize);
+  public ParallelExecutor(int throttleLimit, int poolSize) {
+    this.throttleLimit = throttleLimit;
+    this.executorService = Executors.newFixedThreadPool(poolSize);
   }
+
   public <T> List<T> submit(List<Supplier<T>> suppliers, Duration waitTime) {
     var futures = new ArrayList<Future<T>>();
     var throttler = new Semaphore(throttleLimit);
@@ -41,8 +46,8 @@ public class ParallelExecutor implements Closeable {
     }
   }
 
-    @Override
-    public void close() throws IOException {
-        this.executorService.close();
-    }
+  @Override
+  public void close() throws IOException {
+    this.executorService.close();
+  }
 }

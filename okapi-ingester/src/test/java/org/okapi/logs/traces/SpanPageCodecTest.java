@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.logs.traces;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,8 +19,7 @@ import org.okapi.traces.io.SpanPageCodec;
 
 public class SpanPageCodecTest {
 
-  private static Span payload(
-      byte[] traceId, byte[] spanId, long startMs, long endMs) {
+  private static Span payload(byte[] traceId, byte[] spanId, long startMs, long endMs) {
     Span sp =
         Span.newBuilder()
             .setTraceId(ByteString.copyFrom(traceId))
@@ -28,12 +31,17 @@ public class SpanPageCodecTest {
   }
 
   String SVC_A = "svcA";
+
   @Test
   void roundTrip_and_isFull_thresholds() throws Exception {
     long base = 1700000000000L;
     SpanPage page = new SpanPage(1000, 0.01, 1000, 30);
-    page.append(SpanIngestionRecord.from(SVC_A, payload("trace-a".getBytes(), "span-a".getBytes(), base, base + 10)));
-    page.append(SpanIngestionRecord.from(SVC_A, payload("trace-b".getBytes(), "span-b".getBytes(), base + 20, base + 30)));
+    page.append(
+        SpanIngestionRecord.from(
+            SVC_A, payload("trace-a".getBytes(), "span-a".getBytes(), base, base + 10)));
+    page.append(
+        SpanIngestionRecord.from(
+            SVC_A, payload("trace-b".getBytes(), "span-b".getBytes(), base + 20, base + 30)));
 
     var codec = new SpanPageCodec();
     byte[] bytes = codec.serialize(page);

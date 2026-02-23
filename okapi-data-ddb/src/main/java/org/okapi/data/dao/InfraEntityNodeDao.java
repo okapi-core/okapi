@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.data.dao;
 
 import java.util.List;
@@ -15,7 +19,8 @@ public interface InfraEntityNodeDao {
 
   void deleteNode(InfraEntityId infraEntityId);
 
-  void addOutgoingEdge(InfraEntityId entityId, InfraNodeOutgoingEdge outgoingEdge) throws EntityDoesNotExistException;
+  void addOutgoingEdge(InfraEntityId entityId, InfraNodeOutgoingEdge outgoingEdge)
+      throws EntityDoesNotExistException;
 
   void removeEdge(InfraEntityId entityId, InfraEntityId targetNodeId);
 

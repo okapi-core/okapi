@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.dtos.auth;
 
 import jakarta.validation.constraints.NotNull;
@@ -13,6 +17,7 @@ import lombok.NoArgsConstructor;
 public class SignInRequest {
   @NotNull(message = "Email must be provided.")
   String email;
+
   @NotNull(message = "Password must be provided.")
   String password;
 }

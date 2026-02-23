@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.data.ddb.dao;
 
 import static org.okapi.data.dto.TablesAndIndexes.DASHBOARD_ROWS_TABLE;
@@ -7,7 +11,6 @@ import java.util.List;
 import java.util.Optional;
 import org.okapi.data.dao.DashboardRowDao;
 import org.okapi.data.ddb.CommonQueryPatterns;
-import org.okapi.data.ddb.dao.ResourceIdCreator;
 import org.okapi.data.dto.DashboardRow;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;

@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.service.dashboards.panels;
 
 import static org.okapi.validation.OkapiChecks.checkArgument;
@@ -68,8 +72,7 @@ public class DashboardPanelService
       }
       order.add(panelId);
       fetchedRow.setPanelOrder(order);
-      dashboardRowDao.save(
-          request.getOrgId(), request.getDashboardId(), versionId, fetchedRow);
+      dashboardRowDao.save(request.getOrgId(), request.getDashboardId(), versionId, fetchedRow);
     }
     return Mappers.mapDashboardPanelToResponse(panel);
   }

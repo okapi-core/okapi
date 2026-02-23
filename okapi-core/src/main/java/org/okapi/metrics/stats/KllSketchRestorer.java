@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.stats;
 
 import org.apache.datasketches.kll.KllFloatsSketch;
@@ -11,7 +15,7 @@ public class KllSketchRestorer implements QuantileRestorer {
     return KllFloatsSketch.heapify(mem);
   }
 
-  public static KllFloatsSketch restoreFromBytes(byte[] bytes){
+  public static KllFloatsSketch restoreFromBytes(byte[] bytes) {
     var mem = Memory.wrap(bytes);
     return KllFloatsSketch.heapify(mem);
   }

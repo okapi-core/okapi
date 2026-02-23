@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.datagen.spans;
 
 import java.util.Collections;
@@ -22,8 +26,7 @@ public class SpansGeneratorConfig {
   @Builder.Default Journey journey = Journey.defaultJourney();
 
   public static SpansGeneratorConfig defaultConfig() {
-    var defaultLatency =
-        LatencyConfig.builder().minMs(10).maxMs(80).timeoutPenaltyMs(120).build();
+    var defaultLatency = LatencyConfig.builder().minMs(10).maxMs(80).timeoutPenaltyMs(120).build();
     var slowLatency = LatencyConfig.builder().minMs(50).maxMs(250).timeoutPenaltyMs(400).build();
 
     var defaultComponent =
@@ -83,18 +86,18 @@ public class SpansGeneratorConfig {
             .components(
                 Map.of(
                     "inventory-service",
-                        ComponentState.builder()
-                            .successRate(0.7)
-                            .latency(defaultLatency)
-                            .errorRates(
-                                Map.of(
-                                    ErrorType.APP_ERROR, 0.2,
-                                    ErrorType.DEPENDENCY_ERROR, 0.1))
-                            .errorMessages(
-                                Map.of(
-                                    ErrorType.APP_ERROR, "out of stock",
-                                    ErrorType.DEPENDENCY_ERROR, "db unavailable"))
-                            .build()))
+                    ComponentState.builder()
+                        .successRate(0.7)
+                        .latency(defaultLatency)
+                        .errorRates(
+                            Map.of(
+                                ErrorType.APP_ERROR, 0.2,
+                                ErrorType.DEPENDENCY_ERROR, 0.1))
+                        .errorMessages(
+                            Map.of(
+                                ErrorType.APP_ERROR, "out of stock",
+                                ErrorType.DEPENDENCY_ERROR, "db unavailable"))
+                        .build()))
             .build();
 
     var shippingSlow =
@@ -104,12 +107,12 @@ public class SpansGeneratorConfig {
             .components(
                 Map.of(
                     "shipping-service",
-                        ComponentState.builder()
-                            .successRate(0.95)
-                            .latency(slowLatency)
-                            .errorRates(Map.of(ErrorType.TIMEOUT, 0.05))
-                            .errorMessages(Map.of(ErrorType.TIMEOUT, "rate limit timeout"))
-                            .build()))
+                    ComponentState.builder()
+                        .successRate(0.95)
+                        .latency(slowLatency)
+                        .errorRates(Map.of(ErrorType.TIMEOUT, 0.05))
+                        .errorMessages(Map.of(ErrorType.TIMEOUT, "rate limit timeout"))
+                        .build()))
             .build();
 
     var healthy =

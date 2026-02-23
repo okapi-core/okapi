@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.dtos.org;
 
 import jakarta.validation.constraints.NotNull;
@@ -11,8 +15,6 @@ import org.okapi.web.dtos.users.ORG_ROLE;
 @NoArgsConstructor
 @Getter
 public class UpdateOrgMemberRequest {
-  @NotNull
-  private String email;
-  @NotNull
-  private List<ORG_ROLE> roles;
+  @NotNull private String email;
+  @NotNull private List<ORG_ROLE> roles;
 }

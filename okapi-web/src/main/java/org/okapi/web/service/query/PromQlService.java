@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.service.query;
 
 import java.io.IOException;
@@ -69,8 +73,7 @@ public class PromQlService {
     return getRequest(url.toString());
   }
 
-  public String queryPromQlLabels(
-      String token, String start, String end, List<String> matchers) {
+  public String queryPromQlLabels(String token, String start, String end, List<String> matchers) {
     validateAccess(token);
     var url = new StringBuilder("/api/v1/labels");
     boolean first = true;

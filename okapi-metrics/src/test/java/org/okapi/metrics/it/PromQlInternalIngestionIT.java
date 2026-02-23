@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.it;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,10 +42,13 @@ public class PromQlInternalIngestionIT {
 
   final Gson gson = new Gson();
   @LocalServerPort int port;
+
   @Value("${cas.contact.point}")
   String contactPoint;
+
   @Value("${cas.contact.datacenter}")
   String datacenter;
+
   RestTemplate rest = new RestTemplate();
 
   // variables that we capture

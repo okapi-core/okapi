@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.wal.io;
 
 import java.io.IOException;
@@ -92,7 +96,6 @@ public class WalReaderTests {
     Assertions.assertEquals(List.of("TWO"), collectPayloads(read2));
   }
 
-
   @Test
   void testReadLargePayloads_readSingleRecord() throws IOException, IllegalWalEntryException {
     // reader created before writes should read back a single large payload record
@@ -156,8 +159,7 @@ public class WalReaderTests {
   }
 
   @Test
-  void testReaderSkipsOldSegmentsWhenStartingLate()
-      throws IOException, IllegalWalEntryException {
+  void testReaderSkipsOldSegmentsWhenStartingLate() throws IOException, IllegalWalEntryException {
     var walManager = new WalManager(temp, rotationConfig());
     var walDir = new WalDirectory(temp);
     var walWriter = new WalWriter(walManager, walDir);
@@ -191,6 +193,7 @@ public class WalReaderTests {
   public static WalManager.WalConfig rotationConfig() {
     return new WalManager.WalConfig(50L);
   }
+
   private List<Long> collectLsn(List<WalEntry> entries) {
     return entries.stream().map(e -> e.getLsn().getNumber()).toList();
   }

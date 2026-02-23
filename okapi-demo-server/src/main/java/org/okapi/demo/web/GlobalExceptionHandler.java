@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.demo.web;
 
 import io.opentracing.Span;
@@ -25,16 +29,15 @@ public class GlobalExceptionHandler {
     traceError(exception);
     log.error("Request {} failed: {}", request.getRequestURI(), exception.getReason(), exception);
     var status = exception.getStatusCode();
-    var body =
-        new ErrorResponse(status.value(), exception.getReason(), request.getRequestURI());
+    var body = new ErrorResponse(status.value(), exception.getReason(), request.getRequestURI());
     return ResponseEntity.status(status).body(body);
   }
 
   @ExceptionHandler(Exception.class)
-  public ResponseEntity<ErrorResponse> handleAll(
-      Exception exception, HttpServletRequest request) {
+  public ResponseEntity<ErrorResponse> handleAll(Exception exception, HttpServletRequest request) {
     traceError(exception);
-    log.error("Unexpected error for {}: {}", request.getRequestURI(), exception.getMessage(), exception);
+    log.error(
+        "Unexpected error for {}: {}", request.getRequestURI(), exception.getMessage(), exception);
     var status = HttpStatus.INTERNAL_SERVER_ERROR;
     var body = new ErrorResponse(status.value(), "Internal error", request.getRequestURI());
     return ResponseEntity.status(status).body(body);

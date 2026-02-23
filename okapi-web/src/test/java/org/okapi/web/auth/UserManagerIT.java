@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.auth;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -57,7 +61,8 @@ public class UserManagerIT extends AbstractIT {
 
     var orgInfo = orgManager.getOrg(tempToken, orgId);
     assertEquals(orgId, orgInfo.getOrgId(), "Retrieved org ID should match.");
-    var orgMemberIds = orgInfo.getMembers().stream().map(OrgMemberWDto::getEmail).collect(Collectors.toSet());
+    var orgMemberIds =
+        orgInfo.getMembers().stream().map(OrgMemberWDto::getEmail).collect(Collectors.toSet());
     assertTrue(orgMemberIds.contains(randomEmail));
   }
 

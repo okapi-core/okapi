@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.traces.service;
 
 import com.google.gson.Gson;
@@ -62,12 +66,13 @@ public class TracesShardWalConsumer {
         batch.stream()
             .map(
                 (walEntry) -> {
-                    try {
-                        return SpanIngestionRecord.fromByteArray(walEntry.getPayload());
-                    } catch (StreamReadingException | IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }).toList();
+                  try {
+                    return SpanIngestionRecord.fromByteArray(walEntry.getPayload());
+                  } catch (StreamReadingException | IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                })
+            .toList();
     var packed = new ForwardedSpanRecord(shard, reqs);
     traceForwarder.forward(member, packed);
   }

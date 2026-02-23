@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.ch;
 
 public final class ChJteTemplateFiles {
@@ -24,7 +28,8 @@ public final class ChJteTemplateFiles {
       "get_span_default_numeric_attribute_summary.jte";
   public static final String GET_SPAN_CUSTOM_NUMERIC_ATTRIBUTE_SUMMARY =
       "get_span_custom_numeric_attribute_summary.jte";
-  public static final String GET_SPAN_ATTRIBUTE_HINTS_CUSTOM = "get_span_attribute_hints_custom.jte";
+  public static final String GET_SPAN_ATTRIBUTE_HINTS_CUSTOM =
+      "get_span_attribute_hints_custom.jte";
   public static final String GET_SPAN_ATTRIBUTE_VALUES_CUSTOM_STR =
       "get_span_attribute_values_custom_str.jte";
   public static final String GET_SPAN_ATTRIBUTE_VALUES_CUSTOM_NUM =

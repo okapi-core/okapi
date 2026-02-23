@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics.query;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -17,7 +21,8 @@ import org.okapi.primitives.TimestampedReadonlySketch;
 public class SeekIteratorQueryProcessorTests {
 
   private SeekIteratorQueryProcessor qpForBytes(byte[] bytes) {
-    var seekIterator = new LengthPrefixedBlockSeekIterator(SampleMetricsPages.getRangeSupplier(bytes));
+    var seekIterator =
+        new LengthPrefixedBlockSeekIterator(SampleMetricsPages.getRangeSupplier(bytes));
     var codec = new MetricsPageCodec();
     return new SeekIteratorQueryProcessor(seekIterator, codec);
   }
@@ -46,7 +51,11 @@ public class SeekIteratorQueryProcessorTests {
 
     var sketches =
         qp.getGaugeSketches(
-            SampleMetricsPages.METRIC_NAME, SampleMetricsPages.METRIC_TAGS, RES_TYPE.SECONDLY, 1000L, 6000L);
+            SampleMetricsPages.METRIC_NAME,
+            SampleMetricsPages.METRIC_TAGS,
+            RES_TYPE.SECONDLY,
+            1000L,
+            6000L);
 
     // Expect seconds: 1,2,3,4,5,6 -> 6 sketches
     assertEquals(6, sketches.size());
@@ -69,7 +78,11 @@ public class SeekIteratorQueryProcessorTests {
 
     var sketches =
         qp.getGaugeSketches(
-            SampleMetricsPages.METRIC_NAME, SampleMetricsPages.METRIC_TAGS, RES_TYPE.SECONDLY, 1500L, 3500L);
+            SampleMetricsPages.METRIC_NAME,
+            SampleMetricsPages.METRIC_TAGS,
+            RES_TYPE.SECONDLY,
+            1500L,
+            3500L);
 
     // Expect seconds: 1,2,3 -> 3 sketches
     assertEquals(3, sketches.size());
@@ -89,7 +102,11 @@ public class SeekIteratorQueryProcessorTests {
 
     var sketches =
         qp.getGaugeSketches(
-            SampleMetricsPages.METRIC_NAME, SampleMetricsPages.METRIC_TAGS, RES_TYPE.SECONDLY, 700L, 999L);
+            SampleMetricsPages.METRIC_NAME,
+            SampleMetricsPages.METRIC_TAGS,
+            RES_TYPE.SECONDLY,
+            700L,
+            999L);
 
     assertTrue(sketches.isEmpty());
   }
@@ -116,7 +133,8 @@ public class SeekIteratorQueryProcessorTests {
     // Use a subset of tags; path won't match exactly -> no results
     Map<String, String> partialTags = Map.of("host", "server1");
     var sketches =
-        qp.getGaugeSketches(SampleMetricsPages.METRIC_NAME, partialTags, RES_TYPE.SECONDLY, 1000L, 6000L);
+        qp.getGaugeSketches(
+            SampleMetricsPages.METRIC_NAME, partialTags, RES_TYPE.SECONDLY, 1000L, 6000L);
 
     assertTrue(sketches.isEmpty());
   }
@@ -129,7 +147,11 @@ public class SeekIteratorQueryProcessorTests {
 
     var sketches =
         qp.getGaugeSketches(
-            SampleMetricsPages.METRIC_NAME, SampleMetricsPages.METRIC_TAGS, RES_TYPE.SECONDLY, 1000L, 6000L);
+            SampleMetricsPages.METRIC_NAME,
+            SampleMetricsPages.METRIC_TAGS,
+            RES_TYPE.SECONDLY,
+            1000L,
+            6000L);
 
     // Should behave same as simple scan across two relevant pages
     assertEquals(6, sketches.size());
@@ -150,7 +172,11 @@ public class SeekIteratorQueryProcessorTests {
 
     var sketches =
         qp.getGaugeSketches(
-            SampleMetricsPages.METRIC_NAME, SampleMetricsPages.METRIC_TAGS, RES_TYPE.SECONDLY, 1000L, 8000L);
+            SampleMetricsPages.METRIC_NAME,
+            SampleMetricsPages.METRIC_TAGS,
+            RES_TYPE.SECONDLY,
+            1000L,
+            8000L);
 
     // Only the first page contributes
     assertEquals(3, sketches.size());
@@ -171,7 +197,11 @@ public class SeekIteratorQueryProcessorTests {
 
     var sketches =
         qp.getGaugeSketches(
-            SampleMetricsPages.METRIC_NAME, SampleMetricsPages.METRIC_TAGS, RES_TYPE.SECONDLY, 1000L, 2999L);
+            SampleMetricsPages.METRIC_NAME,
+            SampleMetricsPages.METRIC_TAGS,
+            RES_TYPE.SECONDLY,
+            1000L,
+            2999L);
 
     // Should include seconds 1 and 2
     assertEquals(2, sketches.size());
@@ -188,7 +218,11 @@ public class SeekIteratorQueryProcessorTests {
 
     var sketches =
         qp.getGaugeSketches(
-            SampleMetricsPages.METRIC_NAME, SampleMetricsPages.METRIC_TAGS, RES_TYPE.SECONDLY, 1000L, 3001L);
+            SampleMetricsPages.METRIC_NAME,
+            SampleMetricsPages.METRIC_TAGS,
+            RES_TYPE.SECONDLY,
+            1000L,
+            3001L);
 
     // Should include seconds 1,2,3 (inclusive on end block)
     assertEquals(3, sketches.size());
@@ -206,7 +240,11 @@ public class SeekIteratorQueryProcessorTests {
 
     var sketches =
         qp.getGaugeSketches(
-            SampleMetricsPages.METRIC_NAME, SampleMetricsPages.METRIC_TAGS, RES_TYPE.SECONDLY, 3000L, 4001L);
+            SampleMetricsPages.METRIC_NAME,
+            SampleMetricsPages.METRIC_TAGS,
+            RES_TYPE.SECONDLY,
+            3000L,
+            4001L);
 
     assertEquals(2, sketches.size());
     assertEquals(2f, sumCounts(sketches), 1e-3);
@@ -222,7 +260,11 @@ public class SeekIteratorQueryProcessorTests {
 
     var sketches =
         qp.getGaugeSketches(
-            SampleMetricsPages.METRIC_NAME, SampleMetricsPages.METRIC_TAGS, RES_TYPE.MINUTELY, 1000L, 6000L);
+            SampleMetricsPages.METRIC_NAME,
+            SampleMetricsPages.METRIC_TAGS,
+            RES_TYPE.MINUTELY,
+            1000L,
+            6000L);
 
     // Expect one minute block (0) per page -> two sketches
     assertEquals(2, sketches.size());
@@ -249,7 +291,11 @@ public class SeekIteratorQueryProcessorTests {
 
     var sketches =
         qp.getGaugeSketches(
-            SampleMetricsPages.METRIC_NAME, SampleMetricsPages.METRIC_TAGS, RES_TYPE.MINUTELY, 0L, 2000L);
+            SampleMetricsPages.METRIC_NAME,
+            SampleMetricsPages.METRIC_TAGS,
+            RES_TYPE.MINUTELY,
+            0L,
+            2000L);
 
     // Only the first page overlaps -> one minute sketch for minute 0
     assertEquals(1, sketches.size());
@@ -265,7 +311,11 @@ public class SeekIteratorQueryProcessorTests {
 
     var sketches =
         qp.getGaugeSketches(
-            SampleMetricsPages.METRIC_NAME, SampleMetricsPages.METRIC_TAGS, RES_TYPE.HOURLY, 1000L, 6000L);
+            SampleMetricsPages.METRIC_NAME,
+            SampleMetricsPages.METRIC_TAGS,
+            RES_TYPE.HOURLY,
+            1000L,
+            6000L);
 
     // Expect one hourly block (0) per page -> two sketches
     assertEquals(2, sketches.size());
@@ -291,7 +341,8 @@ public class SeekIteratorQueryProcessorTests {
     supersetTags.put("env", "prod");
 
     var sketches =
-        qp.getGaugeSketches(SampleMetricsPages.METRIC_NAME, supersetTags, RES_TYPE.SECONDLY, 1000L, 6000L);
+        qp.getGaugeSketches(
+            SampleMetricsPages.METRIC_NAME, supersetTags, RES_TYPE.SECONDLY, 1000L, 6000L);
 
     assertTrue(sketches.isEmpty());
   }
@@ -304,12 +355,20 @@ public class SeekIteratorQueryProcessorTests {
 
     var first =
         qp.getGaugeSketches(
-            SampleMetricsPages.METRIC_NAME, SampleMetricsPages.METRIC_TAGS, RES_TYPE.SECONDLY, 1000L, 6000L);
+            SampleMetricsPages.METRIC_NAME,
+            SampleMetricsPages.METRIC_TAGS,
+            RES_TYPE.SECONDLY,
+            1000L,
+            6000L);
     assertEquals(6, first.size());
 
     var second =
         qp.getGaugeSketches(
-            SampleMetricsPages.METRIC_NAME, SampleMetricsPages.METRIC_TAGS, RES_TYPE.SECONDLY, 1000L, 6000L);
+            SampleMetricsPages.METRIC_NAME,
+            SampleMetricsPages.METRIC_TAGS,
+            RES_TYPE.SECONDLY,
+            1000L,
+            6000L);
     assertTrue(second.isEmpty());
   }
 }

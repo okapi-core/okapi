@@ -1,12 +1,16 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.data.migrations;
 
 import static org.okapi.data.TableSpecifications.makeRequest;
 
 import java.util.Collections;
+import org.okapi.data.TableSpec;
 import org.okapi.data.dto.FederatedSource;
 import org.okapi.data.dto.TableAttributes;
 import org.okapi.data.dto.TablesAndIndexes;
-import org.okapi.data.TableSpec;
 import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest;
 
 public class FederatedSourceTable implements TableSpec<FederatedSource> {

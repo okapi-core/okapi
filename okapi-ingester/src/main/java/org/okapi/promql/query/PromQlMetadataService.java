@@ -1,8 +1,12 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.promql.query;
 
 import com.clickhouse.client.api.Client;
-import com.google.inject.Inject;
 import com.clickhouse.client.api.query.GenericRecord;
+import com.google.inject.Inject;
 import gg.jte.TemplateOutput;
 import gg.jte.output.StringOutput;
 import java.util.ArrayList;
@@ -55,8 +59,7 @@ public class PromQlMetadataService {
       String eventType = record.getString("event_type");
       var list = data.computeIfAbsent(metricName, k -> new ArrayList<>());
       String promType = mapType(eventType);
-      boolean exists =
-          list.stream().anyMatch(item -> promType.equals(item.getType()));
+      boolean exists = list.stream().anyMatch(item -> promType.equals(item.getType()));
       if (!exists) {
         list.add(new PromQlMetadataItem(promType, "", ""));
       }

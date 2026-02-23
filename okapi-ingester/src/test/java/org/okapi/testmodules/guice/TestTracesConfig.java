@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.testmodules.guice;
 
 import java.nio.file.Path;
@@ -14,15 +18,7 @@ public class TestTracesConfig implements TracesCfg {
   private final long bufferPoolFlushEvalMillis;
 
   public TestTracesConfig(Path dataDir) {
-    this(
-        dataDir,
-        128,
-        1_048_576,
-        60_000L,
-        8,
-        1_000L,
-        60_000L,
-        1_000L);
+    this(dataDir, 128, 1_048_576, 60_000L, 8, 1_000L, 60_000L, 1_000L);
   }
 
   public TestTracesConfig(

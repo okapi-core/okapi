@@ -1,11 +1,15 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.service.token;
 
 import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import org.okapi.data.dao.TokenMetaDao;
-import org.okapi.data.dto.TokenMetaDdb;
 import org.okapi.data.dto.TOKEN_STATUS;
+import org.okapi.data.dto.TokenMetaDdb;
 import org.okapi.exceptions.NotFoundException;
 import org.okapi.web.auth.AccessManager;
 import org.okapi.web.auth.ApiTokenManager;

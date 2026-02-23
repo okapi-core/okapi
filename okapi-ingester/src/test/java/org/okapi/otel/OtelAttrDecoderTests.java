@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.otel;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,8 +23,7 @@ public class OtelAttrDecoderTests {
     Map<String, AnyValue> attrs = Map.of("key", primary, "fallback.key", fallback);
 
     assertEquals(
-        primary,
-        OtelAttrDecoder.getAttribute(attrs, "key", List.of("fallback.key")).orElseThrow());
+        primary, OtelAttrDecoder.getAttribute(attrs, "key", List.of("fallback.key")).orElseThrow());
     assertEquals(
         fallback,
         OtelAttrDecoder.getAttribute(attrs, "missing", List.of("fallback.key")).orElseThrow());

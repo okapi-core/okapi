@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.dtos.org;
 
 import jakarta.validation.constraints.NotNull;
@@ -11,11 +15,9 @@ import lombok.Setter;
 @Setter
 @Builder
 public class OrgMemberWDto {
-  @NotNull
-  String userId;
+  @NotNull String userId;
   String firstName;
   String lastName;
-  @NotNull
-  String email;
+  @NotNull String email;
   boolean isAdmin;
 }

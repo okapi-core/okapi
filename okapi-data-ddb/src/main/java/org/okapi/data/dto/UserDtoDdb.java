@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.data.dto;
 
 import com.google.common.base.Preconditions;
@@ -17,6 +21,7 @@ public class UserDtoDdb {
     ACTIVE,
     INACTIVE,
   }
+
   String userId;
   String email;
   UserStatus status;

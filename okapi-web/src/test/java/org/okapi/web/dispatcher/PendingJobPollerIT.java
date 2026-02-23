@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.dispatcher;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -88,7 +92,7 @@ public class PendingJobPollerIT extends AbstractIT {
     assertFalse(future.isDone(), "Future should not be completed immediately");
 
     pendingJobsDao.updateJobStatus(orgId, jobId, JOB_STATUS.IN_PROGRESS);
-    var errorPayload =QueryResult.ofError("boom");
+    var errorPayload = QueryResult.ofError("boom");
     pendingJobsDao.updateJobError(orgId, jobId, gson.toJson(errorPayload));
 
     var result = future.get(5, TimeUnit.SECONDS);

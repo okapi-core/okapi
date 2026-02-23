@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.web.auth;
 
 import com.auth0.jwt.JWT;
@@ -22,7 +26,8 @@ public class TokenDecoder {
     }
   }
 
-  public String checkClaimOrThrow(String token, String claimName, Algorithm algorithm) throws UnAuthorizedException {
+  public String checkClaimOrThrow(String token, String claimName, Algorithm algorithm)
+      throws UnAuthorizedException {
     try {
       var decoded = decode(token, algorithm);
       var claim = decoded.getClaim(claimName);

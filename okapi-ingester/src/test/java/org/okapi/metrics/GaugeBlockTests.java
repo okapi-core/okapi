@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.metrics;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -156,7 +160,8 @@ public class GaugeBlockTests {
         var timestamp = minutely.getTimestamp().get(i);
         var expectedValue = minutely.getValues().get(i);
         var minutelyBlock = timestamp / 60_000;
-        var minutelyStat = deserializedBlock.getMinutelyStat(minutelyBlock, new double[] {0.0, 0.5, 1.0});
+        var minutelyStat =
+            deserializedBlock.getMinutelyStat(minutelyBlock, new double[] {0.0, 0.5, 1.0});
         assertEquals(minutelyStat.getMean(), expectedValue, 0.0001f);
       }
     }

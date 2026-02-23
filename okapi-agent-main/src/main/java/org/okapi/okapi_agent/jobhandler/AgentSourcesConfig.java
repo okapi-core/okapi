@@ -1,12 +1,13 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.okapi_agent.jobhandler;
 
-import lombok.Data;
-import lombok.Getter;
-
 import java.util.List;
+import lombok.Data;
 
 @Data
 public class AgentSourcesConfig {
-    private List<SourceDefinition> sources;
+  private List<SourceDefinition> sources;
 }
-

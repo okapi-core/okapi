@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.rest.metrics.query;
 
 import lombok.AllArgsConstructor;
@@ -10,6 +14,6 @@ import org.okapi.metrics.pojos.RES_TYPE;
 @NoArgsConstructor
 @Getter
 public class GaugeQueryConfig {
-    RES_TYPE resolution;
-    AGG_TYPE aggregation;
+  RES_TYPE resolution;
+  AGG_TYPE aggregation;
 }

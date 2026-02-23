@@ -1,3 +1,7 @@
+/*
+ * Copyright The OkapiCore Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.okapi.data.ddb.dao;
 
 import static org.okapi.data.dto.TablesAndIndexes.DASHBOARD_VERSIONS_TABLE;
@@ -22,7 +26,8 @@ public class DashboardVersionDaoImpl implements DashboardVersionDao {
   @Inject
   public DashboardVersionDaoImpl(DynamoDbEnhancedClient enhancedClient) {
     this.table =
-        enhancedClient.table(DASHBOARD_VERSIONS_TABLE, TableSchema.fromBean(DashboardVersion.class));
+        enhancedClient.table(
+            DASHBOARD_VERSIONS_TABLE, TableSchema.fromBean(DashboardVersion.class));
   }
 
   @Override
