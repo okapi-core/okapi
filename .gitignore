@@ -2,7 +2,6 @@ HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/ !**/src/test/**/target/
-
 ### STS ###
 .apt_generated
 .classpath
@@ -44,6 +43,12 @@ ch_logs/**/*
 fe-setup.json
 
 # Fe copied files
-okapi-web/src/main/resources/public/assets/index-*.js
-okapi-web/src/main/resources/public/assets/index.html
-okapi-web/src/main/resources/public/assets/index-*.css
+okapi-web/**/*.js
+okapi-web/**/*.html
+okapi-web/**/*.css
+
+## Exclude build targets
+helm/dist/**/*.tgz
+**/*.pyc
+okapi-cp/**/*.tar.gz
+okapi-cp/**/*.whl
