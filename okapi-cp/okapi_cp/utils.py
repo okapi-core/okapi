@@ -1,3 +1,6 @@
+# Copyright The OkapiCore Authors
+# SPDX-License-Identifier: Apache-2.0
+
 """Shared utility helpers."""
 
 import time

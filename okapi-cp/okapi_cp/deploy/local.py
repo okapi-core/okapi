@@ -1,3 +1,6 @@
+# Copyright The OkapiCore Authors
+# SPDX-License-Identifier: Apache-2.0
+
 """Local deployment via docker compose."""
 
 from dataclasses import dataclass

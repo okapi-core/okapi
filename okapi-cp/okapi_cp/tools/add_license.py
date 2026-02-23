@@ -1,3 +1,6 @@
+# Copyright The OkapiCore Authors
+# SPDX-License-Identifier: Apache-2.0
+
 """Apply SPDX license headers to okapi-cp Python sources."""
 
 from __future__ import annotations
