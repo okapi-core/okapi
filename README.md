@@ -23,18 +23,18 @@ This is why "play-nice" is an explicit goal so teams can start using Okapi with 
 
 ## Feature list
 
-- *OpenTelemetry native* : Okapi is compatible with OTLP meaning any collector that emits metrics as OTel or submits
+- **OpenTelemetry native** : Okapi is compatible with OTLP meaning any collector that emits metrics as OTel or submits
   spans via OTel can leverage Okapi as a storage and analysis layer.
-- *PromQl* : Okapi has its own implementation of PromQl. This means that metrics which are stored in Okapi can be
-  visualized using dashboarding solutions such as Grafana and Perses.
-- *Dashboard designer* : Okapi has its own dashboard designer should you choose to just use our own UI.
-- *Dashboards as code and templates* : Dashboards can be expressed as intuitive YAML. Refer to templates for examples on
+- **PromQl** : Okapi has its own implementation of PromQl. Metrics stored in Okapi can be
+  visualized using existing solutions such as Grafana and Perses.
+- **Dashboard designer** : Okapi has its own dashboard designer should you choose to just use our own UI.
+- **Dashboards as code and templates** : Dashboards can be expressed as intuitive YAML. Refer to templates for examples
+  on
   how to monitor Clickhouse, Postgres, Kafka.
-- *Spans Browser and Visualizer* : Okapi comes with its own browser for Spans. Users can browser spans, visualize the
-  lifetime of a specific trace and visualize span attributes.
-- *Autocomplete almost everywhere* : Nearly every filter or form field in the Okapi UI has autocomplete minimizing the
+- **Spans Browser and Visualizer** : Okapi comes with its own browser for Spans. Users can search spans, visualize span attributes, view attributes of a span.
+- **Autocomplete almost everywhere** : Nearly every form field in the Okapi UI has autocomplete minimizing the
   need for copy-paste.
-- *Support for arbitrary span fields* : Traces forwarded to Okapi can contain spans with arbitrary attributes.
+- **Support for arbitrary span fields** : Traces forwarded to Okapi can contain spans with arbitrary attributes.
 
 ## Quickstart
 
