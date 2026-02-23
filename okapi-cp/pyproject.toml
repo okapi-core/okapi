@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "okapi-cp"
-version = "0.1.1"
+version = "0.1.2"
 description = "CLI to deploy okapi and its dependencies."
 authors = ["Your Name <you@example.com>"]
 license = "Apache-2"
