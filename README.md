@@ -62,7 +62,7 @@ Full deployment with LocalStack and a new ClickHouse install:
 helm repo add clickhouse https://charts.clickhouse.com
 helm install clickhouse clickhouse/clickhouse --namespace okapi --create-namespace
 okapi-cp deploy k8s \
-  --chart-repo https://REPLACE_WITH_OKAPI_HELM_REPO \
+  --chart-repo oci://ghcr.io/okapi-core \
   --namespace okapi \
   --aws-mode localstack \
   --aws-endpoint http://localstack.okapi.svc.cluster.local:4566 \
@@ -76,7 +76,7 @@ Using an existing ClickHouse deployment:
 
 ```sh
 okapi-cp deploy k8s \
-  --chart-repo https://REPLACE_WITH_OKAPI_HELM_REPO \
+  --chart-repo oci://ghcr.io/okapi-core \
   --namespace okapi \
   --aws-mode localstack \
   --aws-endpoint http://localstack.okapi.svc.cluster.local:4566 \
@@ -84,7 +84,7 @@ okapi-cp deploy k8s \
   --clickhouse-port 8123
 ```
 
-Note: replace `https://REPLACE_WITH_OKAPI_HELM_REPO` with the published Helm repo for okapi.
+Note: the Okapi Helm charts are published in GHCR at `oci://ghcr.io/okapi-core`.
 
 ### Helm charts (OCI)
 

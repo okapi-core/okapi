@@ -171,6 +171,9 @@ def _resolve_chart(
     return local_chart, None
   if chart_repo is None:
     raise ValueError("chart_repo is required when local_chart is not provided")
+  if chart_repo.startswith("oci://"):
+    chart = f"{chart_repo.rstrip('/')}/{chart_name}"
+    return chart, chart_version
   _run(["helm", "repo", "add", "okapi", chart_repo])
   _run(["helm", "repo", "update"])
   chart = f"okapi/{chart_name}"
