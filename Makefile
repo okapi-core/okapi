@@ -4,6 +4,31 @@ FE_SETUP ?= fe-setup.json
 REPO = ghcr.io/okapi-core
 OKAPI_TEST_NET = okapi-test-network
 
+HELM ?= helm
+HELM_NS ?= okapi
+HELM_FLAGS ?=
+MINIKUBE ?= minikube
+LOCALSTACK_REPO ?= https://localstack.github.io/helm-charts
+CLICKHOUSE_REPO ?= https://charts.clickhouse.com/
+LOCALSTACK_CHART ?= localstack/localstack
+CLICKHOUSE_CHART ?= clickhouse/clickhouse
+LOCALSTACK_RELEASE ?= localstack
+CLICKHOUSE_RELEASE ?= clickhouse
+OKAPI_WEB_RELEASE ?= okapi-web
+OKAPI_INGESTER_RELEASE ?= okapi-ingester
+CERT_MANAGER_REPO ?= https://charts.jetstack.io
+CERT_MANAGER_CHART ?= jetstack/cert-manager
+CERT_MANAGER_RELEASE ?= cert-manager
+CERT_MANAGER_NS ?= cert-manager
+CLICKHOUSE_HOST ?= clickhouse.$(HELM_NS).svc.cluster.local
+CLICKHOUSE_PORT ?= 8123
+CLICKHOUSE_USER ?= default
+CLICKHOUSE_PASSWORD ?=
+OKAPI_AWS_ENDPOINT ?= http://localstack.$(HELM_NS).svc.cluster.local:4566
+OKAPI_CLUSTER_ENDPOINT ?= http://okapi-ingester.$(HELM_NS).svc.cluster.local:9009
+HELM_CHART_REPO ?= oci://ghcr.io/okapi-core
+HELM_CHART_DIST ?= helm/dist
+
 fe-dist:
 	@python3 build-scripts/fe_dist_copy.py
 
@@ -45,6 +70,45 @@ stop-test-infra:
 
 localstack-k8s:
 	kubectl apply -n okapi -f okapi-ingester/local-stack-yamls/localstack.yml
+
+helm-okapi-web:
+	$(MINIKUBE) image load $(REPO)/okapi-web:$(TAG)
+	$(HELM) upgrade --install $(OKAPI_WEB_RELEASE) helm/okapi-web --namespace $(HELM_NS) --create-namespace \
+	--set springOverrides.clusterEndpoint=$(OKAPI_CLUSTER_ENDPOINT) \
+	--set springOverrides.okapi.aws.endpoint=$(OKAPI_AWS_ENDPOINT) \
+	$(HELM_FLAGS)
+
+helm-okapi-ingester:
+	$(MINIKUBE) image load $(REPO)/okapi-ingester:$(TAG)
+	$(HELM) upgrade --install $(OKAPI_INGESTER_RELEASE) helm/okapi-ingester --namespace $(HELM_NS) --create-namespace \
+	--set springOverrides.okapi.clickhouse.host=$(CLICKHOUSE_HOST) \
+	--set springOverrides.okapi.clickhouse.port=$(CLICKHOUSE_PORT) \
+	--set springOverrides.okapi.clickhouse.username=$(CLICKHOUSE_USER) \
+	--set springOverrides.okapi.clickhouse.password=$(CLICKHOUSE_PASSWORD) \
+	--set springOverrides.okapi.clickhouse.secure=false \
+	--set springOverrides.okapi.aws.endpoint=$(OKAPI_AWS_ENDPOINT) \
+	$(HELM_FLAGS)
+
+helm-localstack:
+	$(HELM) repo add localstack $(LOCALSTACK_REPO) --force-update
+	$(HELM) repo update
+	$(HELM) upgrade --install $(LOCALSTACK_RELEASE) $(LOCALSTACK_CHART) --namespace $(HELM_NS) --create-namespace $(HELM_FLAGS)
+
+helm-clickhouse:
+	$(HELM) repo add jetstack $(CERT_MANAGER_REPO) --force-update
+	$(HELM) repo update
+	$(HELM) upgrade --install $(CERT_MANAGER_RELEASE) $(CERT_MANAGER_CHART) --namespace $(CERT_MANAGER_NS) --create-namespace --set installCRDs=true $(HELM_FLAGS)
+	$(HELM) upgrade --install okapi-clickhouse oci://ghcr.io/clickhouse/clickhouse-operator-helm \
+	--create-namespace \
+	-n $(HELM_NS)
+
+helm-package:
+	rm -f $(HELM_CHART_DIST)/okapi-ingester-*.tgz $(HELM_CHART_DIST)/okapi-web-*.tgz
+	mkdir -p $(HELM_CHART_DIST)
+	$(HELM) package helm/okapi-ingester --destination $(HELM_CHART_DIST)
+	$(HELM) package helm/okapi-web --destination $(HELM_CHART_DIST)
+	$(HELM) push $(HELM_CHART_DIST)/okapi-ingester-*.tgz $(HELM_CHART_REPO)
+	$(HELM) push $(HELM_CHART_DIST)/okapi-web-*.tgz $(HELM_CHART_REPO)
 
 testnetwork:
 	sh test-network.sh $(OKAPI_TEST_NET)
@@ -118,7 +182,18 @@ test-run-web:
 	--okapi.aws.endpoint=http://localstack-main:4566
 
 test-run: test-run-ingester test-run-web
-publish:
+
+publish-docker:
 	docker push $(REPO)/okapi-web:$(TAG)
 	docker push $(REPO)/okapi-ingester:$(TAG)
 	docker push $(REPO)/okapi-ops:$(TAG)
+
+publish-okapi-cp:
+	cd okapi-cp && poetry build
+	cd okapi-cp && poetry publish
+
+publish: publish-docker publish-okapi-cp
+
+publish-okapi-cp-test:
+	cd okapi-cp && poetry build
+	cd okapi-cp && poetry publish -r testpypi

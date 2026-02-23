@@ -13,9 +13,13 @@ spec:
     metadata:
       labels:
         {{- include "okapi-web.selectorLabels" . | nindent 8 }}
-        {{- toYaml .Values.podLabels | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.podAnnotations }}
       annotations:
-        {{- toYaml .Values.podAnnotations | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
       {{- if .Values.serviceAccount.create }}
       serviceAccountName: {{ include "okapi-web.fullname" . }}

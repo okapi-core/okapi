@@ -86,6 +86,31 @@ okapi-cp deploy k8s \
 
 Note: replace `https://REPLACE_WITH_OKAPI_HELM_REPO` with the published Helm repo for okapi.
 
+### Helm charts (OCI)
+
+Okapi Helm charts are published to GHCR:
+
+- `oci://ghcr.io/okapi-core/okapi-ingester`
+- `oci://ghcr.io/okapi-core/okapi-web`
+
+Sample Helm deploy (assumes ClickHouse and LocalStack are already running in `okapi`):
+
+```sh
+helm upgrade --install okapi-ingester oci://ghcr.io/okapi-core/okapi-ingester \
+  --namespace okapi --create-namespace \
+  --set springOverrides.okapi.clickhouse.host=clickhouse.okapi.svc.cluster.local \
+  --set springOverrides.okapi.clickhouse.port=8123 \
+  --set springOverrides.okapi.clickhouse.username=default \
+  --set springOverrides.okapi.clickhouse.password=YOUR_CLICKHOUSE_PASSWORD \
+  --set springOverrides.okapi.clickhouse.secure=false \
+  --set springOverrides.okapi.aws.endpoint=http://localstack.okapi.svc.cluster.local:4566
+
+helm upgrade --install okapi-web oci://ghcr.io/okapi-core/okapi-web \
+  --namespace okapi --create-namespace \
+  --set springOverrides.clusterEndpoint=http://okapi-ingester.okapi.svc.cluster.local:9009 \
+  --set springOverrides.okapi.aws.endpoint=http://localstack.okapi.svc.cluster.local:4566
+```
+
 ## OTLP/HTTP Ingest (OpenTelemetry)
 
 ### Example: Setting up OTel collector with okapi export

@@ -28,8 +28,6 @@ public class ChConfig {
   @NotNull
   String userName;
 
-  @NotBlank(message = "ch password should be provided.")
-  @NotNull
   String password;
 
   @NotNull(message = "ch metrics wal path should be specified.")
