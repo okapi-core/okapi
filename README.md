@@ -35,6 +35,8 @@ This is why "play-nice" is an explicit goal so teams can start using Okapi with 
 - **Autocomplete almost everywhere** : Nearly every form field in the Okapi UI has autocomplete minimizing the
   need for copy-paste.
 - **Support for arbitrary span fields** : Traces forwarded to Okapi can contain spans with arbitrary attributes.
+- **Out of box service healths** : Get golden metrics in one place with Service health boards.
+- **Granular REDs** : Okapi calculates golden signals for the aggregate service, all its service-peer paths and all associated operations.
 
 ## Quickstart
 
