@@ -2,7 +2,7 @@
  * Copyright The OkapiCore Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.okapi.metrics.ch;
+package org.okapi.metrics.ch.template;
 
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -12,13 +12,12 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 @Builder
-public class ChGetGaugeQueryTemplate {
+public class ChGetHistoQueryTemplate {
   String table;
-  String bucketExpr;
-  String aggExpr;
   String resource;
   String metric;
-  long startMs;
-  long endMs;
   Map<String, String> tags;
+  String histoType;
+  long ts;
+  long te;
 }

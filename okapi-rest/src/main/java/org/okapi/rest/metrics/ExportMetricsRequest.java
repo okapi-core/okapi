@@ -29,6 +29,8 @@ public class ExportMetricsRequest {
   @Setter
   MetricType type;
 
+  String unit;
+
   Gauge gauge;
   Histo histo;
   Sum sum;
@@ -41,7 +43,8 @@ public class ExportMetricsRequest {
       MetricType type,
       Gauge gauge,
       Histo histo,
-      Sum sum) {
+      Sum sum,
+      String unit) {
     this.resource = resource;
     this.metricName = metricName;
     this.tags = (tags == null) ? null : new TreeMap<>(tags);
@@ -49,6 +52,7 @@ public class ExportMetricsRequest {
     this.gauge = gauge;
     this.histo = histo;
     this.sum = sum;
+    this.unit = unit;
   }
 
   public ExportMetricsRequest(

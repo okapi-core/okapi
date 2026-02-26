@@ -58,15 +58,15 @@ public class HistogramQueryProcessorJteTests {
     var counts = new int[] {1, 2, 3};
 
     var row =
-        ChHistoSampleInsertRow.builder()
+        ChHistoSample.builder()
             .resource(resource)
-            .metric_name(metric)
+            .metric(metric)
             .tags(tags)
-            .ts_start_ms(1_000)
-            .ts_end_ms(2_000)
+            .tsStart(1_000)
+            .tsEnd(2_000)
             .buckets(buckets)
             .counts(counts)
-            .histo_type("DELTA")
+            .histoType(ChHistoSample.HISTO_TYPE.DELTA)
             .build();
     writer.writeHistoSamplesBinary(List.of(row)).get();
 

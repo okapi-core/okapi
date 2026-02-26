@@ -15,10 +15,18 @@ import java.util.function.Supplier;
 public class ParallelExecutor implements Closeable {
   int throttleLimit;
   ExecutorService executorService;
+  Duration waitTime;
 
   public ParallelExecutor(int throttleLimit, int poolSize) {
     this.throttleLimit = throttleLimit;
     this.executorService = Executors.newFixedThreadPool(poolSize);
+    this.waitTime = null;
+  }
+
+  public ParallelExecutor(int throttleLimit, int poolSize, Duration waitTime) {
+    this.throttleLimit = throttleLimit;
+    this.executorService = Executors.newFixedThreadPool(poolSize);
+    this.waitTime = waitTime;
   }
 
   public <T> List<T> submit(List<Supplier<T>> suppliers, Duration waitTime) {
@@ -44,6 +52,13 @@ public class ParallelExecutor implements Closeable {
     } catch (ExecutionException | InterruptedException | TimeoutException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public <T> List<T> submit(List<Supplier<T>> suppliers) {
+    if (waitTime == null) {
+      throw new IllegalStateException("No default wait time configured.");
+    }
+    return submit(suppliers, waitTime);
   }
 
   @Override

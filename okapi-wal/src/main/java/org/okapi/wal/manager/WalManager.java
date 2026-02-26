@@ -16,7 +16,10 @@ import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.okapi.wal.commit.WalCommit;
+import org.okapi.wal.filelock.FileLockException;
+import org.okapi.wal.filelock.FileLockUtils;
 import org.okapi.wal.lsn.Lsn;
 
 /**
@@ -24,6 +27,7 @@ import org.okapi.wal.lsn.Lsn;
  *
  * <p>Filename pattern: wal_{epoch}_log, zero-based epochs.
  */
+@Slf4j
 public class WalManager implements Closeable {
 
   @Getter
@@ -47,11 +51,12 @@ public class WalManager implements Closeable {
   @Getter @Setter private Lsn lastWrittenLsn;
   Gson gson;
 
-  public WalManager(Path dir, WalConfig config) throws IOException {
+  public WalManager(Path dir, WalConfig config) throws IOException, FileLockException {
     this(new WalDirectory(dir), config);
   }
 
-  public WalManager(WalDirectory walDirectory, WalConfig walConfig) throws IOException {
+  public WalManager(WalDirectory walDirectory, WalConfig walConfig)
+      throws IOException, FileLockException {
     var dir = walDirectory.getRoot();
     if (!Files.exists(dir)) {
       Files.createDirectories(dir);
@@ -63,7 +68,12 @@ public class WalManager implements Closeable {
       Files.createFile(lockFile);
     }
     this.lockFileFc = FileChannel.open(lockFile, StandardOpenOption.WRITE);
-    this.fileLock = this.lockFileFc.lock();
+    try {
+      this.fileLock = FileLockUtils.tryLockOrFail(this.lockFileFc);
+    } catch (FileLockException e) {
+      log.error("Could not lock file: {}", lockFile);
+      throw new FileLockException("Locking failed for file: " + lockFile);
+    }
     if (walConfig.getSegmentSize() <= 0) {
       throw new IllegalArgumentException("maxWalSize must be positive");
     }

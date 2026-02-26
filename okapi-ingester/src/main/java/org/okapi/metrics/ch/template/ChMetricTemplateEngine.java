@@ -4,8 +4,6 @@
  */
 package org.okapi.metrics.ch.template;
 
-import gg.jte.ContentType;
-import gg.jte.TemplateEngine;
 import gg.jte.TemplateException;
 import gg.jte.TemplateOutput;
 import org.springframework.stereotype.Component;
@@ -13,13 +11,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class ChMetricTemplateEngine {
 
-  private final TemplateEngine engine;
+  private final ChTemplateEngine engine;
 
   public ChMetricTemplateEngine() {
-    engine = TemplateEngine.createPrecompiled(ContentType.Plain);
+    engine = new ChTemplateEngine();
   }
 
   public void render(String name, Object param, TemplateOutput output) throws TemplateException {
     engine.render(name, param, output);
+  }
+  public String render(String name, Object param){
+    return engine.render(name, param);
   }
 }

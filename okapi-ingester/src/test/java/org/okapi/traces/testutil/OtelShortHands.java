@@ -8,6 +8,8 @@ import com.google.protobuf.ByteString;
 import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.common.v1.KeyValue;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 
 public final class OtelShortHands {
   private OtelShortHands() {}
@@ -24,6 +26,12 @@ public final class OtelShortHands {
         .setKey(key)
         .setValue(AnyValue.newBuilder().setIntValue(value))
         .build();
+  }
+
+  public static List<KeyValue> keyValues(Map<String, String> vals) {
+    return vals.entrySet().stream()
+        .map(entry -> keyValue(entry.getKey(), entry.getValue()))
+        .toList();
   }
 
   public static KeyValue keyValue(String key, boolean value) {

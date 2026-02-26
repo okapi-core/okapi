@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.okapi.ch.ChJteTemplateFiles;
 import org.okapi.exceptions.BadRequestException;
+import org.okapi.metrics.ch.template.ChGetGaugeQueryTemplate;
 import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;

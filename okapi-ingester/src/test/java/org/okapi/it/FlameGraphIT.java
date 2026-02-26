@@ -17,11 +17,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.okapi.ch.CreateChTablesSpec;
+import org.okapi.chtest.ChTestOnlyUtils;
 import org.okapi.corpus.FlameGraphTestCorpus;
 import org.okapi.logs.TestApplication;
+import org.okapi.metrics.ch.ChConstants;
 import org.okapi.otel.OtelAnyValueDecoder;
 import org.okapi.rest.traces.*;
-import org.okapi.traces.ch.ChTracesConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -72,7 +73,7 @@ public class FlameGraphIT {
   void setUp() {
     baseUrl = "http://localhost:" + port;
     CreateChTablesSpec.migrate(chClient);
-    chClient.queryAll("TRUNCATE TABLE IF EXISTS " + ChTracesConstants.TBL_SPANS_V1);
+    ChTestOnlyUtils.truncateTable(chClient, ChConstants.TBL_SPANS_V1);
   }
 
   @Test

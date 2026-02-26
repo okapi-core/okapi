@@ -39,10 +39,8 @@ public class ChIngesters {
 
   @Bean
   public ChTracesIngester tracesIngester(
-      @Autowired @Qualifier(Qualifiers.TRACES_CH_WAL_RESOURCES) ChWalResources walResources,
-      @Autowired TraceFilterStrategy traceFilterStrategy,
-      @Autowired SpanFilterStrategy spanFilterStrategy) {
-    return new ChTracesIngester(walResources, traceFilterStrategy, spanFilterStrategy);
+      @Autowired @Qualifier(Qualifiers.TRACES_CH_WAL_RESOURCES) ChWalResources walResources) {
+    return new ChTracesIngester(walResources);
   }
 
   @Bean

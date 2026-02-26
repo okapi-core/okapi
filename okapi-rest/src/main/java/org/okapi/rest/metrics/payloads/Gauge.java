@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
+import org.okapi.rest.metrics.Exemplar;
 
 @AllArgsConstructor
 @Builder
@@ -18,9 +19,16 @@ import lombok.ToString;
 public class Gauge {
   private List<Long> ts;
   private List<Float> value;
+  private List<Exemplar> exemplars;
 
   public void lock() {
     ts = Collections.unmodifiableList(ts);
     value = Collections.unmodifiableList(value);
+  }
+
+  public Gauge(List<Long> ts, List<Float> value) {
+    this.ts = ts;
+    this.value = value;
+    this.exemplars = Collections.emptyList();
   }
 }

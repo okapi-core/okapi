@@ -61,6 +61,9 @@ WHERE 1=1
 @if(data.getTraceId() != null && !data.getTraceId().isEmpty())
   AND trace_id = '${data.getTraceId()}'
 @endif
+@if(data.getSpanId() != null && !data.getSpanId().isEmpty())
+    AND span_id = '${data.getSpanId()}'
+@endif
 @if(data.getKind() != null && !data.getKind().isEmpty())
   AND kind = '${data.getKind()}'
 @endif

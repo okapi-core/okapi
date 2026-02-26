@@ -47,4 +47,8 @@ public class OkapiLists {
       }
     };
   }
+
+  public static <T> List<T> keyToEmptyArrayList(String key) {
+    return new ArrayList<>();
+  }
 }

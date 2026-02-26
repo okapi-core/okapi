@@ -14,6 +14,8 @@ import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import org.okapi.parallel.ParallelExecutor;
+import org.okapi.rest.metrics.exemplar.GetExemplarsRequest;
+import org.okapi.rest.metrics.exemplar.GetExemplarsResponse;
 import org.okapi.rest.metrics.query.GetMetricsBatchResponse;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
@@ -113,6 +115,11 @@ public class MetricsQueryService {
     var results =
         this.parallelExecutor.submit(fetchers, Duration.of(this.timeoutMillis, ChronoUnit.MILLIS));
     return new GetMetricsBatchResponse(results);
+  }
+
+  public GetExemplarsResponse getExemplarsResponse(String token, GetExemplarsRequest request) {
+    validateAccess(token);
+    return ingesterClient.getExemplarsResponse(request);
   }
 
   @PreDestroy

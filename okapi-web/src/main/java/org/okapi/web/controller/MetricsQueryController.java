@@ -6,6 +6,8 @@ package org.okapi.web.controller;
 
 import lombok.AllArgsConstructor;
 import org.okapi.headers.CookiesAndHeaders;
+import org.okapi.rest.metrics.exemplar.GetExemplarsRequest;
+import org.okapi.rest.metrics.exemplar.GetExemplarsResponse;
 import org.okapi.rest.metrics.query.GetMetricsBatchResponse;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
@@ -67,5 +69,12 @@ public class MetricsQueryController {
       @RequestHeader(CookiesAndHeaders.HEADER_TEMP_TOKEN) String tempToken,
       @RequestBody GetTagValueHintsRequest request) {
     return metricsQueryService.getTagValueHints(tempToken, request);
+  }
+
+  @PostMapping("/metrics/exemplars")
+  public GetExemplarsResponse getMetricExemplars(
+      @RequestHeader(CookiesAndHeaders.HEADER_TEMP_TOKEN) String tempToken,
+      @RequestBody GetExemplarsRequest request) {
+    return metricsQueryService.getExemplarsResponse(tempToken, request);
   }
 }

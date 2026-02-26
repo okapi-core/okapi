@@ -4,20 +4,19 @@
  */
 package org.okapi.metrics.otel;
 
+import static org.okapi.clock.OkapiTimeUtils.nanosToMillis;
+import static org.okapi.metrics.otel.OtelValueDecoders.*;
+
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
-import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.common.v1.KeyValue;
-import io.opentelemetry.proto.metrics.v1.Gauge;
-import io.opentelemetry.proto.metrics.v1.Histogram;
-import io.opentelemetry.proto.metrics.v1.HistogramDataPoint;
-import io.opentelemetry.proto.metrics.v1.Metric;
-import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
-import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
-import io.opentelemetry.proto.metrics.v1.ScopeMetrics;
-import io.opentelemetry.proto.metrics.v1.Sum;
+import io.opentelemetry.proto.metrics.v1.*;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import org.okapi.bytes.OkapiBytes;
+import org.okapi.collections.OkapiLists;
+import org.okapi.collections.OkapiMaps;
+import org.okapi.otel.ResourceAttributesReader;
+import org.okapi.rest.metrics.Exemplar;
 import org.okapi.rest.metrics.ExportMetricsRequest;
 import org.okapi.rest.metrics.MetricType;
 import org.okapi.rest.metrics.payloads.Gauge.GaugeBuilder;
@@ -59,74 +58,15 @@ public final class OtelConverter {
     return out;
   }
 
-  private static String anyValueToString(AnyValue v) {
-    if (v == null) return "";
-    return switch (v.getValueCase()) {
-      case STRING_VALUE -> v.getStringValue();
-      case BOOL_VALUE -> Boolean.toString(v.getBoolValue());
-      case INT_VALUE -> Long.toString(v.getIntValue());
-      case DOUBLE_VALUE -> Double.toString(v.getDoubleValue());
-      case ARRAY_VALUE ->
-          v.getArrayValue().getValuesList().stream()
-              .map(OtelConverter::anyValueToString)
-              .collect(Collectors.joining(",", "[", "]"));
-      case KVLIST_VALUE ->
-          v.getKvlistValue().getValuesList().stream()
-              .map(kv -> kv.getKey() + "=" + anyValueToString(kv.getValue()))
-              .collect(Collectors.joining(",", "{", "}"));
-      case BYTES_VALUE -> Arrays.toString(v.getBytesValue().toByteArray());
-      case VALUE_NOT_SET -> "";
-    };
-  }
-
   private static Map<String, String> mergeTags(Map<String, String> a, Map<String, String> b) {
-    if ((a == null || a.isEmpty()) && (b == null || b.isEmpty())) return Map.of();
-    if (a == null || a.isEmpty()) return new LinkedHashMap<>(b);
-    if (b == null || b.isEmpty()) return new LinkedHashMap<>(a);
-    Map<String, String> out = new LinkedHashMap<>(a);
-    out.putAll(b);
-    return out;
+    return OkapiMaps.mergeLeft(a, b, TreeMap::new);
   }
 
   private static String canonicalKey(Map<String, String> tags) {
-    if (tags == null || tags.isEmpty()) return "";
     return tags.entrySet().stream()
-        .sorted(Comparator.comparing(Map.Entry::getKey))
+        .sorted(Map.Entry.comparingByKey())
         .map(e -> e.getKey() + "=" + Objects.toString(e.getValue(), ""))
         .collect(Collectors.joining("|"));
-  }
-
-  private static long nanosToMillis(long nanos) {
-    return TimeUnit.NANOSECONDS.toMillis(nanos);
-  }
-
-  private static float extractNumberAsFloat(NumberDataPoint p) {
-    return switch (p.getValueCase()) {
-      case AS_DOUBLE -> (float) p.getAsDouble();
-      case AS_INT -> (float) p.getAsInt();
-      case VALUE_NOT_SET -> 0.0f;
-    };
-  }
-
-  private static int extractNumberAsInt(NumberDataPoint p) {
-    switch (p.getValueCase()) {
-      case AS_DOUBLE:
-        double d = p.getAsDouble();
-        long rounded = Math.round(d);
-        return clampToInt(rounded);
-      case AS_INT:
-        return clampToInt(p.getAsInt());
-      case VALUE_NOT_SET:
-        return 0;
-      default:
-        return 0;
-    }
-  }
-
-  private static int clampToInt(long value) {
-    if (value > Integer.MAX_VALUE) return Integer.MAX_VALUE;
-    if (value < Integer.MIN_VALUE) return Integer.MIN_VALUE;
-    return (int) value;
   }
 
   private boolean isExcludedTag(String key) {
@@ -152,9 +92,7 @@ public final class OtelConverter {
     Map<String, String> resourceTags =
         rm.hasResource() ? toTagMap(rm.getResource().getAttributesList()) : Map.of();
     var resourceName =
-        rm.hasResource()
-            ? org.okapi.otel.ResourceAttributesReader.getSvc(rm.getResource()).orElse(null)
-            : null;
+        rm.hasResource() ? ResourceAttributesReader.getSvc(rm.getResource()).orElse(null) : null;
     List<ExportMetricsRequest> out = new ArrayList<>();
     for (ScopeMetrics sm : rm.getScopeMetricsList()) {
       out.addAll(convertScopeMetrics(resourceTags, sm, resourceName));
@@ -188,19 +126,65 @@ public final class OtelConverter {
     return Collections.emptyList();
   }
 
+  public Exemplar fromOtelExemplarToOkapiExemplar(
+      String metric,
+      Map<String, String> tags,
+      io.opentelemetry.proto.metrics.v1.Exemplar otelExemplar) {
+    var val = OtelValueDecoders.decodeExemplarAsDouble(otelExemplar);
+    var attributes =
+        otelExemplar.getFilteredAttributesList().stream()
+            .map(OtelValueDecoders::decodeKv)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .toList();
+    var traceId = OkapiBytes.encodeAsHex(otelExemplar.getTraceId().toByteArray());
+    var spanId = OkapiBytes.encodeAsHex(otelExemplar.getSpanId().toByteArray());
+    var tsNanos = otelExemplar.getTimeUnixNano();
+    var builder =
+        Exemplar.builder()
+            .spanId(spanId)
+            .tsNanos(tsNanos)
+            .metric(metric)
+            .tags(tags)
+            .traceId(traceId)
+            .kv(attributes);
+    val.ifPresent(builder::measurement);
+    return builder.build();
+  }
+
+  public List<Exemplar> collectExemplar(
+      String metric, Map<String, String> tags, NumberDataPoint numberDataPoint) {
+    return numberDataPoint.getExemplarsList().stream()
+        .map((e) -> this.fromOtelExemplarToOkapiExemplar(metric, tags, e))
+        .toList();
+  }
+
+  public List<Exemplar> collectExemplar(
+      String metric, Map<String, String> tags, HistogramDataPoint histogramDataPoint) {
+    return histogramDataPoint.getExemplarsList().stream()
+        .map((e) -> this.fromOtelExemplarToOkapiExemplar(metric, tags, e))
+        .toList();
+  }
+
   private List<ExportMetricsRequest> convertGauge(
       String metricName, Map<String, String> baseTags, Gauge g, String resourceName) {
     // Group points by tags
     Map<String, Map<String, String>> tagKeyToTags = new HashMap<>();
     Map<String, List<Long>> tsByKey = new HashMap<>();
     Map<String, List<Float>> valsByKey = new HashMap<>();
-
+    Map<String, List<Exemplar>> exemplarsByKey = new HashMap<>();
     for (NumberDataPoint p : g.getDataPointsList()) {
       Map<String, String> tags = mergeTags(baseTags, toTagMap(p.getAttributesList()));
       String key = canonicalKey(tags);
       tagKeyToTags.putIfAbsent(key, tags);
-      tsByKey.computeIfAbsent(key, k -> new ArrayList<>()).add(nanosToMillis(p.getTimeUnixNano()));
-      valsByKey.computeIfAbsent(key, k -> new ArrayList<>()).add(extractNumberAsFloat(p));
+      tsByKey
+          .computeIfAbsent(key, OkapiLists::keyToEmptyArrayList)
+          .add(nanosToMillis(p.getTimeUnixNano()));
+      valsByKey
+          .computeIfAbsent(key, OkapiLists::keyToEmptyArrayList)
+          .add(OtelValueDecoders.extractNumberAsFloat(p));
+      var exemplar = collectExemplar(metricName, tags, p);
+      exemplarsByKey.computeIfAbsent(key, OkapiLists::keyToEmptyArrayList).addAll(exemplar);
     }
 
     List<ExportMetricsRequest> out = new ArrayList<>();
@@ -208,8 +192,10 @@ public final class OtelConverter {
       var tsList = tsByKey.getOrDefault(key, List.of());
       var valList = valsByKey.getOrDefault(key, List.of());
       GaugeBuilder gauge =
-          org.okapi.rest.metrics.payloads.Gauge.builder().ts(tsList).value(valList);
-
+          org.okapi.rest.metrics.payloads.Gauge.builder()
+              .ts(tsList)
+              .exemplars(Collections.unmodifiableList(exemplarsByKey.get(key)))
+              .value(valList);
       out.add(
           ExportMetricsRequest.builder()
               .resource(resourceName)
@@ -243,7 +229,7 @@ public final class OtelConverter {
       pt.setStart(nanosToMillis(p.getStartTimeUnixNano()));
       pt.setEnd(nanosToMillis(p.getTimeUnixNano()));
       pt.setSum(extractNumberAsInt(p));
-      ptsByKey.computeIfAbsent(key, k -> new ArrayList<>()).add(pt);
+      ptsByKey.computeIfAbsent(key, OkapiLists::keyToEmptyArrayList).add(pt);
     }
 
     List<ExportMetricsRequest> out = new ArrayList<>();
@@ -267,12 +253,12 @@ public final class OtelConverter {
   }
 
   private List<ExportMetricsRequest> convertHistogram(
-      String metricName, Map<String, String> baseTags, Histogram h, String resourceName) {
+      String metricName, Map<String, String> baseTags, Histogram otelHisto, String resourceName) {
     // Group datapoints by tags
     Map<String, Map<String, String>> tagKeyToTags = new HashMap<>();
     Map<String, List<HistoPoint>> ptsByKey = new HashMap<>();
-
-    for (HistogramDataPoint p : h.getDataPointsList()) {
+    Map<String, List<Exemplar>> exemplarsByKey = new HashMap<>();
+    for (var p : otelHisto.getDataPointsList()) {
       Map<String, String> tags = mergeTags(baseTags, toTagMap(p.getAttributesList()));
       String key = canonicalKey(tags);
       tagKeyToTags.putIfAbsent(key, tags);
@@ -281,7 +267,7 @@ public final class OtelConverter {
       pt.setStart(nanosToMillis(p.getStartTimeUnixNano()));
       pt.setEnd(nanosToMillis(p.getTimeUnixNano()));
       var translatedTemporality =
-          switch (h.getAggregationTemporality()) {
+          switch (otelHisto.getAggregationTemporality()) {
             case AGGREGATION_TEMPORALITY_DELTA -> HistoPoint.TEMPORALITY.DELTA;
             case AGGREGATION_TEMPORALITY_CUMULATIVE -> HistoPoint.TEMPORALITY.CUMULATIVE;
             case AGGREGATION_TEMPORALITY_UNSPECIFIED -> HistoPoint.TEMPORALITY.DELTA; // fallback
@@ -302,8 +288,10 @@ public final class OtelConverter {
         counts[i] = clampToInt(p.getBucketCounts(i));
       }
       pt.setBucketCounts(counts);
+      ptsByKey.computeIfAbsent(key, OkapiLists::keyToEmptyArrayList).add(pt);
 
-      ptsByKey.computeIfAbsent(key, k -> new ArrayList<>()).add(pt);
+      var exemplars = collectExemplar(metricName, tags, p);
+      exemplarsByKey.computeIfAbsent(key, OkapiLists::keyToEmptyArrayList).addAll(exemplars);
     }
 
     List<ExportMetricsRequest> out = new ArrayList<>();

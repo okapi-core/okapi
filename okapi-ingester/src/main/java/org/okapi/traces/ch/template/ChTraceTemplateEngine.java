@@ -4,20 +4,18 @@
  */
 package org.okapi.traces.ch.template;
 
-import gg.jte.ContentType;
-import gg.jte.TemplateEngine;
 import gg.jte.TemplateException;
 import gg.jte.TemplateOutput;
-import gg.jte.output.StringOutput;
+import org.okapi.metrics.ch.template.ChTemplateEngine;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ChTraceTemplateEngine {
+public class ChTraceTemplateEngine extends ChTemplateEngine {
 
-  private final TemplateEngine engine;
+  private final ChTemplateEngine engine;
 
   public ChTraceTemplateEngine() {
-    engine = TemplateEngine.createPrecompiled(ContentType.Plain);
+    engine = new ChTemplateEngine();
   }
 
   public void render(String name, Object param, TemplateOutput output) throws TemplateException {
@@ -25,8 +23,6 @@ public class ChTraceTemplateEngine {
   }
 
   public String render(String name, Object data) {
-    var output = new StringOutput();
-    render(name, data, output);
-    return output.toString();
+    return engine.render(name, data);
   }
 }

@@ -35,14 +35,13 @@ public final class OtelAttrDecoder {
 
   public static Optional<AnyValue> getAttribute(
       Map<String, AnyValue> attrs, String key, List<String> fallbacks) {
-    if (attrs == null || key == null || key.isEmpty()) return Optional.empty();
-    AnyValue v = attrs.get(key);
-    if (v != null) return Optional.of(v);
-    if (fallbacks == null || fallbacks.isEmpty()) return Optional.empty();
+    if (attrs.containsKey(key)) {
+      return Optional.of(attrs.get(key));
+    }
     for (String fallback : fallbacks) {
-      if (fallback == null || fallback.isEmpty()) continue;
-      v = attrs.get(fallback);
-      if (v != null) return Optional.of(v);
+      if (attrs.containsKey(fallback)) {
+        return Optional.of(attrs.get(fallback));
+      }
     }
     return Optional.empty();
   }

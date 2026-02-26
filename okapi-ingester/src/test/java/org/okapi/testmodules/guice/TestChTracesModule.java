@@ -20,13 +20,13 @@ import org.okapi.traces.ch.ChTraceQueryService;
 import org.okapi.traces.ch.ChTracesIngester;
 import org.okapi.traces.ch.ChTracesWalConsumer;
 import org.okapi.traces.ch.ChTracesWalConsumerDriver;
+import org.okapi.traces.ch.reds.ChRedQueryService;
 import org.okapi.traces.ch.NoopSpanFilterStrategy;
 import org.okapi.traces.ch.NoopTraceFilterStrategy;
 import org.okapi.traces.ch.OtelTracesToChRowsConverter;
 import org.okapi.traces.ch.SpanFilterStrategy;
 import org.okapi.traces.ch.TraceFilterStrategy;
 import org.okapi.traces.ch.template.ChTraceTemplateEngine;
-import org.okapi.wal.io.WalReader;
 import org.okapi.wal.manager.WalManager;
 
 public class TestChTracesModule extends AbstractModule {
@@ -77,11 +77,8 @@ public class TestChTracesModule extends AbstractModule {
 
   @Provides
   @Singleton
-  ChTracesIngester provideChTracesIngester(
-      ChWalResources walResources,
-      TraceFilterStrategy traceFilterStrategy,
-      SpanFilterStrategy spanFilterStrategy) {
-    return new ChTracesIngester(walResources, traceFilterStrategy, spanFilterStrategy);
+  ChTracesIngester provideChTracesIngester(ChWalResources walResources) {
+    return new ChTracesIngester(walResources);
   }
 
   @Provides
@@ -93,9 +90,13 @@ public class TestChTracesModule extends AbstractModule {
   @Provides
   @Singleton
   ChTracesWalConsumer provideChTracesWalConsumer(
-      ChWalResources walResources, ChWriter writer, OtelTracesToChRowsConverter converter) {
-    WalReader reader = walResources.getReader();
-    return new ChTracesWalConsumer(walResources, batchSize, writer, converter);
+      ChWalResources walResources,
+      ChWriter writer,
+      TraceFilterStrategy traceFilterStrategy,
+      SpanFilterStrategy spanFilterStrategy,
+      OtelTracesToChRowsConverter converter) {
+    return new ChTracesWalConsumer(
+        walResources, batchSize, writer, converter, traceFilterStrategy, spanFilterStrategy);
   }
 
   @Provides
@@ -115,6 +116,12 @@ public class TestChTracesModule extends AbstractModule {
   ChTraceQueryService provideChTraceQueryService(
       Client client, ChTraceTemplateEngine templateEngine) {
     return new ChTraceQueryService(client, templateEngine);
+  }
+
+  @Provides
+  @Singleton
+  ChRedQueryService provideChRedQueryService(Client client, ChTraceTemplateEngine templateEngine) {
+    return new ChRedQueryService(client, templateEngine);
   }
 
   @Provides

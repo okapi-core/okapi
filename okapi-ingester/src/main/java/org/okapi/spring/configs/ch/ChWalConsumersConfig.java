@@ -14,9 +14,7 @@ import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
 import org.okapi.runtime.ch.ChWalConsumerCommonDriver;
 import org.okapi.spring.configs.Qualifiers;
 import org.okapi.spring.configs.properties.ChWalConsumerCfg;
-import org.okapi.traces.ch.ChTracesWalConsumer;
-import org.okapi.traces.ch.ChTracesWalConsumerDriver;
-import org.okapi.traces.ch.OtelTracesToChRowsConverter;
+import org.okapi.traces.ch.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -61,8 +59,16 @@ public class ChWalConsumersConfig {
       @Autowired @Qualifier(Qualifiers.TRACES_CH_WAL_RESOURCES) ChWalResources walResources,
       @Autowired ChWriter writer,
       @Autowired ChWalConsumerCfg walCfg,
-      @Autowired OtelTracesToChRowsConverter converter) {
-    return new ChTracesWalConsumer(walResources, walCfg.getBatchSize(), writer, converter);
+      @Autowired OtelTracesToChRowsConverter converter,
+      @Autowired TraceFilterStrategy traceFilterStrategy,
+      @Autowired SpanFilterStrategy spanFilterStrategy) {
+    return new ChTracesWalConsumer(
+        walResources,
+        walCfg.getBatchSize(),
+        writer,
+        converter,
+        traceFilterStrategy,
+        spanFilterStrategy);
   }
 
   @Bean

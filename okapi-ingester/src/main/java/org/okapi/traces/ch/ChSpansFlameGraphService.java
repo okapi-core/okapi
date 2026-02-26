@@ -61,7 +61,7 @@ public class ChSpansFlameGraphService {
 
   private static ChSpansQueryTemplate buildTemplate(String traceId, long startNs, long endNs) {
     return ChSpansQueryTemplate.builder()
-        .table(ChTracesConstants.TBL_SPANS_V1)
+        .table(ChConstants.TBL_SPANS_V1)
         .traceId(traceId)
         .tsStartNs(startNs)
         .tsEndNs(endNs)

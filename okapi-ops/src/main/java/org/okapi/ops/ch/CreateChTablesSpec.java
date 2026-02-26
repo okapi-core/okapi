@@ -38,14 +38,24 @@ public class CreateChTablesSpec {
     return ClasspathResourceReader.readResource(metricsPath);
   }
 
+  public static String getExemplarsTableSpec() {
+    return ClasspathResourceReader.readResource("ch/create_exemplar_table.sql");
+  }
+
+  public static String getServiceRedEventsTableSpec() {
+    return ClasspathResourceReader.readResource("ch/create_service_red_events_table.sql");
+  }
+
   public static void migrate(Client client) {
     client.queryAll("CREATE DATABASE IF NOT EXISTS okapi_metrics");
     client.queryAll(getCreateGaugeTableSpec());
     client.queryAll(getCreateHistoTableSpec());
     client.queryAll(getCreateSumTableSpec());
     client.queryAll(getCreateMetricEventsMetaTableSpec());
+    client.queryAll(getExemplarsTableSpec());
     client.queryAll("CREATE DATABASE IF NOT EXISTS okapi_traces");
     client.queryAll(getTracesTableSpec());
     client.queryAll(getSpansIngestedAttribsTableSpec());
+    client.queryAll(getServiceRedEventsTableSpec());
   }
 }

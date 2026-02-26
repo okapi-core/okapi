@@ -1,4 +1,4 @@
-@param org.okapi.metrics.ch.ChGetHistoQueryTemplate data
+@param org.okapi.metrics.ch.template.ChGetHistoQueryTemplate data
 
 SELECT resource, metric_name, tags,
 toUnixTimestamp64Milli(ts_start) AS ts_start_ms,

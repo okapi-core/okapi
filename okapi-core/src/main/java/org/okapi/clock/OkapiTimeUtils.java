@@ -1,0 +1,7 @@
+package org.okapi.clock;
+
+public class OkapiTimeUtils {
+    public static long nanosToMillis(long nanos){
+        return nanos / 1_000_000;
+    }
+}

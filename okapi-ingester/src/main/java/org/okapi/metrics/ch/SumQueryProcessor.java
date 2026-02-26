@@ -13,6 +13,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import org.okapi.ch.ChJteTemplateFiles;
+import org.okapi.metrics.ch.template.ChGetSumQueryTemplate;
 import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
 import org.okapi.rest.metrics.query.CannedResponses;
 import org.okapi.rest.metrics.query.GetMetricsRequest;

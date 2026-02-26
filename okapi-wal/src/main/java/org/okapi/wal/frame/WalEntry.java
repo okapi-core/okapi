@@ -24,7 +24,6 @@ import org.okapi.wal.lsn.Lsn;
  * FRAME_LEN = HEADER_LEN + PAYLOAD_LEN + CRC32_LEN + MAGIC_END.length HEADER_LEN = bytes from
  * VERSION through PAYLOAD_LEN (inclusive) to make resync possible.
  */
-// todo: add test cases for s12n, de-s12n : empty, single byte, multi-byte, >max, <min
 public class WalEntry {
   // static configuration
   public static final int MAX_PAYLOAD_BYTES = 16 * 1024 * 1024;

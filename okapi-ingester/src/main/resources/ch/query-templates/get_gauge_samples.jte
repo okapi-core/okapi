@@ -1,4 +1,4 @@
-@param org.okapi.metrics.ch.ChGetGaugeQueryTemplate data
+@param org.okapi.metrics.ch.template.ChGetGaugeQueryTemplate data
 
 SELECT ${data.getBucketExpr()} AS bucket_ms, ${data.getAggExpr()} AS value
 FROM ${data.getTable()}

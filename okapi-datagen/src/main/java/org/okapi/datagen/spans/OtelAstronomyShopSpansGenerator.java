@@ -11,6 +11,7 @@ import io.opentelemetry.proto.resource.v1.Resource;
 import io.opentelemetry.proto.trace.v1.ResourceSpans;
 import io.opentelemetry.proto.trace.v1.ScopeSpans;
 import io.opentelemetry.proto.trace.v1.Span;
+import io.opentelemetry.proto.trace.v1.Status;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -76,6 +77,10 @@ public class OtelAstronomyShopSpansGenerator {
       endNs = Math.max(endNs, childStart + TimeUtils.millisToNanos(config.getTailMs()));
     }
 
+    String peerService = null;
+    if (allowChildren && !step.getChildren().isEmpty()) {
+      peerService = step.getChildren().get(0).getComponent();
+    }
     var span =
         buildSpan(
             step,
@@ -84,7 +89,8 @@ public class OtelAstronomyShopSpansGenerator {
             startNs,
             endNs,
             outcome,
-            componentState.errorMessage(outcome));
+            componentState.errorMessage(outcome),
+            peerService);
     ctx.getSpansByService().computeIfAbsent(step.getComponent(), k -> new ArrayList<>()).add(span);
     return endNs;
   }
@@ -96,7 +102,8 @@ public class OtelAstronomyShopSpansGenerator {
       long startNs,
       long endNs,
       Outcome outcome,
-      String errorMessage) {
+      String errorMessage,
+      String peerService) {
     var builder =
         Span.newBuilder()
             .setTraceId(spanRef.traceIdBytes())
@@ -109,13 +116,18 @@ public class OtelAstronomyShopSpansGenerator {
     if (parentRef != null) {
       builder.setParentSpanId(parentRef.spanIdBytes());
     }
+    if (peerService != null && !peerService.isEmpty()) {
+      builder.addAttributes(OtelShorthand.kv("peer.service", peerService));
+    }
     if (outcome != Outcome.SUCCESS) {
+      builder.setStatus(Status.newBuilder().setCode(Status.StatusCode.STATUS_CODE_ERROR).build());
       builder.addAttributes(OtelShorthand.kv("error.type", outcome.errorType));
       if (errorMessage != null && !errorMessage.isEmpty()) {
         builder.addAttributes(OtelShorthand.kv("error.message", errorMessage));
       }
       builder.addAttributes(OtelShorthand.kvInt("http.status_code", outcome.httpStatusCode));
     } else {
+      builder.setStatus(Status.newBuilder().setCode(Status.StatusCode.STATUS_CODE_OK).build());
       var requestSize = this.requestSizes.sample();
       builder.addAttributes(OtelShorthand.kvDouble("http.server.request.body.size", requestSize));
       builder.addAttributes(OtelShorthand.kvDouble("http.request.body.size", requestSize));

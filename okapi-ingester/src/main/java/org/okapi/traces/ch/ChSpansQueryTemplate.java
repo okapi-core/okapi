@@ -13,6 +13,7 @@ import lombok.Value;
 public class ChSpansQueryTemplate {
   String table;
   String traceId;
+  String spanId;
   String kind;
   String serviceName;
   String servicePeerName;

@@ -6,6 +6,8 @@ package org.okapi.metrics.api;
 
 import lombok.RequiredArgsConstructor;
 import org.okapi.metrics.ch.ChMetricsQueryProcessor;
+import org.okapi.rest.metrics.exemplar.GetExemplarsRequest;
+import org.okapi.rest.metrics.exemplar.GetExemplarsResponse;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
 import org.okapi.rest.search.*;
@@ -44,5 +46,10 @@ public class ChMetricsQueryController {
   @PostMapping("/metrics/tag-value/hints")
   public GetMetricsHintsResponse getTagValueHints(@RequestBody GetTagValueHintsRequest request) {
     return chMetricsQueryProcessor.getTagValueHints(request);
+  }
+
+  @PostMapping("/metrics/exemplars")
+  public GetExemplarsResponse getTagValueHints(@RequestBody GetExemplarsRequest request) {
+    return chMetricsQueryProcessor.getExemplarsResponse(request);
   }
 }

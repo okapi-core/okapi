@@ -10,13 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import com.clickhouse.client.api.Client;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
-import io.opentelemetry.proto.metrics.v1.Gauge;
-import io.opentelemetry.proto.metrics.v1.Metric;
-import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
-import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
-import io.opentelemetry.proto.metrics.v1.ScopeMetrics;
-import io.opentelemetry.proto.resource.v1.Resource;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +31,7 @@ public class ChGaugeTests {
   private Injector injector;
   private Client client;
   private final String testSession = java.util.UUID.randomUUID().toString();
+  private final MetricsTestingOtelFactory otelFactory = new MetricsTestingOtelFactory(testSession);
 
   @BeforeEach
   void setup() {
@@ -54,7 +48,7 @@ public class ChGaugeTests {
     var qp = injector.getInstance(ChMetricsQueryProcessor.class);
 
     ingester.ingestOtelProtobuf(
-        buildGaugeRequest("svc-1", "metric_1", List.of(1_000L), List.of(1.0)));
+        otelFactory.buildGaugeRequest("svc-1", "metric_1", List.of(1_000L), List.of(1.0)));
     driver.onTick();
 
     var req =
@@ -82,7 +76,8 @@ public class ChGaugeTests {
     var qp = injector.getInstance(ChMetricsQueryProcessor.class);
 
     ingester.ingestOtelProtobuf(
-        buildGaugeRequest("svc-2", "metric_2", List.of(1_000L, 2_000L), List.of(1.0, 2.0)));
+        otelFactory.buildGaugeRequest(
+            "svc-2", "metric_2", List.of(1_000L, 2_000L), List.of(1.0, 2.0)));
     driver.onTick();
 
     var req =
@@ -109,7 +104,7 @@ public class ChGaugeTests {
     var qp = injector.getInstance(ChMetricsQueryProcessor.class);
 
     ingester.ingestOtelProtobuf(
-        buildGaugeRequest("svc-3", "metric_3", List.of(1_000L), List.of(1.0)));
+        otelFactory.buildGaugeRequest("svc-3", "metric_3", List.of(1_000L), List.of(1.0)));
     driver.onTick();
 
     var req =
@@ -136,7 +131,7 @@ public class ChGaugeTests {
     var qp = injector.getInstance(ChMetricsQueryProcessor.class);
 
     ingester.ingestOtelProtobuf(
-        buildGaugeRequest("svc-4", "metric_4", List.of(1_000L), List.of(1.0)));
+        otelFactory.buildGaugeRequest("svc-4", "metric_4", List.of(1_000L), List.of(1.0)));
     driver.onTick();
 
     var req =
@@ -163,9 +158,9 @@ public class ChGaugeTests {
     var qp = injector.getInstance(ChMetricsQueryProcessor.class);
 
     ingester.ingestOtelProtobuf(
-        buildGaugeRequest("svc-keep", "metric_multi", List.of(1_000L), List.of(1.0)));
+        otelFactory.buildGaugeRequest("svc-keep", "metric_multi", List.of(1_000L), List.of(1.0)));
     ingester.ingestOtelProtobuf(
-        buildGaugeRequest("svc-ignore", "metric_multi", List.of(1_000L), List.of(5.0)));
+        otelFactory.buildGaugeRequest("svc-ignore", "metric_multi", List.of(1_000L), List.of(5.0)));
     driver.onTick();
 
     var req =
@@ -192,7 +187,7 @@ public class ChGaugeTests {
     var qp = injector.getInstance(ChMetricsQueryProcessor.class);
 
     ingester.ingestOtelProtobuf(
-        buildGaugeRequest(
+        otelFactory.buildGaugeRequest(
             "svc-5", "metric_same_bucket", List.of(1_000L, 1_050L), List.of(1.0, 3.0)));
     driver.onTick();
 
@@ -220,7 +215,8 @@ public class ChGaugeTests {
     var qp = injector.getInstance(ChMetricsQueryProcessor.class);
 
     ingester.ingestOtelProtobuf(
-        buildGaugeRequest("svc-6", "metric_minutely", List.of(1_000L, 30_000L), List.of(2.0, 5.0)));
+        otelFactory.buildGaugeRequest(
+            "svc-6", "metric_minutely", List.of(1_000L, 30_000L), List.of(2.0, 5.0)));
     driver.onTick();
 
     var req =
@@ -243,50 +239,5 @@ public class ChGaugeTests {
 
   private void truncateGaugeTable() {
     client.queryAll("TRUNCATE TABLE IF EXISTS okapi_metrics.gauge_raw_samples");
-  }
-
-  private ExportMetricsServiceRequest buildGaugeRequest(
-      String resourceName, String metricName, List<Long> timestampsMs, List<Double> values) {
-    var gaugeBuilder = Gauge.newBuilder();
-    for (int i = 0; i < timestampsMs.size(); i++) {
-      gaugeBuilder.addDataPoints(
-          NumberDataPoint.newBuilder()
-              .setTimeUnixNano(timestampsMs.get(i) * 1_000_000)
-              .setStartTimeUnixNano(0)
-              .addAttributes(
-                  io.opentelemetry.proto.common.v1.KeyValue.newBuilder()
-                      .setKey("env")
-                      .setValue(
-                          io.opentelemetry.proto.common.v1.AnyValue.newBuilder()
-                              .setStringValue("dev")
-                              .build())
-                      .build())
-              .addAttributes(
-                  io.opentelemetry.proto.common.v1.KeyValue.newBuilder()
-                      .setKey("test-session")
-                      .setValue(
-                          io.opentelemetry.proto.common.v1.AnyValue.newBuilder()
-                              .setStringValue(testSession)
-                              .build())
-                      .build())
-              .setAsDouble(values.get(i))
-              .build());
-    }
-    Metric metric = Metric.newBuilder().setName(metricName).setGauge(gaugeBuilder.build()).build();
-    var scopeMetrics = ScopeMetrics.newBuilder().addMetrics(metric).build();
-    var resource =
-        Resource.newBuilder()
-            .addAttributes(
-                io.opentelemetry.proto.common.v1.KeyValue.newBuilder()
-                    .setKey("service.name")
-                    .setValue(
-                        io.opentelemetry.proto.common.v1.AnyValue.newBuilder()
-                            .setStringValue(resourceName)
-                            .build())
-                    .build())
-            .build();
-    var resourceMetrics =
-        ResourceMetrics.newBuilder().setResource(resource).addScopeMetrics(scopeMetrics).build();
-    return ExportMetricsServiceRequest.newBuilder().addResourceMetrics(resourceMetrics).build();
   }
 }

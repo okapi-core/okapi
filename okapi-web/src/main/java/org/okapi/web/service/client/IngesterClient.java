@@ -11,6 +11,8 @@ import java.io.IOException;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import org.okapi.rest.metrics.exemplar.GetExemplarsRequest;
+import org.okapi.rest.metrics.exemplar.GetExemplarsResponse;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
 import org.okapi.rest.search.*;
@@ -23,6 +25,10 @@ import org.okapi.rest.traces.SpanQueryV2Response;
 import org.okapi.rest.traces.SpansFlameGraphResponse;
 import org.okapi.rest.traces.SpansQueryStatsRequest;
 import org.okapi.rest.traces.SpansQueryStatsResponse;
+import org.okapi.rest.traces.red.ListServicesRequest;
+import org.okapi.rest.traces.red.ServiceListResponse;
+import org.okapi.rest.traces.red.ServiceRedRequest;
+import org.okapi.rest.traces.red.ServiceRedResponse;
 import org.okapi.web.service.Configs;
 import org.okapi.web.service.query.ProxyResponseTranslator;
 import org.springframework.beans.factory.annotation.Value;
@@ -99,6 +105,10 @@ public class IngesterClient {
     return postRequest("/api/v1/metrics/query", getMetricsRequest, GetMetricsResponse.class);
   }
 
+  public GetExemplarsResponse getExemplarsResponse(GetExemplarsRequest request) {
+    return postRequest("/api/v1/metrics/exemplars", request, GetExemplarsResponse.class);
+  }
+
   public SpanQueryV2Response querySpans(SpanQueryV2Request request) {
     return postRequest("/api/v1/spans/query", request, SpanQueryV2Response.class);
   }
@@ -113,6 +123,14 @@ public class IngesterClient {
 
   public SpanAttributeHintsResponse getSpanAttributeHints(SpanAttributeHintsRequest request) {
     return postRequest("/api/v1/spans/attributes/hints", request, SpanAttributeHintsResponse.class);
+  }
+
+  public ServiceListResponse getSvcList(ListServicesRequest request) {
+    return postRequest("/api/v1/services", request, ServiceListResponse.class);
+  }
+
+  public ServiceRedResponse getServiceReds(ServiceRedRequest request) {
+    return postRequest("/api/v1/reds", request, ServiceRedResponse.class);
   }
 
   public SpanAttributeValueHintsResponse getSpanAttributeValueHints(

@@ -12,6 +12,8 @@ import java.util.Objects;
 import org.okapi.ch.ChJteTemplateFiles;
 import org.okapi.exceptions.BadRequestException;
 import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
+import org.okapi.rest.metrics.exemplar.GetExemplarsRequest;
+import org.okapi.rest.metrics.exemplar.GetExemplarsResponse;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
 import org.okapi.rest.search.*;
@@ -24,6 +26,7 @@ public class ChMetricsQueryProcessor {
   private final GaugeQueryProcessor gaugeQueryProcessor;
   private final HistogramQueryProcessor histogramQueryProcessor;
   private final SumQueryProcessor sumQueryProcessor;
+  private final ChExemplarQueryProcessor exemplarQueryProcessor;
   private final ChMetricTemplateEngine templateEngine;
 
   public ChMetricsQueryProcessor(Client client, ChMetricTemplateEngine templateEngine) {
@@ -32,6 +35,7 @@ public class ChMetricsQueryProcessor {
     this.gaugeQueryProcessor = new GaugeQueryProcessor(client, templateEngine);
     this.histogramQueryProcessor = new HistogramQueryProcessor(client, templateEngine);
     this.sumQueryProcessor = new SumQueryProcessor(client, templateEngine);
+    this.exemplarQueryProcessor = new ChExemplarQueryProcessor(client, templateEngine);
   }
 
   public GetMetricsResponse getMetricsResponse(GetMetricsRequest getMetricsRequest) {
@@ -166,5 +170,9 @@ public class ChMetricsQueryProcessor {
     TemplateOutput output = new StringOutput();
     templateEngine.render(templateName, data, output);
     return output.toString();
+  }
+
+  public GetExemplarsResponse getExemplarsResponse(GetExemplarsRequest request) {
+    return exemplarQueryProcessor.getExemplarsResponse(request);
   }
 }

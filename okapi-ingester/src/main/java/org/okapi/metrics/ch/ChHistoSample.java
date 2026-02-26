@@ -4,6 +4,7 @@
  */
 package org.okapi.metrics.ch;
 
+import com.google.gson.annotations.SerializedName;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,13 +20,24 @@ public class ChHistoSample {
   }
 
   String resource;
+
+  @SerializedName("metric_name")
   String metric;
+
   Map<String, String> tags;
+
+  @SerializedName("histo_type")
   HISTO_TYPE histoType;
+
   float sum;
   Long count;
+
+  @SerializedName("ts_start")
   long tsStart;
+
+  @SerializedName("ts_end")
   long tsEnd;
+
   float min;
   float max;
   float[] buckets;

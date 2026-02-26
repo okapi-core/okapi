@@ -17,6 +17,7 @@ import java.util.Objects;
 import org.okapi.ch.ChJteTemplateFiles;
 import org.okapi.ds.HistogramMerger;
 import org.okapi.ds.TwoAtATimeMerger;
+import org.okapi.metrics.ch.template.ChGetHistoQueryTemplate;
 import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
 import org.okapi.rest.metrics.query.CannedResponses;
 import org.okapi.rest.metrics.query.GetHistogramResponse;

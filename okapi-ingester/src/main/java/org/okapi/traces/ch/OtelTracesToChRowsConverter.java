@@ -8,12 +8,9 @@ import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.trace.v1.ScopeSpans;
 import io.opentelemetry.proto.trace.v1.Span;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import io.opentelemetry.proto.trace.v1.Status;
+import java.util.*;
+import org.okapi.nullity.NullHandler;
 import org.okapi.otel.OtelAnyValueDecoder;
 import org.okapi.otel.OtelAttrDecoder;
 import org.okapi.otel.ResourceAttributesReader;
@@ -39,13 +36,64 @@ public class OtelTracesToChRowsConverter {
     if (request == null) return Collections.emptyList();
     List<ChSpansIngestedAttribsRow> rows = new ArrayList<>();
     for (var resourceSpans : request.getResourceSpansList()) {
-      for (ScopeSpans scopeSpans : resourceSpans.getScopeSpansList()) {
-        for (Span span : scopeSpans.getSpansList()) {
+      for (var scopeSpans : resourceSpans.getScopeSpansList()) {
+        for (var span : scopeSpans.getSpansList()) {
           rows.addAll(toAttributeRows(span));
         }
       }
     }
     return rows;
+  }
+
+  public List<ChServiceRedEvents> deriveRedEvents(ExportTraceServiceRequest request) {
+    List<ChServiceRedEvents> rows = new ArrayList<>();
+    for (var resourceSpans : request.getResourceSpansList()) {
+      var svc = ResourceAttributesReader.getSvc(resourceSpans.getResource());
+      if (svc.isEmpty()) continue;
+      for (var scopeSpans : resourceSpans.getScopeSpansList()) {
+        for (var span : scopeSpans.getSpansList()) {
+          deriveRedEvent(svc.get(), span).ifPresent(rows::add);
+        }
+      }
+    }
+    return rows;
+  }
+
+  public Optional<ChServiceRedEvents> deriveRedEvent(String svc, Span span) {
+    SpanKind kind =
+        switch (NullHandler.ifNullThen(span.getKind(), Span.SpanKind.SPAN_KIND_UNSPECIFIED)) {
+          case SPAN_KIND_UNSPECIFIED -> SpanKind.UNK;
+          case SPAN_KIND_INTERNAL -> SpanKind.INTERNAL;
+          case SPAN_KIND_SERVER -> SpanKind.SERVER;
+          case SPAN_KIND_CLIENT -> SpanKind.CLIENT;
+          case SPAN_KIND_PRODUCER -> SpanKind.PRODUCER;
+          case SPAN_KIND_CONSUMER -> SpanKind.CONSUMER;
+          case UNRECOGNIZED -> SpanKind.UNK;
+        };
+    var status =
+        NullHandler.safelyGet(span.getStatus(), Status::getCode)
+            .map(
+                statusCode ->
+                    switch (statusCode) {
+                      case STATUS_CODE_UNSET -> SpanStatus.UNK;
+                      case STATUS_CODE_OK -> SpanStatus.OK;
+                      case STATUS_CODE_ERROR -> SpanStatus.ERROR;
+                      case UNRECOGNIZED -> SpanStatus.UNK;
+                    });
+    var startNanos = span.getStartTimeUnixNano();
+    var endNanos = span.getEndTimeUnixNano();
+    var name = span.getName();
+    Map<String, AnyValue> spanAttrs = OtelAttrDecoder.toAttrMap(span.getAttributesList());
+    var builder =
+        ChServiceRedEvents.builder()
+            .tsStartNanos(startNanos)
+            .tsEndNanos(endNanos)
+            .serviceName(svc)
+            .spanName(NullHandler.ifNullThenEmpty(name))
+            .spanKind(kind);
+    OtelAttrDecoder.getStringStrict(spanAttrs, ChSpansFallbackPaths.getPaths("service_peer_name"))
+        .ifPresent(builder::peerServiceName);
+    return status.map(spanStatus -> builder.spanStatus(spanStatus).build());
   }
 
   private ChSpansTableRow toRow(Span span, String serviceName) {

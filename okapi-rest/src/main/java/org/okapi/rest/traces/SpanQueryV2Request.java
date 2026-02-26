@@ -14,6 +14,7 @@ import lombok.Value;
 @AllArgsConstructor
 public class SpanQueryV2Request {
   String traceId;
+  String spanId;
   String kind;
   DbFilters dbFilters;
   DurationFilter durationFilter;

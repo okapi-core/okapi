@@ -41,6 +41,17 @@ public class ChTraceQueryServiceTests {
   private String traceIdDHex;
   private String kindServer;
 
+  ByteString traceIdA = utf8Bytes("trace-id-0000001");
+  ByteString spanIdA = utf8Bytes("span0001");
+  ByteString traceIdA2 = utf8Bytes("trace-id-0000001");
+  ByteString spanIdA2 = utf8Bytes("span0002");
+  ByteString traceIdB = utf8Bytes("trace-id-0000002");
+  ByteString spanIdB = utf8Bytes("span0003");
+  ByteString traceIdC = utf8Bytes("trace-id-0000003");
+  ByteString spanIdC = utf8Bytes("span0004");
+  ByteString traceIdD = utf8Bytes("trace-id-0000004");
+  ByteString spanIdD = utf8Bytes("span0005");
+
   @BeforeEach
   void setup() throws Exception {
     injector = Guice.createInjector(new TestChTracesModule(tempDir.resolve("wal"), 16));
@@ -53,17 +64,6 @@ public class ChTraceQueryServiceTests {
   private void ingestCorpus() throws Exception {
     var ingester = injector.getInstance(ChTracesIngester.class);
     var driver = injector.getInstance(ChTracesWalConsumerDriver.class);
-
-    var traceIdA = utf8Bytes("trace-id-0000001");
-    var spanIdA = utf8Bytes("span0001");
-    var traceIdA2 = utf8Bytes("trace-id-0000001");
-    var spanIdA2 = utf8Bytes("span0002");
-    var traceIdB = utf8Bytes("trace-id-0000002");
-    var spanIdB = utf8Bytes("span0003");
-    var traceIdC = utf8Bytes("trace-id-0000003");
-    var spanIdC = utf8Bytes("span0004");
-    var traceIdD = utf8Bytes("trace-id-0000004");
-    var spanIdD = utf8Bytes("span0005");
 
     var request =
         ExportTraceServiceRequest.newBuilder()
@@ -279,6 +279,20 @@ public class ChTraceQueryServiceTests {
             .build();
     var respNonMatching = queryService.getSpans(nonMatching);
     assertEquals(0, respNonMatching.getItems().size());
+  }
+
+  @Test
+  public void checkSpanIdQuery() {
+    var queryService = injector.getInstance(ChTraceQueryService.class);
+    var tsFilter = TimestampFilter.builder().tsStartNanos(0).tsEndNanos(10_000_000_000L).build();
+
+    var matching =
+        SpanQueryV2Request.builder()
+            .spanId(OtelAnyValueDecoder.bytesToHex(spanIdA.toByteArray()))
+            .timestampFilter(tsFilter)
+            .build();
+    var respMatching = queryService.getSpans(matching);
+    assertEquals(1, respMatching.getItems().size());
   }
 
   private void truncateTable() {

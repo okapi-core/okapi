@@ -19,6 +19,7 @@ import org.okapi.rest.traces.SpanQueryV2Request;
 import org.okapi.rest.traces.SpanQueryV2Response;
 import org.okapi.rest.traces.SpanRowV2;
 import org.okapi.rest.traces.StringAttributeFilter;
+import org.okapi.timeutils.TimeUtils;
 import org.okapi.traces.ch.template.ChTraceTemplateEngine;
 import org.springframework.stereotype.Service;
 
@@ -51,7 +52,7 @@ public class ChTraceQueryService {
     var duration = requestV2.getDurationFilter();
     var builder =
         ChSpansQueryTemplate.builder()
-            .table(ChTracesConstants.TBL_SPANS_V1)
+            .table(ChConstants.TBL_SPANS_V1)
             .traceId(requestV2.getTraceId())
             .kind(requestV2.getKind());
     if (service != null) {
@@ -76,8 +77,11 @@ public class ChTraceQueryService {
     }
     if (duration != null) {
       builder
-          .durMinNs(duration.getDurMinMillis() * 1_000_000L)
-          .durMaxNs(duration.getDurMaxMillis() * 1_000_000L);
+          .durMinNs(TimeUtils.millisToNanos(duration.getDurMinMillis()))
+          .durMaxNs(TimeUtils.millisToNanos(duration.getDurMaxMillis()));
+    }
+    if (requestV2.getSpanId() != null) {
+      builder.spanId(requestV2.getSpanId());
     }
     builder
         .stringAttributeFilters(buildStringAttributeFilters(requestV2.getStringAttributesFilter()))
