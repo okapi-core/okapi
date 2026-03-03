@@ -89,8 +89,7 @@ public class ChPromQlTsClient implements TsClient {
     return GaugeScan.builder().universalPath(metric).timestamps(times).values(values).build();
   }
 
-  private Scan getSumSeries(
-      String metric, Map<String, String> tags, long startMs, long endMs) {
+  private Scan getSumSeries(String metric, Map<String, String> tags, long startMs, long endMs) {
     var delta = scanSumSamples(metric, tags, startMs, endMs, "DELTA");
     if (!delta.isEmpty()) {
       return toSumScan(metric, delta, false);
@@ -100,11 +99,7 @@ public class ChPromQlTsClient implements TsClient {
   }
 
   private List<SumPoint> scanSumSamples(
-      String metric,
-      Map<String, String> tags,
-      long startMs,
-      long endMs,
-      String type) {
+      String metric, Map<String, String> tags, long startMs, long endMs, String type) {
     TemplateOutput output = new StringOutput();
     templateEngine.render(
         ChTemplateFiles.GET_SUM_SAMPLES,
@@ -161,11 +156,7 @@ public class ChPromQlTsClient implements TsClient {
   }
 
   private List<HistogramSeries.HistogramPoint> scanHistoSamples(
-      String metric,
-      Map<String, String> tags,
-      long startMs,
-      long endMs,
-      String type) {
+      String metric, Map<String, String> tags, long startMs, long endMs, String type) {
     TemplateOutput output = new StringOutput();
     templateEngine.render(
         ChTemplateFiles.GET_HISTO_SAMPLES,
@@ -186,12 +177,7 @@ public class ChPromQlTsClient implements TsClient {
       int[] counts = readIntArray(record, "counts");
       points.add(
           new HistogramSeries.HistogramPoint(
-              record.getLong("ts_start_ms"),
-              record.getLong("ts_end_ms"),
-              buckets,
-              counts,
-              0.0f,
-              0.0f));
+              record.getLong("ts_start_ms"), record.getLong("ts_end_ms"), buckets, counts));
     }
     points.sort(Comparator.comparingLong(HistogramSeries.HistogramPoint::endMs));
     return points;
@@ -212,8 +198,7 @@ public class ChPromQlTsClient implements TsClient {
             delta[i] = d < 0 ? counts[i] : d;
           }
           out.add(
-              new HistogramSeries.HistogramPoint(
-                  p.startMs(), p.endMs(), p.upperBounds(), delta, 0.0f, 0.0f));
+              new HistogramSeries.HistogramPoint(p.startMs(), p.endMs(), p.upperBounds(), delta));
         } else {
           out.add(p);
         }
