@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import org.okapi.ch.ChJteTemplateFiles;
+import org.okapi.ch.ChTemplateFiles;
 import org.okapi.metrics.ch.template.ChGetSumQueryTemplate;
 import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
 import org.okapi.rest.metrics.query.CannedResponses;
@@ -108,7 +108,7 @@ public class SumQueryProcessor {
             .histoType(sumType.name())
             .build();
     TemplateOutput output = new StringOutput();
-    templateEngine.render(ChJteTemplateFiles.GET_SUM_SAMPLES, template, output);
+    templateEngine.render(ChTemplateFiles.GET_SUM_SAMPLES, template, output);
     return output.toString();
   }
 

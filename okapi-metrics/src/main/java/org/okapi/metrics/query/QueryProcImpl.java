@@ -9,6 +9,7 @@ import org.okapi.metrics.common.MetricPaths;
 import org.okapi.metrics.rollup.TsReader;
 import org.okapi.metrics.rollup.TsSearcher;
 import org.okapi.metrics.service.web.QueryProcessor;
+import java.util.List;
 import org.okapi.rest.metrics.*;
 import org.okapi.rest.metrics.query.*;
 import org.okapi.rest.metrics.search.SearchMetricsRequestInternal;
@@ -27,6 +28,12 @@ public class QueryProcImpl implements QueryProcessor {
     var path = MetricPaths.convertToUnivPath(request);
     var agg = request.getGaugeQueryConfig().getAggregation();
     var scanResult = tsReader.scanGauge(path, start, end, agg, res);
+    var series =
+        GaugeSeries.builder()
+            .tags(request.getTags())
+            .times(scanResult.getTimestamps())
+            .values(scanResult.getValues())
+            .build();
     return GetMetricsResponse.builder()
         .metric(request.getMetric())
         .tags(request.getTags())
@@ -34,8 +41,7 @@ public class QueryProcImpl implements QueryProcessor {
             GetGaugeResponse.builder()
                 .resolution(res)
                 .aggregation(agg)
-                .times(scanResult.getTimestamps())
-                .values(scanResult.getValues())
+                .series(List.of(series))
                 .build())
         .build();
   }

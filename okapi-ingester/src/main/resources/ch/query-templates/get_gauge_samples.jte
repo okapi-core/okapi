@@ -1,12 +1,14 @@
 @param org.okapi.metrics.ch.template.ChGetGaugeQueryTemplate data
 
-SELECT ${data.getBucketExpr()} AS bucket_ms, ${data.getAggExpr()} AS value
+SELECT ${data.getBucketExpr()} AS bucket_ms, ${data.getAggExpr()} AS value, tags
 FROM ${data.getTable()}
-WHERE metric = '${data.getMetric()}'
+WHERE 1 = 1
+AND metric = '${data.getMetric()}'
 AND timestamp >= toDateTime64(${data.getStartMs()}/1000.0, 3, 'UTC')
 AND timestamp < toDateTime64(${data.getEndMs()}/1000.0, 3, 'UTC')
-AND length(tags) = ${data.getTags().size()}
-@for(var tag : data.getTags().entrySet())
-    AND mapContains(tags, '${tag.getKey()}') AND tags['${tag.getKey()}'] = '${tag.getValue()}'
-@endfor
-GROUP BY bucket_ms ORDER BY bucket_ms
+@if (data.getTags() != null)
+    @for(var tag : data.getTags().entrySet())
+        AND mapContains(tags, '${tag.getKey()}') AND tags['${tag.getKey()}'] = '${tag.getValue()}'
+    @endfor
+@endif
+GROUP BY tags, bucket_ms ORDER BY tags, bucket_ms

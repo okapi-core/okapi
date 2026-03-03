@@ -4,7 +4,7 @@
  */
 package org.okapi.ch;
 
-public final class ChJteTemplateFiles {
+public final class ChTemplateFiles {
   public static final String GET_GAUGE_RAW_SAMPLES = "get_gauge_raw_samples.jte";
   public static final String GET_GAUGE_SAMPLES = "get_gauge_samples.jte";
   public static final String GET_HISTO_SAMPLES = "get_histo_samples.jte";
@@ -42,5 +42,5 @@ public final class ChJteTemplateFiles {
   public static final String GET_SERVICE_RED_OPS_COUNT = "get_service_red_ops_count.jte";
   public static final String GET_SERVICE_RED_OP_METRICS = "get_service_red_op_metrics.jte";
 
-  private ChJteTemplateFiles() {}
+  private ChTemplateFiles() {}
 }

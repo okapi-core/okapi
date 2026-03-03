@@ -6,7 +6,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
-import org.okapi.ch.ChJteTemplateFiles;
+import org.okapi.ch.ChTemplateFiles;
 import org.okapi.metrics.ch.ChConstants;
 import org.okapi.metrics.pojos.RES_TYPE;
 import org.okapi.parallel.ParallelExecutor;
@@ -91,7 +91,7 @@ public class ChRedQueryService {
             .durationExpr(DURATION_MS_EXPR)
             .timestampFilter(request.getTimestampFilter())
             .build();
-    var query = engine.render(ChJteTemplateFiles.GET_SERVICE_RED_OP_METRICS, template);
+    var query = engine.render(ChTemplateFiles.GET_SERVICE_RED_OP_METRICS, template);
     var records = client.queryAll(query);
     if (records.isEmpty()) {
       return ServiceOpRed.builder().op(op).redMetrics(EMPTY).build();
@@ -136,7 +136,7 @@ public class ChRedQueryService {
             .timestampFilter(request.getTimestampFilter())
             .limit(TOTAL_OPS_SUMMARY_LIMIT)
             .build();
-    var query = engine.render(ChJteTemplateFiles.GET_SERVICE_RED_OPS, template);
+    var query = engine.render(ChTemplateFiles.GET_SERVICE_RED_OPS, template);
     var records = client.queryAll(query);
     var ops = new ArrayList<String>(records.size());
     for (var record : records) {
@@ -158,7 +158,7 @@ public class ChRedQueryService {
             .serviceName(request.getService())
             .timestampFilter(request.getTimestampFilter())
             .build();
-    var query = engine.render(ChJteTemplateFiles.GET_SERVICE_RED_OPS_COUNT, template);
+    var query = engine.render(ChTemplateFiles.GET_SERVICE_RED_OPS_COUNT, template);
     var records = client.queryAll(query);
     if (records.isEmpty()) {
       return 0;
@@ -175,7 +175,7 @@ public class ChRedQueryService {
             .table(ChConstants.TBL_SERVICE_RED_EVENTS)
             .timestampFilter(request.getTimestampFilter())
             .build();
-    var query = engine.render(ChJteTemplateFiles.GET_SERVICE_RED_SERVICES, template);
+    var query = engine.render(ChTemplateFiles.GET_SERVICE_RED_SERVICES, template);
     var records = client.queryAll(query);
     var services = new ArrayList<String>(records.size());
     for (var record : records) {
@@ -201,7 +201,7 @@ public class ChRedQueryService {
             .serviceName(request.getService())
             .timestampFilter(request.getTimestampFilter())
             .build();
-    var query = engine.render(ChJteTemplateFiles.GET_SERVICE_RED_PEERS, template);
+    var query = engine.render(ChTemplateFiles.GET_SERVICE_RED_PEERS, template);
     var records = client.queryAll(query);
     var peers = new ArrayList<String>(records.size());
     for (var record : records) {
@@ -239,7 +239,7 @@ public class ChRedQueryService {
             .durationExpr(DURATION_MS_EXPR)
             .timestampFilter(request.getTimestampFilter())
             .build();
-    var query = engine.render(ChJteTemplateFiles.GET_SERVICE_RED_METRICS, template);
+    var query = engine.render(ChTemplateFiles.GET_SERVICE_RED_METRICS, template);
     var records = client.queryAll(query);
     if (records.isEmpty()) {
       return EMPTY;

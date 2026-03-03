@@ -3,7 +3,7 @@ package org.okapi.metrics.ch;
 import com.clickhouse.client.api.Client;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
-import org.okapi.ch.ChJteTemplateFiles;
+import org.okapi.ch.ChTemplateFiles;
 import org.okapi.metrics.ch.template.ChGetExemplarTemplate;
 import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
 import org.okapi.rest.metrics.exemplar.GetExemplarsRequest;
@@ -30,7 +30,7 @@ public class ChExemplarQueryProcessor {
             .tsNanosStart(request.getTimeFilter().getTsStartNanos())
             .tsNanosEnd(request.getTimeFilter().getTsEndNanos())
             .build();
-    var query = templateEngine.render(ChJteTemplateFiles.GET_METRIC_EXEMPLARS, template);
+    var query = templateEngine.render(ChTemplateFiles.GET_METRIC_EXEMPLARS, template);
     var records = client.queryAll(query);
     var exemplars =
         records.stream()

@@ -9,7 +9,7 @@ import gg.jte.TemplateOutput;
 import gg.jte.output.StringOutput;
 import java.util.ArrayList;
 import java.util.Objects;
-import org.okapi.ch.ChJteTemplateFiles;
+import org.okapi.ch.ChTemplateFiles;
 import org.okapi.exceptions.BadRequestException;
 import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
 import org.okapi.rest.metrics.exemplar.GetExemplarsRequest;
@@ -62,7 +62,7 @@ public class ChMetricsQueryProcessor {
             : request.getMetricEventFilter().getMetricType();
     var query =
         renderQuery(
-            ChJteTemplateFiles.GET_METRIC_HINTS,
+            ChTemplateFiles.GET_METRIC_HINTS,
             MetricHintsQueryTemplate.builder()
                 .table(ChConstants.TBL_METRIC_EVENTS_META)
                 .eventType(metricType == null ? null : metricType.name())
@@ -88,7 +88,7 @@ public class ChMetricsQueryProcessor {
 
     var query =
         renderQuery(
-            ChJteTemplateFiles.GET_TAG_HINTS,
+            ChTemplateFiles.GET_TAG_HINTS,
             MetricHintsQueryTemplate.builder()
                 .table(ChConstants.TBL_METRIC_EVENTS_META)
                 .eventType(metricType == null ? null : metricType.name())
@@ -116,7 +116,7 @@ public class ChMetricsQueryProcessor {
 
     var query =
         renderQuery(
-            ChJteTemplateFiles.GET_TAG_VALUE_HINTS,
+            ChTemplateFiles.GET_TAG_VALUE_HINTS,
             MetricHintsQueryTemplate.builder()
                 .table(ChConstants.TBL_METRIC_EVENTS_META)
                 .eventType(metricType == null ? null : metricType.name())

@@ -17,6 +17,5 @@ import org.okapi.metrics.pojos.RES_TYPE;
 public class GetGaugeResponse {
   RES_TYPE resolution;
   AGG_TYPE aggregation;
-  List<Long> times;
-  List<Float> values;
+  List<GaugeSeries> series;
 }

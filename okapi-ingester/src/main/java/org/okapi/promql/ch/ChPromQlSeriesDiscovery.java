@@ -11,7 +11,7 @@ import gg.jte.TemplateOutput;
 import gg.jte.output.StringOutput;
 import java.util.*;
 import lombok.AllArgsConstructor;
-import org.okapi.ch.ChJteTemplateFiles;
+import org.okapi.ch.ChTemplateFiles;
 import org.okapi.metrics.ch.ChConstants;
 import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
 import org.okapi.promql.eval.VectorData;
@@ -28,7 +28,7 @@ public class ChPromQlSeriesDiscovery implements SeriesDiscovery {
       String metricOrNull, List<LabelMatcher> matchers, long start, long end) {
     TemplateOutput output = new StringOutput();
     templateEngine.render(
-        ChJteTemplateFiles.GET_METRIC_EVENTS_SERIES,
+        ChTemplateFiles.GET_METRIC_EVENTS_SERIES,
         ChSeriesDiscoveryQueryTemplate.builder()
             .table(ChConstants.TBL_METRIC_EVENTS_META)
             .metric(metricOrNull)

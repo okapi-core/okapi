@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import org.okapi.ch.ChJteTemplateFiles;
+import org.okapi.ch.ChTemplateFiles;
 import org.okapi.metrics.ch.ChConstants;
 import org.okapi.rest.traces.FlameGraphNode;
 import org.okapi.rest.traces.SpanQueryV2Request;
@@ -38,7 +38,7 @@ public class ChSpansFlameGraphService {
     long startNs = timeFilter.getTsStartNanos();
     long endNs = timeFilter.getTsEndNanos();
     var template = buildTemplate(traceIdHex, startNs, endNs);
-    var query = templateEngine.render(ChJteTemplateFiles.GET_SPANS_V2, template);
+    var query = templateEngine.render(ChTemplateFiles.GET_SPANS_V2, template);
     var records = client.queryAll(query);
 
     var spans = new ArrayList<SpanInfo>(records.size());

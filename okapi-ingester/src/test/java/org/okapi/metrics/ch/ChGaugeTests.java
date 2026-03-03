@@ -63,8 +63,8 @@ public class ChGaugeTests {
 
     var resp = qp.getMetricsResponse(req).getGaugeResponse();
     assertNotNull(resp);
-    assertEquals(List.of(1_000L), resp.getTimes());
-    assertEquals(List.of(1.0f), resp.getValues());
+    assertEquals(List.of(1_000L), resp.getSeries().get(0).getTimes());
+    assertEquals(List.of(1.0f), resp.getSeries().get(0).getValues());
   }
 
   @Test
@@ -90,8 +90,8 @@ public class ChGaugeTests {
 
     var resp = qp.getMetricsResponse(req).getGaugeResponse();
     assertNotNull(resp);
-    assertEquals(List.of(1_000L, 2_000L), resp.getTimes());
-    assertEquals(List.of(1.0f, 2.0f), resp.getValues());
+    assertEquals(List.of(1_000L, 2_000L), resp.getSeries().get(0).getTimes());
+    assertEquals(List.of(1.0f, 2.0f), resp.getSeries().get(0).getValues());
   }
 
   @Test
@@ -166,8 +166,8 @@ public class ChGaugeTests {
 
     var resp = qp.getMetricsResponse(req).getGaugeResponse();
     assertNotNull(resp);
-    assertEquals(List.of(1_000L), resp.getTimes());
-    assertEquals(List.of(3.0f), resp.getValues());
+    assertEquals(List.of(1_000L), resp.getSeries().get(0).getTimes());
+    assertEquals(List.of(3.0f), resp.getSeries().get(0).getValues());
   }
 
   @Test
@@ -193,8 +193,8 @@ public class ChGaugeTests {
 
     var resp = qp.getMetricsResponse(req).getGaugeResponse();
     assertNotNull(resp);
-    assertEquals(List.of(1_000L), resp.getTimes());
-    assertEquals(List.of(2.0f), resp.getValues());
+    assertEquals(List.of(1_000L), resp.getSeries().get(0).getTimes());
+    assertEquals(List.of(2.0f), resp.getSeries().get(0).getValues());
   }
 
   @Test
@@ -220,9 +220,9 @@ public class ChGaugeTests {
 
     var resp = qp.getMetricsResponse(req).getGaugeResponse();
     assertNotNull(resp);
-    assertEquals(1, resp.getTimes().size());
-    assertEquals(1, resp.getValues().size());
-    assertEquals(7.0f, resp.getValues().getFirst());
+    assertEquals(1, resp.getSeries().get(0).getTimes().size());
+    assertEquals(1, resp.getSeries().get(0).getValues().size());
+    assertEquals(7.0f, resp.getSeries().get(0).getValues().getFirst());
   }
 
   private void truncateGaugeTable() {

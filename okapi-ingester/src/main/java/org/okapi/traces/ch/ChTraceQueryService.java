@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.okapi.ch.ChJteTemplateFiles;
+import org.okapi.ch.ChTemplateFiles;
 import org.okapi.metrics.ch.ChConstants;
 import org.okapi.rest.traces.NumberAttributeFilter;
 import org.okapi.rest.traces.SpanQueryV2Request;
@@ -91,7 +91,7 @@ public class ChTraceQueryService {
 
   private String renderQuery(ChSpansQueryTemplate template) {
     TemplateOutput output = new StringOutput();
-    templateEngine.render(ChJteTemplateFiles.GET_SPANS_V2, template, output);
+    templateEngine.render(ChTemplateFiles.GET_SPANS_V2, template, output);
     return output.toString();
   }
 

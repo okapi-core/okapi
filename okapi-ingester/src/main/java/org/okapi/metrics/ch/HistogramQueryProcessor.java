@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import org.okapi.ch.ChJteTemplateFiles;
+import org.okapi.ch.ChTemplateFiles;
 import org.okapi.ds.HistogramMerger;
 import org.okapi.ds.TwoAtATimeMerger;
 import org.okapi.metrics.ch.template.ChGetHistoQueryTemplate;
@@ -208,7 +208,7 @@ public class HistogramQueryProcessor {
 
   private String renderHistoQuery(ChGetHistoQueryTemplate data) {
     TemplateOutput output = new StringOutput();
-    templateEngine.render(ChJteTemplateFiles.GET_HISTO_SAMPLES, data, output);
+    templateEngine.render(ChTemplateFiles.GET_HISTO_SAMPLES, data, output);
     return output.toString();
   }
 }

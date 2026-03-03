@@ -7,16 +7,28 @@ package org.okapi.metrics.service;
 import com.google.common.collect.TreeMultimap;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import org.apache.datasketches.kll.KllFloatsSketch;
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
 import org.okapi.metrics.query.SketchToResConverter;
 import org.okapi.primitives.TimestampedReadonlySketch;
+import org.okapi.rest.metrics.query.GaugeSeries;
 import org.okapi.rest.metrics.query.GetGaugeResponse;
 
 public class GaugeAggregator {
   public static final GetGaugeResponse aggregateSketches(
-      List<TimestampedReadonlySketch> sketches, RES_TYPE resType, AGG_TYPE aggType) {
+      List<TimestampedReadonlySketch> sketches,
+      RES_TYPE resType,
+      AGG_TYPE aggType,
+      Map<String, String> tags) {
+    if (sketches.isEmpty()) {
+      return GetGaugeResponse.builder()
+          .resolution(resType)
+          .aggregation(aggType)
+          .series(List.of())
+          .build();
+    }
     var times = sketches.stream().map(TimestampedReadonlySketch::getTs).toList();
     TreeMultimap<Long, TimestampedReadonlySketch> map = TreeMultimap.create();
     for (var sk : sketches) {
@@ -33,11 +45,11 @@ public class GaugeAggregator {
                   return aggregated;
                 })
             .toList();
+    var series = GaugeSeries.builder().tags(tags).times(ts).values(values).build();
     return GetGaugeResponse.builder()
         .resolution(resType)
         .aggregation(aggType)
-        .times(ts)
-        .values(values)
+        .series(List.of(series))
         .build();
   }
 

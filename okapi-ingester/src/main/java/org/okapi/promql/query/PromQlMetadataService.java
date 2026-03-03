@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.okapi.ch.ChJteTemplateFiles;
+import org.okapi.ch.ChTemplateFiles;
 import org.okapi.metrics.ch.ChConstants;
 import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
 import org.okapi.promql.ch.ChMetricMetadataQueryTemplate;
@@ -41,7 +41,7 @@ public class PromQlMetadataService {
 
     TemplateOutput output = new StringOutput();
     templateEngine.render(
-        ChJteTemplateFiles.GET_METRIC_METADATA,
+        ChTemplateFiles.GET_METRIC_METADATA,
         ChMetricMetadataQueryTemplate.builder()
             .table(ChConstants.TBL_METRIC_EVENTS_META)
             .metric(metricFilter)

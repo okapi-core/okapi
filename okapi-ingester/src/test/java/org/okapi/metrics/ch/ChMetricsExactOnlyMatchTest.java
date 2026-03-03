@@ -4,6 +4,7 @@
  */
 package org.okapi.metrics.ch;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -121,8 +122,10 @@ public class ChMetricsExactOnlyMatchTest {
                 .gaugeQueryConfig(new GaugeQueryConfig(RES_TYPE.SECONDLY, AGG_TYPE.SUM))
                 .build());
     assertNotNull(gaugeFull.getGaugeResponse());
-    assertFalse(gaugeFull.getGaugeResponse().getValues().isEmpty());
+    assertFalse(gaugeFull.getGaugeResponse().getSeries().isEmpty());
 
+    // Gauge uses subset matching: partialTags is a subset of both tagsA and tagsB,
+    // so both series should be returned.
     var gaugePartial =
         qp.getMetricsResponse(
             GetMetricsRequest.builder()
@@ -133,7 +136,8 @@ public class ChMetricsExactOnlyMatchTest {
                 .metricType(METRIC_TYPE.GAUGE)
                 .gaugeQueryConfig(new GaugeQueryConfig(RES_TYPE.SECONDLY, AGG_TYPE.SUM))
                 .build());
-    assertNull(gaugePartial.getGaugeResponse());
+    assertNotNull(gaugePartial.getGaugeResponse());
+    assertEquals(2, gaugePartial.getGaugeResponse().getSeries().size());
 
     var histoFull =
         qp.getMetricsResponse(

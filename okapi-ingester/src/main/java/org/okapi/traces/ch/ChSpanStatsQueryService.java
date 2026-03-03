@@ -9,7 +9,7 @@ import com.clickhouse.client.api.query.GenericRecord;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.okapi.ch.ChJteTemplateFiles;
+import org.okapi.ch.ChTemplateFiles;
 import org.okapi.collections.OkapiMaps;
 import org.okapi.exceptions.BadRequestException;
 import org.okapi.metrics.ch.ChConstants;
@@ -76,7 +76,7 @@ public class ChSpanStatsQueryService {
         aggClause,
         presenceClause,
         whereClause,
-        ChJteTemplateFiles.GET_SPAN_DEFAULT_NUMERIC_ATTRIBUTE_SUMMARY);
+        ChTemplateFiles.GET_SPAN_DEFAULT_NUMERIC_ATTRIBUTE_SUMMARY);
   }
 
   public AttributeNumericSeries queryCustomNumericAttribute(
@@ -91,7 +91,7 @@ public class ChSpanStatsQueryService {
         aggClause,
         presenceClause,
         whereClause,
-        ChJteTemplateFiles.GET_SPAN_CUSTOM_NUMERIC_ATTRIBUTE_SUMMARY);
+        ChTemplateFiles.GET_SPAN_CUSTOM_NUMERIC_ATTRIBUTE_SUMMARY);
   }
 
   private AttributeNumericSeries queryNumericSummary(
@@ -123,7 +123,7 @@ public class ChSpanStatsQueryService {
 
   private long countMatches(SpansQueryStatsRequest request) {
     var template = buildCountTemplate(request);
-    var query = templateEngine.render(ChJteTemplateFiles.GET_SPANS_STATS_COUNT, template);
+    var query = templateEngine.render(ChTemplateFiles.GET_SPANS_STATS_COUNT, template);
     var records = client.queryAll(query);
     if (records.isEmpty()) return 0L;
     return records.getFirst().getLong("cnt");
@@ -156,7 +156,7 @@ public class ChSpanStatsQueryService {
     boolean approximate =
         request.getSummaryConfig() != null && request.getSummaryConfig().isApproximateCount();
     var template = buildDistributionTemplate(request, attributes, approximate);
-    var query = templateEngine.render(ChJteTemplateFiles.GET_SPANS_STATS_DISTRIBUTION, template);
+    var query = templateEngine.render(ChTemplateFiles.GET_SPANS_STATS_DISTRIBUTION, template);
     var records = client.queryAll(query);
     Map<String, List<ValueCount>> valuesByAttr = new HashMap<>();
     for (GenericRecord record : records) {
@@ -217,7 +217,7 @@ public class ChSpanStatsQueryService {
       return Collections.emptyMap();
     }
     var template = ChSpansAttributeTypesTemplate.builder().attributes(attributes).build();
-    var query = templateEngine.render(ChJteTemplateFiles.GET_SPANS_ATTRIBUTE_TYPES, template);
+    var query = templateEngine.render(ChTemplateFiles.GET_SPANS_ATTRIBUTE_TYPES, template);
     var records = client.queryAll(query);
     Map<String, String> out = new HashMap<>();
     for (GenericRecord record : records) {

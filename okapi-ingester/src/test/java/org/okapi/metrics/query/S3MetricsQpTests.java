@@ -60,7 +60,7 @@ public class S3MetricsQpTests {
       AGG_TYPE agg)
       throws Exception {
     var sketches = qp.getGaugeSketches(metric, tags, res, start, end);
-    return GaugeAggregator.aggregateSketches(sketches, res, agg);
+    return GaugeAggregator.aggregateSketches(sketches, res, agg, tags);
   }
 
   private static S3MetricsQp qpForTenantWithKeys(List<String> keys) {
@@ -89,7 +89,7 @@ public class S3MetricsQpTests {
       AGG_TYPE agg)
       throws Exception {
     var gr = gaugeResponse(qp, metric, tags, start, end, res, agg);
-    return gr.getTimes().stream().sorted().collect(Collectors.toList());
+    return gr.getSeries().get(0).getTimes().stream().sorted().collect(Collectors.toList());
   }
 
   private static List<Float> valuesSortedByTimes(
@@ -102,9 +102,10 @@ public class S3MetricsQpTests {
       AGG_TYPE agg)
       throws Exception {
     var gr = gaugeResponse(qp, metric, tags, start, end, res, agg);
+    var s = gr.getSeries().get(0);
     var pairs = new ArrayList<Map.Entry<Long, Float>>();
-    for (int i = 0; i < gr.getTimes().size(); i++) {
-      pairs.add(Map.entry(gr.getTimes().get(i), gr.getValues().get(i)));
+    for (int i = 0; i < s.getTimes().size(); i++) {
+      pairs.add(Map.entry(s.getTimes().get(i), s.getValues().get(i)));
     }
     pairs.sort(Comparator.comparingLong(Map.Entry::getKey));
     return pairs.stream().map(Map.Entry::getValue).collect(Collectors.toList());
@@ -217,8 +218,7 @@ public class S3MetricsQpTests {
             6000L,
             RES_TYPE.SECONDLY,
             AGG_TYPE.AVG);
-    assertTrue(gr.getTimes().isEmpty());
-    assertTrue(gr.getValues().isEmpty());
+    assertTrue(gr.getSeries().isEmpty());
   }
 
   @Test
@@ -295,9 +295,9 @@ public class S3MetricsQpTests {
             6000L,
             RES_TYPE.MINUTELY,
             AGG_TYPE.AVG);
-    assertEquals(1, gr.getTimes().size());
+    assertEquals(1, gr.getSeries().get(0).getTimes().size());
     // both timestamps are 0 (minute 0); order of values may vary
-    var values = new HashSet<>(gr.getValues());
+    var values = new HashSet<>(gr.getSeries().get(0).getValues());
     assertEquals(1, values.size());
     assertTrue(values.contains(0.6875f));
   }

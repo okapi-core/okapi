@@ -9,7 +9,7 @@ import com.clickhouse.client.api.query.GenericRecord;
 import gg.jte.TemplateOutput;
 import gg.jte.output.StringOutput;
 import java.util.*;
-import org.okapi.ch.ChJteTemplateFiles;
+import org.okapi.ch.ChTemplateFiles;
 import org.okapi.metrics.ch.ChConstants;
 import org.okapi.metrics.ch.template.ChGetHistoQueryTemplate;
 import org.okapi.metrics.ch.template.ChGetSumQueryTemplate;
@@ -47,7 +47,7 @@ public class ChPromQlTsClient implements TsClient {
       String metric, Map<String, String> tags, long startMs, long endMs) {
     TemplateOutput output = new StringOutput();
     templateEngine.render(
-        ChJteTemplateFiles.GET_METRIC_EVENT_TYPE,
+        ChTemplateFiles.GET_METRIC_EVENT_TYPE,
         ChMetricEventTypeQueryTemplate.builder()
             .table(ChConstants.TBL_METRIC_EVENTS_META)
             .metric(metric)
@@ -69,7 +69,7 @@ public class ChPromQlTsClient implements TsClient {
       String metric, Map<String, String> tags, long startMs, long endMs) {
     TemplateOutput output = new StringOutput();
     templateEngine.render(
-        ChJteTemplateFiles.GET_GAUGE_RAW_SAMPLES,
+        ChTemplateFiles.GET_GAUGE_RAW_SAMPLES,
         ChGetGaugeRawQueryTemplate.builder()
             .table(ChConstants.TBL_GAUGES)
             .metric(metric)
@@ -107,7 +107,7 @@ public class ChPromQlTsClient implements TsClient {
       String type) {
     TemplateOutput output = new StringOutput();
     templateEngine.render(
-        ChJteTemplateFiles.GET_SUM_SAMPLES,
+        ChTemplateFiles.GET_SUM_SAMPLES,
         ChGetSumQueryTemplate.builder()
             .table(ChConstants.TBL_SUM)
             .metric(metric)
@@ -168,7 +168,7 @@ public class ChPromQlTsClient implements TsClient {
       String type) {
     TemplateOutput output = new StringOutput();
     templateEngine.render(
-        ChJteTemplateFiles.GET_HISTO_SAMPLES,
+        ChTemplateFiles.GET_HISTO_SAMPLES,
         ChGetHistoQueryTemplate.builder()
             .table(ChConstants.TBL_HISTOS)
             .metric(metric)
@@ -186,7 +186,12 @@ public class ChPromQlTsClient implements TsClient {
       int[] counts = readIntArray(record, "counts");
       points.add(
           new HistogramSeries.HistogramPoint(
-              record.getLong("ts_start_ms"), record.getLong("ts_end_ms"), buckets, counts));
+              record.getLong("ts_start_ms"),
+              record.getLong("ts_end_ms"),
+              buckets,
+              counts,
+              0.0f,
+              0.0f));
     }
     points.sort(Comparator.comparingLong(HistogramSeries.HistogramPoint::endMs));
     return points;
@@ -207,7 +212,8 @@ public class ChPromQlTsClient implements TsClient {
             delta[i] = d < 0 ? counts[i] : d;
           }
           out.add(
-              new HistogramSeries.HistogramPoint(p.startMs(), p.endMs(), p.upperBounds(), delta));
+              new HistogramSeries.HistogramPoint(
+                  p.startMs(), p.endMs(), p.upperBounds(), delta, 0.0f, 0.0f));
         } else {
           out.add(p);
         }

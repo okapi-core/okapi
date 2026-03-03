@@ -8,22 +8,24 @@ import static org.okapi.validation.OkapiChecks.checkArgument;
 
 import com.clickhouse.client.api.Client;
 import com.clickhouse.client.api.query.GenericRecord;
-import gg.jte.TemplateOutput;
-import gg.jte.output.StringOutput;
 import java.util.ArrayList;
 import java.util.List;
-import org.okapi.ch.ChJteTemplateFiles;
+import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.okapi.ch.ChTemplateFiles;
 import org.okapi.exceptions.BadRequestException;
 import org.okapi.metrics.ch.template.ChGetGaugeQueryTemplate;
 import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
 import org.okapi.rest.metrics.query.CannedResponses;
+import org.okapi.rest.metrics.query.GaugeSeries;
 import org.okapi.rest.metrics.query.GetGaugeResponse;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
 
 /** Handles gauge query execution against ClickHouse. */
+@Slf4j
 public class GaugeQueryProcessor {
   private final Client client;
   private final ChMetricTemplateEngine templateEngine;
@@ -47,37 +49,55 @@ public class GaugeQueryProcessor {
         () -> new BadRequestException("A resolution is required for gauge queries."));
     var aggType = gaugeQueryConfig.getAggregation();
     var resType = gaugeQueryConfig.getResolution();
+    var templateModel =
+        ChGetGaugeQueryTemplate.builder()
+            .table(ChConstants.TBL_GAUGES)
+            .bucketExpr(bucketExpr(resType))
+            .aggExpr(aggExpr(aggType))
+            .metric(getMetricsRequest.getMetric())
+            .startMs(getMetricsRequest.getStart())
+            .endMs(getMetricsRequest.getEnd())
+            .tags(getMetricsRequest.getTags())
+            .build();
 
-    var query =
-        renderGaugeQuery(
-            ChGetGaugeQueryTemplate.builder()
-                .table(ChConstants.TBL_GAUGES)
-                .bucketExpr(bucketExpr(resType))
-                .aggExpr(aggExpr(aggType))
-                .metric(getMetricsRequest.getMetric())
-                .startMs(getMetricsRequest.getStart())
-                .endMs(getMetricsRequest.getEnd())
-                .tags(getMetricsRequest.getTags())
-                .build());
-
+    var query = templateEngine.render(ChTemplateFiles.GET_GAUGE_SAMPLES, templateModel);
     List<GenericRecord> records = client.queryAll(query);
-    var times = new ArrayList<Long>(records.size());
-    var values = new ArrayList<Float>(records.size());
     if (records.isEmpty()) {
       return CannedResponses.noMetricsResponse(
           getMetricsRequest.getMetric(), getMetricsRequest.getTags());
     }
+
+    var seriesList = new ArrayList<GaugeSeries>();
+    Map<String, String> currentTags = null;
+    var currentTimes = new ArrayList<Long>();
+    var currentValues = new ArrayList<Float>();
     for (var record : records) {
-      times.add(record.getLong("bucket_ms"));
-      values.add((float) record.getDouble("value"));
+      @SuppressWarnings("unchecked")
+      var tags = (Map<String, String>) record.getObject("tags");
+      if (!tags.equals(currentTags)) {
+        if (currentTags != null) {
+          seriesList.add(
+              GaugeSeries.builder()
+                  .tags(currentTags)
+                  .times(currentTimes)
+                  .values(currentValues)
+                  .build());
+        }
+        currentTags = tags;
+        currentTimes = new ArrayList<>();
+        currentValues = new ArrayList<>();
+      }
+      currentTimes.add(record.getLong("bucket_ms"));
+      currentValues.add((float) record.getDouble("value"));
     }
+    seriesList.add(
+        GaugeSeries.builder().tags(currentTags).times(currentTimes).values(currentValues).build());
 
     var gaugeResponse =
         GetGaugeResponse.builder()
             .resolution(resType)
             .aggregation(aggType)
-            .times(times)
-            .values(values)
+            .series(seriesList)
             .build();
 
     return GetMetricsResponse.builder()
@@ -85,12 +105,6 @@ public class GaugeQueryProcessor {
         .tags(getMetricsRequest.getTags())
         .gaugeResponse(gaugeResponse)
         .build();
-  }
-
-  private String renderGaugeQuery(ChGetGaugeQueryTemplate templateData) {
-    TemplateOutput output = new StringOutput();
-    templateEngine.render(ChJteTemplateFiles.GET_GAUGE_SAMPLES, templateData, output);
-    return output.toString();
   }
 
   private static String bucketExpr(RES_TYPE resType) {

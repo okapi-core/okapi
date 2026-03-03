@@ -11,7 +11,7 @@ import com.clickhouse.client.api.query.GenericRecord;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.okapi.ch.ChJteTemplateFiles;
+import org.okapi.ch.ChTemplateFiles;
 import org.okapi.metrics.ch.ChConstants;
 import org.okapi.rest.traces.NumericAttributeSummary;
 import org.okapi.rest.traces.SpanAttributeHint;
@@ -37,7 +37,7 @@ public class ChSpanAttributeHintsService {
 
   public SpanAttributeHintsResponse getAttributeHints(SpanAttributeHintsRequest request) {
     var template = buildCustomHintsTemplate(request);
-    var query = templateEngine.render(ChJteTemplateFiles.GET_SPAN_ATTRIBUTE_HINTS_CUSTOM, template);
+    var query = templateEngine.render(ChTemplateFiles.GET_SPAN_ATTRIBUTE_HINTS_CUSTOM, template);
     var records = client.queryAll(query);
     var custom = new ArrayList<SpanAttributeHint>(records.size());
     for (var record : records) {
@@ -86,7 +86,7 @@ public class ChSpanAttributeHintsService {
     if ("number".equals(type)) {
       var template = buildCustomNumericTemplate(request);
       var query =
-          templateEngine.render(ChJteTemplateFiles.GET_SPAN_ATTRIBUTE_VALUES_CUSTOM_NUM, template);
+          templateEngine.render(ChTemplateFiles.GET_SPAN_ATTRIBUTE_VALUES_CUSTOM_NUM, template);
       var records = client.queryAll(query);
       NumericAttributeSummary summary = null;
       if (!records.isEmpty()) {
@@ -108,7 +108,7 @@ public class ChSpanAttributeHintsService {
     }
     var template = buildCustomStringTemplate(request);
     var query =
-        templateEngine.render(ChJteTemplateFiles.GET_SPAN_ATTRIBUTE_VALUES_CUSTOM_STR, template);
+        templateEngine.render(ChTemplateFiles.GET_SPAN_ATTRIBUTE_VALUES_CUSTOM_STR, template);
     var records = client.queryAll(query);
     var values = new ArrayList<String>();
     for (GenericRecord record : records) {
@@ -128,7 +128,7 @@ public class ChSpanAttributeHintsService {
     if (ChSpanAtttributes.isNumeric(attr)) {
       var template = buildDefaultNumericTemplate(request);
       var query =
-          templateEngine.render(ChJteTemplateFiles.GET_SPAN_ATTRIBUTE_VALUES_DEFAULT_NUM, template);
+          templateEngine.render(ChTemplateFiles.GET_SPAN_ATTRIBUTE_VALUES_DEFAULT_NUM, template);
       var records = client.queryAll(query);
       NumericAttributeSummary summary = null;
       if (!records.isEmpty()) {
@@ -160,7 +160,7 @@ public class ChSpanAttributeHintsService {
     }
     var template = buildDefaultStringTemplate(request);
     var query =
-        templateEngine.render(ChJteTemplateFiles.GET_SPAN_ATTRIBUTE_VALUES_DEFAULT_STR, template);
+        templateEngine.render(ChTemplateFiles.GET_SPAN_ATTRIBUTE_VALUES_DEFAULT_STR, template);
     var records = client.queryAll(query);
     var values = new ArrayList<String>();
     for (GenericRecord record : records) {
@@ -176,7 +176,7 @@ public class ChSpanAttributeHintsService {
 
   private String getAttributeType(String attr) {
     var template = ChSpansAttributeTypesTemplate.builder().attributes(List.of(attr)).build();
-    var query = templateEngine.render(ChJteTemplateFiles.GET_SPANS_ATTRIBUTE_TYPES, template);
+    var query = templateEngine.render(ChTemplateFiles.GET_SPANS_ATTRIBUTE_TYPES, template);
     var records = client.queryAll(query);
     if (records.isEmpty()) return "string";
     var type = records.getFirst().getString("attribute_type");

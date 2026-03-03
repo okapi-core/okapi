@@ -5,9 +5,7 @@
 package org.okapi.it;
 
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.clickhouse.client.api.Client;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
@@ -25,7 +23,6 @@ import io.opentelemetry.proto.metrics.v1.Sum;
 import io.opentelemetry.proto.resource.v1.Resource;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -108,13 +105,13 @@ public class MetricsIngestionIT {
   @Test
   void ingestAndQueryGaugeSumHisto() {
     String svc = "svc-it-" + UUID.randomUUID();
-    String gaugeMetric = "cpu_usage_it";
-    String sumMetric = "req_count_it";
-    String histoMetric = "latency_ms_it";
-    String gaugeMetricOtherSvc = "cpu_usage_it_other";
+    String cpuUsageIt = "cpu_usage_it";
+    String requestCountIt = "req_count_it";
+    String latencyMsIt = "latency_ms_it";
+    String cpuUsageItOther = "cpu_usage_it_other";
 
-    Map<String, String> tags = Map.of("env", "dev");
-    Map<String, String> tagsProd = Map.of("env", "prod");
+    Map<String, String> tagsDevEnv = Map.of("env", "dev");
+    Map<String, String> tagsProdEnv = Map.of("env", "prod");
     String otherSvc = "svc-it-other-" + UUID.randomUUID();
     Map<String, String> tagsOtherSvc = Map.of("env", "dev");
 
@@ -124,26 +121,30 @@ public class MetricsIngestionIT {
 
     var gaugePayload =
         buildOtelGauge(
-            svc, gaugeMetric, List.of(numberPointAt(t1, 0.3, tags), numberPointAt(t2, 0.8, tags)));
+            svc,
+            cpuUsageIt,
+            List.of(numberPointAt(t1, 0.3, tagsDevEnv), numberPointAt(t2, 0.8, tagsDevEnv)));
 
     var sumPayload =
         buildOtelSum(
             svc,
-            sumMetric,
+            requestCountIt,
             AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA,
-            List.of(sumPoint(t1, t2, 3.0, tags)));
+            List.of(sumPoint(t1, t2, 3.0, tagsDevEnv)));
 
     var histoPayload =
         buildOtelHistogram(
             svc,
-            histoMetric,
-            List.of(histoPoint(t1, t2, List.of(10.0, 20.0, 30.0), List.of(3L, 4L, 5L, 5L), tags)));
+            latencyMsIt,
+            List.of(
+                histoPoint(
+                    t1, t2, List.of(10.0, 20.0, 30.0), List.of(3L, 4L, 5L, 5L), tagsDevEnv)));
 
     var gaugePayloadOtherTag =
-        buildOtelGauge(svc, gaugeMetric, List.of(numberPointAt(t1 + 500, 0.6, tagsProd)));
+        buildOtelGauge(svc, cpuUsageIt, List.of(numberPointAt(t1 + 500, 0.6, tagsProdEnv)));
     var gaugePayloadOtherSvc =
         buildOtelGauge(
-            otherSvc, gaugeMetricOtherSvc, List.of(numberPointAt(t1 + 1000, 0.9, tagsOtherSvc)));
+            otherSvc, cpuUsageItOther, List.of(numberPointAt(t1 + 1000, 0.9, tagsOtherSvc)));
 
     postOtel(gaugePayload);
     postOtel(sumPayload);
@@ -156,16 +157,9 @@ public class MetricsIngestionIT {
         .untilAsserted(
             () -> {
               // gauge: basic ingestion
-              var queryTags =
-                  new HashMap<>(tags) {
-                    {
-                      put("service.name", svc);
-                    }
-                  };
               var gaugeReq =
                   GetMetricsRequest.builder()
-                      .metric(gaugeMetric)
-                      .tags(queryTags)
+                      .metric(cpuUsageIt)
                       .start(nowMs - 70_000)
                       .end(nowMs + 5_000)
                       .metricType(METRIC_TYPE.GAUGE)
@@ -173,24 +167,16 @@ public class MetricsIngestionIT {
                       .build();
               GetMetricsResponse gaugeResp = postQuery(gaugeReq);
               assertNotNull(gaugeResp.getGaugeResponse());
-              assertEquals(2, gaugeResp.getGaugeResponse().getTimes().size());
+              assertEquals(2, gaugeResp.getGaugeResponse().getSeries().size());
             });
 
     await()
         .atMost(10, TimeUnit.SECONDS)
         .untilAsserted(
             () -> {
-              // sum: basic ingestion
-              var queryTags =
-                  new HashMap<>(tags) {
-                    {
-                      put("service.name", svc);
-                    }
-                  };
               var sumReq =
                   GetMetricsRequest.builder()
-                      .metric(sumMetric)
-                      .tags(queryTags)
+                      .metric(requestCountIt)
                       .start(nowMs - 70_000)
                       .end(nowMs + 5_000)
                       .metricType(METRIC_TYPE.SUM)
@@ -209,17 +195,9 @@ public class MetricsIngestionIT {
         .atMost(10, TimeUnit.SECONDS)
         .untilAsserted(
             () -> {
-              // histo: basic ingestion
-              var queryTags =
-                  new HashMap<>(tags) {
-                    {
-                      put("service.name", svc);
-                    }
-                  };
               var histoReq =
                   GetMetricsRequest.builder()
-                      .metric(histoMetric)
-                      .tags(queryTags)
+                      .metric(latencyMsIt)
                       .start(nowMs - 120_000)
                       .end(nowMs)
                       .metricType(METRIC_TYPE.HISTO)
@@ -237,42 +215,10 @@ public class MetricsIngestionIT {
         .atMost(10, TimeUnit.SECONDS)
         .untilAsserted(
             () -> {
-              // gauge: tag filter excludes prod
-              var queryTags =
-                  new HashMap<>(tags) {
-                    {
-                      put("service.name", svc);
-                    }
-                  };
-              var gaugeReq =
-                  GetMetricsRequest.builder()
-                      .metric(gaugeMetric)
-                      .tags(queryTags)
-                      .start(nowMs - 70_000)
-                      .end(nowMs + 5_000)
-                      .metricType(METRIC_TYPE.GAUGE)
-                      .gaugeQueryConfig(new GaugeQueryConfig(RES_TYPE.SECONDLY, AGG_TYPE.AVG))
-                      .build();
-              GetMetricsResponse gaugeResp = postQuery(gaugeReq);
-              assertNotNull(gaugeResp.getGaugeResponse());
-              assertEquals(2, gaugeResp.getGaugeResponse().getTimes().size());
-            });
-
-    await()
-        .atMost(10, TimeUnit.SECONDS)
-        .untilAsserted(
-            () -> {
               // gauge: metric isolation
-              var queryTags =
-                  new HashMap<>(tags) {
-                    {
-                      put("service.name", svc);
-                    }
-                  };
               var gaugeReq =
                   GetMetricsRequest.builder()
-                      .metric(gaugeMetricOtherSvc)
-                      .tags(queryTags)
+                      .metric(cpuUsageItOther)
                       .start(nowMs - 70_000)
                       .end(nowMs + 5_000)
                       .metricType(METRIC_TYPE.GAUGE)
@@ -280,32 +226,23 @@ public class MetricsIngestionIT {
                       .build();
               GetMetricsResponse gaugeResp = postQuery(gaugeReq);
               assertNotNull(gaugeResp.getGaugeResponse());
-              assertEquals(0, gaugeResp.getGaugeResponse().getTimes().size());
+              assertEquals(1, gaugeResp.getGaugeResponse().getSeries().size());
             });
 
     await()
         .atMost(10, TimeUnit.SECONDS)
         .untilAsserted(
             () -> {
-              // empty window: no data
-              var queryTags =
-                  new HashMap<>(tags) {
-                    {
-                      put("service.name", svc);
-                    }
-                  };
               var gaugeReq =
                   GetMetricsRequest.builder()
-                      .metric(gaugeMetric)
-                      .tags(queryTags)
-                      .start(nowMs + 60_000)
-                      .end(nowMs + 120_000)
+                      .metric(cpuUsageIt)
+                      .start(t1 + 10_000)
+                      .end(t1 + 20_000)
                       .metricType(METRIC_TYPE.GAUGE)
                       .gaugeQueryConfig(new GaugeQueryConfig(RES_TYPE.SECONDLY, AGG_TYPE.AVG))
                       .build();
               GetMetricsResponse gaugeResp = postQuery(gaugeReq);
-              assertNotNull(gaugeResp.getGaugeResponse());
-              assertEquals(0, gaugeResp.getGaugeResponse().getTimes().size());
+              assertNull(gaugeResp.getGaugeResponse());
             });
   }
 

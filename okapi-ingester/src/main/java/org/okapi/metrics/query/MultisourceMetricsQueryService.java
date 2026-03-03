@@ -78,7 +78,10 @@ public class MultisourceMetricsQueryService implements MetricsQueryService {
     var sketches = joiner.aggregate(suppliers, queryTimeout);
     var gaugeResponse =
         GaugeAggregator.aggregateSketches(
-            sketches, gaugeQueryConfig.getResolution(), gaugeQueryConfig.getAggregation());
+            sketches,
+            gaugeQueryConfig.getResolution(),
+            gaugeQueryConfig.getAggregation(),
+            request.getTags());
     return GetMetricsResponse.builder()
         .metric(request.getMetric())
         .tags(request.getTags())
