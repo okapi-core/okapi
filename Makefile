@@ -144,6 +144,9 @@ test-data:
 	java -jar okapi-datagen/target/okapi-datagen-0.0.1-SNAPSHOT.jar astro-spans-gen --host http://localhost --port 9009
 	java -jar okapi-datagen/target/okapi-datagen-0.0.1-SNAPSHOT.jar users-gen --host http://localhost --port 9001
 
+promql-testdata:
+	scripts/promql/update-promqltestdata.sh
+
 test-infra: testnetwork localstack ch migrate test-secret
 
 run-ingester:

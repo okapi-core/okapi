@@ -53,7 +53,6 @@ public class GaugeQueryProcessor {
                 .table(ChConstants.TBL_GAUGES)
                 .bucketExpr(bucketExpr(resType))
                 .aggExpr(aggExpr(aggType))
-                .resource(getMetricsRequest.getSvc())
                 .metric(getMetricsRequest.getMetric())
                 .startMs(getMetricsRequest.getStart())
                 .endMs(getMetricsRequest.getEnd())

@@ -10,7 +10,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.okapi.otel.ResourceAttributesReader;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -22,8 +21,7 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "okapi.metrics.otel.converter")
 public class OtelConverterConfig {
 
-  private Set<String> excludeTags =
-      new LinkedHashSet<>(Set.of(ResourceAttributesReader.SVC_NAME_ATTR));
+  private Set<String> excludeTags = new LinkedHashSet<>();
   private Set<String> excludeTagPrefixes = new LinkedHashSet<>();
 
   @PostConstruct

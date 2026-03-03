@@ -100,7 +100,7 @@ public class PromQlHistogramWindowTests {
   }
 
   @Test
-  void seriesDiscoveryAddsServiceLabel() throws Exception {
+  void seriesDiscoveryIncludesTagsOnly() throws Exception {
     var ingester = injector.getInstance(ChMetricsIngester.class);
     var driver = injector.getInstance(ChMetricsWalConsumerDriver.class);
     var discoveryFactory = injector.getInstance(SeriesDiscoveryFactory.class);
@@ -117,8 +117,8 @@ public class PromQlHistogramWindowTests {
     var series = discovery.expand(metric, List.of(), 0, 5_000);
     assertFalse(series.isEmpty());
     var labels = series.getFirst().labels().tags();
-    assertEquals(resource, labels.get("service"));
     assertEquals("prod", labels.get("env"));
+    assertFalse(labels.containsKey("service"));
   }
 
   @Test
@@ -140,8 +140,8 @@ public class PromQlHistogramWindowTests {
     var series = discovery.expand(null, matchers, 0, 5_000);
     assertFalse(series.isEmpty());
     var labels = series.getFirst().labels().tags();
-    assertEquals(resource, labels.get("service"));
     assertEquals("prod", labels.get("env"));
+    assertFalse(labels.containsKey("service"));
     assertFalse(labels.containsKey("__name__"));
   }
 

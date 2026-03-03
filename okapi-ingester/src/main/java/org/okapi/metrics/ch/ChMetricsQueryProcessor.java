@@ -16,7 +16,11 @@ import org.okapi.rest.metrics.exemplar.GetExemplarsRequest;
 import org.okapi.rest.metrics.exemplar.GetExemplarsResponse;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
-import org.okapi.rest.search.*;
+import org.okapi.rest.search.GetMetricNameHints;
+import org.okapi.rest.search.GetMetricsHintsResponse;
+import org.okapi.rest.search.GetTagHintsRequest;
+import org.okapi.rest.search.GetTagValueHintsRequest;
+import org.okapi.rest.search.TagValueCompletion;
 import org.okapi.usermessages.UserFacingMessages;
 import org.okapi.validation.OkapiChecks;
 
@@ -47,35 +51,6 @@ public class ChMetricsQueryProcessor {
     };
   }
 
-  public GetMetricsHintsResponse getSvcHints(GetSvcHintsRequest request) {
-    OkapiChecks.checkArgument(
-        request.getInterval() != null,
-        () -> new BadRequestException(UserFacingMessages.TIME_FILTER_MISSING));
-    var interval = request.getInterval();
-    var filter = request.getMetricEventFilter();
-    var metricType = filter == null ? null : filter.getMetricType();
-    var svcPrefix = request.getSvcPrefix();
-
-    var query =
-        renderQuery(
-            ChJteTemplateFiles.GET_SVC_HINTS,
-            MetricHintsQueryTemplate.builder()
-                .table(ChConstants.TBL_METRIC_EVENTS_META)
-                .eventType(metricType == null ? null : metricType.name())
-                .svcPrefix(svcPrefix)
-                .startMs(interval.getStart())
-                .endMs(interval.getEnd())
-                .limit(ChConstants.METRIC_HINTS_LIMIT)
-                .build());
-
-    var records = client.queryAll(query);
-    var completions = new ArrayList<String>(records.size());
-    for (var record : records) {
-      completions.add(record.getString("svc"));
-    }
-    return GetMetricsHintsResponse.builder().svcHints(completions).build();
-  }
-
   public GetMetricsHintsResponse getMetricHints(GetMetricNameHints request) {
     OkapiChecks.checkArgument(
         request.getInterval() != null,
@@ -91,7 +66,6 @@ public class ChMetricsQueryProcessor {
             MetricHintsQueryTemplate.builder()
                 .table(ChConstants.TBL_METRIC_EVENTS_META)
                 .eventType(metricType == null ? null : metricType.name())
-                .svc(request.getSvc())
                 .metricPrefix(request.getMetricPrefix() == null ? "" : request.getMetricPrefix())
                 .startMs(interval.getStart())
                 .endMs(interval.getEnd())
@@ -118,7 +92,6 @@ public class ChMetricsQueryProcessor {
             MetricHintsQueryTemplate.builder()
                 .table(ChConstants.TBL_METRIC_EVENTS_META)
                 .eventType(metricType == null ? null : metricType.name())
-                .svc(request.getSvc())
                 .metric(request.getMetricName())
                 .tagPrefix(request.getTagPrefix() == null ? "" : request.getTagPrefix())
                 .otherTags(request.getOtherTags())
@@ -147,7 +120,6 @@ public class ChMetricsQueryProcessor {
             MetricHintsQueryTemplate.builder()
                 .table(ChConstants.TBL_METRIC_EVENTS_META)
                 .eventType(metricType == null ? null : metricType.name())
-                .svc(request.getSvc())
                 .metric(request.getMetricName())
                 .tag(request.getTag())
                 .otherTags(request.getOtherTags())

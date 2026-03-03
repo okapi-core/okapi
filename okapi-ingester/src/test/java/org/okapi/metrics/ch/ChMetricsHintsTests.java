@@ -33,7 +33,6 @@ import org.okapi.ch.CreateChTablesSpec;
 import org.okapi.rest.TimeInterval;
 import org.okapi.rest.metrics.query.METRIC_TYPE;
 import org.okapi.rest.search.GetMetricNameHints;
-import org.okapi.rest.search.GetSvcHintsRequest;
 import org.okapi.rest.search.GetTagHintsRequest;
 import org.okapi.rest.search.GetTagValueHintsRequest;
 import org.okapi.rest.search.MetricEventFilter;
@@ -93,81 +92,48 @@ public class ChMetricsHintsTests {
 
     driver.onTick();
 
-    assertSvcHints(qp, svc);
-    assertMetricHints(qp, svc);
-    assertTagHints(qp, svc, tags);
-    assertTagValueHints(qp, svc, tags);
+    assertMetricHints(qp);
+    assertTagHints(qp, tags);
+    assertTagValueHints(qp, tags);
   }
 
-  private void assertSvcHints(ChMetricsQueryProcessor qp, String svc) {
-    var interval = new TimeInterval(0, 5_000);
-    var filter = new MetricEventFilter(METRIC_TYPE.GAUGE);
-    var prefix = svc.substring(0, svc.length() - 4);
-
-    var req = new GetSvcHintsRequest(prefix, interval, filter);
-    var resp = qp.getSvcHints(req);
-    assertNotNull(resp);
-    assertNotNull(resp.getSvcHints());
-    assertTrue(resp.getSvcHints().contains(svc));
-    assertTrue(resp.getSvcHints().stream().allMatch(s -> s.startsWith(prefix)));
-
-    var nullFilterReq = new GetSvcHintsRequest(prefix, interval, null);
-    var nullFilterResp = qp.getSvcHints(nullFilterReq);
-    assertNotNull(nullFilterResp);
-    assertNotNull(nullFilterResp.getSvcHints());
-    assertTrue(nullFilterResp.getSvcHints().contains(svc));
-
-    var emptyReq = new GetSvcHintsRequest("", interval, filter);
-    var emptyResp = qp.getSvcHints(emptyReq);
-    assertNotNull(emptyResp);
-    assertNotNull(emptyResp.getSvcHints());
-    assertTrue(emptyResp.getSvcHints().contains(svc));
-  }
-
-  private void assertMetricHints(ChMetricsQueryProcessor qp, String svc) {
+  private void assertMetricHints(ChMetricsQueryProcessor qp) {
     var interval = new TimeInterval(0, 5_000);
     var metricReq =
-        new GetMetricNameHints(svc, "metric.", interval, new MetricEventFilter(METRIC_TYPE.GAUGE));
+        new GetMetricNameHints("metric.", interval, new MetricEventFilter(METRIC_TYPE.GAUGE));
     var resp = qp.getMetricHints(metricReq);
     assertNotNull(resp);
     assertNotNull(resp.getMetricHints());
     assertEquals(2, resp.getMetricHints().size(), "Got " + resp.toString());
     assertTrue(resp.getMetricHints().containsAll(List.of("metric.cpu", "metric.mem")));
 
-    var nullFilterMetricReq = new GetMetricNameHints(svc, "metric.", interval, null);
+    var nullFilterMetricReq = new GetMetricNameHints("metric.", interval, null);
     var nullFilterMetricResp = qp.getMetricHints(nullFilterMetricReq);
     assertNotNull(nullFilterMetricResp);
     assertNotNull(nullFilterMetricResp.getMetricHints());
     assertTrue(
         nullFilterMetricResp.getMetricHints().containsAll(List.of("metric.cpu", "metric.mem")));
 
-    var noSvcReq = new GetMetricNameHints(null, "metric.", interval, null);
-    var noSvcResp = qp.getMetricHints(noSvcReq);
-    assertNotNull(noSvcResp);
-    assertNotNull(noSvcResp.getMetricHints());
-    assertTrue(noSvcResp.getMetricHints().containsAll(List.of("metric.cpu", "metric.mem")));
-
     var histoReq =
         new GetMetricNameHints(
-            svc, "metric.la", interval, new MetricEventFilter(METRIC_TYPE.HISTO));
+            "metric.la", interval, new MetricEventFilter(METRIC_TYPE.HISTO));
     var histoResp = qp.getMetricHints(histoReq);
     assertNotNull(histoResp.getMetricHints());
     assertEquals(1, histoResp.getMetricHints().size());
     assertTrue(histoResp.getMetricHints().containsAll(List.of("metric.latency")));
 
     var sumReq =
-        new GetMetricNameHints(svc, "metric.re", interval, new MetricEventFilter(METRIC_TYPE.SUM));
+        new GetMetricNameHints("metric.re", interval, new MetricEventFilter(METRIC_TYPE.SUM));
     var sumResp = qp.getMetricHints(sumReq);
     assertNotNull(sumResp.getMetricHints());
     assertEquals(1, sumResp.getMetricHints().size());
     assertTrue(sumResp.getMetricHints().containsAll(List.of("metric.requests")));
   }
 
-  private void assertTagHints(ChMetricsQueryProcessor qp, String svc, Map<String, String> tags) {
+  private void assertTagHints(ChMetricsQueryProcessor qp, Map<String, String> tags) {
     var interval = new TimeInterval(0, 5_000);
     var req =
         new GetTagHintsRequest(
-            svc,
             "metric.cpu",
             Map.of("env", "dev", "test-session", testSession),
             "re",
@@ -181,7 +147,6 @@ public class ChMetricsHintsTests {
 
     var nullFilterReq =
         new GetTagHintsRequest(
-            svc,
             "metric.cpu",
             Map.of("env", "dev", "test-session", testSession),
             "re",
@@ -193,12 +158,10 @@ public class ChMetricsHintsTests {
     assertTrue(nullFilterResp.getTagHints().containsAll(List.of("region")));
   }
 
-  private void assertTagValueHints(
-      ChMetricsQueryProcessor qp, String svc, Map<String, String> tags) {
+  private void assertTagValueHints(ChMetricsQueryProcessor qp, Map<String, String> tags) {
     var interval = new TimeInterval(0, 5_000);
     var req =
         new GetTagValueHintsRequest(
-            svc,
             "metric.cpu",
             Map.of("env", "dev", "test-session", testSession),
             "region",
@@ -214,7 +177,6 @@ public class ChMetricsHintsTests {
 
     var nullFilterReq =
         new GetTagValueHintsRequest(
-            svc,
             "metric.cpu",
             Map.of("env", "dev", "test-session", testSession),
             "region",
@@ -227,7 +189,6 @@ public class ChMetricsHintsTests {
 
     var noSvcMetricReq =
         new GetTagValueHintsRequest(
-            null,
             null,
             Map.of("env", "dev", "test-session", testSession),
             "region",

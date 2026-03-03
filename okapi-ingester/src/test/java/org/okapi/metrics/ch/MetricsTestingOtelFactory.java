@@ -95,7 +95,6 @@ public class MetricsTestingOtelFactory {
     var scopeMetrics = ScopeMetrics.newBuilder().addMetrics(metricProto).build();
     var resource =
         Resource.newBuilder()
-            .addAttributes(OtelShortHands.keyValue("service.name", "svc-exemplar"))
             .build();
     var resourceMetrics =
         ResourceMetrics.newBuilder().setResource(resource).addScopeMetrics(scopeMetrics).build();

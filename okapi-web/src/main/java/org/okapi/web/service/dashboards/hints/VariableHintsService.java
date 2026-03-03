@@ -9,7 +9,6 @@ import java.time.temporal.ChronoUnit;
 import lombok.RequiredArgsConstructor;
 import org.okapi.rest.TimeInterval;
 import org.okapi.rest.search.GetMetricNameHints;
-import org.okapi.rest.search.GetSvcHintsRequest;
 import org.okapi.rest.search.GetTagValueHintsRequest;
 import org.okapi.web.dtos.dashboards.vars.DASH_VAR_TYPE;
 import org.okapi.web.dtos.dashboards.vars.GetVarHintsRequest;
@@ -27,11 +26,7 @@ public class VariableHintsService {
   public VarHintsResponse getVarHints(String tempToken, GetVarHintsRequest request) {
     memberChecker.checkUserIsOrgMember(tempToken);
     var queryInterval = buildConstraint(request);
-    if (request.getVarType() == DASH_VAR_TYPE.SVC) {
-      var hintsRequest = GetSvcHintsRequest.builder().svcPrefix("").interval(queryInterval).build();
-      var svcList = ingesterClient.getSvcHints(hintsRequest);
-      return VarHintsResponse.builder().suggestions(svcList.getSvcHints()).build();
-    } else if (request.getVarType() == DASH_VAR_TYPE.METRIC) {
+    if (request.getVarType() == DASH_VAR_TYPE.METRIC) {
       var hintsRequest = GetMetricNameHints.builder().interval(queryInterval).build();
       var hints = ingesterClient.getMetricHints(hintsRequest);
       return VarHintsResponse.builder().suggestions(hints.getMetricHints()).build();

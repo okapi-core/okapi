@@ -1,6 +1,5 @@
 CREATE TABLE IF NOT EXISTS okapi_metrics.gauge_raw_samples (
     timestamp DateTime64(3, 'UTC'),
-    resource LowCardinality(String),
     metric LowCardinality(String),
     tags Map(String, String),
     value Float32,
@@ -10,5 +9,5 @@ CREATE TABLE IF NOT EXISTS okapi_metrics.gauge_raw_samples (
     month UInt8 DEFAULT toStartOfMonth(timestamp)
 )
 ENGINE = MergeTree
-PARTITION BY (resource, toYYYYMM(timestamp))
-ORDER BY (resource, metric, toUnixTimestamp(timestamp));
+PARTITION BY toYYYYMM(timestamp)
+ORDER BY (metric, toUnixTimestamp(timestamp));

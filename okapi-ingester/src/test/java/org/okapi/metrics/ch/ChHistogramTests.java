@@ -71,7 +71,6 @@ public class ChHistogramTests {
 
     var queryReq =
         GetMetricsRequest.builder()
-            .svc(resource)
             .metric(metric)
             .tags(tags)
             .start(0)

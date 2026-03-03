@@ -19,8 +19,6 @@ public class ChHistoSample {
     CUMULATIVE
   }
 
-  String resource;
-
   @SerializedName("metric_name")
   String metric;
 

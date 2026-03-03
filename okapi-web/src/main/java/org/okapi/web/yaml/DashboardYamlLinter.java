@@ -49,6 +49,15 @@ public class DashboardYamlLinter {
                   "VAR_NAME_MISSING", "Variable name is required", "$.dashboard.vars[" + i + "]"));
           continue;
         }
+        if (isBlank(varSpec.getType())
+            || !(varSpec.getType().equalsIgnoreCase("METRIC")
+                || varSpec.getType().equalsIgnoreCase("TAG_VALUE"))) {
+          errors.add(
+              issue(
+                  "VAR_TYPE_INVALID",
+                  "Variable type must be METRIC or TAG_VALUE",
+                  "$.dashboard.vars[" + i + "].type"));
+        }
         if (!declaredVars.add(varSpec.getName())) {
           errors.add(
               issue(
@@ -142,7 +151,7 @@ public class DashboardYamlLinter {
         errors.add(issue("QUERY_JSON_INVALID", "Query JSON is invalid", path));
         return;
       }
-      if (!json.has("svc") || !json.has("metric") || !json.has("tags")) {
+      if (!json.has("metric") || !json.has("tags")) {
         errors.add(issue("QUERY_JSON_INVALID", "Query JSON missing required fields", path));
         return;
       }

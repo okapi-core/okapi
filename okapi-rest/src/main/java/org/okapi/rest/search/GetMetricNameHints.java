@@ -15,7 +15,6 @@ import org.okapi.rest.TimeInterval;
 @Getter
 @Builder
 public class GetMetricNameHints {
-  String svc;
   String metricPrefix;
   TimeInterval interval;
   MetricEventFilter metricEventFilter;

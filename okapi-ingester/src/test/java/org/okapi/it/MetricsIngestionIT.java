@@ -25,6 +25,7 @@ import io.opentelemetry.proto.metrics.v1.Sum;
 import io.opentelemetry.proto.resource.v1.Resource;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -49,11 +50,11 @@ import org.okapi.rest.search.GetMetricsHintsResponse;
 import org.okapi.rest.search.GetTagHintsRequest;
 import org.okapi.rest.search.GetTagValueHintsRequest;
 import org.okapi.rest.search.MetricEventFilter;
+import org.okapi.traces.testutil.OtelShortHands;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
@@ -62,7 +63,6 @@ import org.springframework.web.client.RestClient;
 @SpringBootTest(
     classes = {TestApplication.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles({"test"})
 @TestPropertySource(
     properties = {
       "okapi.clickhouse.host=localhost",
@@ -156,11 +156,16 @@ public class MetricsIngestionIT {
         .untilAsserted(
             () -> {
               // gauge: basic ingestion
+              var queryTags =
+                  new HashMap<>(tags) {
+                    {
+                      put("service.name", svc);
+                    }
+                  };
               var gaugeReq =
                   GetMetricsRequest.builder()
-                      .svc(svc)
                       .metric(gaugeMetric)
-                      .tags(tags)
+                      .tags(queryTags)
                       .start(nowMs - 70_000)
                       .end(nowMs + 5_000)
                       .metricType(METRIC_TYPE.GAUGE)
@@ -176,11 +181,16 @@ public class MetricsIngestionIT {
         .untilAsserted(
             () -> {
               // sum: basic ingestion
+              var queryTags =
+                  new HashMap<>(tags) {
+                    {
+                      put("service.name", svc);
+                    }
+                  };
               var sumReq =
                   GetMetricsRequest.builder()
-                      .svc(svc)
                       .metric(sumMetric)
-                      .tags(tags)
+                      .tags(queryTags)
                       .start(nowMs - 70_000)
                       .end(nowMs + 5_000)
                       .metricType(METRIC_TYPE.SUM)
@@ -200,11 +210,16 @@ public class MetricsIngestionIT {
         .untilAsserted(
             () -> {
               // histo: basic ingestion
+              var queryTags =
+                  new HashMap<>(tags) {
+                    {
+                      put("service.name", svc);
+                    }
+                  };
               var histoReq =
                   GetMetricsRequest.builder()
-                      .svc(svc)
                       .metric(histoMetric)
-                      .tags(tags)
+                      .tags(queryTags)
                       .start(nowMs - 120_000)
                       .end(nowMs)
                       .metricType(METRIC_TYPE.HISTO)
@@ -223,11 +238,16 @@ public class MetricsIngestionIT {
         .untilAsserted(
             () -> {
               // gauge: tag filter excludes prod
+              var queryTags =
+                  new HashMap<>(tags) {
+                    {
+                      put("service.name", svc);
+                    }
+                  };
               var gaugeReq =
                   GetMetricsRequest.builder()
-                      .svc(svc)
                       .metric(gaugeMetric)
-                      .tags(tags)
+                      .tags(queryTags)
                       .start(nowMs - 70_000)
                       .end(nowMs + 5_000)
                       .metricType(METRIC_TYPE.GAUGE)
@@ -242,12 +262,17 @@ public class MetricsIngestionIT {
         .atMost(10, TimeUnit.SECONDS)
         .untilAsserted(
             () -> {
-              // gauge: svc isolation
+              // gauge: metric isolation
+              var queryTags =
+                  new HashMap<>(tags) {
+                    {
+                      put("service.name", svc);
+                    }
+                  };
               var gaugeReq =
                   GetMetricsRequest.builder()
-                      .svc(svc)
                       .metric(gaugeMetricOtherSvc)
-                      .tags(tags)
+                      .tags(queryTags)
                       .start(nowMs - 70_000)
                       .end(nowMs + 5_000)
                       .metricType(METRIC_TYPE.GAUGE)
@@ -263,11 +288,16 @@ public class MetricsIngestionIT {
         .untilAsserted(
             () -> {
               // empty window: no data
+              var queryTags =
+                  new HashMap<>(tags) {
+                    {
+                      put("service.name", svc);
+                    }
+                  };
               var gaugeReq =
                   GetMetricsRequest.builder()
-                      .svc(svc)
                       .metric(gaugeMetric)
-                      .tags(tags)
+                      .tags(queryTags)
                       .start(nowMs + 60_000)
                       .end(nowMs + 120_000)
                       .metricType(METRIC_TYPE.GAUGE)
@@ -311,7 +341,6 @@ public class MetricsIngestionIT {
               // metric hints: positive match
               var hintsReq =
                   new GetMetricNameHints(
-                      svc,
                       "cpu_",
                       new TimeInterval(nowMs - 70_000, nowMs + 5_000),
                       new MetricEventFilter(METRIC_TYPE.GAUGE));
@@ -327,7 +356,7 @@ public class MetricsIngestionIT {
 
               var nullFilterReq =
                   new GetMetricNameHints(
-                      svc, "cpu_", new TimeInterval(nowMs - 70_000, nowMs + 5_000), null);
+                      "cpu_", new TimeInterval(nowMs - 70_000, nowMs + 5_000), null);
               GetMetricsHintsResponse nullFilterResp =
                   restClient
                       .post()
@@ -346,7 +375,6 @@ public class MetricsIngestionIT {
               // tag hints: positive match
               var tagHintsReq =
                   new GetTagHintsRequest(
-                      svc,
                       gaugeMetric,
                       Map.of("env", "dev"),
                       "re",
@@ -364,7 +392,6 @@ public class MetricsIngestionIT {
 
               var nullFilterReq =
                   new GetTagHintsRequest(
-                      svc,
                       gaugeMetric,
                       Map.of("env", "dev"),
                       "re",
@@ -388,7 +415,6 @@ public class MetricsIngestionIT {
               // tag value hints: positive match
               var tagValReq =
                   new GetTagValueHintsRequest(
-                      svc,
                       gaugeMetric,
                       Map.of("env", "dev"),
                       "region",
@@ -407,7 +433,6 @@ public class MetricsIngestionIT {
 
               var nullFilterReq =
                   new GetTagValueHintsRequest(
-                      svc,
                       gaugeMetric,
                       Map.of("env", "dev"),
                       "region",
@@ -432,7 +457,6 @@ public class MetricsIngestionIT {
               // metric hints: prefix miss
               var hintsReq =
                   new GetMetricNameHints(
-                      svc,
                       "does_not_exist",
                       new TimeInterval(nowMs - 70_000, nowMs + 5_000),
                       new MetricEventFilter(METRIC_TYPE.GAUGE));
@@ -454,7 +478,6 @@ public class MetricsIngestionIT {
               // tag hints: otherTags mismatch
               var tagHintsReq =
                   new GetTagHintsRequest(
-                      svc,
                       gaugeMetric,
                       Map.of("env", "prod"),
                       "re",
@@ -478,7 +501,6 @@ public class MetricsIngestionIT {
               // tag value hints: missing tag
               var tagValReq =
                   new GetTagValueHintsRequest(
-                      svc,
                       gaugeMetric,
                       Map.of("env", "dev"),
                       "missing_tag",
@@ -500,10 +522,9 @@ public class MetricsIngestionIT {
         .atMost(10, TimeUnit.SECONDS)
         .untilAsserted(
             () -> {
-              // hints: svc isolation
+              // hints: no service scoping
               var hintsReq =
                   new GetMetricNameHints(
-                      svc,
                       "cpu_hint_other",
                       new TimeInterval(nowMs - 70_000, nowMs + 5_000),
                       new MetricEventFilter(METRIC_TYPE.GAUGE));
@@ -515,7 +536,7 @@ public class MetricsIngestionIT {
                       .retrieve()
                       .body(GetMetricsHintsResponse.class);
               assertNotNull(hintsResp);
-              assertEquals(0, hintsResp.getMetricHints().size());
+              assertTrue(hintsResp.getMetricHints().contains("cpu_hint_other"));
             });
   }
 
@@ -573,13 +594,7 @@ public class MetricsIngestionIT {
   private ExportMetricsServiceRequest wrapMetric(String svc, String metricName, Metric metric) {
     var scopeMetrics = ScopeMetrics.newBuilder().addMetrics(metric).build();
     var resource =
-        Resource.newBuilder()
-            .addAttributes(
-                KeyValue.newBuilder()
-                    .setKey("service.name")
-                    .setValue(AnyValue.newBuilder().setStringValue(svc).build())
-                    .build())
-            .build();
+        Resource.newBuilder().addAttributes(OtelShortHands.keyValue("service.name", svc)).build();
     var resourceMetrics =
         ResourceMetrics.newBuilder().setResource(resource).addScopeMetrics(scopeMetrics).build();
     return ExportMetricsServiceRequest.newBuilder().addResourceMetrics(resourceMetrics).build();

@@ -15,7 +15,10 @@ import org.okapi.rest.metrics.exemplar.GetExemplarsRequest;
 import org.okapi.rest.metrics.exemplar.GetExemplarsResponse;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
-import org.okapi.rest.search.*;
+import org.okapi.rest.search.GetMetricNameHints;
+import org.okapi.rest.search.GetMetricsHintsResponse;
+import org.okapi.rest.search.GetTagHintsRequest;
+import org.okapi.rest.search.GetTagValueHintsRequest;
 import org.okapi.rest.traces.SpanAttributeHintsRequest;
 import org.okapi.rest.traces.SpanAttributeHintsResponse;
 import org.okapi.rest.traces.SpanAttributeValueHintsRequest;
@@ -83,10 +86,6 @@ public class IngesterClient {
       sb.append('/').append(path);
     }
     return sb.toString();
-  }
-
-  public GetMetricsHintsResponse getSvcHints(GetSvcHintsRequest request) {
-    return postRequest("/api/v1/metrics/svc/hints", request, GetMetricsHintsResponse.class);
   }
 
   public GetMetricsHintsResponse getMetricHints(GetMetricNameHints request) {

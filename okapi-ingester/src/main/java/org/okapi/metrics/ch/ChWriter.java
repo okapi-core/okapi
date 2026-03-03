@@ -65,7 +65,6 @@ public class ChWriter {
             .map(
                 r -> {
                   var map = new HashMap<String, Object>();
-                  map.put("resource", r.getResource());
                   map.put("metric_name", r.getMetric());
                   map.put("tags", r.getTags());
                   map.put("ts_start", TS_FMT.format(Instant.ofEpochMilli(r.getTsStart())));

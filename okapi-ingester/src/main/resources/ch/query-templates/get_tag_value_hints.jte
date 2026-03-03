@@ -3,9 +3,6 @@
 SELECT DISTINCT tags['${data.getTag()}'] AS tag_value
 FROM ${data.getTable()}
 WHERE 1 = 1
-@if(data.getSvc() != null && !data.getSvc().isBlank())
-AND svc = '${data.getSvc()}'
-@endif
 @if(data.getMetric() != null && !data.getMetric().isBlank())
 AND metric = '${data.getMetric()}'
 @endif

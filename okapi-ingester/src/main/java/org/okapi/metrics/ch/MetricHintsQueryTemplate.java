@@ -15,8 +15,6 @@ import lombok.Getter;
 public class MetricHintsQueryTemplate {
   String table;
   String eventType;
-  String svc;
-  String svcPrefix;
   String metricPrefix;
   String metric;
   String tagPrefix;

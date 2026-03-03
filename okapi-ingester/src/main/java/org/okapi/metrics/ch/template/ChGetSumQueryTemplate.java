@@ -14,7 +14,6 @@ import lombok.Getter;
 @Builder
 public class ChGetSumQueryTemplate {
   String table;
-  String resource;
   String metric;
   Map<String, String> tags;
   String histoType;

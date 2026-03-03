@@ -12,7 +12,6 @@ import org.okapi.rest.traces.TimestampFilter;
 @Getter
 @Builder
 public class GetExemplarsRequest {
-  String svc;
   String metric;
   Map<String, String> labels;
   TimestampFilter timeFilter;

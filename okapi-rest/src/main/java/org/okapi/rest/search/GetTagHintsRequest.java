@@ -14,7 +14,6 @@ import org.okapi.rest.TimeInterval;
 @NoArgsConstructor
 @Getter
 public class GetTagHintsRequest {
-  String svc;
   String metricName;
   Map<String, String> otherTags;
   String tagPrefix;

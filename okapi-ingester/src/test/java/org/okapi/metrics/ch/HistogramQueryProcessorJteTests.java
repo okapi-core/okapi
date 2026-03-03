@@ -59,7 +59,6 @@ public class HistogramQueryProcessorJteTests {
 
     var row =
         ChHistoSample.builder()
-            .resource(resource)
             .metric(metric)
             .tags(tags)
             .tsStart(1_000)
@@ -72,7 +71,6 @@ public class HistogramQueryProcessorJteTests {
 
     var req =
         GetMetricsRequest.builder()
-            .svc(resource)
             .metric(metric)
             .tags(tags)
             .start(0)

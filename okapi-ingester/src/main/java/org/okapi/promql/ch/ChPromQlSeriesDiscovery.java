@@ -46,10 +46,6 @@ public class ChPromQlSeriesDiscovery implements SeriesDiscovery {
       if (tags != null) {
         labels.putAll(tags);
       }
-      String svc = record.getString("svc");
-      if (svc != null) {
-        labels.put(ChPromQlTsClient.SERVICE_LABEL, svc);
-      }
       var matchLabels = new LinkedHashMap<>(labels);
       var name = record.getString("metric");
       if (name != null) {

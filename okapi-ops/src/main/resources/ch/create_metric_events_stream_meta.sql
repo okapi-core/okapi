@@ -1,6 +1,5 @@
 CREATE TABLE IF NOT EXISTS okapi_metrics.metric_events_stream_meta (
     event_type Enum('GAUGE' = 1, 'HISTO' = 2, 'SUM' = 3),
-    svc LowCardinality(String),
     metric LowCardinality(String),
     tags Map(String, String),
     ts_start DateTime64(3, 'UTC'),
@@ -12,4 +11,4 @@ CREATE TABLE IF NOT EXISTS okapi_metrics.metric_events_stream_meta (
 )
 ENGINE = MergeTree
 PARTITION BY toYYYYMM(ts_start)
-ORDER BY (svc, metric, event_type, toUnixTimestamp(ts_start));
+ORDER BY (metric, event_type, toUnixTimestamp(ts_start));

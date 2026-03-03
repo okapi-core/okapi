@@ -35,7 +35,6 @@ public class SumQueryProcessor {
   }
 
   public GetMetricsResponse getSumRes(GetMetricsRequest query) {
-    var resource = query.getSvc();
     var metric = query.getMetric();
     var tags = query.getTags();
     var ts = query.getStart();
@@ -49,9 +48,9 @@ public class SumQueryProcessor {
           case CUMULATIVE -> CH_SUM_TYPE.CUMULATIVE;
           case DELTA_AGGREGATE -> CH_SUM_TYPE.DELTA;
         };
-    var samples = scanSumSamples(ts, te, resource, metric, tags, sumType);
+    var samples = scanSumSamples(ts, te, metric, tags, sumType);
     if (samples.isEmpty()) {
-      return CannedResponses.noMetricsResponse(resource, metric, tags);
+      return CannedResponses.noMetricsResponse(metric, tags);
     }
 
     List<Sum> sums;
@@ -60,7 +59,7 @@ public class SumQueryProcessor {
         var maxSample =
             samples.stream().max(Comparator.comparingLong(ChSumSample::value)).orElse(null);
         if (maxSample == null) {
-          return CannedResponses.noMetricsResponse(resource, metric, tags);
+          return CannedResponses.noMetricsResponse(metric, tags);
         }
         sums =
             List.of(
@@ -97,17 +96,11 @@ public class SumQueryProcessor {
   }
 
   public String chScanSumsQuery(
-      long ts,
-      long te,
-      String resource,
-      String metric,
-      Map<String, String> tags,
-      CH_SUM_TYPE sumType) {
+      long ts, long te, String metric, Map<String, String> tags, CH_SUM_TYPE sumType) {
 
     var template =
         ChGetSumQueryTemplate.builder()
             .table(ChConstants.TBL_SUM)
-            .resource(resource)
             .metric(metric)
             .tags(tags)
             .ts(ts)
@@ -122,12 +115,11 @@ public class SumQueryProcessor {
   private List<ChSumSample> scanSumSamples(
       long ts,
       long te,
-      String resource,
       String metric,
       Map<String, String> tags,
       CH_SUM_TYPE sumType) {
 
-    var query = chScanSumsQuery(ts, te, resource, metric, tags, sumType);
+    var query = chScanSumsQuery(ts, te, metric, tags, sumType);
     List<GenericRecord> records = client.queryAll(query);
     var samples = new ArrayList<ChSumSample>(records.size());
     for (var record : records) {

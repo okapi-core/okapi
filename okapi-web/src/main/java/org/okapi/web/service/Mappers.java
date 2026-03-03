@@ -188,7 +188,6 @@ public class Mappers {
   public static DASH_VAR_TYPE toWebDashVarType(DashboardVariable.DASHBOARD_VAR_TYPE type) {
     if (type == null) return null;
     return switch (type) {
-      case SVC -> DASH_VAR_TYPE.SVC;
       case METRIC -> DASH_VAR_TYPE.METRIC;
       case TAG -> DASH_VAR_TYPE.TAG_VALUE;
     };

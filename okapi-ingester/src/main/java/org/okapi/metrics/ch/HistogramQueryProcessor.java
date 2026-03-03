@@ -46,7 +46,7 @@ public class HistogramQueryProcessor {
           case MERGED -> ChHistoSample.HISTO_TYPE.DELTA;
         };
     var readings =
-        scanSamples(ts, te, query.getSvc(), query.getMetric(), query.getTags(), histoType);
+        scanSamples(ts, te, query.getMetric(), query.getTags(), histoType);
     if (query.getHistoQueryConfig().getTemporality() == HistoQueryConfig.TEMPORALITY.CUMULATIVE) {
       var largestSampleSize = readings.stream().map(r -> r.count).max(Long::compare).orElse(0L);
       var largestSample =
@@ -59,8 +59,7 @@ public class HistogramQueryProcessor {
             .histogramResponse(histo)
             .build();
       } else {
-        return CannedResponses.noMetricsResponse(
-            query.getSvc(), query.getMetric(), query.getTags());
+        return CannedResponses.noMetricsResponse(query.getMetric(), query.getTags());
       }
     } else if (query.getHistoQueryConfig().getTemporality() == HistoQueryConfig.TEMPORALITY.DELTA
         || query.getHistoQueryConfig().getTemporality() == HistoQueryConfig.TEMPORALITY.MERGED) {
@@ -82,7 +81,6 @@ public class HistogramQueryProcessor {
                 var min = Math.min(a.min, b.min);
                 var max = Math.max(a.max, b.max);
                 return ChHistoSample.builder()
-                    .resource(query.getSvc())
                     .metric(query.getMetric())
                     .tags(query.getTags())
                     .histoType(histoType)
@@ -104,11 +102,10 @@ public class HistogramQueryProcessor {
             .histogramResponse(histo)
             .build();
       } else {
-        return CannedResponses.noMetricsResponse(
-            query.getSvc(), query.getMetric(), query.getTags());
+        return CannedResponses.noMetricsResponse(query.getMetric(), query.getTags());
       }
     }
-    return CannedResponses.noMetricsResponse(query.getSvc(), query.getMetric(), query.getTags());
+    return CannedResponses.noMetricsResponse(query.getMetric(), query.getTags());
   }
 
   public GetHistogramResponse getHistogramResponse(ChHistoSample chHistoSample) {
@@ -133,7 +130,6 @@ public class HistogramQueryProcessor {
   public List<ChHistoSample> scanSamples(
       long ts,
       long te,
-      String resource,
       String metrics,
       Map<String, String> tags,
       ChHistoSample.HISTO_TYPE histoType) {
@@ -141,7 +137,6 @@ public class HistogramQueryProcessor {
         renderHistoQuery(
             ChGetHistoQueryTemplate.builder()
                 .table(ChConstants.TBL_HISTOS)
-                .resource(resource)
                 .metric(metrics)
                 .tags(tags)
                 .histoType(histoType.name())
@@ -195,7 +190,6 @@ public class HistogramQueryProcessor {
 
       samples.add(
           ChHistoSample.builder()
-              .resource(record.getString("resource"))
               .metric(record.getString("metric_name"))
               .tags(recordTags)
               .tsStart(record.getLong("ts_start_ms"))

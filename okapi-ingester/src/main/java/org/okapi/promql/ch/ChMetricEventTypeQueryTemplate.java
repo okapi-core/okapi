@@ -12,7 +12,6 @@ import lombok.Value;
 @Builder
 public class ChMetricEventTypeQueryTemplate {
   String table;
-  String resource;
   String metric;
   long startMs;
   long endMs;

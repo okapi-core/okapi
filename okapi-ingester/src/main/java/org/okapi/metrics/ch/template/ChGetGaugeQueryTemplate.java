@@ -16,7 +16,6 @@ public class ChGetGaugeQueryTemplate {
   String table;
   String bucketExpr;
   String aggExpr;
-  String resource;
   String metric;
   long startMs;
   long endMs;

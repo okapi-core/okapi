@@ -47,6 +47,9 @@ okapi-web/**/*.js
 okapi-web/**/*.html
 okapi-web/**/*.css
 
+# PromQL upstream cache
+scripts/.cache/prometheus-promqltest/
+
 ## Exclude build targets
 helm/dist/**/*.tgz
 **/*.pyc

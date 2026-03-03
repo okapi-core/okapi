@@ -109,13 +109,6 @@ public class VariableHintsServiceIT extends AbstractIT {
         .atMost(10, TimeUnit.SECONDS)
         .untilAsserted(
             () -> {
-              var svcHints =
-                  variableHintsService.getVarHints(
-                      adminTempToken, new GetVarHintsRequest(DASH_VAR_TYPE.SVC, null, constraint));
-              log.info("Got hints: {}", svcHints);
-              assertNotNull(svcHints);
-              assertTrue(svcHints.getSuggestions().containsAll(List.of(svcA, svcB)));
-
               var metricHints =
                   variableHintsService.getVarHints(
                       adminTempToken,

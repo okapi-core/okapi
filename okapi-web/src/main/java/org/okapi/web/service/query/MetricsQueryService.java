@@ -21,7 +21,6 @@ import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
 import org.okapi.rest.search.GetMetricNameHints;
 import org.okapi.rest.search.GetMetricsHintsResponse;
-import org.okapi.rest.search.GetSvcHintsRequest;
 import org.okapi.rest.search.GetTagHintsRequest;
 import org.okapi.rest.search.GetTagValueHintsRequest;
 import org.okapi.web.auth.AccessManager;
@@ -71,11 +70,6 @@ public class MetricsQueryService {
     var orgId = tokenManager.getOrgId(token);
     accessManager.checkUserIsOrgMember(new AccessManager.AuthContext(userId, orgId));
     return ingesterClient.query(getMetricsRequest);
-  }
-
-  public GetMetricsHintsResponse getSvcHints(String token, GetSvcHintsRequest request) {
-    validateAccess(token);
-    return ingesterClient.getSvcHints(request);
   }
 
   public GetMetricsHintsResponse getMetricHints(String token, GetMetricNameHints request) {

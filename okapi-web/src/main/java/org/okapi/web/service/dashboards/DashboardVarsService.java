@@ -65,7 +65,6 @@ public class DashboardVarsService {
   private static DashboardVariable.DASHBOARD_VAR_TYPE toDashboardVarType(DASH_VAR_TYPE type) {
     if (type == null) return null;
     return switch (type) {
-      case SVC -> DashboardVariable.DASHBOARD_VAR_TYPE.SVC;
       case METRIC -> DashboardVariable.DASHBOARD_VAR_TYPE.METRIC;
       case TAG_VALUE -> DashboardVariable.DASHBOARD_VAR_TYPE.TAG;
     };

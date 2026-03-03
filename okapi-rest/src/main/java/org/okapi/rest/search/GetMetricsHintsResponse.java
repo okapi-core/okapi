@@ -13,7 +13,6 @@ import lombok.*;
 @ToString
 @Builder
 public class GetMetricsHintsResponse {
-  List<String> svcHints;
   List<String> metricHints;
   List<String> tagHints;
   TagValueCompletion tagValueHints;

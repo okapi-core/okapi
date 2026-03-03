@@ -74,8 +74,8 @@ public class DashboardYamlIngestionServiceIT extends AbstractIT {
           title: "Test Dash"
           description: "Test"
           vars:
-            - name: svc
-              type: SVC
+            - name: metric
+              type: METRIC
           rows:
             - id: "row-1"
               title: "Row 1"
@@ -83,7 +83,7 @@ public class DashboardYamlIngestionServiceIT extends AbstractIT {
                 - id: "panel-1"
                   title: "Panel 1"
                   queries:
-                    - query: "{\\"svc\\":\\"$__{svc}\\",\\"metric\\":\\"m\\",\\"tags\\":{},\\"start\\":0,\\"end\\":0,\\"metricType\\":\\"GAUGE\\"}"
+                    - query: "{\\"metric\\":\\"$__{metric}\\",\\"tags\\":{},\\"start\\":0,\\"end\\":0,\\"metricType\\":\\"GAUGE\\"}"
         """
             .formatted(dashboardId);
 

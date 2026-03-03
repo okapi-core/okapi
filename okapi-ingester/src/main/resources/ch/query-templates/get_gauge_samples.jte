@@ -2,7 +2,7 @@
 
 SELECT ${data.getBucketExpr()} AS bucket_ms, ${data.getAggExpr()} AS value
 FROM ${data.getTable()}
-WHERE metric = '${data.getMetric()}' AND resource = '${data.getResource()}'
+WHERE metric = '${data.getMetric()}'
 AND timestamp >= toDateTime64(${data.getStartMs()}/1000.0, 3, 'UTC')
 AND timestamp < toDateTime64(${data.getEndMs()}/1000.0, 3, 'UTC')
 @for(var tag : data.getTags().entrySet())

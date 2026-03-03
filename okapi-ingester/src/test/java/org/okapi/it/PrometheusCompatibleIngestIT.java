@@ -108,9 +108,8 @@ public class PrometheusCompatibleIngestIT {
 
     restClient
         .post()
-        .uri(baseUrl + "/v1/metrics")
+        .uri(baseUrl + "/prometheus/v1/metrics")
         .contentType(MediaType.APPLICATION_OCTET_STREAM)
-        .header("x-okapi-metrics-dialect", "prometheus")
         .body(req.toByteArray())
         .retrieve()
         .toBodilessEntity();

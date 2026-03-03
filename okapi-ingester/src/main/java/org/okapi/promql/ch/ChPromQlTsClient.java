@@ -22,7 +22,6 @@ import org.okapi.promql.eval.ts.RESOLUTION;
 import org.okapi.promql.eval.ts.TsClient;
 
 public class ChPromQlTsClient implements TsClient {
-  public static final String SERVICE_LABEL = "service";
   private final Client client;
   private final ChMetricTemplateEngine templateEngine;
 
@@ -34,24 +33,22 @@ public class ChPromQlTsClient implements TsClient {
   @Override
   public Scan get(String name, Map<String, String> tags, RESOLUTION res, long startMs, long endMs) {
     Map<String, String> tagCopy = tags == null ? new LinkedHashMap<>() : new LinkedHashMap<>(tags);
-    String resource = tagCopy.remove(SERVICE_LABEL);
-    MetricEventType type = resolveMetricType(resource, name, tagCopy, startMs, endMs);
+    MetricEventType type = resolveMetricType(name, tagCopy, startMs, endMs);
 
     return switch (type) {
-      case HISTO -> getHistogramSeries(resource, name, tagCopy, startMs, endMs);
-      case SUM -> getSumSeries(resource, name, tagCopy, startMs, endMs);
-      case GAUGE -> getGaugeSeries(resource, name, tagCopy, startMs, endMs);
+      case HISTO -> getHistogramSeries(name, tagCopy, startMs, endMs);
+      case SUM -> getSumSeries(name, tagCopy, startMs, endMs);
+      case GAUGE -> getGaugeSeries(name, tagCopy, startMs, endMs);
     };
   }
 
   private MetricEventType resolveMetricType(
-      String resource, String metric, Map<String, String> tags, long startMs, long endMs) {
+      String metric, Map<String, String> tags, long startMs, long endMs) {
     TemplateOutput output = new StringOutput();
     templateEngine.render(
         ChJteTemplateFiles.GET_METRIC_EVENT_TYPE,
         ChMetricEventTypeQueryTemplate.builder()
             .table(ChConstants.TBL_METRIC_EVENTS_META)
-            .resource(resource)
             .metric(metric)
             .startMs(startMs)
             .endMs(endMs)
@@ -68,13 +65,12 @@ public class ChPromQlTsClient implements TsClient {
   }
 
   private GaugeScan getGaugeSeries(
-      String resource, String metric, Map<String, String> tags, long startMs, long endMs) {
+      String metric, Map<String, String> tags, long startMs, long endMs) {
     TemplateOutput output = new StringOutput();
     templateEngine.render(
         ChJteTemplateFiles.GET_GAUGE_RAW_SAMPLES,
         ChGetGaugeRawQueryTemplate.builder()
             .table(ChConstants.TBL_GAUGES)
-            .resource(resource)
             .metric(metric)
             .startMs(startMs)
             .endMs(endMs)
@@ -93,17 +89,16 @@ public class ChPromQlTsClient implements TsClient {
   }
 
   private Scan getSumSeries(
-      String resource, String metric, Map<String, String> tags, long startMs, long endMs) {
-    var delta = scanSumSamples(resource, metric, tags, startMs, endMs, "DELTA");
+      String metric, Map<String, String> tags, long startMs, long endMs) {
+    var delta = scanSumSamples(metric, tags, startMs, endMs, "DELTA");
     if (!delta.isEmpty()) {
       return toSumScan(metric, delta, false);
     }
-    var cumulative = scanSumSamples(resource, metric, tags, startMs, endMs, "CUMULATIVE");
+    var cumulative = scanSumSamples(metric, tags, startMs, endMs, "CUMULATIVE");
     return toSumScan(metric, cumulative, true);
   }
 
   private List<SumPoint> scanSumSamples(
-      String resource,
       String metric,
       Map<String, String> tags,
       long startMs,
@@ -114,7 +109,6 @@ public class ChPromQlTsClient implements TsClient {
         ChJteTemplateFiles.GET_SUM_SAMPLES,
         ChGetSumQueryTemplate.builder()
             .table(ChConstants.TBL_SUM)
-            .resource(resource)
             .metric(metric)
             .tags(tags)
             .histoType(type)
@@ -153,12 +147,12 @@ public class ChPromQlTsClient implements TsClient {
   }
 
   private Scan getHistogramSeries(
-      String resource, String metric, Map<String, String> tags, long startMs, long endMs) {
-    var delta = scanHistoSamples(resource, metric, tags, startMs, endMs, "DELTA");
+      String metric, Map<String, String> tags, long startMs, long endMs) {
+    var delta = scanHistoSamples(metric, tags, startMs, endMs, "DELTA");
     if (!delta.isEmpty()) {
       return new HistogramSeries(metric, delta);
     }
-    var cumulative = scanHistoSamples(resource, metric, tags, startMs, endMs, "CUMULATIVE");
+    var cumulative = scanHistoSamples(metric, tags, startMs, endMs, "CUMULATIVE");
     if (cumulative.isEmpty()) {
       return new HistogramSeries(metric, List.of());
     }
@@ -166,7 +160,6 @@ public class ChPromQlTsClient implements TsClient {
   }
 
   private List<HistogramSeries.HistogramPoint> scanHistoSamples(
-      String resource,
       String metric,
       Map<String, String> tags,
       long startMs,
@@ -177,7 +170,6 @@ public class ChPromQlTsClient implements TsClient {
         ChJteTemplateFiles.GET_HISTO_SAMPLES,
         ChGetHistoQueryTemplate.builder()
             .table(ChConstants.TBL_HISTOS)
-            .resource(resource)
             .metric(metric)
             .tags(tags)
             .histoType(type)

@@ -146,7 +146,6 @@ class QueryServiceIT {
     assertNotNull(recorded.getBody());
     var bodyJson =
         JsonParser.parseString(recorded.getBody().string(StandardCharsets.UTF_8)).getAsJsonObject();
-    assertEquals("svcA", bodyJson.get("svc").getAsString());
     assertEquals("metricA", bodyJson.get("metric").getAsString());
     assertEquals(10, bodyJson.get("start").getAsLong());
     assertEquals(20, bodyJson.get("end").getAsLong());
@@ -192,8 +191,7 @@ class QueryServiceIT {
             .timeConstraint(TimeConstraint.builder().start(100).end(200).build())
             .varsContext(
                 new VarsContext(
-                    Map.of(
-                        "svc", "svcA", "metric1", "metricA", "metric2", "metricB", "env", "prod")))
+                    Map.of("metric1", "metricA", "metric2", "metricB", "env", "prod")))
             .queries(
                 List.of(
                     PanelQueryConfigWDto.builder().query(query1).build(),
@@ -228,7 +226,7 @@ class QueryServiceIT {
     var panel =
         MultiQueryPanelWDto.builder()
             .timeConstraint(TimeConstraint.builder().start(100).end(200).build())
-            .varsContext(new VarsContext(Map.of("svc", "svcA")))
+            .varsContext(new VarsContext(Map.of("metricA", "metricA")))
             .queries(List.of(PanelQueryConfigWDto.builder().query(query).build()))
             .build();
 
@@ -259,7 +257,6 @@ class QueryServiceIT {
 
   private String extractMetric(String body) {
     JsonObject json = JsonParser.parseString(body).getAsJsonObject();
-    assertEquals("svcA", json.get("svc").getAsString());
     assertEquals(100, json.get("start").getAsLong());
     assertEquals(200, json.get("end").getAsLong());
     assertEquals("prod", json.get("tags").getAsJsonObject().get("env").getAsString());

@@ -75,8 +75,7 @@ public class OtelConverterGaugeTest {
     ExportMetricsRequest r = out.get(0);
     assertEquals("cpu_usage", r.getMetricName());
     assertEquals(MetricType.GAUGE, r.getType());
-    assertEquals("svc", r.getResource());
-    assertFalse(r.getTags().containsKey("service.name"));
+    assertEquals("svc", r.getTags().get("service.name"));
     assertEquals("p1", r.getTags().get("pod"));
 
     var g = r.getGauge();

@@ -56,8 +56,6 @@ public class SumQueryProcessorJteTests {
     var row1 =
         gson.toJson(
             Map.of(
-                "resource",
-                resource,
                 "metric_name",
                 metric,
                 "tags",
@@ -73,8 +71,6 @@ public class SumQueryProcessorJteTests {
     var row2 =
         gson.toJson(
             Map.of(
-                "resource",
-                resource,
                 "metric_name",
                 metric,
                 "tags",
@@ -92,7 +88,6 @@ public class SumQueryProcessorJteTests {
 
     var req =
         GetMetricsRequest.builder()
-            .svc(resource)
             .metric(metric)
             .tags(tags)
             .start(0)

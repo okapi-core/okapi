@@ -1,5 +1,4 @@
 CREATE TABLE IF NOT EXISTS okapi_metrics.histo_raw_samples (
-    resource LowCardinality(String),
     metric_name LowCardinality(String),
     tags Map(String, String),
     ts_start DateTime64(3, 'UTC'),
@@ -14,4 +13,4 @@ CREATE TABLE IF NOT EXISTS okapi_metrics.histo_raw_samples (
 )
 ENGINE = MergeTree
 PARTITION BY toYYYYMM(ts_start)
-ORDER BY (resource, metric_name, toUnixTimestamp(ts_start));
+ORDER BY (metric_name, toUnixTimestamp(ts_start));

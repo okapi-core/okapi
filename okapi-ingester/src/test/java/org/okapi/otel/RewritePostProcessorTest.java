@@ -20,7 +20,6 @@ public class RewritePostProcessorTest {
   void rewritesMetricResourceAndTagKeys() {
     var req =
         ExportMetricsRequest.builder()
-            .resource("svc.name")
             .metricName("metric.name")
             .tags(Map.of("tag.one", "v1", "tag.two", "v2"))
             .type(MetricType.GAUGE)
@@ -32,7 +31,6 @@ public class RewritePostProcessorTest {
     assertNotNull(out);
     assertEquals(1, out.size());
     var rewritten = out.get(0);
-    assertEquals("svc_name", rewritten.getResource());
     assertEquals("metric_name", rewritten.getMetricName());
     assertEquals("v1", rewritten.getTags().get("tag_one"));
     assertEquals("v2", rewritten.getTags().get("tag_two"));
@@ -42,7 +40,6 @@ public class RewritePostProcessorTest {
   void doesNotRetainOriginalDottedTagKeys() {
     var req =
         ExportMetricsRequest.builder()
-            .resource("svc")
             .metricName("metric")
             .tags(Map.of("service.instance.id", "i1", "env", "dev"))
             .type(MetricType.GAUGE)
@@ -65,7 +62,6 @@ public class RewritePostProcessorTest {
 
     var req =
         ExportMetricsRequest.builder()
-            .resource("svc")
             .metricName("metric")
             .tags(tags)
             .type(MetricType.GAUGE)

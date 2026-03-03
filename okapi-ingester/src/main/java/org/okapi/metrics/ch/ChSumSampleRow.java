@@ -15,8 +15,6 @@ import org.okapi.ch.AbstractChRow;
 @Getter
 @Builder
 public class ChSumSampleRow extends AbstractChRow {
-  String resource;
-
   @SerializedName("metric_name")
   String metricName;
 

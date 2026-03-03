@@ -21,7 +21,6 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortK
 public class DashboardVariable {
   public enum DASHBOARD_VAR_TYPE {
     METRIC,
-    SVC,
     TAG
   }
 

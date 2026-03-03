@@ -20,5 +20,5 @@ okapi:
   metrics:
     otel:
       converter:
-        excludeTags: [ success,type,service.name ]
+        excludeTags: [ success,type ]
         excludeTagPrefixes: [ telemetry.sdk ]

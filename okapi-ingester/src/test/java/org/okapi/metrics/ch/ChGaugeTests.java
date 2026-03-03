@@ -53,7 +53,6 @@ public class ChGaugeTests {
 
     var req =
         GetMetricsRequest.builder()
-            .svc("svc-1")
             .metric("metric_1")
             .tags(Map.of("env", "dev"))
             .tags(Map.of("env", "dev", "test-session", testSession))
@@ -82,7 +81,6 @@ public class ChGaugeTests {
 
     var req =
         GetMetricsRequest.builder()
-            .svc("svc-2")
             .metric("metric_2")
             .tags(Map.of("env", "dev", "test-session", testSession))
             .start(0)
@@ -109,7 +107,6 @@ public class ChGaugeTests {
 
     var req =
         GetMetricsRequest.builder()
-            .svc("svc-3")
             .metric("metric_3")
             .tags(Map.of("env", "prod", "test-session", testSession))
             .start(0)
@@ -136,7 +133,6 @@ public class ChGaugeTests {
 
     var req =
         GetMetricsRequest.builder()
-            .svc("svc-4")
             .metric("metric_4")
             .tags(Map.of("env", "dev", "test-session", testSession))
             .start(5_000)
@@ -152,7 +148,7 @@ public class ChGaugeTests {
   }
 
   @Test
-  void multipleResourcesFilterBySvc() throws Exception {
+  void multipleResourcesFilterByServiceTag() throws Exception {
     var ingester = injector.getInstance(ChMetricsIngester.class);
     var driver = injector.getInstance(ChMetricsWalConsumerDriver.class);
     var qp = injector.getInstance(ChMetricsQueryProcessor.class);
@@ -165,9 +161,8 @@ public class ChGaugeTests {
 
     var req =
         GetMetricsRequest.builder()
-            .svc("svc-keep")
             .metric("metric_multi")
-            .tags(Map.of("env", "dev", "test-session", testSession))
+            .tags(Map.of("env", "dev", "test-session", testSession, "service.name", "svc-keep"))
             .start(0)
             .end(10_000)
             .metricType(METRIC_TYPE.GAUGE)
@@ -193,7 +188,6 @@ public class ChGaugeTests {
 
     var req =
         GetMetricsRequest.builder()
-            .svc("svc-5")
             .metric("metric_same_bucket")
             .tags(Map.of("env", "dev", "test-session", testSession))
             .start(0)
@@ -221,7 +215,6 @@ public class ChGaugeTests {
 
     var req =
         GetMetricsRequest.builder()
-            .svc("svc-6")
             .metric("metric_minutely")
             .tags(Map.of("env", "dev", "test-session", testSession))
             .start(0)

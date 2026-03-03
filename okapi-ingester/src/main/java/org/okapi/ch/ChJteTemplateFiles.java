@@ -15,12 +15,8 @@ public final class ChJteTemplateFiles {
   public static final String GET_METRIC_EXEMPLARS = "get_exemplars.jte";
 
   public static final String GET_SUM_SAMPLES = "get_sum_samples.jte";
-  public static final String GET_SVC_HINTS = "get_svc_hints.jte";
   public static final String GET_TAG_HINTS = "get_tag_hints.jte";
   public static final String GET_TAG_VALUE_HINTS = "get_tag_value_hints.jte";
-  public static final String SEARCH_RESOURCES_GAUGE = "search_resources_gauge.jte";
-  public static final String SEARCH_RESOURCES_HISTO = "search_resources_histo.jte";
-  public static final String SEARCH_RESOURCES_SUM = "search_resources_sum.jte";
   public static final String GET_SPANS_V2 = "get_spans_v2.jte";
   public static final String GET_SPANS_STATS_COUNT = "get_spans_stats_count.jte";
   public static final String GET_SPANS_STATS_DISTRIBUTION = "get_spans_stats_distribution.jte";

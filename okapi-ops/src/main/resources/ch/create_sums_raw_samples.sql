@@ -1,5 +1,4 @@
 CREATE TABLE IF NOT EXISTS okapi_metrics.sums_raw_samples (
-    resource LowCardinality(String),
     metric_name LowCardinality(String),
     tags Map(String, String),
     ts_start DateTime64(3, 'UTC'),
@@ -12,5 +11,5 @@ CREATE TABLE IF NOT EXISTS okapi_metrics.sums_raw_samples (
     month UInt8 DEFAULT toStartOfMonth(ts_start)
 )
 ENGINE = MergeTree
-PARTITION BY (resource, toYYYYMM(ts_start))
-ORDER BY (resource, metric_name, toUnixTimestamp(ts_start));
+PARTITION BY toYYYYMM(ts_start)
+ORDER BY (metric_name, toUnixTimestamp(ts_start));

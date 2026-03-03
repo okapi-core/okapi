@@ -227,7 +227,6 @@ public class DashboardYamlIngestionService {
     if (type == null) return null;
     var normalized = type.trim().toUpperCase();
     return switch (normalized) {
-      case "SVC" -> DashboardVariable.DASHBOARD_VAR_TYPE.SVC;
       case "METRIC" -> DashboardVariable.DASHBOARD_VAR_TYPE.METRIC;
       case "TAG_VALUE" -> DashboardVariable.DASHBOARD_VAR_TYPE.TAG;
       default -> null;

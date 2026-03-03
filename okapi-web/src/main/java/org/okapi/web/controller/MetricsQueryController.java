@@ -13,7 +13,6 @@ import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
 import org.okapi.rest.search.GetMetricNameHints;
 import org.okapi.rest.search.GetMetricsHintsResponse;
-import org.okapi.rest.search.GetSvcHintsRequest;
 import org.okapi.rest.search.GetTagHintsRequest;
 import org.okapi.rest.search.GetTagValueHintsRequest;
 import org.okapi.web.dtos.dashboards.MultiQueryPanelWDto;
@@ -41,13 +40,6 @@ public class MetricsQueryController {
       @RequestBody MultiQueryPanelWDto panelWDto)
       throws MalformedQueryException {
     return metricsQueryService.queryMetrics(tempToken, panelWDto);
-  }
-
-  @PostMapping("/svc/hints")
-  public GetMetricsHintsResponse getSvcHints(
-      @RequestHeader(CookiesAndHeaders.HEADER_TEMP_TOKEN) String tempToken,
-      @RequestBody GetSvcHintsRequest request) {
-    return metricsQueryService.getSvcHints(tempToken, request);
   }
 
   @PostMapping("/name/hints")

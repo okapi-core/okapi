@@ -183,7 +183,6 @@ public class ChExemplarQueryProcessorTests {
             .tsEndNanos(TimeUtils.millisToNanos(endMs))
             .build();
     return GetExemplarsRequest.builder()
-        .svc("svc-exemplar")
         .metric(metric)
         .labels(labels)
         .timeFilter(timeFilter)

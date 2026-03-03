@@ -10,7 +10,10 @@ import org.okapi.rest.metrics.exemplar.GetExemplarsRequest;
 import org.okapi.rest.metrics.exemplar.GetExemplarsResponse;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
-import org.okapi.rest.search.*;
+import org.okapi.rest.search.GetMetricNameHints;
+import org.okapi.rest.search.GetMetricsHintsResponse;
+import org.okapi.rest.search.GetTagHintsRequest;
+import org.okapi.rest.search.GetTagValueHintsRequest;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,11 +28,6 @@ public class ChMetricsQueryController {
   @PostMapping("/metrics/query")
   public GetMetricsResponse getMetricsResponse(@RequestBody GetMetricsRequest getMetricsRequest) {
     return chMetricsQueryProcessor.getMetricsResponse(getMetricsRequest);
-  }
-
-  @PostMapping("/metrics/svc/hints")
-  public GetMetricsHintsResponse getSvcHints(@RequestBody GetSvcHintsRequest getSvcHintsRequest) {
-    return chMetricsQueryProcessor.getSvcHints(getSvcHintsRequest);
   }
 
   @PostMapping("/metrics/name/hints")

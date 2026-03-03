@@ -3,9 +3,6 @@
 SELECT DISTINCT metric
 FROM ${data.getTable()}
 WHERE 1 = 1
-@if(data.getSvc() != null && !data.getSvc().isBlank())
-AND svc = '${data.getSvc()}'
-@endif
 @if(data.getEventType() != null && !data.getEventType().isBlank())
 AND event_type = '${data.getEventType()}'
 @endif

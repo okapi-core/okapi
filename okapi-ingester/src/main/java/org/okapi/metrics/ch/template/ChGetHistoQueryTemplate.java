@@ -14,7 +14,6 @@ import lombok.Getter;
 @Builder
 public class ChGetHistoQueryTemplate {
   String table;
-  String resource;
   String metric;
   Map<String, String> tags;
   String histoType;

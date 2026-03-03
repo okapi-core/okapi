@@ -15,7 +15,6 @@ import org.okapi.ch.AbstractChRow;
 @Builder
 public class ChGaugeSampleRow extends AbstractChRow {
   long timestamp;
-  String resource;
   String metric;
   Map<String, String> tags;
   float value;
