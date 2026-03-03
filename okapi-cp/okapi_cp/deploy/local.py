@@ -190,7 +190,7 @@ def start_ingester() -> None:
           "--name",
           "okapi-ingester",
           image,
-          "--okapi.clickhouse.host=localhost",
+          "--okapi.clickhouse.host=okapi-clickhouse",
           "--okapi.chMetricsWal=/wal/metrics",
           "--okapi.chLogsWal=/wal/metrics",
           "--okapi.chTracesWal=/wal/metrics",
@@ -223,8 +223,8 @@ def start_web() -> None:
   cmd.extend(
       [
           image,
-          "--clusterEndpoint=http://localhost:9009",
-          "--okapi.aws.endpoint=http://localhost:4566",
+          "--clusterEndpoint=http://okapi-ingester:9009",
+          "--okapi.aws.endpoint=http://localstack-main:4566",
       ]
   )
   subprocess.run(cmd, check=True)
