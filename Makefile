@@ -131,23 +131,20 @@ ch:
 	clickhouse/clickhouse-server
 
 test-secret:
-	aws secretsmanager create-secret \
-	--name '/okapi/secrets' \
-	--description "Okapi test secrets" \
-	--secret-string '{"hmacKey":"5e1a04d3","apiKey":"a2991d99"}' \
-	--region us-west-2 \
-	--endpoint-url http://localhost:4566
+	java -jar okapi-ops/target/okapi-ops-0.0.1-SNAPSHOT.jar create-secrets \
+	--endpoint http://localhost:4566 \
+	--region us-west-2
 
 
 migrate:
-	java -jar okapi-ops/target/okapi-ops-0.0.1-SNAPSHOT.jar ddb-migrate --env local --region us-west-2
+	java -jar okapi-ops/target/okapi-ops-0.0.1-SNAPSHOT.jar ddb-migrate --region us-west-2 --endpoint http://localhost:4566
 	java -jar okapi-ops/target/okapi-ops-0.0.1-SNAPSHOT.jar ch-migrate --host localhost --port 8123 --user default --password okapi_testing_password
 
 test-data:
 	java -jar okapi-datagen/target/okapi-datagen-0.0.1-SNAPSHOT.jar astro-spans-gen --host http://localhost --port 9009
 	java -jar okapi-datagen/target/okapi-datagen-0.0.1-SNAPSHOT.jar users-gen --host http://localhost --port 9001
 
-test-infra: testnetwork localstack test-secret ch migrate
+test-infra: testnetwork localstack ch migrate test-secret
 
 run-ingester:
 	java -jar okapi-ingester/target/okapi-ingester-0.0.1-SNAPSHOT.jar &

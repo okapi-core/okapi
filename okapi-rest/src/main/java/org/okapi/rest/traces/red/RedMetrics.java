@@ -13,20 +13,13 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 public class RedMetrics {
-  @NotNull
-  List<Long> ts;
-  @NotNull
-  List<Long> counts;
-  @NotNull
-  List<Double> durationsP50;
-  @NotNull
-  List<Double> durationsP75;
-  @NotNull
-  List<Double> durationsP90;
-  @NotNull
-  List<Double> durationsP99;
-  @NotNull
-  List<Long> errors;
+  @NotNull List<Long> ts;
+  @NotNull List<Long> counts;
+  @NotNull List<Double> durationsP50;
+  @NotNull List<Double> durationsP75;
+  @NotNull List<Double> durationsP90;
+  @NotNull List<Double> durationsP99;
+  @NotNull List<Long> errors;
 
   public static RedMetrics of(
       List<Long> ts, List<Long> counts, List<Long> errors, List<Double> values) {
