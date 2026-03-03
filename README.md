@@ -23,20 +23,20 @@ This is why "play-nice" is an explicit goal so teams can start using Okapi with 
 
 ## Feature list
 
-- **OpenTelemetry native** : Okapi is compatible with OTLP meaning any collector that emits metrics as OTel or submits
+- 🔌 **OpenTelemetry native** : Okapi is compatible with OTLP meaning any collector that emits metrics as OTel or submits
   spans via OTel can leverage Okapi as a storage and analysis layer.
-- **PromQl** : Okapi has its own implementation of PromQl. Metrics stored in Okapi can be
+- 📈 **PromQl** : Okapi has its own implementation of PromQl. Metrics stored in Okapi can be
   visualized using existing solutions such as Grafana and Perses.
-- **Dashboard designer** : Okapi has its own dashboard designer should you choose to just use our own UI.
-- **Dashboards as code and templates** : Dashboards can be expressed as intuitive YAML. Refer to templates for examples
+- 🧩 **Dashboard designer** : Okapi has its own dashboard designer should you choose to just use our own UI.
+- 🧱 **Dashboards as code and templates** : Dashboards can be expressed as intuitive YAML. Refer to templates for examples
   on
   how to monitor Clickhouse, Postgres, Kafka.
-- **Spans Browser and Visualizer** : Okapi comes with its own browser for Spans. Users can search spans, visualize span attributes, view attributes of a span.
-- **Autocomplete almost everywhere** : Nearly every form field in the Okapi UI has autocomplete minimizing the
+- 🔍 **Spans Browser and Visualizer** : Okapi comes with its own browser for Spans. Users can search spans, visualize span attributes, view attributes of a span.
+- ✨ **Autocomplete almost everywhere** : Nearly every form field in the Okapi UI has autocomplete minimizing the
   need for copy-paste.
-- **Support for arbitrary span fields** : Traces forwarded to Okapi can contain spans with arbitrary attributes.
-- **Out of box service healths** : Get golden metrics in one place with Service health boards.
-- **Granular REDs** : Okapi calculates golden signals for the aggregate service, all its service-peer paths and all associated operations.
+- 🧷 **Support for arbitrary span fields** : Traces forwarded to Okapi can contain spans with arbitrary attributes.
+- 🩺 **Out of box service healths** : Get golden metrics in one place with Service health boards.
+- 🎯 **Granular REDs** : Okapi calculates golden signals for the aggregate service, all its service-peer paths and all associated operations.
 
 ## Quickstart
 

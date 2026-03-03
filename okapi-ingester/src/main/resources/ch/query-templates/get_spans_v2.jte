@@ -5,6 +5,7 @@ SELECT
     ts_end_ns,
     trace_id,
     span_id,
+    span_status,
     parent_span_id,
     kind,
     kind_string,

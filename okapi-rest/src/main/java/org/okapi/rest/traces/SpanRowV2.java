@@ -16,6 +16,7 @@ public class SpanRowV2 {
   long tsEndNs;
   String traceId;
   String spanId;
+  SpanStatus spanStatus;
   String parentSpanId;
   String kind;
   String kindString;

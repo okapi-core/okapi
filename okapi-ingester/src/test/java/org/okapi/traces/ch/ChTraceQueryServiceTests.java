@@ -17,6 +17,7 @@ import io.opentelemetry.proto.resource.v1.Resource;
 import io.opentelemetry.proto.trace.v1.ResourceSpans;
 import io.opentelemetry.proto.trace.v1.ScopeSpans;
 import io.opentelemetry.proto.trace.v1.Span;
+import io.opentelemetry.proto.trace.v1.Status;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.okapi.ch.CreateChTablesSpec;
 import org.okapi.otel.OtelAnyValueDecoder;
 import org.okapi.rest.traces.*;
+import org.okapi.rest.traces.SpanStatus;
 import org.okapi.testmodules.guice.TestChTracesModule;
 import org.okapi.traces.testutil.OtelShortHands;
 
@@ -184,6 +186,49 @@ public class ChTraceQueryServiceTests {
     assertEquals(kindServer, row.getKind());
     assertEquals("", row.getHttpMethod());
     assertEquals("", row.getDbSystemName());
+    assertEquals(org.okapi.rest.traces.SpanStatus.UNK, row.getSpanStatus());
+  }
+
+  @Test
+  public void checkSpanStatusMapping() {
+    var queryService = injector.getInstance(ChTraceQueryService.class);
+    var tsFilter = TimestampFilter.builder().tsStartNanos(0).tsEndNanos(10_000_000_000L).build();
+
+    var okReq =
+        SpanQueryV2Request.builder()
+            .spanId(OtelAnyValueDecoder.bytesToHex(spanIdA.toByteArray()))
+            .timestampFilter(tsFilter)
+            .build();
+    var okResp = queryService.getSpans(okReq);
+    assertEquals(1, okResp.getItems().size());
+    assertEquals(org.okapi.rest.traces.SpanStatus.OK, okResp.getItems().get(0).getSpanStatus());
+
+    var okDbReq =
+        SpanQueryV2Request.builder()
+            .spanId(OtelAnyValueDecoder.bytesToHex(spanIdB.toByteArray()))
+            .timestampFilter(tsFilter)
+            .build();
+    var okDbResp = queryService.getSpans(okDbReq);
+    assertEquals(1, okDbResp.getItems().size());
+    assertEquals(org.okapi.rest.traces.SpanStatus.OK, okDbResp.getItems().get(0).getSpanStatus());
+
+    var errReq =
+        SpanQueryV2Request.builder()
+            .spanId(OtelAnyValueDecoder.bytesToHex(spanIdA2.toByteArray()))
+            .timestampFilter(tsFilter)
+            .build();
+    var errResp = queryService.getSpans(errReq);
+    assertEquals(1, errResp.getItems().size());
+    assertEquals(org.okapi.rest.traces.SpanStatus.ERROR, errResp.getItems().get(0).getSpanStatus());
+
+    var unkReq =
+        SpanQueryV2Request.builder()
+            .spanId(OtelAnyValueDecoder.bytesToHex(spanIdC.toByteArray()))
+            .timestampFilter(tsFilter)
+            .build();
+    var unkResp = queryService.getSpans(unkReq);
+    assertEquals(1, unkResp.getItems().size());
+    assertEquals(SpanStatus.UNK, unkResp.getItems().get(0).getSpanStatus());
   }
 
   @Test
@@ -311,6 +356,7 @@ public class ChTraceQueryServiceTests {
             .setKind(Span.SpanKind.SPAN_KIND_SERVER)
             .setStartTimeUnixNano(1_000_000_000L)
             .setEndTimeUnixNano(1_100_000_000L)
+            .setStatus(Status.newBuilder().setCode(Status.StatusCode.STATUS_CODE_OK).build())
             .addAttributes(keyValue("http.request.method", "GET"))
             .addAttributes(OtelShortHands.keyValue("http.response.status_code", 200))
             .addAttributes(OtelShortHands.keyValue("http.request.body.size", 64))
@@ -337,6 +383,7 @@ public class ChTraceQueryServiceTests {
             .setKind(Span.SpanKind.SPAN_KIND_SERVER)
             .setStartTimeUnixNano(1_200_000_000L)
             .setEndTimeUnixNano(1_250_000_000L)
+            .setStatus(Status.newBuilder().setCode(Status.StatusCode.STATUS_CODE_ERROR).build())
             .addAttributes(keyValue("http.request.method", "POST"))
             .addAttributes(OtelShortHands.keyValue("http.response.status_code", 201))
             .addAttributes(keyValue("http.origin", "example.com"))
@@ -356,6 +403,7 @@ public class ChTraceQueryServiceTests {
             .setKind(Span.SpanKind.SPAN_KIND_CLIENT)
             .setStartTimeUnixNano(1_500_000_000L)
             .setEndTimeUnixNano(1_750_000_000L)
+            .setStatus(Status.newBuilder().setCode(Status.StatusCode.STATUS_CODE_OK).build())
             .addAttributes(keyValue("db.system", "mysql"))
             .addAttributes(keyValue("db.namespace", "db-main"))
             .addAttributes(keyValue("db.collection.name", "orders"))

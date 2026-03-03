@@ -16,6 +16,7 @@ public class ChSpansTableRow {
   long ts_start_ns;
   long ts_end_ns;
   String span_id;
+  SpanStatus span_status;
   String parent_span_id;
   String trace_id;
   String kind;

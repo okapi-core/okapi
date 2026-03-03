@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS okapi_traces.spans_table_v1 (
     ts_start_ns Int64,
     ts_end_ns Int64,
     span_id String CODEC(ZSTD),
+    span_status Enum('OK' = 1, 'ERROR' = 2, 'UNK' = 3),
     parent_span_id String CODEC(ZSTD),
     trace_id String CODEC(ZSTD),
     kind LowCardinality(String),

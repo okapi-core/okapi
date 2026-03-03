@@ -70,16 +70,7 @@ public class OtelTracesToChRowsConverter {
           case SPAN_KIND_CONSUMER -> SpanKind.CONSUMER;
           case UNRECOGNIZED -> SpanKind.UNK;
         };
-    var status =
-        NullHandler.safelyGet(span.getStatus(), Status::getCode)
-            .map(
-                statusCode ->
-                    switch (statusCode) {
-                      case STATUS_CODE_UNSET -> SpanStatus.UNK;
-                      case STATUS_CODE_OK -> SpanStatus.OK;
-                      case STATUS_CODE_ERROR -> SpanStatus.ERROR;
-                      case UNRECOGNIZED -> SpanStatus.UNK;
-                    });
+    var status = readStatus(span);
     var startNanos = span.getStartTimeUnixNano();
     var endNanos = span.getEndTimeUnixNano();
     var name = span.getName();
@@ -102,11 +93,13 @@ public class OtelTracesToChRowsConverter {
     var strBuckets = initStringBuckets();
     var numberBuckets = initNumberBuckets();
     populateAttributeBuckets(spanAttrs, strBuckets, numberBuckets);
+    var spanStatus = readStatus(span).orElse(SpanStatus.UNK);
     var builder =
         ChSpansTableRow.builder()
             .ts_start_ns(span.getStartTimeUnixNano())
             .ts_end_ns(span.getEndTimeUnixNano())
             .span_id(OtelAnyValueDecoder.bytesToHex(span.getSpanId().toByteArray()))
+            .span_status(spanStatus)
             .parent_span_id(OtelAnyValueDecoder.bytesToHex(span.getParentSpanId().toByteArray()))
             .trace_id(OtelAnyValueDecoder.bytesToHex(span.getTraceId().toByteArray()))
             .kind(kind)
@@ -200,6 +193,18 @@ public class OtelTracesToChRowsConverter {
         .attribs_number_9(numberBuckets.get(9));
 
     return builder.build();
+  }
+
+  private static Optional<SpanStatus> readStatus(Span span) {
+    return NullHandler.safelyGet(span.getStatus(), Status::getCode)
+        .map(
+            statusCode ->
+                switch (statusCode) {
+                  case STATUS_CODE_UNSET -> SpanStatus.UNK;
+                  case STATUS_CODE_OK -> SpanStatus.OK;
+                  case STATUS_CODE_ERROR -> SpanStatus.ERROR;
+                  case UNRECOGNIZED -> SpanStatus.UNK;
+                });
   }
 
   private static List<ChSpansIngestedAttribsRow> toAttributeRows(Span span) {

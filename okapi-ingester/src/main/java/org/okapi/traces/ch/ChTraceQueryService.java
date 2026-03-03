@@ -103,6 +103,7 @@ public class ChTraceQueryService {
         .tsEndNs(record.getLong("ts_end_ns"))
         .traceId(record.getString("trace_id"))
         .spanId(record.getString("span_id"))
+        .spanStatus(getSpanStatus(record))
         .parentSpanId(record.getString("parent_span_id"))
         .kind(record.getString("kind"))
         .kindString(record.getString("kind_string"))
@@ -137,6 +138,18 @@ public class ChTraceQueryService {
         .customStringAttributes(customStringAttributes)
         .customNumberAttributes(customNumberAttributes)
         .build();
+  }
+
+  private static org.okapi.rest.traces.SpanStatus getSpanStatus(GenericRecord record) {
+    var value = record.getString("span_status");
+    if (value == null || value.isEmpty()) {
+      return org.okapi.rest.traces.SpanStatus.UNK;
+    }
+    try {
+      return org.okapi.rest.traces.SpanStatus.valueOf(value);
+    } catch (IllegalArgumentException e) {
+      return org.okapi.rest.traces.SpanStatus.UNK;
+    }
   }
 
   private static Integer getInt(GenericRecord record, String key) {
