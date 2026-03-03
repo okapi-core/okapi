@@ -18,6 +18,7 @@ import org.okapi.metrics.ch.template.ChGetGaugeQueryTemplate;
 import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
+import org.okapi.rest.metrics.query.CannedResponses;
 import org.okapi.rest.metrics.query.GetGaugeResponse;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
@@ -62,6 +63,10 @@ public class GaugeQueryProcessor {
     List<GenericRecord> records = client.queryAll(query);
     var times = new ArrayList<Long>(records.size());
     var values = new ArrayList<Float>(records.size());
+    if (records.isEmpty()) {
+      return CannedResponses.noMetricsResponse(
+          getMetricsRequest.getMetric(), getMetricsRequest.getTags());
+    }
     for (var record : records) {
       times.add(record.getLong("bucket_ms"));
       values.add((float) record.getDouble("value"));

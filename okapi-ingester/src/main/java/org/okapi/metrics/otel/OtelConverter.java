@@ -50,8 +50,8 @@ public final class OtelConverter {
     Map<String, String> out = new LinkedHashMap<>();
     attrs.stream()
         .filter(Objects::nonNull)
-        .filter(kv -> kv.getKey().isEmpty())
-        .filter(kv -> isExcludedTag(kv.getKey()))
+        .filter(kv -> !kv.getKey().isEmpty())
+        .filter(kv -> !isExcludedTag(kv.getKey()))
         .forEach(kv -> out.put(kv.getKey(), anyValueToString(kv.getValue())));
     return out;
   }

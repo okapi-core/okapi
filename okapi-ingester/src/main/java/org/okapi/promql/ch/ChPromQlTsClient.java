@@ -33,6 +33,7 @@ public class ChPromQlTsClient implements TsClient {
   @Override
   public Scan get(String name, Map<String, String> tags, RESOLUTION res, long startMs, long endMs) {
     Map<String, String> tagCopy = tags == null ? new LinkedHashMap<>() : new LinkedHashMap<>(tags);
+    // todo: cache this information, type information does not change that often.
     MetricEventType type = resolveMetricType(name, tagCopy, startMs, endMs);
 
     return switch (type) {

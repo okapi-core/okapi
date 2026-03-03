@@ -9,9 +9,7 @@ PREWHERE metric_name = '${data.getMetric()}'
 AND ts_start < toDateTime64(${data.getTe()}/1000.0, 3, 'UTC')
 AND ts_end > toDateTime64(${data.getTs()}/1000.0, 3, 'UTC')
 AND histo_type = '${data.getHistoType()}'
-@if(data.getTags() != null && !data.getTags().isEmpty())
-WHERE 1
+WHERE length(tags) = ${data.getTags().size()}
 @for(var tag : data.getTags().entrySet())
 AND mapContains(tags, '${tag.getKey()}') AND tags['${tag.getKey()}'] = '${tag.getValue()}'
 @endfor
-@endif

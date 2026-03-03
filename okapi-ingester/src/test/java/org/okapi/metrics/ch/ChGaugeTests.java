@@ -4,8 +4,7 @@
  */
 package org.okapi.metrics.ch;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.clickhouse.client.api.Client;
 import com.google.inject.Guice;
@@ -116,9 +115,7 @@ public class ChGaugeTests {
             .build();
 
     var resp = qp.getMetricsResponse(req).getGaugeResponse();
-    assertNotNull(resp);
-    assertEquals(List.of(), resp.getTimes());
-    assertEquals(List.of(), resp.getValues());
+    assertNull(resp);
   }
 
   @Test
@@ -142,13 +139,11 @@ public class ChGaugeTests {
             .build();
 
     var resp = qp.getMetricsResponse(req).getGaugeResponse();
-    assertNotNull(resp);
-    assertEquals(List.of(), resp.getTimes());
-    assertEquals(List.of(), resp.getValues());
+    assertNull(resp);
   }
 
   @Test
-  void multipleResourcesFilterByServiceTag() throws Exception {
+  void aggregationDoneOnlyByTagsAndName() throws Exception {
     var ingester = injector.getInstance(ChMetricsIngester.class);
     var driver = injector.getInstance(ChMetricsWalConsumerDriver.class);
     var qp = injector.getInstance(ChMetricsQueryProcessor.class);
@@ -162,7 +157,7 @@ public class ChGaugeTests {
     var req =
         GetMetricsRequest.builder()
             .metric("metric_multi")
-            .tags(Map.of("env", "dev", "test-session", testSession, "service.name", "svc-keep"))
+            .tags(Map.of("env", "dev", "test-session", testSession))
             .start(0)
             .end(10_000)
             .metricType(METRIC_TYPE.GAUGE)
@@ -172,7 +167,7 @@ public class ChGaugeTests {
     var resp = qp.getMetricsResponse(req).getGaugeResponse();
     assertNotNull(resp);
     assertEquals(List.of(1_000L), resp.getTimes());
-    assertEquals(List.of(1.0f), resp.getValues());
+    assertEquals(List.of(3.0f), resp.getValues());
   }
 
   @Test

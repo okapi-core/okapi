@@ -31,7 +31,6 @@ public class ChExemplarQueryProcessor {
             .tsNanosEnd(request.getTimeFilter().getTsEndNanos())
             .build();
     var query = templateEngine.render(ChJteTemplateFiles.GET_METRIC_EXEMPLARS, template);
-    log.info("Query: {}", query);
     var records = client.queryAll(query);
     var exemplars =
         records.stream()
