@@ -22,7 +22,9 @@ public class OtelLogsController {
 
   @Autowired ChLogsIngester logsIngester;
 
-  @PostMapping(path = "/v1/logs", consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+  @PostMapping(
+      path = "/v1/logs",
+      consumes = {MediaType.APPLICATION_PROTOBUF_VALUE, MediaType.APPLICATION_OCTET_STREAM_VALUE})
   public ResponseEntity<Void> ingestProtobuf(@RequestBody byte[] body)
       throws IOException, IllegalWalEntryException {
     var req = ExportLogsServiceRequest.parseFrom(body);

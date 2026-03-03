@@ -14,9 +14,6 @@ import lombok.Getter;
 @Builder(toBuilder = true)
 @Getter
 public class GetMetricsRequest {
-  @NotNull(message = "Service name must be supplied.")
-  String svc;
-
   @NotNull(message = "Metrics name must be supplied.")
   @Getter
   String metric;

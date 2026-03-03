@@ -48,7 +48,6 @@ public class ChMetricsWalConsumer {
         var ts = req.getGauge().getTs().get(i);
         var sample =
             ChGaugeSampleRow.builder()
-                .resource(req.getResource() == null ? "" : req.getResource())
                 .metric(req.getMetricName())
                 .tags(req.getTags())
                 .timestamp(ts)
@@ -57,7 +56,6 @@ public class ChMetricsWalConsumer {
         gaugeSamples.add(gson.toJson(sample));
         var map = new HashMap<String, Object>();
         map.put("event_type", METRIC_TYPE.GAUGE.name());
-        map.put("svc", req.getResource() == null ? "" : req.getResource());
         map.put("metric", req.getMetricName());
         map.put("tags", req.getTags());
         map.put("ts_start", ts);
@@ -90,7 +88,6 @@ public class ChMetricsWalConsumer {
         }
         var sample =
             ChHistoSample.builder()
-                .resource(req.getResource())
                 .histoType(histoType)
                 .metric(req.getMetricName())
                 .tags(req.getTags())
@@ -104,7 +101,6 @@ public class ChMetricsWalConsumer {
         histoSamples.add(gson.toJson(sample));
         var map = new java.util.HashMap<String, Object>();
         map.put("event_type", METRIC_TYPE.HISTO.name());
-        map.put("svc", req.getResource() == null ? "" : req.getResource());
         map.put("metric", req.getMetricName());
         map.put("tags", req.getTags());
         map.put("ts_start", pt.getStart());
@@ -128,7 +124,6 @@ public class ChMetricsWalConsumer {
             };
         var sample =
             ChSumSampleRow.builder()
-                .resource(req.getResource())
                 .metricName(req.getMetricName())
                 .tags(req.getTags())
                 .tsStart(pt.getStart())
@@ -139,7 +134,6 @@ public class ChMetricsWalConsumer {
         sumSamples.add(gson.toJson(sample));
         var map = new java.util.HashMap<String, Object>();
         map.put("event_type", METRIC_TYPE.SUM.name());
-        map.put("svc", req.getResource() == null ? "" : req.getResource());
         map.put("metric", req.getMetricName());
         map.put("tags", req.getTags());
         map.put("ts_start", pt.getStart());

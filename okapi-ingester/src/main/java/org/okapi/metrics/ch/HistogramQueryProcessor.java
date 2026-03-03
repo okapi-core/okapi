@@ -54,7 +54,6 @@ public class HistogramQueryProcessor {
       if (largestSample.isPresent()) {
         var histo = getHistogramResponse(largestSample.get());
         return GetMetricsResponse.builder()
-            .resource(query.getSvc())
             .metric(query.getMetric())
             .tags(query.getTags())
             .histogramResponse(histo)
@@ -100,7 +99,6 @@ public class HistogramQueryProcessor {
       if (merged.isPresent()) {
         var histo = getHistogramResponse(merged.get());
         return GetMetricsResponse.builder()
-            .resource(query.getSvc())
             .metric(query.getMetric())
             .tags(query.getTags())
             .histogramResponse(histo)

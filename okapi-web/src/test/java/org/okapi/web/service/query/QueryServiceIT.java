@@ -119,7 +119,6 @@ class QueryServiceIT {
 
     var backendResponse =
         GetMetricsResponse.builder()
-            .resource("r1")
             .metric("m1")
             .tags(Map.of("env", "prod"))
             .build();
@@ -127,7 +126,6 @@ class QueryServiceIT {
 
     var request =
         GetMetricsRequest.builder()
-            .svc("svcA")
             .metric("metricA")
             .tags(Map.of("env", "prod"))
             .start(10)
@@ -137,7 +135,6 @@ class QueryServiceIT {
 
     var response = metricsQueryService.queryMetrics("token", request);
 
-    assertEquals("r1", response.getResource());
     assertEquals("m1", response.getMetric());
     assertEquals(Map.of("env", "prod"), response.getTags());
 
@@ -165,7 +162,6 @@ class QueryServiceIT {
 
     var request =
         GetMetricsRequest.builder()
-            .svc("svcA")
             .metric("metricA")
             .tags(Map.of("env", "prod"))
             .start(10)
@@ -183,13 +179,13 @@ class QueryServiceIT {
     when(tokenManager.getUserId("token")).thenReturn("user-1");
     when(tokenManager.getOrgId("token")).thenReturn("org-1");
 
-    enqueueJson(GetMetricsResponse.builder().resource("r1").metric("metricA").build());
-    enqueueJson(GetMetricsResponse.builder().resource("r2").metric("metricB").build());
+    enqueueJson(GetMetricsResponse.builder().metric("metricA").build());
+    enqueueJson(GetMetricsResponse.builder().metric("metricB").build());
 
     var query1 =
-        "{\"svc\":\"$__{svc}\",\"metric\":\"$__{metric1}\",\"tags\":{\"env\":\"$__{env}\"},\"start\":1,\"end\":2,\"metricType\":\"GAUGE\"}";
+        "{\"metric\":\"$__{metric1}\",\"tags\":{\"env\":\"$__{env}\"},\"start\":1,\"end\":2,\"metricType\":\"GAUGE\"}";
     var query2 =
-        "{\"svc\":\"$__{svc}\",\"metric\":\"$__{metric2}\",\"tags\":{\"env\":\"$__{env}\"},\"start\":3,\"end\":4,\"metricType\":\"GAUGE\"}";
+        "{\"metric\":\"$__{metric2}\",\"tags\":{\"env\":\"$__{env}\"},\"start\":3,\"end\":4,\"metricType\":\"GAUGE\"}";
 
     var panel =
         MultiQueryPanelWDto.builder()
@@ -228,7 +224,7 @@ class QueryServiceIT {
     when(tokenManager.getOrgId("token")).thenReturn("org-1");
 
     var query =
-        "{\"svc\":\"$__{svc\",\"metric\":\"metricA\",\"tags\":{},\"start\":1,\"end\":2,\"metricType\":\"GAUGE\"}";
+        "{\"metric\":\"${__metricA\",\"tags\":{},\"start\":1,\"end\":2,\"metricType\":\"GAUGE\"}";
     var panel =
         MultiQueryPanelWDto.builder()
             .timeConstraint(TimeConstraint.builder().start(100).end(200).build())

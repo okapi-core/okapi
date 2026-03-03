@@ -33,7 +33,6 @@ public class RewritePostProcessor implements MetricsPostProcessor {
     var rewrittenTags = rewriteTags(req.getTags());
     return ExportMetricsRequest.builder()
         .metricName(pipeline.rewrite(req.getMetricName()))
-        .resource(pipeline.rewrite(req.getResource()))
         .tags(rewrittenTags)
         .type(req.getType())
         .gauge(req.getGauge())

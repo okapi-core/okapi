@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 import org.okapi.bytes.OkapiBytes;
 import org.okapi.collections.OkapiLists;
 import org.okapi.collections.OkapiMaps;
-import org.okapi.otel.ResourceAttributesReader;
 import org.okapi.rest.metrics.Exemplar;
 import org.okapi.rest.metrics.ExportMetricsRequest;
 import org.okapi.rest.metrics.MetricType;
@@ -91,17 +90,15 @@ public final class OtelConverter {
   private List<ExportMetricsRequest> convertResourceMetrics(ResourceMetrics rm) {
     Map<String, String> resourceTags =
         rm.hasResource() ? toTagMap(rm.getResource().getAttributesList()) : Map.of();
-    var resourceName =
-        rm.hasResource() ? ResourceAttributesReader.getSvc(rm.getResource()).orElse(null) : null;
     List<ExportMetricsRequest> out = new ArrayList<>();
     for (ScopeMetrics sm : rm.getScopeMetricsList()) {
-      out.addAll(convertScopeMetrics(resourceTags, sm, resourceName));
+      out.addAll(convertScopeMetrics(resourceTags, sm));
     }
     return out;
   }
 
   private List<ExportMetricsRequest> convertScopeMetrics(
-      Map<String, String> resourceTags, ScopeMetrics sm, String resourceName) {
+      Map<String, String> resourceTags, ScopeMetrics sm) {
     Map<String, String> scopeTags = new LinkedHashMap<>(resourceTags);
     if (sm.hasScope()) {
       scopeTags.putAll(toTagMap(sm.getScope().getAttributesList()));
@@ -109,19 +106,19 @@ public final class OtelConverter {
 
     List<ExportMetricsRequest> out = new ArrayList<>();
     for (Metric m : sm.getMetricsList()) {
-      out.addAll(convertMetric(scopeTags, m, resourceName));
+      out.addAll(convertMetric(scopeTags, m));
     }
     return out;
   }
 
   private List<ExportMetricsRequest> convertMetric(
-      Map<String, String> baseTags, Metric m, String resourceName) {
+      Map<String, String> baseTags, Metric m) {
     if (m.hasGauge()) {
-      return convertGauge(m.getName(), baseTags, m.getGauge(), resourceName);
+      return convertGauge(m.getName(), baseTags, m.getGauge());
     } else if (m.hasSum()) {
-      return convertSum(m.getName(), baseTags, m.getSum(), resourceName);
+      return convertSum(m.getName(), baseTags, m.getSum());
     } else if (m.hasHistogram()) {
-      return convertHistogram(m.getName(), baseTags, m.getHistogram(), resourceName);
+      return convertHistogram(m.getName(), baseTags, m.getHistogram());
     }
     return Collections.emptyList();
   }
@@ -167,7 +164,7 @@ public final class OtelConverter {
   }
 
   private List<ExportMetricsRequest> convertGauge(
-      String metricName, Map<String, String> baseTags, Gauge g, String resourceName) {
+      String metricName, Map<String, String> baseTags, Gauge g) {
     // Group points by tags
     Map<String, Map<String, String>> tagKeyToTags = new HashMap<>();
     Map<String, List<Long>> tsByKey = new HashMap<>();
@@ -198,7 +195,6 @@ public final class OtelConverter {
               .value(valList);
       out.add(
           ExportMetricsRequest.builder()
-              .resource(resourceName)
               .metricName(metricName)
               .tags(tagKeyToTags.get(key))
               .type(MetricType.GAUGE)
@@ -209,7 +205,7 @@ public final class OtelConverter {
   }
 
   private List<ExportMetricsRequest> convertSum(
-      String metricName, Map<String, String> baseTags, Sum s, String resourceName) {
+      String metricName, Map<String, String> baseTags, Sum s) {
     SUM_TEMPORALITY SUMTYPE =
         switch (s.getAggregationTemporality()) {
           case AGGREGATION_TEMPORALITY_CUMULATIVE -> SUM_TEMPORALITY.CUMULATIVE;
@@ -242,7 +238,6 @@ public final class OtelConverter {
               .build();
       out.add(
           ExportMetricsRequest.builder()
-              .resource(resourceName)
               .metricName(metricName)
               .tags(tagKeyToTags.get(key))
               .type(MetricType.COUNTER)
@@ -253,7 +248,7 @@ public final class OtelConverter {
   }
 
   private List<ExportMetricsRequest> convertHistogram(
-      String metricName, Map<String, String> baseTags, Histogram otelHisto, String resourceName) {
+      String metricName, Map<String, String> baseTags, Histogram otelHisto) {
     // Group datapoints by tags
     Map<String, Map<String, String>> tagKeyToTags = new HashMap<>();
     Map<String, List<HistoPoint>> ptsByKey = new HashMap<>();
@@ -299,7 +294,6 @@ public final class OtelConverter {
       Histo histo = Histo.builder().histoPoints(ptsByKey.getOrDefault(key, List.of())).build();
       out.add(
           ExportMetricsRequest.builder()
-              .resource(resourceName)
               .metricName(metricName)
               .tags(tagKeyToTags.get(key))
               .type(MetricType.HISTO)

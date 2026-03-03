@@ -18,7 +18,9 @@ public class OtelTracesController {
 
   @Autowired private ChTracesIngester tracesIngester;
 
-  @PostMapping(path = "/v1/traces", consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+  @PostMapping(
+      path = "/v1/traces",
+      consumes = {MediaType.APPLICATION_PROTOBUF_VALUE, MediaType.APPLICATION_OCTET_STREAM_VALUE})
   public ResponseEntity<Void> ingest(@RequestBody byte[] body) throws Exception {
     var otlpTraces = ExportTraceServiceRequest.parseFrom(body);
     tracesIngester.ingest(otlpTraces);

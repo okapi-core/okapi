@@ -16,8 +16,6 @@ import org.okapi.rest.metrics.payloads.Sum;
 @Getter
 @ToString
 public class ExportMetricsRequest {
-  @Setter String resource;
-
   @NotNull(message = "Metrics name must be supplied.")
   @Setter
   String metricName;
@@ -37,7 +35,6 @@ public class ExportMetricsRequest {
 
   @Builder(toBuilder = true)
   public ExportMetricsRequest(
-      String resource,
       String metricName,
       @Singular Map<String, String> tags,
       MetricType type,
@@ -45,7 +42,6 @@ public class ExportMetricsRequest {
       Histo histo,
       Sum sum,
       String unit) {
-    this.resource = resource;
     this.metricName = metricName;
     this.tags = (tags == null) ? null : new TreeMap<>(tags);
     this.type = type;

@@ -90,7 +90,6 @@ public class SumQueryProcessor {
     }
 
     return GetMetricsResponse.builder()
-        .resource(resource)
         .metric(metric)
         .tags(tags)
         .sumsResponse(GetSumsResponse.builder().sums(sums).build())

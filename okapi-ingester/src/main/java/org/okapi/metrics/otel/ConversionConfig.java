@@ -13,11 +13,22 @@ import lombok.Getter;
 public class ConversionConfig {
   private final boolean prometheusDialect;
 
+  public static final ConversionConfig DEFAULT = new ConversionConfig(false);
+  public static final ConversionConfig PROMETHEUS = new ConversionConfig(true);
+
   public static ConversionConfig fromHeader(String headerValue) {
     if (headerValue == null || headerValue.isBlank()) {
-      return new ConversionConfig(false);
+      return DEFAULT;
     }
     var normalized = headerValue.trim().toLowerCase(Locale.ROOT);
-    return new ConversionConfig("prometheus".equals(normalized));
+    return (normalized.equals("prometheus") ? PROMETHEUS : DEFAULT);
+  }
+
+  public static ConversionConfig noOp() {
+    return DEFAULT;
+  }
+
+  public static ConversionConfig prometheus() {
+    return PROMETHEUS;
   }
 }

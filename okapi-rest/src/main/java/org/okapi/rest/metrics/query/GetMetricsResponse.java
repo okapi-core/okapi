@@ -13,7 +13,6 @@ import lombok.Getter;
 @Builder
 @Getter
 public class GetMetricsResponse {
-  String resource;
   String metric;
   Map<String, String> tags;
   GetGaugeResponse gaugeResponse;
