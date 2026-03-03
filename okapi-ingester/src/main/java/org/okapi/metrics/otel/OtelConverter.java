@@ -88,37 +88,28 @@ public final class OtelConverter {
   }
 
   private List<ExportMetricsRequest> convertResourceMetrics(ResourceMetrics rm) {
-    Map<String, String> resourceTags =
-        rm.hasResource() ? toTagMap(rm.getResource().getAttributesList()) : Map.of();
     List<ExportMetricsRequest> out = new ArrayList<>();
     for (ScopeMetrics sm : rm.getScopeMetricsList()) {
-      out.addAll(convertScopeMetrics(resourceTags, sm));
+      out.addAll(convertScopeMetrics(sm));
     }
     return out;
   }
 
-  private List<ExportMetricsRequest> convertScopeMetrics(
-      Map<String, String> resourceTags, ScopeMetrics sm) {
-    Map<String, String> scopeTags = new LinkedHashMap<>(resourceTags);
-    if (sm.hasScope()) {
-      scopeTags.putAll(toTagMap(sm.getScope().getAttributesList()));
-    }
-
+  private List<ExportMetricsRequest> convertScopeMetrics(ScopeMetrics sm) {
     List<ExportMetricsRequest> out = new ArrayList<>();
     for (Metric m : sm.getMetricsList()) {
-      out.addAll(convertMetric(scopeTags, m));
+      out.addAll(convertMetric(m));
     }
     return out;
   }
 
-  private List<ExportMetricsRequest> convertMetric(
-      Map<String, String> baseTags, Metric m) {
+  private List<ExportMetricsRequest> convertMetric(Metric m) {
     if (m.hasGauge()) {
-      return convertGauge(m.getName(), baseTags, m.getGauge());
+      return convertGauge(m.getName(), m.getGauge());
     } else if (m.hasSum()) {
-      return convertSum(m.getName(), baseTags, m.getSum());
+      return convertSum(m.getName(), m.getSum());
     } else if (m.hasHistogram()) {
-      return convertHistogram(m.getName(), baseTags, m.getHistogram());
+      return convertHistogram(m.getName(), m.getHistogram());
     }
     return Collections.emptyList();
   }
@@ -163,15 +154,14 @@ public final class OtelConverter {
         .toList();
   }
 
-  private List<ExportMetricsRequest> convertGauge(
-      String metricName, Map<String, String> baseTags, Gauge g) {
+  private List<ExportMetricsRequest> convertGauge(String metricName, Gauge g) {
     // Group points by tags
     Map<String, Map<String, String>> tagKeyToTags = new HashMap<>();
     Map<String, List<Long>> tsByKey = new HashMap<>();
     Map<String, List<Float>> valsByKey = new HashMap<>();
     Map<String, List<Exemplar>> exemplarsByKey = new HashMap<>();
     for (NumberDataPoint p : g.getDataPointsList()) {
-      Map<String, String> tags = mergeTags(baseTags, toTagMap(p.getAttributesList()));
+      Map<String, String> tags = toTagMap(p.getAttributesList());
       String key = canonicalKey(tags);
       tagKeyToTags.putIfAbsent(key, tags);
       tsByKey
@@ -204,8 +194,7 @@ public final class OtelConverter {
     return out;
   }
 
-  private List<ExportMetricsRequest> convertSum(
-      String metricName, Map<String, String> baseTags, Sum s) {
+  private List<ExportMetricsRequest> convertSum(String metricName, Sum s) {
     SUM_TEMPORALITY SUMTYPE =
         switch (s.getAggregationTemporality()) {
           case AGGREGATION_TEMPORALITY_CUMULATIVE -> SUM_TEMPORALITY.CUMULATIVE;
@@ -218,7 +207,7 @@ public final class OtelConverter {
     Map<String, Map<String, String>> tagKeyToTags = new HashMap<>();
     Map<String, List<SumPoint>> ptsByKey = new HashMap<>();
     for (NumberDataPoint p : s.getDataPointsList()) {
-      Map<String, String> tags = mergeTags(baseTags, toTagMap(p.getAttributesList()));
+      Map<String, String> tags = toTagMap(p.getAttributesList());
       String key = canonicalKey(tags);
       tagKeyToTags.putIfAbsent(key, tags);
       SumPoint pt = new SumPoint();
@@ -247,14 +236,13 @@ public final class OtelConverter {
     return out;
   }
 
-  private List<ExportMetricsRequest> convertHistogram(
-      String metricName, Map<String, String> baseTags, Histogram otelHisto) {
+  private List<ExportMetricsRequest> convertHistogram(String metricName, Histogram otelHisto) {
     // Group datapoints by tags
     Map<String, Map<String, String>> tagKeyToTags = new HashMap<>();
     Map<String, List<HistoPoint>> ptsByKey = new HashMap<>();
     Map<String, List<Exemplar>> exemplarsByKey = new HashMap<>();
     for (var p : otelHisto.getDataPointsList()) {
-      Map<String, String> tags = mergeTags(baseTags, toTagMap(p.getAttributesList()));
+      Map<String, String> tags = toTagMap(p.getAttributesList());
       String key = canonicalKey(tags);
       tagKeyToTags.putIfAbsent(key, tags);
 
