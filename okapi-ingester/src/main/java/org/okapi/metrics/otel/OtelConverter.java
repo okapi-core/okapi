@@ -14,7 +14,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import org.okapi.bytes.OkapiBytes;
 import org.okapi.collections.OkapiLists;
-import org.okapi.collections.OkapiMaps;
 import org.okapi.rest.metrics.Exemplar;
 import org.okapi.rest.metrics.ExportMetricsRequest;
 import org.okapi.rest.metrics.MetricType;
@@ -47,18 +46,14 @@ public final class OtelConverter {
     this.config = config == null ? OtelConverterConfig.defaultConfig() : config;
   }
 
-  private Map<String, String> toTagMap(List<KeyValue> attrs) {
+  private Map<String, String> toTagsMap(List<KeyValue> attrs) {
     Map<String, String> out = new LinkedHashMap<>();
-    for (KeyValue kv : attrs) {
-      if (kv == null || kv.getKey().isEmpty()) continue;
-      if (isExcludedTag(kv.getKey())) continue;
-      out.put(kv.getKey(), anyValueToString(kv.getValue()));
-    }
+    attrs.stream()
+        .filter(Objects::nonNull)
+        .filter(kv -> kv.getKey().isEmpty())
+        .filter(kv -> isExcludedTag(kv.getKey()))
+        .forEach(kv -> out.put(kv.getKey(), anyValueToString(kv.getValue())));
     return out;
-  }
-
-  private static Map<String, String> mergeTags(Map<String, String> a, Map<String, String> b) {
-    return OkapiMaps.mergeLeft(a, b, TreeMap::new);
   }
 
   private static String canonicalKey(Map<String, String> tags) {
@@ -69,8 +64,7 @@ public final class OtelConverter {
   }
 
   private boolean isExcludedTag(String key) {
-    if (key == null || key.isEmpty()) return false;
-    if (config.getExcludeTags().contains(key)) return true;
+    if (key == null || key.isEmpty() || config.getExcludeTags().contains(key)) return true;
     for (String prefix : config.getExcludeTagPrefixes()) {
       if (key.startsWith(prefix)) return true;
     }
@@ -161,7 +155,7 @@ public final class OtelConverter {
     Map<String, List<Float>> valsByKey = new HashMap<>();
     Map<String, List<Exemplar>> exemplarsByKey = new HashMap<>();
     for (NumberDataPoint p : g.getDataPointsList()) {
-      Map<String, String> tags = toTagMap(p.getAttributesList());
+      Map<String, String> tags = toTagsMap(p.getAttributesList());
       String key = canonicalKey(tags);
       tagKeyToTags.putIfAbsent(key, tags);
       tsByKey
@@ -207,7 +201,7 @@ public final class OtelConverter {
     Map<String, Map<String, String>> tagKeyToTags = new HashMap<>();
     Map<String, List<SumPoint>> ptsByKey = new HashMap<>();
     for (NumberDataPoint p : s.getDataPointsList()) {
-      Map<String, String> tags = toTagMap(p.getAttributesList());
+      Map<String, String> tags = toTagsMap(p.getAttributesList());
       String key = canonicalKey(tags);
       tagKeyToTags.putIfAbsent(key, tags);
       SumPoint pt = new SumPoint();
@@ -242,7 +236,7 @@ public final class OtelConverter {
     Map<String, List<HistoPoint>> ptsByKey = new HashMap<>();
     Map<String, List<Exemplar>> exemplarsByKey = new HashMap<>();
     for (var p : otelHisto.getDataPointsList()) {
-      Map<String, String> tags = toTagMap(p.getAttributesList());
+      Map<String, String> tags = toTagsMap(p.getAttributesList());
       String key = canonicalKey(tags);
       tagKeyToTags.putIfAbsent(key, tags);
 
