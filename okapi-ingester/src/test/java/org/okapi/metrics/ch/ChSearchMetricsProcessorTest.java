@@ -1,6 +1,7 @@
 package org.okapi.metrics.ch;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.clickhouse.client.api.Client;
@@ -22,6 +23,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.okapi.ch.CreateChTablesSpec;
+import org.okapi.exceptions.BadRequestException;
+import org.okapi.rest.search.AnyMetricOrValueFilter;
 import org.okapi.rest.search.LabelValueFilter;
 import org.okapi.rest.search.LabelValuePatternFilter;
 import org.okapi.rest.search.MetricPath;
@@ -160,6 +163,67 @@ public class ChSearchMetricsProcessorTest {
     assertEquals(5, resp.size());
   }
 
+  // --- anyMetricOrValueFilter ---
+
+  @Test
+  void searchByAnyFilter_exactMetricName() {
+    var resp = search(req().anyMetricOrValueFilter(anyFilter().value("cpu.usage").build()));
+    assertEquals(3, resp.size());
+    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_02)));
+    assertTrue(resp.contains(path("cpu.usage", TAGS_DEV_DB_01)));
+  }
+
+  @Test
+  void searchByAnyFilter_exactTagValue() {
+    // "web-01" appears as host tag in P1, P4, P5
+    var resp = search(req().anyMetricOrValueFilter(anyFilter().value("web-01").build()));
+    assertEquals(3, resp.size());
+    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("cpu.idle", TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("memory.usage", TAGS_PROD_WEB_01)));
+  }
+
+  @Test
+  void searchByAnyFilter_patternMetricName() {
+    var resp = search(req().anyMetricOrValueFilter(anyFilter().pattern("memory\\..*").build()));
+    assertEquals(1, resp.size());
+    assertTrue(resp.contains(path("memory.usage", TAGS_PROD_WEB_01)));
+  }
+
+  @Test
+  void searchByAnyFilter_patternTagValue() {
+    // "eu-west" only appears in P2
+    var resp = search(req().anyMetricOrValueFilter(anyFilter().pattern("eu-.*").build()));
+    assertEquals(1, resp.size());
+    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_02)));
+  }
+
+  @Test
+  void searchByAnyFilter_noMatch() {
+    var resp = search(req().anyMetricOrValueFilter(anyFilter().value("nonexistent").build()));
+    assertEquals(0, resp.size());
+  }
+
+  @Test
+  void searchByAnyFilter_combinedWithMetricPattern() {
+    // anyFilter matches metric name OR tag; metricPattern further restricts to cpu.*
+    var resp =
+        search(
+            req()
+                .anyMetricOrValueFilter(anyFilter().value("prod").build())
+                .metricNamePattern("cpu\\..*"));
+    // "prod" is a tag value in P1, P2, P4 — all are cpu.* metrics
+    assertEquals(3, resp.size());
+  }
+
+  @Test
+  void searchByAnyFilter_bothBlank_throwsBadRequest() {
+    assertThrows(
+        BadRequestException.class,
+        () -> search(req().anyMetricOrValueFilter(anyFilter().build())));
+  }
+
   // --- helpers ---
 
   // Year 2100 in millis — large enough for tests, safely within DateTime64(3) range
@@ -185,6 +249,10 @@ public class ChSearchMetricsProcessorTest {
 
   private LabelValuePatternFilter patternFilter(String label, String pattern) {
     return LabelValuePatternFilter.builder().label(label).pattern(pattern).build();
+  }
+
+  private AnyMetricOrValueFilter.AnyMetricOrValueFilterBuilder anyFilter() {
+    return AnyMetricOrValueFilter.builder();
   }
 
   private ExportMetricsServiceRequest gauge(String metricName, Map<String, String> tags) {

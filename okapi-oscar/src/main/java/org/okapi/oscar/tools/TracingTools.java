@@ -1,5 +1,6 @@
 package org.okapi.oscar.tools;
 
+import lombok.AllArgsConstructor;
 import org.okapi.ingester.client.IngesterClient;
 import org.okapi.rest.traces.SpanQueryV2Request;
 import org.okapi.rest.traces.SpanQueryV2Response;
@@ -10,6 +11,7 @@ import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 
 @Component
+@AllArgsConstructor
 public class TracingTools {
 
   IngesterClient client;

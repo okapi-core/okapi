@@ -3,6 +3,7 @@ package org.okapi.web.spring.config;
 import okhttp3.OkHttpClient;
 import org.okapi.ingester.client.IngesterClient;
 import org.okapi.ingester.client.ProxyResponseTranslator;
+import org.okapi.oscar.client.OscarClient;
 import org.okapi.web.service.Configs;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -22,5 +23,13 @@ public class ProxyConfig {
       OkHttpClient okHttpClient,
       ProxyResponseTranslator responseTranslator) {
     return new IngesterClient(clusterEp, okHttpClient, responseTranslator);
+  }
+
+  @Bean
+  public OscarClient oscarClient(
+      @Value(Configs.OSCAR_EP) String oscarEp,
+      OkHttpClient okHttpClient,
+      ProxyResponseTranslator responseTranslator) {
+    return new OscarClient(oscarEp, okHttpClient, responseTranslator);
   }
 }

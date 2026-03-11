@@ -12,18 +12,22 @@ import org.okapi.metrics.ch.template.ChSearchMetricsQueryTemplate;
 import org.okapi.rest.search.MetricPath;
 import org.okapi.rest.search.SearchMetricsRequest;
 import org.okapi.rest.search.SearchMetricsResponse;
+import org.springframework.stereotype.Component;
 
 @AllArgsConstructor
+@Component
 public class ChSearchMetricsProcessor {
   private final Client client;
   private final ChMetricTemplateEngine templateEngine;
 
   public SearchMetricsResponse searchMetricsResponse(SearchMetricsRequest request) {
+    var anyMatcher = AnyMetricOrValueFilterMatcher.fromFilter(request.getAnyMetricOrValueFilter());
     var matcher = MetricPathMatcher.fromRequest(request);
     var matchingPaths =
         getMetricsInTimeWindow(request.getTsStartMillis(), request.getTsEndMillis());
     var matching =
         matchingPaths.stream()
+            .filter(row -> anyMatcher.matches(row.getName(), row.getTags()))
             .filter(row -> matcher.matches(row.getName(), row.getTags()))
             .map(this::fromPathToRow)
             .toList();

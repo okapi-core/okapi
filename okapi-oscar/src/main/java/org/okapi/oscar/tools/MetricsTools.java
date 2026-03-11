@@ -1,5 +1,6 @@
 package org.okapi.oscar.tools;
 
+import lombok.AllArgsConstructor;
 import org.okapi.ingester.client.IngesterClient;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
@@ -10,6 +11,7 @@ import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 
 @Component
+@AllArgsConstructor
 public class MetricsTools {
   IngesterClient client;
 

@@ -1,3 +1,6 @@
+server:
+  port: 9002
+
 okapi:
   oscar:
     model:

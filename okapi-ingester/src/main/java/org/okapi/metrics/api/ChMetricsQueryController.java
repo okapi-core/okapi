@@ -52,7 +52,7 @@ public class ChMetricsQueryController {
   }
 
   @PostMapping("/metrics/search")
-  public SearchMetricsResponse searchMetrics(@RequestBody SearchMetricsRequest request){
+  public SearchMetricsResponse searchMetrics(@RequestBody SearchMetricsRequest request) {
     return searchMetricsProcessor.searchMetricsResponse(request);
   }
 }

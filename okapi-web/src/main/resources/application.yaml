@@ -5,6 +5,7 @@ spring:
       preferred-json-mapper: gson
 
 clusterEndpoint: http://localhost:9009
+oscarEndpoint: http://localhost:9002
 cookies:
   secure: false
 

@@ -39,4 +39,9 @@ public class SearchMetricsRequest {
   @JsonPropertyDescription(
       "List label-value pattern filters to match. Filters will are matched as an AND of each filter.")
   List<LabelValuePatternFilter> patternFilters;
+
+  @JsonPropertyDescription(
+      "Optional cross-field filter. If set, the metric name or any tag value must match the"
+          + " filter's value (exact) or pattern (RE2). Applied before all other filters.")
+  AnyMetricOrValueFilter anyMetricOrValueFilter;
 }
