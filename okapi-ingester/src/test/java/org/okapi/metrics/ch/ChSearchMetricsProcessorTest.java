@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.okapi.ch.CreateChTablesSpec;
 import org.okapi.exceptions.BadRequestException;
+import org.okapi.rest.metrics.query.METRIC_TYPE;
 import org.okapi.rest.search.AnyMetricOrValueFilter;
 import org.okapi.rest.search.LabelValueFilter;
 import org.okapi.rest.search.LabelValuePatternFilter;
@@ -78,19 +79,19 @@ public class ChSearchMetricsProcessorTest {
   void searchByExactMetricName() {
     var resp = search(req().metricName("cpu.usage"));
     assertEquals(3, resp.size());
-    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_01)));
-    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_02)));
-    assertTrue(resp.contains(path("cpu.usage", TAGS_DEV_DB_01)));
+    assertTrue(resp.contains(path("cpu.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("cpu.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_02)));
+    assertTrue(resp.contains(path("cpu.usage", METRIC_TYPE.GAUGE, TAGS_DEV_DB_01)));
   }
 
   @Test
   void searchByMetricPattern() {
     var resp = search(req().metricNamePattern("cpu\\..*"));
     assertEquals(4, resp.size());
-    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_01)));
-    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_02)));
-    assertTrue(resp.contains(path("cpu.usage", TAGS_DEV_DB_01)));
-    assertTrue(resp.contains(path("cpu.idle", TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("cpu.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("cpu.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_02)));
+    assertTrue(resp.contains(path("cpu.usage", METRIC_TYPE.GAUGE, TAGS_DEV_DB_01)));
+    assertTrue(resp.contains(path("cpu.idle", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_01)));
   }
 
   @Test
@@ -103,10 +104,10 @@ public class ChSearchMetricsProcessorTest {
   void searchByLabelValue() {
     var resp = search(req().valueFilters(List.of(labelFilter("env", "prod"))));
     assertEquals(4, resp.size());
-    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_01)));
-    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_02)));
-    assertTrue(resp.contains(path("cpu.idle", TAGS_PROD_WEB_01)));
-    assertTrue(resp.contains(path("memory.usage", TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("cpu.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("cpu.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_02)));
+    assertTrue(resp.contains(path("cpu.idle", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("memory.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_01)));
   }
 
   @Test
@@ -119,10 +120,10 @@ public class ChSearchMetricsProcessorTest {
   void searchByLabelValuePattern() {
     var resp = search(req().patternFilters(List.of(patternFilter("host", "web-.*"))));
     assertEquals(4, resp.size());
-    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_01)));
-    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_02)));
-    assertTrue(resp.contains(path("cpu.idle", TAGS_PROD_WEB_01)));
-    assertTrue(resp.contains(path("memory.usage", TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("cpu.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("cpu.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_02)));
+    assertTrue(resp.contains(path("cpu.idle", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("memory.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_01)));
   }
 
   @Test
@@ -139,9 +140,9 @@ public class ChSearchMetricsProcessorTest {
                 .metricNamePattern("cpu\\..*")
                 .valueFilters(List.of(labelFilter("env", "prod"))));
     assertEquals(3, resp.size());
-    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_01)));
-    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_02)));
-    assertTrue(resp.contains(path("cpu.idle", TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("cpu.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("cpu.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_02)));
+    assertTrue(resp.contains(path("cpu.idle", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_01)));
   }
 
   @Test
@@ -152,9 +153,9 @@ public class ChSearchMetricsProcessorTest {
                 .metricNamePattern("cpu\\..*")
                 .patternFilters(List.of(patternFilter("host", "web-.*"))));
     assertEquals(3, resp.size());
-    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_01)));
-    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_02)));
-    assertTrue(resp.contains(path("cpu.idle", TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("cpu.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("cpu.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_02)));
+    assertTrue(resp.contains(path("cpu.idle", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_01)));
   }
 
   @Test
@@ -169,9 +170,9 @@ public class ChSearchMetricsProcessorTest {
   void searchByAnyFilter_exactMetricName() {
     var resp = search(req().anyMetricOrValueFilter(anyFilter().value("cpu.usage").build()));
     assertEquals(3, resp.size());
-    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_01)));
-    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_02)));
-    assertTrue(resp.contains(path("cpu.usage", TAGS_DEV_DB_01)));
+    assertTrue(resp.contains(path("cpu.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("cpu.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_02)));
+    assertTrue(resp.contains(path("cpu.usage", METRIC_TYPE.GAUGE, TAGS_DEV_DB_01)));
   }
 
   @Test
@@ -179,16 +180,16 @@ public class ChSearchMetricsProcessorTest {
     // "web-01" appears as host tag in P1, P4, P5
     var resp = search(req().anyMetricOrValueFilter(anyFilter().value("web-01").build()));
     assertEquals(3, resp.size());
-    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_01)));
-    assertTrue(resp.contains(path("cpu.idle", TAGS_PROD_WEB_01)));
-    assertTrue(resp.contains(path("memory.usage", TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("cpu.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("cpu.idle", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("memory.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_01)));
   }
 
   @Test
   void searchByAnyFilter_patternMetricName() {
     var resp = search(req().anyMetricOrValueFilter(anyFilter().pattern("memory\\..*").build()));
     assertEquals(1, resp.size());
-    assertTrue(resp.contains(path("memory.usage", TAGS_PROD_WEB_01)));
+    assertTrue(resp.contains(path("memory.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_01)));
   }
 
   @Test
@@ -196,7 +197,7 @@ public class ChSearchMetricsProcessorTest {
     // "eu-west" only appears in P2
     var resp = search(req().anyMetricOrValueFilter(anyFilter().pattern("eu-.*").build()));
     assertEquals(1, resp.size());
-    assertTrue(resp.contains(path("cpu.usage", TAGS_PROD_WEB_02)));
+    assertTrue(resp.contains(path("cpu.usage", METRIC_TYPE.GAUGE, TAGS_PROD_WEB_02)));
   }
 
   @Test
@@ -239,8 +240,8 @@ public class ChSearchMetricsProcessorTest {
     return SearchMetricsRequest.builder();
   }
 
-  private MetricPath path(String metric, Map<String, String> labels) {
-    return MetricPath.builder().metric(metric).labels(labels).build();
+  private MetricPath path(String metric, METRIC_TYPE type, Map<String, String> labels) {
+    return MetricPath.builder().metric(metric).metricType(type).labels(labels).build();
   }
 
   private LabelValueFilter labelFilter(String label, String value) {

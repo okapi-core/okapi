@@ -23,8 +23,9 @@ public class AnyMetricOrValueFilterMatcher {
     if ((value == null || value.isBlank()) && (patternStr == null || patternStr.isBlank())) {
       throw new BadRequestException("anyMetricOrValueFilter must set value or pattern");
     }
-    var compiled = (value != null && !value.isBlank()) ? null : Pattern.compile(patternStr);
-    return new AnyMetricOrValueFilterMatcher(value, compiled);
+    var normalizedValue = (value != null && !value.isBlank()) ? value : null;
+    var compiled = normalizedValue != null ? null : Pattern.compile(patternStr);
+    return new AnyMetricOrValueFilterMatcher(normalizedValue, compiled);
   }
 
   public boolean matches(String metricName, Map<String, String> tags) {

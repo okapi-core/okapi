@@ -77,6 +77,16 @@ public class AnyMetricOrValueFilterMatcherTest {
     assertFalse(matcher.matches("any.metric", Map.of("host", "db-01")));
   }
 
+  // --- blank value falls through to pattern ---
+
+  @Test
+  void blankValue_consultsPattern() {
+    var matcher = matcherFor(filter().value("").pattern("checkout\\..*").build());
+    assertTrue(matcher.matches("checkout.http.requests", Map.of("env", "prod")));
+    assertTrue(matcher.matches("checkout.jvm.heap", Map.of()));
+    assertFalse(matcher.matches("payment.http.requests", Map.of("env", "prod")));
+  }
+
   // --- value takes precedence over pattern ---
 
   @Test

@@ -9,6 +9,7 @@ import org.okapi.ch.ChTemplateFiles;
 import org.okapi.metrics.ch.rows.ChSearchMetricsRow;
 import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
 import org.okapi.metrics.ch.template.ChSearchMetricsQueryTemplate;
+import org.okapi.rest.metrics.query.METRIC_TYPE;
 import org.okapi.rest.search.MetricPath;
 import org.okapi.rest.search.SearchMetricsRequest;
 import org.okapi.rest.search.SearchMetricsResponse;
@@ -35,7 +36,11 @@ public class ChSearchMetricsProcessor {
   }
 
   public MetricPath fromPathToRow(ChSearchMetricsRow row) {
-    return MetricPath.builder().metric(row.getName()).labels(row.getTags()).build();
+    return MetricPath.builder()
+        .metric(row.getName())
+        .metricType(row.getMetricType())
+        .labels(row.getTags())
+        .build();
   }
 
   public Set<ChSearchMetricsRow> getMetricsInTimeWindow(long tsStartMillis, long tsEndMillis) {
@@ -51,7 +56,13 @@ public class ChSearchMetricsProcessor {
     for (var record : records) {
       @SuppressWarnings("unchecked")
       var tags = (Map<String, String>) record.getObject("tags");
-      rows.add(ChSearchMetricsRow.builder().name(record.getString("metric")).tags(tags).build());
+      var metricType = METRIC_TYPE.valueOf(record.getString("event_type"));
+      rows.add(
+          ChSearchMetricsRow.builder()
+              .name(record.getString("metric"))
+              .tags(tags)
+              .metricType(metricType)
+              .build());
     }
     return rows;
   }
