@@ -147,4 +147,5 @@ public class ChMetricsQueryProcessor {
   public GetExemplarsResponse getExemplarsResponse(GetExemplarsRequest request) {
     return exemplarQueryProcessor.getExemplarsResponse(request);
   }
+
 }

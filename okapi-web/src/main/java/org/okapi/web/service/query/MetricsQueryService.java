@@ -13,6 +13,9 @@ import java.util.ArrayList;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
+import org.okapi.exceptions.MalformedQueryException;
+import org.okapi.ingester.client.IngesterClient;
+import org.okapi.ingester.client.ProxyResponseTranslator;
 import org.okapi.parallel.ParallelExecutor;
 import org.okapi.rest.metrics.exemplar.GetExemplarsRequest;
 import org.okapi.rest.metrics.exemplar.GetExemplarsResponse;
@@ -27,7 +30,6 @@ import org.okapi.web.auth.AccessManager;
 import org.okapi.web.auth.TokenManager;
 import org.okapi.web.dtos.dashboards.MultiQueryPanelWDto;
 import org.okapi.web.service.Configs;
-import org.okapi.web.service.client.IngesterClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

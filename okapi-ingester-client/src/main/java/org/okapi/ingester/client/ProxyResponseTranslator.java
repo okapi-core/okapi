@@ -2,15 +2,14 @@
  * Copyright The OkapiCore Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.okapi.web.service.query;
+package org.okapi.ingester.client;
 
 import com.google.gson.Gson;
 import java.io.IOException;
 import okhttp3.Response;
 import org.okapi.exceptions.BadRequestException;
-import org.springframework.stereotype.Service;
+import org.okapi.exceptions.DownstreamFailedException;
 
-@Service
 public class ProxyResponseTranslator {
   Gson gson = new Gson();
 

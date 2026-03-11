@@ -16,7 +16,7 @@ import org.okapi.rest.search.GetMetricsHintsResponse;
 import org.okapi.rest.search.GetTagHintsRequest;
 import org.okapi.rest.search.GetTagValueHintsRequest;
 import org.okapi.web.dtos.dashboards.MultiQueryPanelWDto;
-import org.okapi.web.service.query.MalformedQueryException;
+import org.okapi.exceptions.MalformedQueryException;
 import org.okapi.web.service.query.MetricsQueryService;
 import org.springframework.web.bind.annotation.*;
 

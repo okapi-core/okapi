@@ -12,6 +12,7 @@ import java.util.Map;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import org.okapi.ingester.client.ProxyResponseTranslator;
 import org.okapi.web.auth.AccessManager;
 import org.okapi.web.auth.TokenManager;
 import org.okapi.web.service.Configs;
@@ -24,8 +25,8 @@ public class PromQlService {
   private final OkHttpClient client;
   private final TokenManager tokenManager;
   private final AccessManager accessManager;
-  private final ProxyResponseTranslator translator;
   private final String clusterEndpoint;
+  private final ProxyResponseTranslator translator;
 
   public PromQlService(
       OkHttpClient client,

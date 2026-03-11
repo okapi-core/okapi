@@ -7,6 +7,7 @@ package org.okapi.web.service.query;
 import java.util.Map;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.okapi.exceptions.MalformedQueryException;
 
 public class VarsPreprocessorTests {
 

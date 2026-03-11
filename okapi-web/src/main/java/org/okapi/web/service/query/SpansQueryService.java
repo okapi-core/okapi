@@ -5,6 +5,7 @@
 package org.okapi.web.service.query;
 
 import lombok.RequiredArgsConstructor;
+import org.okapi.ingester.client.IngesterClient;
 import org.okapi.rest.traces.SpanAttributeHintsRequest;
 import org.okapi.rest.traces.SpanAttributeHintsResponse;
 import org.okapi.rest.traces.SpanAttributeValueHintsRequest;
@@ -15,7 +16,6 @@ import org.okapi.rest.traces.SpansFlameGraphResponse;
 import org.okapi.rest.traces.SpansQueryStatsRequest;
 import org.okapi.rest.traces.SpansQueryStatsResponse;
 import org.okapi.web.service.access.OrgMemberChecker;
-import org.okapi.web.service.client.IngesterClient;
 import org.springframework.stereotype.Service;
 
 @Service

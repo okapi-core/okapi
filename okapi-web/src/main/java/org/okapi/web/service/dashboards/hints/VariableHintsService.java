@@ -7,6 +7,7 @@ package org.okapi.web.service.dashboards.hints;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import lombok.RequiredArgsConstructor;
+import org.okapi.ingester.client.IngesterClient;
 import org.okapi.rest.TimeInterval;
 import org.okapi.rest.search.GetMetricNameHints;
 import org.okapi.rest.search.GetTagValueHintsRequest;
@@ -14,7 +15,6 @@ import org.okapi.web.dtos.dashboards.vars.DASH_VAR_TYPE;
 import org.okapi.web.dtos.dashboards.vars.GetVarHintsRequest;
 import org.okapi.web.dtos.dashboards.vars.VarHintsResponse;
 import org.okapi.web.service.access.OrgMemberChecker;
-import org.okapi.web.service.client.IngesterClient;
 import org.springframework.stereotype.Service;
 
 @Service

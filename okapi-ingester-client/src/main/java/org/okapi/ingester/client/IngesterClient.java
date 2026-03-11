@@ -2,7 +2,7 @@
  * Copyright The OkapiCore Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.okapi.web.service.client;
+package org.okapi.ingester.client;
 
 import com.google.gson.Gson;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
@@ -32,12 +32,7 @@ import org.okapi.rest.traces.red.ListServicesRequest;
 import org.okapi.rest.traces.red.ServiceListResponse;
 import org.okapi.rest.traces.red.ServiceRedRequest;
 import org.okapi.rest.traces.red.ServiceRedResponse;
-import org.okapi.web.service.Configs;
-import org.okapi.web.service.query.ProxyResponseTranslator;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
-@Service
 public class IngesterClient {
 
   String endpoint;
@@ -45,10 +40,7 @@ public class IngesterClient {
   OkHttpClient client;
   ProxyResponseTranslator translator;
 
-  public IngesterClient(
-      @Value(Configs.CLUSTER_EP) String endpoint,
-      OkHttpClient client,
-      ProxyResponseTranslator translator) {
+  public IngesterClient(String endpoint, OkHttpClient client, ProxyResponseTranslator translator) {
     this.endpoint = endpoint;
     this.gson = new Gson();
     this.client = client;

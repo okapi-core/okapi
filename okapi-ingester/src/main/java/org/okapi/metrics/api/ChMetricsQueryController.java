@@ -6,14 +6,13 @@ package org.okapi.metrics.api;
 
 import lombok.RequiredArgsConstructor;
 import org.okapi.metrics.ch.ChMetricsQueryProcessor;
+import org.okapi.metrics.ch.ChSearchMetricsProcessor;
 import org.okapi.rest.metrics.exemplar.GetExemplarsRequest;
 import org.okapi.rest.metrics.exemplar.GetExemplarsResponse;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
-import org.okapi.rest.search.GetMetricNameHints;
-import org.okapi.rest.search.GetMetricsHintsResponse;
-import org.okapi.rest.search.GetTagHintsRequest;
-import org.okapi.rest.search.GetTagValueHintsRequest;
+import org.okapi.rest.search.*;
+import org.okapi.rest.search.SearchMetricsResponse;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1")
 public class ChMetricsQueryController {
   private final ChMetricsQueryProcessor chMetricsQueryProcessor;
+  private final ChSearchMetricsProcessor searchMetricsProcessor;
 
   @PostMapping("/metrics/query")
   public GetMetricsResponse getMetricsResponse(@RequestBody GetMetricsRequest getMetricsRequest) {
@@ -49,5 +49,10 @@ public class ChMetricsQueryController {
   @PostMapping("/metrics/exemplars")
   public GetExemplarsResponse getTagValueHints(@RequestBody GetExemplarsRequest request) {
     return chMetricsQueryProcessor.getExemplarsResponse(request);
+  }
+
+  @PostMapping("/metrics/search")
+  public SearchMetricsResponse searchMetrics(@RequestBody SearchMetricsRequest request){
+    return searchMetricsProcessor.searchMetricsResponse(request);
   }
 }
