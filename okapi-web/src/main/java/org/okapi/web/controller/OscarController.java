@@ -7,6 +7,7 @@ package org.okapi.web.controller;
 import lombok.AllArgsConstructor;
 import org.okapi.headers.CookiesAndHeaders;
 import org.okapi.rest.chat.ChatHistoryResponse;
+import org.okapi.rest.chat.ChatMessageUpdatesResponse;
 import org.okapi.rest.chat.ChatResponse;
 import org.okapi.rest.chat.GetHistoryRequest;
 import org.okapi.rest.chat.PostMessageRequest;
@@ -35,5 +36,12 @@ public class OscarController {
       @PathVariable("sessionId") String sessionId,
       @RequestBody @Validated GetHistoryRequest request) {
     return oscarService.getHistory(tempToken, sessionId, request);
+  }
+
+  @GetMapping("/{sessionId}/updates")
+  public ChatMessageUpdatesResponse getUpdates(
+      @RequestHeader(CookiesAndHeaders.HEADER_TEMP_TOKEN) String tempToken,
+      @PathVariable("sessionId") String sessionId) {
+    return oscarService.getUpdates(tempToken, sessionId);
   }
 }

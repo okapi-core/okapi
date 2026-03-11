@@ -10,7 +10,7 @@ public class StatefulToolFactory {
 
   private final ChatMessageRepository repository;
 
-  public StatefulTools getTools(String sessionId, String streamId) {
+  public StatefulTools getTools(String sessionId, long streamId) {
     return StatefulTools.forSessionAndStream(sessionId, streamId, repository);
   }
 }

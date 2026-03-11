@@ -40,7 +40,7 @@ public class OscarResearchAgent {
     this.statefulToolFactory = statefulToolFactory;
   }
 
-  public void respond(String sessionId, String streamId, String userMessage) {
+  public void respond(String sessionId, long streamId, String userMessage) {
     chatClient
         .prompt()
         .system(cfg.getSystemPrompt())

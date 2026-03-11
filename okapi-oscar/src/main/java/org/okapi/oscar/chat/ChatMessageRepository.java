@@ -9,5 +9,5 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessageEntity, 
       String sessionId, Long fromMillis, Long toMillis);
 
   List<ChatMessageEntity> findBySessionIdAndEventStreamIdOrderByTsMillisAsc(
-      String sessionId, String eventStreamId);
+      String sessionId, long eventStreamId);
 }

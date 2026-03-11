@@ -21,9 +21,9 @@ public class StatefulTools {
 
   private final String sessionId;
   private final ChatMessageRepository repository;
-  private final String streamId;
+  private final Long streamId;
 
-  StatefulTools(String sessionId, String streamId, ChatMessageRepository repository) {
+  StatefulTools(String sessionId, long streamId, ChatMessageRepository repository) {
     this.sessionId = sessionId;
     this.repository = repository;
     this.streamId = streamId;
@@ -86,7 +86,7 @@ public class StatefulTools {
   }
 
   public static StatefulTools forSessionAndStream(
-      String sessionId, String streamId, ChatMessageRepository repository) {
+      String sessionId, long streamId, ChatMessageRepository repository) {
     return new StatefulTools(sessionId, streamId, repository);
   }
 }

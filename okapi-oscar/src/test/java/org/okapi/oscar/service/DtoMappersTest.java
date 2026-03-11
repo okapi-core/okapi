@@ -15,11 +15,12 @@ public class DtoMappersTest {
   void mapsAllFieldsFromEntity() {
     var entity =
         ChatMessageEntity.builder()
+            .id(100L)
             .sessionId("session-1")
             .userId("user-1")
             .role(CHAT_ROLE.USER)
             .contents("hello")
-            .eventStreamId("stream-1")
+            .eventStreamId(42L)
             .responseType(CHAT_RESPONSE_TYPE.RESPONSE)
             .tsMillis(12345L)
             .build();
@@ -27,7 +28,7 @@ public class DtoMappersTest {
     ChatMessageResponse response = DtoMappers.mapChatEntity(entity);
 
     assertEquals("hello", response.getContents());
-    assertEquals("stream-1", response.getEventStreamId());
+    assertEquals(42L, response.getEventStreamId());
     assertEquals(CHAT_ROLE.USER, response.getRole());
     assertEquals(CHAT_RESPONSE_TYPE.RESPONSE, response.getResponseType());
     assertEquals(12345L, response.getTimestamp());
@@ -37,11 +38,12 @@ public class DtoMappersTest {
   void mapsNullResponseType() {
     var entity =
         ChatMessageEntity.builder()
+            .id(100L)
             .sessionId("session-1")
             .userId("user-1")
             .role(CHAT_ROLE.ASSISTANT)
             .contents("hello there")
-            .eventStreamId("stream-1")
+            .eventStreamId(42L)
             .tsMillis(99999L)
             .build();
 

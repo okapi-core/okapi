@@ -55,12 +55,12 @@ public class OscarAi {
             .userId(request.getUserId())
             .role(CHAT_ROLE.USER)
             .contents(request.getMessage())
-            .eventStreamId(String.valueOf(stream.getStreamId()))
+            .eventStreamId(stream.getStreamId())
             .responseType(CHAT_RESPONSE_TYPE.MARKDOWN_TEXT)
             .tsMillis(System.currentTimeMillis())
             .build());
 
-    var job = makeJob(sessionId, String.valueOf(stream.getStreamId()), request);
+    var job = makeJob(sessionId, stream.getStreamId(), request);
     jobPool.submit(job);
     return ChatResponse.builder()
         .sessionId(sessionId)
@@ -68,11 +68,12 @@ public class OscarAi {
         .build();
   }
 
-  public InferenceJob makeJob(String sessionId, String streamId, PostMessageRequest request) {
+  public InferenceJob makeJob(String sessionId, long streamId, PostMessageRequest request) {
     return new InferenceJob(
         sessionId,
         () -> {
           researchAgent.respond(sessionId, streamId, request.getMessage());
+          streamMetaRepository.updateState(streamId, STREAM_STATE.FIN);
           return null;
         },
         checker.makeSessionInactiveChecker(sessionId));
@@ -90,10 +91,9 @@ public class OscarAi {
           .build();
     }
     var stream = session.getOngoingStream();
-    var streamId = String.valueOf(stream.getStreamId());
     List<ChatMessageResponse> messages =
         chatMessageRepository
-            .findBySessionIdAndEventStreamIdOrderByTsMillisAsc(sessionId, streamId)
+            .findBySessionIdAndEventStreamIdOrderByTsMillisAsc(sessionId, stream.getStreamId())
             .stream()
             .map(DtoMappers::mapChatEntity)
             .toList();

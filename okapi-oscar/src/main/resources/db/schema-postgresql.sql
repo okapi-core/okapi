@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS oscar_chat_messages (
     user_id          VARCHAR(255) NOT NULL,
     role             VARCHAR(10)  NOT NULL,
     contents         TEXT         NOT NULL,
-    event_stream_id  VARCHAR(36)  NOT NULL,
+    event_stream_id  BIGINT  NOT NULL,
     response_type    VARCHAR(20),
     ts_millis        BIGINT       NOT NULL
 );

@@ -30,7 +30,7 @@ public class OscarAiHistoryApiTests {
   @Autowired OscarAi oscarAi;
 
   String testSession;
-  String testStreamId;
+  long testStreamId;
   long t0;
   long t1;
   long t2;
@@ -38,7 +38,7 @@ public class OscarAiHistoryApiTests {
   @BeforeEach
   void submitData() {
     this.testSession = UUID.randomUUID().toString();
-    this.testStreamId = UUID.randomUUID().toString();
+    this.testStreamId = 1L;
     t0 = System.currentTimeMillis() - Duration.of(10, ChronoUnit.MINUTES).toMillis();
     t1 = t0 + Duration.of(2, ChronoUnit.MINUTES).toMillis();
     t2 = t1 + Duration.of(2, ChronoUnit.MINUTES).toMillis();
@@ -139,7 +139,7 @@ public class OscarAiHistoryApiTests {
             .userId("user-other")
             .role(CHAT_ROLE.USER)
             .contents("from other session")
-            .eventStreamId(UUID.randomUUID().toString())
+            .eventStreamId(99L)
             .responseType(CHAT_RESPONSE_TYPE.RESPONSE)
             .tsMillis(t0)
             .build());

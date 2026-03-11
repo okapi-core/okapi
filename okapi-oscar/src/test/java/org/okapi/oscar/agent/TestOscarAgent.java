@@ -25,18 +25,18 @@ public class TestOscarAgent {
   private final StreamMetaRepository streamMetaRepository;
 
   public void submitFirstChunk(String sessionId, String streamId) {
-    CompletableFuture.runAsync(() -> runChunk(sessionId, streamId, this::writeFirstChunk));
+    CompletableFuture.runAsync(() -> runChunk(sessionId, Long.parseLong(streamId), this::writeFirstChunk));
   }
 
   public void submitSecondChunk(String sessionId, String streamId) {
-    CompletableFuture.runAsync(() -> runChunk(sessionId, streamId, this::writeSecondChunk));
+    CompletableFuture.runAsync(() -> runChunk(sessionId, Long.parseLong(streamId), this::writeSecondChunk));
   }
 
-  private void runChunk(String sessionId, String streamId, ToolWriter writer) {
+  private void runChunk(String sessionId, long streamId, ToolWriter writer) {
     try {
       var tools = statefulToolFactory.getTools(sessionId, streamId);
       writer.write(tools);
-      streamMetaRepository.updateState(Long.parseLong(streamId), STREAM_STATE.FIN);
+      streamMetaRepository.updateState(streamId, STREAM_STATE.FIN);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new RuntimeException("TestOscarAgent interrupted", e);
