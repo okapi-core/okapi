@@ -2,13 +2,12 @@ package org.okapi.oscar.integ;
 
 import com.google.gson.Gson;
 import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.TestInstance;
 import org.okapi.ingester.client.IngesterClient;
 import org.okapi.oscar.integ.judge.JudgeAgent;
 import org.okapi.oscar.service.OscarAi;
 import org.okapi.rest.chat.CHAT_RESPONSE_TYPE;
-import org.okapi.rest.chat.ChatResponse;
+import org.okapi.rest.chat.ChatMessageResponse;
 import org.okapi.rest.chat.PostMessageRequest;
 import org.okapi.rest.chat.payload.PostResponsePayload;
 import org.slf4j.Logger;
@@ -29,7 +28,7 @@ public abstract class OscarIntegTestBase {
   @Autowired protected IngesterClient ingesterClient;
 
   protected String session() {
-    return UUID.randomUUID().toString();
+    return oscarAi.createSession().getSessionId();
   }
 
   protected PostMessageRequest msg(String message) {
@@ -37,8 +36,8 @@ public abstract class OscarIntegTestBase {
   }
 
   protected String getLatest(String sessionId) {
-    List<ChatResponse> responses = oscarAi.getHistory(sessionId, 0L, null).getResponses();
-    ChatResponse latest =
+    List<ChatMessageResponse> responses = oscarAi.getHistory(sessionId, 0L, null).getResponses();
+    ChatMessageResponse latest =
         responses.stream()
             .filter(r -> r.getResponseType() == CHAT_RESPONSE_TYPE.RESPONSE)
             .reduce((a, b) -> b)

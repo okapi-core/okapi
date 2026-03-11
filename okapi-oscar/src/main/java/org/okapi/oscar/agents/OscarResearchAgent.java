@@ -40,12 +40,16 @@ public class OscarResearchAgent {
     this.statefulToolFactory = statefulToolFactory;
   }
 
-  public void respond(String sessionId, String userMessage) {
+  public void respond(String sessionId, String streamId, String userMessage) {
     chatClient
         .prompt()
         .system(cfg.getSystemPrompt())
         .user(userMessage)
-        .tools(metricsTools, tracingTools, dateTimeTools, statefulToolFactory.getTools(sessionId))
+        .tools(
+            metricsTools,
+            tracingTools,
+            dateTimeTools,
+            statefulToolFactory.getTools(sessionId, streamId))
         .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, sessionId))
         .call()
         .content();

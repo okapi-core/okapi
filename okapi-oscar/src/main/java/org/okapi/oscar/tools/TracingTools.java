@@ -23,9 +23,7 @@ public class TracingTools {
           "Search for spans matching the provided filters. Use this tool to find traces and spans by service, time window, HTTP attributes, database attributes, duration, or custom span attributes."
               + "When in doubt set the minimum set of filters necessary. Setting more filters than necessary could lead to no results being returned.")
   public SpanQueryV2Response getSpans(@ToolParam SpanQueryV2Request request) {
-    log.info("Request: {}", request);
     var response = client.querySpans(request);
-    log.info("Response: {}", response);
     return response;
   }
 

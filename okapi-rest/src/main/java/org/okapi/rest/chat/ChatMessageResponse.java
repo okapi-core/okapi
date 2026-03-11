@@ -1,6 +1,5 @@
 package org.okapi.rest.chat;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,8 +9,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class ChatResponse {
-
-  @NotNull String streamId;
-  @NotNull String sessionId;
+public class ChatMessageResponse {
+  long id;
+  long timestamp;
+  String contents;
+  String eventStreamId;
+  CHAT_RESPONSE_TYPE responseType;
+  CHAT_ROLE role;
 }

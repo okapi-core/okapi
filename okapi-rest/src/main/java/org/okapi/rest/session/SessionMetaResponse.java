@@ -1,6 +1,5 @@
-package org.okapi.rest.chat;
+package org.okapi.rest.session;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,8 +9,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class ChatResponse {
-
-  @NotNull String streamId;
-  @NotNull String sessionId;
+public class SessionMetaResponse {
+  String sessionId;
+  Long ongoingStreamId;
+  long lastRecordedPing;
+  SESSION_STATE state;
 }

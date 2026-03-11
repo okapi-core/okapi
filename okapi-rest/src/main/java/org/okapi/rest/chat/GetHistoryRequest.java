@@ -10,8 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class ChatResponse {
-
-  @NotNull String streamId;
-  @NotNull String sessionId;
+public class GetHistoryRequest {
+  @NotNull Long from;
+  Long to;
 }

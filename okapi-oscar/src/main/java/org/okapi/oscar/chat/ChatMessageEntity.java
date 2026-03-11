@@ -33,8 +33,11 @@ public class ChatMessageEntity {
   @Column(nullable = false, columnDefinition = "TEXT")
   String contents;
 
+  @Column(nullable = false)
+  String eventStreamId;
+
   @Enumerated(EnumType.STRING)
-  @Column(name = "response_type", nullable = false)
+  @Column(name = "response_type")
   CHAT_RESPONSE_TYPE responseType;
 
   @Column(name = "ts_millis", nullable = false)

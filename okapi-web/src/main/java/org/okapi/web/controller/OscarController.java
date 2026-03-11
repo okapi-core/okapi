@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import org.okapi.headers.CookiesAndHeaders;
 import org.okapi.rest.chat.ChatHistoryResponse;
 import org.okapi.rest.chat.ChatResponse;
+import org.okapi.rest.chat.GetHistoryRequest;
 import org.okapi.rest.chat.PostMessageRequest;
 import org.okapi.web.service.query.OscarService;
 import org.springframework.validation.annotation.Validated;
@@ -28,12 +29,11 @@ public class OscarController {
     return oscarService.postMessage(tempToken, sessionId, request);
   }
 
-  @GetMapping("/messages/{sessionId}")
+  @PostMapping("/messages/{sessionId}")
   public ChatHistoryResponse getHistory(
       @RequestHeader(CookiesAndHeaders.HEADER_TEMP_TOKEN) String tempToken,
       @PathVariable("sessionId") String sessionId,
-      @RequestParam("from") Long from,
-      @RequestParam(value = "to", required = false) Long to) {
-    return oscarService.getHistory(tempToken, sessionId, from, to);
+      @RequestBody @Validated GetHistoryRequest request) {
+    return oscarService.getHistory(tempToken, sessionId, request);
   }
 }

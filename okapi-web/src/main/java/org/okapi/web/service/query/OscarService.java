@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.okapi.oscar.client.OscarClient;
 import org.okapi.rest.chat.ChatHistoryResponse;
 import org.okapi.rest.chat.ChatResponse;
+import org.okapi.rest.chat.GetHistoryRequest;
 import org.okapi.rest.chat.PostMessageRequest;
 import org.okapi.web.service.access.OrgMemberChecker;
 import org.springframework.stereotype.Service;
@@ -24,8 +25,8 @@ public class OscarService {
     return oscarClient.postMessage(sessionId, request);
   }
 
-  public ChatHistoryResponse getHistory(String token, String sessionId, Long from, Long to) {
+  public ChatHistoryResponse getHistory(String token, String sessionId, GetHistoryRequest request) {
     orgMemberChecker.checkUserIsOrgMember(token);
-    return oscarClient.getHistory(sessionId, from, to);
+    return oscarClient.getHistory(sessionId, request);
   }
 }

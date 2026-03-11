@@ -134,7 +134,7 @@ ch:
 	-v "$(ch_dir)/ch_logs:/var/log/clickhouse-server/" \
 	clickhouse/clickhouse-server
 
-postgres:
+postgres: testnetwork
 	$(DOCKER_RM) okapi-postgres
 	$(DOCKER_CMD) \
 	okapi-postgres \

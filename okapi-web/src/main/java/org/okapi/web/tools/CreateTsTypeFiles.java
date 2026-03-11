@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import org.okapi.rest.annotations.TsResponseType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.JarURLConnection;
@@ -49,7 +50,7 @@ public class CreateTsTypeFiles {
         if (cls.isEnum()) continue; // enums are pulled in when referenced
         if (simple.endsWith("Request")) {
           requestRoots.add(cls);
-        } else if (simple.endsWith("Response")) {
+        } else if (simple.endsWith("Response") || cls.isAnnotationPresent(TsResponseType.class)) {
           responseRoots.add(cls);
         }
       }

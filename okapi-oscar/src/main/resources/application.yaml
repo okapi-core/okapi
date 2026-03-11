@@ -26,6 +26,8 @@ okapi:
     cluster:
       endpoint: http://localhost:9009
 
+    inference:
+      nthreads: 5
 spring:
   sql:
     init:
