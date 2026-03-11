@@ -53,7 +53,10 @@ docker-okapi-web: fe-dist package
 docker-okapi-ops: package
 	docker build -t $(REPO)/okapi-ops:$(TAG) -f okapi-ops/Dockerfile okapi-ops
 
-docker-all: docker-okapi-ingester docker-okapi-web docker-okapi-ops
+docker-okapi-oscar: package
+	docker build -t $(REPO)/okapi-oscar:$(TAG) -f okapi-oscar/Dockerfile okapi-oscar
+
+docker-all: docker-okapi-ingester docker-okapi-web docker-okapi-ops docker-okapi-oscar
 
 DOCKER_CMD := docker run -d --name
 DOCKER_RM := sh stop_and_remove_container.sh
