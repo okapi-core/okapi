@@ -5,6 +5,7 @@
 package org.okapi.web.service.query;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.okapi.oscar.client.OscarClient;
 import org.okapi.rest.chat.*;
 import org.okapi.rest.session.CreateSessionBlindRequest;
@@ -16,6 +17,7 @@ import org.okapi.rest.session.SessionMetaResponse;
 import org.okapi.web.service.access.OrgMemberChecker;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OscarService {
