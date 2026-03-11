@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateSessionRequest {
-  @NotNull String ownerId;
+public class CreateSessionBlindRequest {
   @NotNull String initialMsg;
 }

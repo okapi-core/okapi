@@ -6,11 +6,9 @@ package org.okapi.web.service.query;
 
 import lombok.RequiredArgsConstructor;
 import org.okapi.oscar.client.OscarClient;
-import org.okapi.rest.chat.ChatHistoryResponse;
-import org.okapi.rest.chat.ChatMessageUpdatesResponse;
-import org.okapi.rest.chat.ChatResponse;
-import org.okapi.rest.chat.GetHistoryRequest;
-import org.okapi.rest.chat.PostMessageRequest;
+import org.okapi.rest.chat.*;
+import org.okapi.rest.session.CreateSessionBlindRequest;
+import org.okapi.rest.session.CreateSessionRequest;
 import org.okapi.rest.session.SessionMetaResponse;
 import org.okapi.web.service.access.OrgMemberChecker;
 import org.springframework.stereotype.Service;
@@ -37,9 +35,12 @@ public class OscarService {
     return oscarClient.getUpdates(sessionId);
   }
 
-  public SessionMetaResponse createSession(String token) {
-    orgMemberChecker.checkUserIsOrgMember(token);
-    return oscarClient.createSession();
+  public SessionMetaResponse createSession(String token, CreateSessionBlindRequest request) {
+    var ctx = orgMemberChecker.checkUserIsOrgMember(token);
+    var userId = ctx.getUserId();
+    var createSessionRequest =
+        CreateSessionRequest.builder().ownerId(userId).initialMsg(request.getInitialMsg()).build();
+    return oscarClient.createSession(createSessionRequest);
   }
 
   public SessionMetaResponse getSessionMeta(String token, String sessionId) {

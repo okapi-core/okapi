@@ -43,7 +43,6 @@ public class TracingTools {
   The only input to this service si 
   """)
   public ServiceRedResponse getServiceRedMetrics(@ToolParam ServiceRedRequest request) {
-    log.info("Calling reds: {}", request);
     return client.getServiceReds(request);
   }
 }

@@ -6,6 +6,8 @@ package org.okapi.web.controller;
 
 import lombok.AllArgsConstructor;
 import org.okapi.headers.CookiesAndHeaders;
+import org.okapi.rest.session.CreateSessionBlindRequest;
+import org.okapi.rest.session.CreateSessionRequest;
 import org.okapi.rest.session.SessionMetaResponse;
 import org.okapi.web.service.query.OscarService;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +21,9 @@ public class SessionController {
 
   @PostMapping
   public SessionMetaResponse createSession(
-      @RequestHeader(CookiesAndHeaders.HEADER_TEMP_TOKEN) String tempToken) {
-    return oscarService.createSession(tempToken);
+      @RequestHeader(CookiesAndHeaders.HEADER_TEMP_TOKEN) String tempToken,
+      @RequestBody CreateSessionBlindRequest request) {
+    return oscarService.createSession(tempToken, request);
   }
 
   @GetMapping("/{sessionId}/meta")

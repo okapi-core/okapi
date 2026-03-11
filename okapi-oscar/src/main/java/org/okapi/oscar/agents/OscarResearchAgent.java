@@ -3,6 +3,7 @@ package org.okapi.oscar.agents;
 import lombok.extern.slf4j.Slf4j;
 import org.okapi.oscar.spring.cfg.OkapiOscarCfg;
 import org.okapi.oscar.tools.DateTimeTools;
+import org.okapi.oscar.tools.GreetingTools;
 import org.okapi.oscar.tools.MetricsTools;
 import org.okapi.oscar.tools.StatefulToolFactory;
 import org.okapi.oscar.tools.TracingTools;
@@ -21,6 +22,7 @@ public class OscarResearchAgent {
   private final MetricsTools metricsTools;
   private final TracingTools tracingTools;
   private final DateTimeTools dateTimeTools;
+  private final GreetingTools greetingTools;
   private final StatefulToolFactory statefulToolFactory;
 
   public OscarResearchAgent(
@@ -30,6 +32,7 @@ public class OscarResearchAgent {
       MetricsTools metricsTools,
       TracingTools tracingTools,
       DateTimeTools dateTimeTools,
+      GreetingTools greetingTools,
       StatefulToolFactory statefulToolFactory) {
     this.chatClient =
         ChatClient.builder(chatModel)
@@ -39,21 +42,23 @@ public class OscarResearchAgent {
     this.metricsTools = metricsTools;
     this.tracingTools = tracingTools;
     this.dateTimeTools = dateTimeTools;
+    this.greetingTools = greetingTools;
     this.statefulToolFactory = statefulToolFactory;
   }
 
   public void respond(String sessionId, long streamId, String userMessage) {
-        chatClient
-            .prompt()
-            .system(cfg.getSystemPrompt())
-            .user(userMessage)
-            .tools(
-                metricsTools,
-                tracingTools,
-                dateTimeTools,
-                statefulToolFactory.getTools(sessionId, streamId))
-            .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, sessionId))
-            .call()
-            .content();
+    chatClient
+        .prompt()
+        .system(cfg.getSystemPrompt())
+        .user(userMessage)
+        .tools(
+            metricsTools,
+            tracingTools,
+            dateTimeTools,
+            greetingTools,
+            statefulToolFactory.getTools(sessionId, streamId))
+        .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, sessionId))
+        .call()
+        .content();
   }
 }

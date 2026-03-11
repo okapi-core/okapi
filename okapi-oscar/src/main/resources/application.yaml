@@ -3,6 +3,12 @@ server:
 
 okapi:
   oscar:
+    greetings:
+      - "Hello! How can I help?"
+      - "Hi there! What are you working on?"
+      - "Hey! Need a hand?"
+      - "Hello! What would you like to dig into?"
+      - "Hi! How can I assist?"
     model:
       core-model-provider: openai
       system-prompt: >
@@ -49,4 +55,3 @@ spring:
             initialize-schema: always
     options:
       temperature: 0.5
-

@@ -10,6 +10,7 @@ import org.okapi.rest.chat.ChatMessageUpdatesResponse;
 import org.okapi.rest.chat.ChatResponse;
 import org.okapi.rest.chat.GetHistoryRequest;
 import org.okapi.rest.chat.PostMessageRequest;
+import org.okapi.rest.session.CreateSessionRequest;
 import org.okapi.rest.session.SessionMetaResponse;
 
 import java.io.IOException;
@@ -98,8 +99,8 @@ public class OscarClient {
     return getRequest("/api/v1/chat/" + sessionId + "/updates", ChatMessageUpdatesResponse.class);
   }
 
-  public SessionMetaResponse createSession() {
-    return postEmpty("/api/v1/sessions", SessionMetaResponse.class);
+  public SessionMetaResponse createSession(CreateSessionRequest request) {
+    return postRequest("/api/v1/sessions", request, SessionMetaResponse.class);
   }
 
   public SessionMetaResponse getSessionMeta(String sessionId) {
