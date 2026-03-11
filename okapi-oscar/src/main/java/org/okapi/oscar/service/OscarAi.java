@@ -33,7 +33,7 @@ public class OscarAi {
     researchAgent.respond(sessionId, request.getMessage());
 
     return ChatResponse.builder()
-        .timestamp(String.valueOf(System.currentTimeMillis()))
+        .timestamp(System.currentTimeMillis())
         .responseType(CHAT_RESPONSE_TYPE.RESPONSE)
         .role(CHAT_ROLE.ASSISTANT)
         .build();
@@ -49,7 +49,7 @@ public class OscarAi {
             .map(
                 m ->
                     ChatResponse.builder()
-                        .timestamp(String.valueOf(m.getTsMillis()))
+                        .timestamp(m.getTsMillis())
                         .contents(m.getContents())
                         .responseType(m.getResponseType())
                         .role(m.getRole())

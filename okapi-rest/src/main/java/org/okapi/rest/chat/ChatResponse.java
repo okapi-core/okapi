@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 public class ChatResponse {
-  String timestamp;
+  long timestamp;
   String contents;
   CHAT_RESPONSE_TYPE responseType;
   CHAT_ROLE role;
