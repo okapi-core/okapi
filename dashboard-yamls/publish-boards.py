@@ -52,7 +52,7 @@ def main() -> None:
     token = read_env("OKAPI_TEMP_TOKEN")
 
     root = Path(__file__).resolve().parent
-    yaml_files = sorted(root.glob("*/dashboard.yaml"))
+    yaml_files = sorted(root.glob("*/*.v2.yaml"))
     if not yaml_files:
         raise SystemExit(f"No dashboard.yaml files found under {root}")
 
