@@ -1,0 +1,16 @@
+package org.okapi.oscar.secrets;
+
+import org.springframework.ai.model.ApiKey;
+
+public interface ApiKeyProvider {
+  String getKey();
+
+  default ApiKey getSpringAiKey() {
+    return new ApiKey() {
+      @Override
+      public String getValue() {
+        return getKey();
+      }
+    };
+  }
+}

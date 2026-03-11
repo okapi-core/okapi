@@ -1,0 +1,120 @@
+version: 1
+dashboard:
+  id: otel-host-monitoring
+  title: Host Monitoring
+  description: Host CPU, memory, disk, filesystem, and network metrics.
+  tags: [otel, hostmetrics, monitoring]
+  vars:
+    - name: host
+      type: TAG_VALUE
+      tag: host.name
+    - name: device
+      type: TAG_VALUE
+      tag: device
+    - name: mountpoint
+      type: TAG_VALUE
+      tag: mountpoint
+    - name: network_interface
+      type: TAG_VALUE
+      tag: network.interface
+  rows:
+    - id: host-cpu-load
+      title: CPU and Load
+      panels:
+        - id: cpu-user-utilization
+          title: CPU User Utilization
+          queries:
+            - query: >
+                {"metric":"system.cpu.utilization","tags":{"host.name":"$__{host}","state":"user"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: cpu-system-utilization
+          title: CPU System Utilization
+          queries:
+            - query: >
+                {"metric":"system.cpu.utilization","tags":{"host.name":"$__{host}","state":"system"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: cpu-idle-utilization
+          title: CPU Idle Utilization
+          queries:
+            - query: >
+                {"metric":"system.cpu.utilization","tags":{"host.name":"$__{host}","state":"idle"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: load-average-1m
+          title: Load Average 1m
+          queries:
+            - query: >
+                {"metric":"system.load.average.1m","tags":{"host.name":"$__{host}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: load-average-5m
+          title: Load Average 5m
+          queries:
+            - query: >
+                {"metric":"system.load.average.5m","tags":{"host.name":"$__{host}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: load-average-15m
+          title: Load Average 15m
+          queries:
+            - query: >
+                {"metric":"system.load.average.15m","tags":{"host.name":"$__{host}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+    - id: host-memory
+      title: Memory
+      panels:
+        - id: memory-utilization
+          title: Memory Utilization
+          queries:
+            - query: >
+                {"metric":"system.memory.utilization","tags":{"host.name":"$__{host}","state":"used"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: memory-usage
+          title: Memory Usage
+          queries:
+            - query: >
+                {"metric":"system.memory.usage","tags":{"host.name":"$__{host}","state":"used"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+    - id: host-disk
+      title: Disk
+      panels:
+        - id: disk-read-bytes
+          title: Disk Read Bytes
+          queries:
+            - query: >
+                {"metric":"system.disk.io","tags":{"host.name":"$__{host}","device":"$__{device}","direction":"read"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: disk-write-bytes
+          title: Disk Write Bytes
+          queries:
+            - query: >
+                {"metric":"system.disk.io","tags":{"host.name":"$__{host}","device":"$__{device}","direction":"write"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: disk-io-time
+          title: Disk I/O Time
+          queries:
+            - query: >
+                {"metric":"system.disk.io_time","tags":{"host.name":"$__{host}","device":"$__{device}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+    - id: host-filesystem
+      title: Filesystem
+      panels:
+        - id: filesystem-utilization
+          title: Filesystem Utilization
+          queries:
+            - query: >
+                {"metric":"system.filesystem.utilization","tags":{"host.name":"$__{host}","mountpoint":"$__{mountpoint}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: filesystem-usage
+          title: Filesystem Usage
+          queries:
+            - query: >
+                {"metric":"system.filesystem.usage","tags":{"host.name":"$__{host}","mountpoint":"$__{mountpoint}","state":"used"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+    - id: host-network
+      title: Network
+      panels:
+        - id: network-receive-bytes
+          title: Network Receive Bytes
+          queries:
+            - query: >
+                {"metric":"system.network.io","tags":{"host.name":"$__{host}","network.interface":"$__{network_interface}","direction":"receive"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: network-transmit-bytes
+          title: Network Transmit Bytes
+          queries:
+            - query: >
+                {"metric":"system.network.io","tags":{"host.name":"$__{host}","network.interface":"$__{network_interface}","direction":"transmit"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: network-receive-errors
+          title: Network Receive Errors
+          queries:
+            - query: >
+                {"metric":"system.network.errors","tags":{"host.name":"$__{host}","network.interface":"$__{network_interface}","direction":"receive"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: network-transmit-errors
+          title: Network Transmit Errors
+          queries:
+            - query: >
+                {"metric":"system.network.errors","tags":{"host.name":"$__{host}","network.interface":"$__{network_interface}","direction":"transmit"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}

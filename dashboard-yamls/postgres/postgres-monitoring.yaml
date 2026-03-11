@@ -1,0 +1,157 @@
+version: 1
+dashboard:
+  id: otel-postgres-monitoring
+  title: Postgres Monitoring
+  description: Postgres connections, transactions, cache, and storage metrics.
+  tags: [otel, postgres, monitoring]
+  vars:
+    - name: service_instance_id
+      type: TAG_VALUE
+      tag: service_instance_id
+  rows:
+    - id: postgres-connections
+      title: Connections
+      panels:
+        - id: backends-total
+          title: Backends Total
+          queries:
+            - query: >
+                {"metric":"postgresql.backends","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: backends-active
+          title: Backends Active
+          queries:
+            - query: >
+                {"metric":"postgresql.backends.active","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: backends-idle
+          title: Backends Idle
+          queries:
+            - query: >
+                {"metric":"postgresql.backends.idle","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: max-connections
+          title: Max Connections
+          queries:
+            - query: >
+                {"metric":"postgresql.max.connections","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+    - id: postgres-transactions
+      title: Transactions
+      panels:
+        - id: xact-commits
+          title: Transactions Committed
+          queries:
+            - query: >
+                {"metric":"postgresql.transactions.committed","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: xact-rollbacks
+          title: Transactions Rolled Back
+          queries:
+            - query: >
+                {"metric":"postgresql.transactions.rolled_back","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: xact-total
+          title: Transactions Total
+          queries:
+            - query: >
+                {"metric":"postgresql.transactions","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+    - id: postgres-rows
+      title: Row Activity
+      panels:
+        - id: rows-returned
+          title: Rows Returned
+          queries:
+            - query: >
+                {"metric":"postgresql.rows.returned","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: rows-fetched
+          title: Rows Fetched
+          queries:
+            - query: >
+                {"metric":"postgresql.rows.fetched","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: rows-inserted
+          title: Rows Inserted
+          queries:
+            - query: >
+                {"metric":"postgresql.rows.inserted","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: rows-updated
+          title: Rows Updated
+          queries:
+            - query: >
+                {"metric":"postgresql.rows.updated","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: rows-deleted
+          title: Rows Deleted
+          queries:
+            - query: >
+                {"metric":"postgresql.rows.deleted","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+    - id: postgres-cache
+      title: Cache and Blocks
+      panels:
+        - id: blocks-read
+          title: Blocks Read
+          queries:
+            - query: >
+                {"metric":"postgresql.blocks.read","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: blocks-hit
+          title: Blocks Hit
+          queries:
+            - query: >
+                {"metric":"postgresql.blocks.hit","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: block-read-time
+          title: Block Read Time
+          queries:
+            - query: >
+                {"metric":"postgresql.blk.read.time","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: block-write-time
+          title: Block Write Time
+          queries:
+            - query: >
+                {"metric":"postgresql.blk.write.time","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+    - id: postgres-wal-temp
+      title: WAL and Temp
+      panels:
+        - id: temp-files
+          title: Temp Files
+          queries:
+            - query: >
+                {"metric":"postgresql.temp.files","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: temp-bytes
+          title: Temp Bytes
+          queries:
+            - query: >
+                {"metric":"postgresql.temp.bytes","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: wal-bytes
+          title: WAL Bytes
+          queries:
+            - query: >
+                {"metric":"postgresql.wal.bytes","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: checkpoints-timed
+          title: Checkpoints Timed
+          queries:
+            - query: >
+                {"metric":"postgresql.checkpoints.timed","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: checkpoints-requested
+          title: Checkpoints Requested
+          queries:
+            - query: >
+                {"metric":"postgresql.checkpoints.req","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+    - id: postgres-locks
+      title: Locks and Conflicts
+      panels:
+        - id: deadlocks
+          title: Deadlocks
+          queries:
+            - query: >
+                {"metric":"postgresql.deadlocks","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: conflicts
+          title: Conflicts
+          queries:
+            - query: >
+                {"metric":"postgresql.conflicts","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: lock-waits
+          title: Lock Waits
+          queries:
+            - query: >
+                {"metric":"postgresql.lock.waits","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+    - id: postgres-storage
+      title: Storage
+      panels:
+        - id: db-size
+          title: Database Size
+          queries:
+            - query: >
+                {"metric":"postgresql.database.size","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}

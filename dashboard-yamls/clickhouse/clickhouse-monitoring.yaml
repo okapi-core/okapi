@@ -1,0 +1,139 @@
+version: 1
+dashboard:
+  id: otel-clickhouse-monitoring
+  title: ClickHouse Monitoring
+  description: ClickHouse query, replication, and storage metrics.
+  tags: [otel, clickhouse, monitoring]
+  vars:
+    - name: service_instance_id
+      type: TAG_VALUE
+      tag: service_instance_id
+  rows:
+    - id: clickhouse-queries
+      title: Query Activity
+      panels:
+        - id: queries-total
+          title: Queries Total
+          queries:
+            - query: >
+                {"metric":"clickhouse.queries.total","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: queries-failed
+          title: Queries Failed
+          queries:
+            - query: >
+                {"metric":"clickhouse.queries.failed","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: query-read-rows
+          title: Query Read Rows
+          queries:
+            - query: >
+                {"metric":"clickhouse.query.read.rows","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: query-written-rows
+          title: Query Written Rows
+          queries:
+            - query: >
+                {"metric":"clickhouse.query.written.rows","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: query-read-bytes
+          title: Query Read Bytes
+          queries:
+            - query: >
+                {"metric":"clickhouse.query.read.bytes","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: query-written-bytes
+          title: Query Written Bytes
+          queries:
+            - query: >
+                {"metric":"clickhouse.query.written.bytes","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+    - id: clickhouse-concurrency
+      title: Concurrency
+      panels:
+        - id: current-connections
+          title: Current Connections
+          queries:
+            - query: >
+                {"metric":"clickhouse.current.connections","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: current-queries
+          title: Current Queries
+          queries:
+            - query: >
+                {"metric":"clickhouse.current.queries","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: query-queue
+          title: Query Queue Size
+          queries:
+            - query: >
+                {"metric":"clickhouse.query.queue.size","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: threads-in-use
+          title: Threads In Use
+          queries:
+            - query: >
+                {"metric":"clickhouse.threads.in_use","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+    - id: clickhouse-parts
+      title: Parts and Merges
+      panels:
+        - id: parts-total
+          title: Parts Total
+          queries:
+            - query: >
+                {"metric":"clickhouse.parts","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: merges-in-progress
+          title: Merges In Progress
+          queries:
+            - query: >
+                {"metric":"clickhouse.merges","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: mutations-in-progress
+          title: Mutations In Progress
+          queries:
+            - query: >
+                {"metric":"clickhouse.mutations","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+    - id: clickhouse-replication
+      title: Replication
+      panels:
+        - id: replication-queue
+          title: Replication Queue Size
+          queries:
+            - query: >
+                {"metric":"clickhouse.replication.queue.size","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: replication-lag
+          title: Replication Lag
+          queries:
+            - query: >
+                {"metric":"clickhouse.replication.lag","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: replica-errors
+          title: Replica Errors
+          queries:
+            - query: >
+                {"metric":"clickhouse.replica.errors","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+    - id: clickhouse-memory
+      title: Memory and Cache
+      panels:
+        - id: memory-usage
+          title: Memory Usage
+          queries:
+            - query: >
+                {"metric":"clickhouse.memory.usage","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: mark-cache-hit
+          title: Mark Cache Hit Ratio
+          queries:
+            - query: >
+                {"metric":"clickhouse.mark.cache.hit_ratio","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: uncompressed-cache-size
+          title: Uncompressed Cache Size
+          queries:
+            - query: >
+                {"metric":"clickhouse.uncompressed.cache.size","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+    - id: clickhouse-storage
+      title: Storage
+      panels:
+        - id: data-size
+          title: Data Size
+          queries:
+            - query: >
+                {"metric":"clickhouse.data.size","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: disk-used
+          title: Disk Used
+          queries:
+            - query: >
+                {"metric":"clickhouse.disk.used","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: disk-free
+          title: Disk Free
+          queries:
+            - query: >
+                {"metric":"clickhouse.disk.free","tags":{"service_instance_id":"$__{service_instance_id}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}

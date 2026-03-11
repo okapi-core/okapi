@@ -28,6 +28,10 @@ OKAPI_AWS_ENDPOINT ?= http://localstack.$(HELM_NS).svc.cluster.local:4566
 OKAPI_CLUSTER_ENDPOINT ?= http://okapi-ingester.$(HELM_NS).svc.cluster.local:9009
 HELM_CHART_REPO ?= oci://ghcr.io/okapi-core
 HELM_CHART_DIST ?= helm/dist
+POSTGRES_DB ?= okapi_oscar
+POSTGRES_USER ?= okapi
+POSTGRES_PASSWORD ?= okapi
+VAULT_ROOT_TOKEN ?= 0d94159a1b7e9c8f563e4e9e383185dc402ef70e
 
 fe-dist:
 	@python3 build-scripts/fe_dist_copy.py
@@ -129,6 +133,35 @@ ch:
 	-v "$(ch_dir)/ch_data:/var/lib/clickhouse/" \
 	-v "$(ch_dir)/ch_logs:/var/log/clickhouse-server/" \
 	clickhouse/clickhouse-server
+
+postgres:
+	$(DOCKER_RM) okapi-postgres
+	$(DOCKER_CMD) \
+	okapi-postgres \
+	--network $(OKAPI_TEST_NET) \
+	-p 5432:5432 \
+	-e POSTGRES_DB=$(POSTGRES_DB) \
+	-e POSTGRES_USER=$(POSTGRES_USER) \
+	-e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) \
+	postgres:16
+
+oscar-vault-dev:
+	@if [ -z "$(OPENAI_API_KEY)" ]; then \
+		echo "OPENAI_API_KEY is not set"; \
+		exit 1; \
+	fi
+	$(DOCKER_RM) okapi-vault-dev
+	$(DOCKER_CMD) \
+	okapi-vault-dev \
+	--network $(OKAPI_TEST_NET) \
+	-p 8200:8200 \
+	-e VAULT_DEV_ROOT_TOKEN_ID=$(VAULT_ROOT_TOKEN) \
+	hashicorp/vault:1.15 \
+	server -dev -dev-root-token-id=$(VAULT_ROOT_TOKEN)
+	@echo "Waiting for Vault..."
+	@sleep 2
+	docker exec -e VAULT_ADDR=http://127.0.0.1:8200 -e VAULT_TOKEN=$(VAULT_ROOT_TOKEN) okapi-vault-dev vault secrets enable -path=secret kv-v2 || true
+	docker exec -e VAULT_ADDR=http://127.0.0.1:8200 -e VAULT_TOKEN=$(VAULT_ROOT_TOKEN) okapi-vault-dev vault kv put secret/openai value="$(OPENAI_API_KEY)"
 
 test-secret:
 	java -jar okapi-ops/target/okapi-ops-0.0.1-SNAPSHOT.jar create-secrets \

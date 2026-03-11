@@ -1,0 +1,35 @@
+version: 1
+dashboard:
+  id: otel-kafka-consumer-group-lag
+  title: Kafka Consumer Group Lag
+  description: Consumer lag and group health from the Kafka metrics receiver.
+  tags: [otel, kafka, kafkametrics, monitoring]
+  vars:
+    - name: consumer_group
+      type: TAG_VALUE
+      tag: consumer_group
+    - name: topic
+      type: TAG_VALUE
+      tag: topic
+    - name: partition
+      type: TAG_VALUE
+      tag: partition
+  rows:
+    - id: kafka-consumer-lag
+      title: Lag
+      panels:
+        - id: consumer-group-lag
+          title: Consumer Group Lag
+          queries:
+            - query: >
+                {"metric":"kafka.consumer_group.lag","tags":{"consumer_group":"$__{consumer_group}","topic":"$__{topic}","partition":"$__{partition}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: consumer-group-lag-max
+          title: Consumer Group Lag (Max)
+          queries:
+            - query: >
+                {"metric":"kafka.consumer_group.lag","tags":{"consumer_group":"$__{consumer_group}","topic":"$__{topic}","partition":"$__{partition}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"MAX"}}
+        - id: consumer-group-members
+          title: Consumer Group Members
+          queries:
+            - query: >
+                {"metric":"kafka.consumer_group.members","tags":{"consumer_group":"$__{consumer_group}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}

@@ -1,0 +1,27 @@
+okapi:
+  oscar:
+    model:
+      core-model-provider: openai
+      system-prompt: >
+        You are an AI SRE agent. Your task is to help engineers troubleshoot production issues. There might be back and forth between engineers and you. You are talking to a technical audience so be precise in your responses. You'll be provided with a set of tools and a prompt. Use the prompt to call the right set of tools
+        and carry out the action to the best of your ability.
+    openai:
+      base-url: https://api.openai.com
+      api-key-path: vault://secret/data/openai#value
+      model: gpt-4o-mini
+    vault:
+      address: ${VAULT_ADDR:http://127.0.0.1:8200}
+      token: ${VAULT_TOKEN:0d94159a1b7e9c8f563e4e9e383185dc402ef70e}
+    memory:
+      max-messages: 20
+
+spring:
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema-postgresql.sql
+  datasource:
+    url: ${OSCAR_DB_URL:jdbc:postgresql://localhost:5432/okapi_oscar}
+    username: ${OSCAR_DB_USER:okapi}
+    password: ${OSCAR_DB_PASSWORD:okapi}
+    driver-class-name: org.postgresql.Driver

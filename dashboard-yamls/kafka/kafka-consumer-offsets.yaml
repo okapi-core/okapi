@@ -1,0 +1,30 @@
+version: 1
+dashboard:
+  id: otel-kafka-consumer-offsets
+  title: Kafka Consumer Offsets
+  description: Consumer group offsets per topic and partition.
+  tags: [otel, kafka, kafkametrics, monitoring]
+  vars:
+    - name: consumer_group
+      type: TAG_VALUE
+      tag: consumer_group
+    - name: topic
+      type: TAG_VALUE
+      tag: topic
+    - name: partition
+      type: TAG_VALUE
+      tag: partition
+  rows:
+    - id: kafka-consumer-offsets
+      title: Offsets
+      panels:
+        - id: consumer-group-offset
+          title: Consumer Group Offset
+          queries:
+            - query: >
+                {"metric":"kafka.consumer_group.offset","tags":{"consumer_group":"$__{consumer_group}","topic":"$__{topic}","partition":"$__{partition}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: consumer-group-offset-max
+          title: Consumer Group Offset (Max)
+          queries:
+            - query: >
+                {"metric":"kafka.consumer_group.offset","tags":{"consumer_group":"$__{consumer_group}","topic":"$__{topic}","partition":"$__{partition}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"MAX"}}

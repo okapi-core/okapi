@@ -1,0 +1,37 @@
+version: 1
+dashboard:
+  id: otel-service-red-spanmetrics
+  title: Service RED Metrics
+  description: Request rate, error rate, and duration from spanmetrics.
+  tags: [otel, spanmetrics, monitoring]
+  vars:
+    - name: service_name
+      type: TAG_VALUE
+      tag: service.name
+    - name: span_kind
+      type: TAG_VALUE
+      tag: span.kind
+  rows:
+    - id: service-red
+      title: RED
+      panels:
+        - id: request-rate
+          title: Request Rate
+          queries:
+            - query: >
+                {"metric":"spanmetrics.calls","tags":{"service.name":"$__{service_name}","span.kind":"$__{span_kind}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: error-rate
+          title: Error Rate
+          queries:
+            - query: >
+                {"metric":"spanmetrics.calls","tags":{"service.name":"$__{service_name}","span.kind":"$__{span_kind}","status.code":"STATUS_CODE_ERROR"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: duration-avg
+          title: Duration Avg
+          queries:
+            - query: >
+                {"metric":"spanmetrics.duration","tags":{"service.name":"$__{service_name}","span.kind":"$__{span_kind}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"AVG"}}
+        - id: duration-max
+          title: Duration Max
+          queries:
+            - query: >
+                {"metric":"spanmetrics.duration","tags":{"service.name":"$__{service_name}","span.kind":"$__{span_kind}"},"start":0,"end":0,"metricType":"GAUGE","gaugeQueryConfig":{"resolution":"SECONDLY","aggregation":"MAX"}}
