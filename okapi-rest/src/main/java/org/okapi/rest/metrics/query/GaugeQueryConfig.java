@@ -18,10 +18,14 @@ import org.okapi.metrics.pojos.RES_TYPE;
 @ToString
 public class GaugeQueryConfig {
   @JsonPropertyDescription(
-      "Time bucket size for grouping gauge samples: SECONDLY, MINUTELY, or HOURLY.")
+"""
+Time bucket size for grouping gauge samples: SECONDLY, MINUTELY, or HOURLY.
+""")
   RES_TYPE resolution;
 
   @JsonPropertyDescription(
-      "Aggregation function applied within each time bucket (e.g. AVG, SUM, MAX).")
+"""
+Aggregation function applied within each time bucket (e.g. AVG, SUM, MAX).
+ """)
   AGG_TYPE aggregation;
 }

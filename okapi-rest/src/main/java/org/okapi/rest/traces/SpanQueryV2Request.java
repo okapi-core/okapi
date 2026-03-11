@@ -13,8 +13,10 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @JsonClassDescription(
-    "Encapsulates search filters used to discover spans. Filters are composed via an AND operation i.e. only spans which match all filters are returned."
-        + "Not every filter needs to be set. When in doubt, set the minimum sure set of filters.")
+"""
+Encapsulates search filters used to discover spans. Filters are composed via an AND operation i.e. only spans which match all filters are returned."
+Not every filter needs to be set. When in doubt, set the minimum sure set of filters.
+""")
 @Getter
 @NoArgsConstructor
 @ToString
@@ -61,5 +63,4 @@ public class SpanQueryV2Request {
   @JsonPropertyDescription(
       "List of span attribute filters where each entry matches a string attribute key to an exact numeric value.")
   List<NumberAttributeFilter> numberAttributesFilter;
-
 }

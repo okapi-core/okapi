@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class FilterContributionToolTest {
 
@@ -106,5 +107,30 @@ class FilterContributionToolTest {
     assertEquals(
         Map.of("http.status_code", 201L, "duration.ms", 202L),
         result.getNumberAttributesFilterCount());
+  }
+
+  @Test
+  void leavesCountsNullWhenFiltersAreMissing() {
+    var client = new FakeIngesterClient();
+    var tool = new FilterContributionTool(client, 2, 2, 1000);
+    var request =
+        SpanQueryV2Request.builder()
+            .traceId("trace-1")
+            .stringAttributesFilter(
+                List.of(StringAttributeFilter.builder().key("http.method").value("GET").build()))
+            .build();
+
+    FilterContribution result = tool.getFilterContributions(request);
+
+    assertEquals(11L, result.getTraceIdFilterResultCount());
+    assertNull(result.getSpanIdFilterResultCount());
+    assertNull(result.getKindFilterCount());
+    assertNull(result.getDbFiltersCount());
+    assertNull(result.getDurationFilterCount());
+    assertNull(result.getHttpFiltersCount());
+    assertNull(result.getServiceFilterCount());
+    assertNull(result.getTimestampFilterCount());
+    assertEquals(Map.of("http.method", 101L), result.getStringAttributesFilterCount());
+    assertNull(result.getNumberAttributesFilterCount());
   }
 }

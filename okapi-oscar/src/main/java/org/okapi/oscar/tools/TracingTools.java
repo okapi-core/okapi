@@ -33,6 +33,7 @@ public class TracingTools {
   public SpanQueryV2Response getSpans(@ToolParam SpanQueryV2Request request) {
     log.info("Calling {}", request);
     var response = client.querySpans(request);
+    log.info("Response: {}", response);
     return response;
   }
 
@@ -40,7 +41,7 @@ public class TracingTools {
       description =
           """
   Get RED metrics (Rate, Error rate, Duration) for a service. Returns aggregate RED metrics for the service, per-operation breakdowns, and per-peer-edge breakdowns.
-  The only input to this service si 
+  The only input to this service si
   """)
   public ServiceRedResponse getServiceRedMetrics(@ToolParam ServiceRedRequest request) {
     return client.getServiceReds(request);

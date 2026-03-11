@@ -27,28 +27,42 @@ public class GetMetricsRequest {
   @Getter
   Map<String, String> tags;
 
-  @JsonPropertyDescription(
-      "Query window start time, in milliseconds since Unix epoch (inclusive).")
+  @JsonPropertyDescription("Query window start time, in milliseconds since Unix epoch (inclusive).")
   @NotNull(message = "start time is required.")
   long start;
 
-  @JsonPropertyDescription(
-      "Query window end time, in milliseconds since Unix epoch (exclusive).")
+  @JsonPropertyDescription("Query window end time, in milliseconds since Unix epoch (exclusive).")
   @NotNull(message = "End time is required.")
   long end;
 
-  @JsonPropertyDescription("Metric instrument type to query: GAUGE, HISTO, or SUM.")
+  @JsonPropertyDescription(
+"""
+The type of metric to query. Acceptable values are:  GAUGE, HISTO, or SUM.
+Only the type that is set will be queried.
+e.g. if metricType is set to GAUGE, the metric is cpu_usage and tags is {"container": "container-abc"},
+then query will look for a metric cpu_usage with tags container=container-abc and of type GAUGE.
+`metric`, `tags` and `metricType` uniquely identify a metric.
+  """)
   METRIC_TYPE metricType;
 
   @JsonPropertyDescription(
-      "Configuration for gauge queries: time bucket resolution and aggregation function. Required when metricType is GAUGE.")
+"""
+Configuration for gauge queries: time bucket resolution and aggregation function. Required when metricType is GAUGE.
+Ignored for any other type.
+  """)
   GaugeQueryConfig gaugeQueryConfig;
 
   @JsonPropertyDescription(
-      "Configuration for histogram queries: temporality mode. Required when metricType is HISTO.")
+"""
+Configuration for histogram queries: temporality mode. Required when metricType is HISTO.
+Ignored for any other type.
+  """)
   HistoQueryConfig histoQueryConfig;
 
   @JsonPropertyDescription(
-      "Configuration for sum queries: temporality mode. Required when metricType is SUM.")
+"""
+Configuration for sum queries: temporality mode. Required when metricType is SUM.
+Ignored for any other type.
+""")
   GetSumsQueryConfig sumsQueryConfig;
 }

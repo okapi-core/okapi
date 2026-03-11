@@ -7,7 +7,6 @@ package org.okapi.ingester.client;
 import com.google.gson.Gson;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
-import java.io.IOException;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -16,19 +15,13 @@ import org.okapi.rest.metrics.exemplar.GetExemplarsResponse;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
 import org.okapi.rest.search.*;
-import org.okapi.rest.traces.SpanAttributeHintsRequest;
-import org.okapi.rest.traces.SpanAttributeHintsResponse;
-import org.okapi.rest.traces.SpanAttributeValueHintsRequest;
-import org.okapi.rest.traces.SpanAttributeValueHintsResponse;
-import org.okapi.rest.traces.SpanQueryV2Request;
-import org.okapi.rest.traces.SpanQueryV2Response;
-import org.okapi.rest.traces.SpansFlameGraphResponse;
-import org.okapi.rest.traces.SpansQueryStatsRequest;
-import org.okapi.rest.traces.SpansQueryStatsResponse;
+import org.okapi.rest.traces.*;
 import org.okapi.rest.traces.red.ListServicesRequest;
 import org.okapi.rest.traces.red.ServiceListResponse;
 import org.okapi.rest.traces.red.ServiceRedRequest;
 import org.okapi.rest.traces.red.ServiceRedResponse;
+
+import java.io.IOException;
 
 public class IngesterClient {
 
@@ -99,6 +92,10 @@ public class IngesterClient {
 
   public SpanQueryV2Response querySpans(SpanQueryV2Request request) {
     return postRequest("/api/v1/spans/query", request, SpanQueryV2Response.class);
+  }
+
+  public SpanQueryV2SummaryResponse getResultsSummary(SpanQueryV2Request request) {
+    return postRequest("/api/v1/spans/query/summary", request, SpanQueryV2SummaryResponse.class);
   }
 
   public SpansFlameGraphResponse querySpansFlameGraph(SpanQueryV2Request request) {

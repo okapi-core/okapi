@@ -16,7 +16,6 @@ class SingleStepIntegrationTest extends OscarIntegTestBase {
 
   @Test
   void getMetricsForCheckoutService() {
-    // todo: check for tool usages -> likely a framework level bug, this is a simple agent, it should just work.
     String question =
         "Get metrics for the checkout service over the last hour. I need values for: "
             + String.join(", ", SingleStepFlowCorpus.METRIC_PATHS);

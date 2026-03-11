@@ -3,6 +3,12 @@ server:
 
 okapi:
   oscar:
+    filter-contrib-tool:
+      thread-count: 4
+      throttle-limit: 10
+      duration-millis: 1000
+
+
     greetings:
       - "Hello! How can I help?"
       - "Hi there! What are you working on?"

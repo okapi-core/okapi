@@ -20,6 +20,8 @@ public class HistoQueryConfig {
   }
 
   @JsonPropertyDescription(
-      "Histogram temporality: CUMULATIVE (running total), DELTA (per-window increments), or MERGED (delta buckets merged into a single distribution).")
+"""
+Histogram temporality: CUMULATIVE (running total), DELTA (per-window increments), or MERGED (delta buckets merged into a single distribution).
+""")
   TEMPORALITY temporality;
 }

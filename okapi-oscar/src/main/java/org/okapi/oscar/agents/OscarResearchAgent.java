@@ -2,11 +2,7 @@ package org.okapi.oscar.agents;
 
 import lombok.extern.slf4j.Slf4j;
 import org.okapi.oscar.spring.cfg.OkapiOscarCfg;
-import org.okapi.oscar.tools.DateTimeTools;
-import org.okapi.oscar.tools.GreetingTools;
-import org.okapi.oscar.tools.MetricsTools;
-import org.okapi.oscar.tools.StatefulToolFactory;
-import org.okapi.oscar.tools.TracingTools;
+import org.okapi.oscar.tools.*;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -23,6 +19,7 @@ public class OscarResearchAgent {
   private final TracingTools tracingTools;
   private final DateTimeTools dateTimeTools;
   private final GreetingTools greetingTools;
+  private final FilterContributionTool filterContributionTool;
   private final StatefulToolFactory statefulToolFactory;
 
   public OscarResearchAgent(
@@ -33,6 +30,7 @@ public class OscarResearchAgent {
       TracingTools tracingTools,
       DateTimeTools dateTimeTools,
       GreetingTools greetingTools,
+      FilterContributionTool filterContributionTool,
       StatefulToolFactory statefulToolFactory) {
     this.chatClient =
         ChatClient.builder(chatModel)
@@ -44,6 +42,7 @@ public class OscarResearchAgent {
     this.dateTimeTools = dateTimeTools;
     this.greetingTools = greetingTools;
     this.statefulToolFactory = statefulToolFactory;
+    this.filterContributionTool = filterContributionTool;
   }
 
   public void respond(String sessionId, long streamId, String userMessage) {
@@ -56,6 +55,7 @@ public class OscarResearchAgent {
             tracingTools,
             dateTimeTools,
             greetingTools,
+            filterContributionTool,
             statefulToolFactory.getTools(sessionId, streamId))
         .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, sessionId))
         .call()

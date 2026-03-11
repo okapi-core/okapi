@@ -23,6 +23,14 @@ public class ParallelExecutor implements Closeable {
     this.waitTime = null;
   }
 
+  public static ParallelExecutor of(int throttleLimit, int poolSize) {
+    return new ParallelExecutor(throttleLimit, poolSize);
+  }
+
+  public static ParallelExecutor of(int throttleLimit, int poolSize, Duration waitTime) {
+    return new ParallelExecutor(throttleLimit, poolSize, waitTime);
+  }
+
   public ParallelExecutor(int throttleLimit, int poolSize, Duration waitTime) {
     this.throttleLimit = throttleLimit;
     this.executorService = Executors.newFixedThreadPool(poolSize);

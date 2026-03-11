@@ -352,13 +352,14 @@ public class ChTraceQueryServiceTests {
 
     var dbFilter = ServiceFilter.builder().service("svc-db").build();
     var dbSummary =
-            queryService.getSpansSummary(SpanQueryV2Request.builder().serviceFilter(dbFilter).build());
+        queryService.getSpansSummary(SpanQueryV2Request.builder().serviceFilter(dbFilter).build());
     assertEquals(1, dbSummary.getCount());
 
     var methodFilter = HttpFilters.builder().httpMethod("GET").build();
-    var methodSummary = queryService.getSpansSummary(SpanQueryV2Request.builder().httpFilters(methodFilter).build());
+    var methodSummary =
+        queryService.getSpansSummary(
+            SpanQueryV2Request.builder().httpFilters(methodFilter).build());
     assertEquals(1, methodSummary.getCount());
-
   }
 
   private void truncateTable() {
