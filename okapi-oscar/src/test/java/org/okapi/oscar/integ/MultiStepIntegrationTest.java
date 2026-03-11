@@ -28,7 +28,7 @@ class MultiStepIntegrationTest extends OscarIntegTestBase {
     assertThat(
             judgeAgent.judge(
                 question,
-                "Mentiones high latency on "
+                "Mentions high latency on "
                     + HighLatencyCpuSpikeCorpus.POSTGRES_HOST
                     + ". Slow POST /checkout traces carry server.name="
                     + HighLatencyCpuSpikeCorpus.POSTGRES_HOST

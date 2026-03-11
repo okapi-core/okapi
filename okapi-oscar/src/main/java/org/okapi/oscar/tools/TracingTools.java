@@ -3,13 +3,18 @@ package org.okapi.oscar.tools;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.okapi.ingester.client.IngesterClient;
+import org.okapi.metrics.pojos.RES_TYPE;
 import org.okapi.rest.traces.SpanQueryV2Request;
 import org.okapi.rest.traces.SpanQueryV2Response;
+import org.okapi.rest.traces.TimestampFilter;
 import org.okapi.rest.traces.red.ServiceRedRequest;
 import org.okapi.rest.traces.red.ServiceRedResponse;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
+
+import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -44,6 +49,41 @@ public class TracingTools {
   The only input to this service si
   """)
   public ServiceRedResponse getServiceRedMetrics(@ToolParam ServiceRedRequest request) {
+    return client.getServiceReds(request);
+  }
+
+  @Tool(
+      description =
+"""
+Purpose
+Discover downstream peer services for a given service over a time window.
+Hint
+Uses this to set `peer` when setting a service filter to get spans.
+Example
+discoverPeers("checkout-service", 1700000000000000000, 1700003600000000000)
+""")
+  public List<String> discoverPeers(
+      @ToolParam(description = "Service name to inspect.") String service,
+      @ToolParam(description = "Start timestamp in nanoseconds since Unix epoch.") long startNs,
+      @ToolParam(description = "End timestamp in nanoseconds since Unix epoch.") long endNs) {
+    var response = getServiceReds(service, startNs, endNs);
+    if (response.getPeerReds() == null) {
+      return Collections.emptyList();
+    }
+    return response.getPeerReds().stream()
+        .map(peer -> peer == null ? null : peer.getPeerService())
+        .filter(name -> name != null && !name.isBlank())
+        .toList();
+  }
+
+  private ServiceRedResponse getServiceReds(String service, long startNs, long endNs) {
+    var request =
+        ServiceRedRequest.builder()
+            .service(service)
+            .timestampFilter(
+                TimestampFilter.builder().tsStartNanos(startNs).tsEndNanos(endNs).build())
+            .resType(RES_TYPE.MINUTELY)
+            .build();
     return client.getServiceReds(request);
   }
 }

@@ -57,7 +57,7 @@ WHERE 1=1
 @if(data.getStringAttributeFilters() != null && !data.getStringAttributeFilters().isEmpty())
     @for(var f : data.getStringAttributeFilters())
         @if(!f.getValue().equals("*"))
-        AND attribs_str_${f.getBucket()}['${f.getKey()}'] = '${f.getValue()}'
+            AND attribs_str_${f.getBucket()}['${f.getKey()}'] = '${f.getValue()}'
         @endif
     @endfor
 @endif

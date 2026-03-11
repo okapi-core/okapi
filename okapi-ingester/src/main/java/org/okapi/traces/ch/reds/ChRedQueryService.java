@@ -2,23 +2,18 @@ package org.okapi.traces.ch.reds;
 
 import com.clickhouse.client.api.Client;
 import jakarta.annotation.PreDestroy;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Supplier;
 import org.okapi.ch.ChTemplateFiles;
 import org.okapi.metrics.ch.ChConstants;
 import org.okapi.metrics.pojos.RES_TYPE;
 import org.okapi.parallel.ParallelExecutor;
 import org.okapi.rest.traces.red.*;
-import org.okapi.traces.ch.template.ChServiceRedMetricsTemplate;
-import org.okapi.traces.ch.template.ChServiceRedOpMetricsTemplate;
-import org.okapi.traces.ch.template.ChServiceRedOpsCountTemplate;
-import org.okapi.traces.ch.template.ChServiceRedOpsTemplate;
-import org.okapi.traces.ch.template.ChServiceRedPeersTemplate;
-import org.okapi.traces.ch.template.ChServiceRedServicesTemplate;
-import org.okapi.traces.ch.template.ChTraceTemplateEngine;
+import org.okapi.traces.ch.template.*;
 import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
 
 @Service
 public class ChRedQueryService {

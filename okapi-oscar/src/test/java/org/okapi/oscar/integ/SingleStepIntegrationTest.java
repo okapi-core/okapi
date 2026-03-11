@@ -80,7 +80,7 @@ class SingleStepIntegrationTest extends OscarIntegTestBase {
     assertThat(
             judgeAgent.judge(
                 question,
-                "RED metrics for POST /checkout on api-gateway show request rate, error rate, and duration breakdown per operation",
+                "RED metrics for POST /checkout on api-gateway are shown with some summary of counts, errors and durations.",
                 response))
         .isNotEqualTo(Judgment.WRONG);
   }

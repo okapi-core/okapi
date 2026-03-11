@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.okapi.ingester.client.IngesterClient;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
+import org.okapi.rest.search.AnyMetricOrValueFilter;
 import org.okapi.rest.search.SearchMetricsRequest;
 import org.okapi.rest.search.SearchMetricsV2Response;
 import org.springframework.ai.tool.annotation.Tool;
@@ -19,34 +20,110 @@ public class MetricsTools {
 
   @Tool(
       description =
-          "Search for metric paths (name + tag combinations) that were emitted in a time window."
-              + " Use this to discover which metrics exist, find all tag combinations for a metric,"
-              + " or check if a metric is being emitted at all."
-              + " tsStartMillis and tsEndMillis MUST be in MILLISECONDS since Unix epoch —"
-              + " use timeRange() not timeRangeNanos() to populate them."
-              + " Example 1 — find all metrics for a service: set metricNamePattern to a RE2 regex"
-              + " (e.g. 'checkout\\..*') to match all metrics whose names start with that prefix."
-              + " Example 2 — find metrics for a specific host: set anyMetricOrValueFilter.value to"
-              + " the exact host name tag value (e.g. 'my-host-42') to match any metric whose"
-              + " name or any tag value equals that string exactly."
-              + " Example 3 — find metrics with a specific tag: set valueFilters with the label"
-              + " and value (e.g. label='host.name', value='my-host-42')."
-              + " NOTE: anyMetricOrValueFilter.value performs an EXACT match — do NOT use it for"
-              + " service name prefixes like 'checkout'; use metricNamePattern instead.")
+"""
+Purpose
+Search for metric paths (name + tag combinations) emitted in a time window to discover available
+metrics, tag sets, or whether a metric exists at all.
+Hint
+tsStartMillis and tsEndMillis MUST be in MILLISECONDS since Unix epoch; use timeRange() not
+timeRangeNanos().
+Example
+1) Find all metrics for a service: metricNamePattern="checkout\\..*"
+2) Find metrics for a specific host: anyMetricOrValueFilter.value="my-host-42"
+3) Find metrics with a specific tag: valueFilters=[{label="host.name", value="my-host-42"}]
+""")
   public SearchMetricsV2Response searchMetrics(@ToolParam SearchMetricsRequest request) {
-    log.info("req: {}", request);
     var response = client.searchMetrics(request);
-    log.info("res: {}", response);
     return response;
+  }
+
+  @Tool(
+      description =
+"""
+Purpose
+Discover metric paths for a specific host value.
+Hint
+This uses an exact value match across metric names and tags.
+Example
+discoverMetricsForHost("my-host-42")
+""")
+  public SearchMetricsV2Response discoverMetricsForHost(
+      @ToolParam(description = "Host value to match exactly.") String host) {
+    log.info("Discovery metrics: {}", host);
+    var response = discoverMetricsFor(host);
+    log.info("Discovered metrics: {}", response);
+    return response;
+  }
+
+  @Tool(
+      description =
+"""
+Purpose
+Discover metric paths for host values matching a pattern.
+Hint
+This uses an RE2 pattern match across metric names and tags.
+Example
+discoverMetricsForHostPattern("web-.*")
+""")
+  public SearchMetricsV2Response discoverMetricsForHostPattern(
+      @ToolParam(description = "RE2 pattern to match host values.") String pattern) {
+    return discoverMetricsForPattern(pattern);
+  }
+
+  @Tool(
+      description =
+"""
+Purpose
+Discover metric paths for a specific database value.
+Hint
+This uses an exact value match across metric names and tags.
+Example
+discoverMetricsForDb("orders-db")
+""")
+  public SearchMetricsV2Response discoverMetricsForDb(
+      @ToolParam(description = "Database value to match exactly.") String db) {
+    return discoverMetricsFor(db);
+  }
+
+  @Tool(
+      description =
+"""
+Purpose
+Discover metric paths for database values matching a pattern.
+Hint
+This uses an RE2 pattern match across metric names and tags.
+Example
+discoverMetricsForDbPattern("orders-.*")
+""")
+  public SearchMetricsV2Response discoverMetricsForDbPattern(
+      @ToolParam(description = "RE2 pattern to match database values.") String dbNamePattern) {
+    return discoverMetricsForPattern(dbNamePattern);
   }
 
   @Tool(
       description =
           "Get metrics data. This method can return histograms, gauges and counters (or sums). Gauges have a specific resolution so its likely that we use this ")
   public GetMetricsResponse getMetrics(@ToolParam GetMetricsRequest request) {
-    log.info("req: {}", request);
-    var response = client.query(request);
-    log.info("res: {}", response);
-    return response;
+    return client.query(request);
+  }
+
+  private SearchMetricsV2Response discoverMetricsFor(String value) {
+    var request =
+        SearchMetricsRequest.builder()
+            .tsStartMillis(0)
+            .tsEndMillis(System.currentTimeMillis())
+            .anyMetricOrValueFilter(AnyMetricOrValueFilter.builder().value(value).build())
+            .build();
+    return client.searchMetrics(request);
+  }
+
+  private SearchMetricsV2Response discoverMetricsForPattern(String pattern) {
+    var request =
+        SearchMetricsRequest.builder()
+            .tsStartMillis(0)
+            .tsEndMillis(System.currentTimeMillis())
+            .anyMetricOrValueFilter(AnyMetricOrValueFilter.builder().pattern(pattern).build())
+            .build();
+    return client.searchMetrics(request);
   }
 }

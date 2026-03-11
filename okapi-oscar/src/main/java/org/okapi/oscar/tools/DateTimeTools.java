@@ -73,6 +73,21 @@ timestamps, suitable for trace queries.
     return TimeRangeNanos.builder().startNanos(startNanos).endNanos(endNanos).build();
   }
 
+  @Tool(
+      description =
+"""
+Purpose
+Convert a Unix epoch timestamp in SECONDS to an ISO-8601 timestamp string.
+Hint
+Use this when timestamps are being returned in a response sent to the user.
+Example
+linuxEpochToHumanReadableTimestamp(1700000000) -> "2023-11-14T22:13:20Z"
+""")
+  public String linuxEpochToHumanReadableTimestamp(
+      @ToolParam(description = "Unix epoch timestamp in SECONDS.") long epochSeconds) {
+    return Instant.ofEpochSecond(epochSeconds).toString();
+  }
+
   @Builder
   @Getter
   public static class TimeRange {
