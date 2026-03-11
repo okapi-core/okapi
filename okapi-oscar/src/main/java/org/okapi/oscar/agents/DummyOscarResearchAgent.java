@@ -178,7 +178,10 @@ public class DummyOscarResearchAgent implements SreResearchAgent {
       context.abort();
       return;
     }
-    var parsed = MetricsPathParser.parse(metricPath);
+    var parsed = MetricsPathParser.parseNormal(metricPath);
+    if (parsed.isEmpty()) {
+      parsed = MetricsPathParser.parse(metricPath);
+    }
     if (parsed.isEmpty()) {
       context.getStatefulTools().postResponse("Unable to parse metric path: " + metricPath);
       context.abort();

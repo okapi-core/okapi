@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS okapi_oscar.oscar_chat_messages (
     role             VARCHAR(10)  NOT NULL,
     contents         TEXT         NOT NULL,
     event_stream_id  BIGINT  NOT NULL,
-    response_type    VARCHAR(20),
+    response_type    VARCHAR(64),
     ts_millis        BIGINT       NOT NULL
 );
 

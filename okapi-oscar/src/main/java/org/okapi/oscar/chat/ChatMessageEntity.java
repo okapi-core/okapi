@@ -37,7 +37,7 @@ public class ChatMessageEntity {
   long eventStreamId;
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "response_type")
+  @Column(name = "response_type", length = 64)
   CHAT_RESPONSE_TYPE responseType;
 
   @Column(name = "ts_millis", nullable = false)

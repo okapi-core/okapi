@@ -1,6 +1,7 @@
 package org.okapi.oscar.tools;
 
 import com.google.gson.Gson;
+import lombok.extern.slf4j.Slf4j;
 import org.okapi.oscar.chat.ChatMessageEntity;
 import org.okapi.oscar.chat.ChatMessageRepository;
 import org.okapi.rest.chat.CHAT_RESPONSE_TYPE;
@@ -16,6 +17,7 @@ import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 
+@Slf4j
 public class StatefulTools {
 
   private static final Gson GSON = new Gson();
@@ -98,6 +100,7 @@ You must always call this tool with a final response for the user as users alway
   }
 
   private void persist(CHAT_RESPONSE_TYPE responseType, String contents) {
+    log.info("Response type: {} and contents: {}", responseType, contents);
     repository.save(
         ChatMessageEntity.builder()
             .sessionId(sessionId)

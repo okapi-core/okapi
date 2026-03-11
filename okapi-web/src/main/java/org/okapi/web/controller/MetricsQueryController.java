@@ -5,6 +5,7 @@
 package org.okapi.web.controller;
 
 import lombok.AllArgsConstructor;
+import org.okapi.exceptions.MalformedQueryException;
 import org.okapi.headers.CookiesAndHeaders;
 import org.okapi.rest.metrics.exemplar.GetExemplarsRequest;
 import org.okapi.rest.metrics.exemplar.GetExemplarsResponse;
@@ -16,7 +17,6 @@ import org.okapi.rest.search.GetMetricsHintsResponse;
 import org.okapi.rest.search.GetTagHintsRequest;
 import org.okapi.rest.search.GetTagValueHintsRequest;
 import org.okapi.web.dtos.dashboards.MultiQueryPanelWDto;
-import org.okapi.exceptions.MalformedQueryException;
 import org.okapi.web.service.query.MetricsQueryService;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +27,7 @@ public class MetricsQueryController {
 
   MetricsQueryService metricsQueryService;
 
-  @GetMapping("/query")
+  @PostMapping("/query")
   public GetMetricsResponse getMetricsResponse(
       @RequestHeader(CookiesAndHeaders.HEADER_TEMP_TOKEN) String tempToken,
       @RequestBody GetMetricsRequest request) {
