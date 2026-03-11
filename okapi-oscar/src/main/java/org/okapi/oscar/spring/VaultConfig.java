@@ -1,5 +1,6 @@
 package org.okapi.oscar.spring;
 
+import lombok.extern.slf4j.Slf4j;
 import org.okapi.oscar.spring.cfg.VaultCfg;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -11,6 +12,7 @@ import org.springframework.vault.core.VaultTemplate;
 
 import java.net.URI;
 
+@Slf4j
 @Configuration
 public class VaultConfig {
   @Bean
@@ -18,7 +20,8 @@ public class VaultConfig {
   public VaultTemplate vaultTemplate(@Autowired VaultCfg vaultCfg) {
     String address = vaultCfg.getAddress();
     String token = vaultCfg.getToken();
-    if (address.isBlank()) {
+    log.info("Starting vault creation with cfg: {}", vaultCfg);
+    if (address == null || address.isBlank()) {
       return null;
     }
     if (token == null || token.isBlank()) {

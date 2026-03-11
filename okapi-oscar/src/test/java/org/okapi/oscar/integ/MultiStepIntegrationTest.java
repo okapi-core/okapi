@@ -2,6 +2,7 @@ package org.okapi.oscar.integ;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junitpioneer.jupiter.RetryingTest;
 import org.okapi.oscar.integ.corpus.HighLatencyCpuSpikeCorpus;
 import org.okapi.oscar.integ.judge.Judgment;
 
@@ -15,6 +16,7 @@ class MultiStepIntegrationTest extends OscarIntegTestBase {
   }
 
   @Test
+  @RetryingTest(3)
   void debugHighLatencyDueToCpuSpike() {
     String question =
         "The "

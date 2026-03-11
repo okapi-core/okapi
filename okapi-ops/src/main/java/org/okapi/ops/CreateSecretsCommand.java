@@ -4,15 +4,19 @@
  */
 package org.okapi.ops;
 
-import java.net.URI;
-import java.security.SecureRandom;
-import java.util.concurrent.Callable;
+import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.CreateSecretRequest;
+import software.amazon.awssdk.services.secretsmanager.model.ResourceExistsException;
 
+import java.net.URI;
+import java.security.SecureRandom;
+import java.util.concurrent.Callable;
+
+@Slf4j
 @Command(
     name = "create-secrets",
     description = "Create Secrets required by okapi",
@@ -39,7 +43,11 @@ public class CreateSecretsCommand implements Callable<Integer> {
               .description(DESCRIPTION)
               .secretString(secretString)
               .build();
-      secretsManager.createSecret(request);
+      try {
+        secretsManager.createSecret(request);
+      } catch (ResourceExistsException e) {
+        log.info("Secret already exists. Moving on.");
+      }
     }
     return 0;
   }
