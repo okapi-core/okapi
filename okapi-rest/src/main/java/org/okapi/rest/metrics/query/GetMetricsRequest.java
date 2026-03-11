@@ -43,6 +43,7 @@ e.g. if metricType is set to GAUGE, the metric is cpu_usage and tags is {"contai
 then query will look for a metric cpu_usage with tags container=container-abc and of type GAUGE.
 `metric`, `tags` and `metricType` uniquely identify a metric.
   """)
+          @NotNull(message = "metricType should be specified.")
   METRIC_TYPE metricType;
 
   @JsonPropertyDescription(

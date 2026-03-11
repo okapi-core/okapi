@@ -42,9 +42,11 @@ public class FilterContributionTool {
 """
 Purpose
 Return per-filter match counts for a span query to explain which filters are narrowing results.
+
 When to use
 1) A span query returns zero results and you need to identify which filter is too restrictive.
 2) You want to compare filter selectivity to refine a span search.
+
 Examples
 1) Filter A (serviceFilter) returns 0 while filter B (traceId) returns 12.
 2) Filter A (httpFilters) returns 3 while filter B (timestampFilter) returns 50.

@@ -100,7 +100,6 @@ You must always call this tool with a final response for the user as users alway
   }
 
   private void persist(CHAT_RESPONSE_TYPE responseType, String contents) {
-    log.info("Response type: {} and contents: {}", responseType, contents);
     repository.save(
         ChatMessageEntity.builder()
             .sessionId(sessionId)

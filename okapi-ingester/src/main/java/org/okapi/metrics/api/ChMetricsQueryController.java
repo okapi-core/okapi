@@ -13,6 +13,7 @@ import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
 import org.okapi.rest.search.*;
 import org.okapi.rest.search.SearchMetricsV2Response;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,7 +27,8 @@ public class ChMetricsQueryController {
   private final ChSearchMetricsProcessor searchMetricsProcessor;
 
   @PostMapping("/metrics/query")
-  public GetMetricsResponse getMetricsResponse(@RequestBody GetMetricsRequest getMetricsRequest) {
+  public GetMetricsResponse getMetricsResponse(
+      @RequestBody @Validated GetMetricsRequest getMetricsRequest) {
     return chMetricsQueryProcessor.getMetricsResponse(getMetricsRequest);
   }
 
