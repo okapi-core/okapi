@@ -1,6 +1,0 @@
-okapi:
-  oscar:
-    openai:
-      api-key-path: env://OPENAI_API_KEY
-    vault:
-      address:    # empty — disables VaultTemplate, uses env:// key provider instead

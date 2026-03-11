@@ -1,18 +1,15 @@
 package org.okapi.oscar.integ.corpus;
 
-import static org.okapi.oscar.integ.OtelHelpers.*;
-
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
-import io.opentelemetry.proto.metrics.v1.Gauge;
-import io.opentelemetry.proto.metrics.v1.Metric;
-import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
-import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
-import io.opentelemetry.proto.metrics.v1.ScopeMetrics;
+import io.opentelemetry.proto.metrics.v1.*;
 import io.opentelemetry.proto.trace.v1.Span;
 import io.opentelemetry.proto.trace.v1.Status;
+import org.okapi.ingester.client.IngesterClient;
+
 import java.util.ArrayList;
 import java.util.List;
-import org.okapi.ingester.client.IngesterClient;
+
+import static org.okapi.oscar.integ.OtelHelpers.*;
 
 public class SingleStepFlowCorpus implements Corpus {
 
@@ -32,10 +29,12 @@ public class SingleStepFlowCorpus implements Corpus {
 
   @Override
   public void seed() {
+    CorpusAwait.truncateAll();
     seedMetrics();
     seedErrorTraces();
     seedDbTraces();
     seedGatewayTraces();
+    CorpusAwait.awaitMetric(ingesterClient, METRIC_PATHS.get(0));
   }
 
   private void seedMetrics() {

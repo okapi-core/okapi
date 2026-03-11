@@ -180,7 +180,7 @@ test-data:
 promql-testdata:
 	scripts/promql/update-promqltestdata.sh
 
-test-infra: testnetwork localstack ch migrate test-secret
+test-infra: testnetwork localstack ch migrate test-secret oscar-vault-dev postgres
 
 run-ingester:
 	java -jar okapi-ingester/target/okapi-ingester-0.0.1-SNAPSHOT.jar &

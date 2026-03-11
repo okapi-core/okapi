@@ -77,7 +77,7 @@ WHERE 1=1
 @if(data.getHttpMethod() != null && !data.getHttpMethod().isEmpty())
   AND http_method = '${data.getHttpMethod()}'
 @endif
-@if(data.getHttpStatusCode() != null)
+@if(data.getHttpStatusCode() != null && data.getHttpStatusCode() >= 100)
   AND http_status_code = ${data.getHttpStatusCode()}
 @endif
 @if(data.getHttpOrigin() != null && !data.getHttpOrigin().isEmpty())

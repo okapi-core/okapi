@@ -8,12 +8,14 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
+@ToString
 public class GaugeQueryConfig {
   @JsonPropertyDescription(
       "Time bucket size for grouping gauge samples: SECONDLY, MINUTELY, or HOURLY.")

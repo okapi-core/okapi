@@ -6,14 +6,15 @@ package org.okapi.rest.metrics.query;
 
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import jakarta.validation.constraints.NotNull;
+import lombok.*;
+
 import java.util.Map;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
 
 @AllArgsConstructor
 @Builder(toBuilder = true)
 @Getter
+@NoArgsConstructor
+@ToString
 public class GetMetricsRequest {
   @JsonPropertyDescription("Name of the metric to query (e.g. \"http.server.duration\").")
   @NotNull(message = "Metrics name must be supplied.")

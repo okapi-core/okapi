@@ -30,8 +30,10 @@ public class HighLatencyCpuSpikeCorpus implements Corpus {
 
   @Override
   public void seed() {
+    CorpusAwait.truncateAll();
     seedSlowTrace();
     seedCpuMetrics();
+    CorpusAwait.awaitMetric(ingesterClient, CPU_METRIC_NAME);
   }
 
   private void seedSlowTrace() {

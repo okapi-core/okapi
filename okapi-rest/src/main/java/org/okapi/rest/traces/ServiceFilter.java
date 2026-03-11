@@ -11,6 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
+@ToString
 public class ServiceFilter {
   @JsonPropertyDescription("Name of the service that emitted the span.")
   String service;

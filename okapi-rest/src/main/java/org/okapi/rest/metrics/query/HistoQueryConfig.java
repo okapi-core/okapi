@@ -5,15 +5,13 @@
 package org.okapi.rest.metrics.query;
 
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @AllArgsConstructor
 @Getter
 @Builder
 @NoArgsConstructor
+@ToString
 public class HistoQueryConfig {
   public enum TEMPORALITY {
     CUMULATIVE,

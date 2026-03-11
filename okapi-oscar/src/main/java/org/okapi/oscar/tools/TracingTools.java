@@ -1,6 +1,7 @@
 package org.okapi.oscar.tools;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.okapi.ingester.client.IngesterClient;
 import org.okapi.rest.traces.SpanQueryV2Request;
 import org.okapi.rest.traces.SpanQueryV2Response;
@@ -10,6 +11,7 @@ import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @AllArgsConstructor
 public class TracingTools {
@@ -18,9 +20,13 @@ public class TracingTools {
 
   @Tool(
       description =
-          "Search for spans matching the provided filters. Use this tool to find traces and spans by service, time window, HTTP attributes, database attributes, duration, or custom span attributes.")
+          "Search for spans matching the provided filters. Use this tool to find traces and spans by service, time window, HTTP attributes, database attributes, duration, or custom span attributes."
+              + "When in doubt set the minimum set of filters necessary. Setting more filters than necessary could lead to no results being returned.")
   public SpanQueryV2Response getSpans(@ToolParam SpanQueryV2Request request) {
-    return client.querySpans(request);
+    log.info("Request: {}", request);
+    var response = client.querySpans(request);
+    log.info("Response: {}", response);
+    return response;
   }
 
   @Tool(

@@ -6,15 +6,18 @@ package org.okapi.rest.metrics.query;
 
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
+
+import java.util.Map;
 
 @AllArgsConstructor
 @Builder
 @Getter
 @JsonClassDescription("Time-series data returned for a single metric series query.")
+@ToString
 public class GetMetricsResponse {
   @JsonPropertyDescription("Name of the queried metric.")
   String metric;

@@ -6,16 +6,18 @@ package org.okapi.rest.traces;
 
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import java.util.List;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Value;
+import lombok.*;
 
-@Value
+import java.util.List;
+
 @Builder
 @AllArgsConstructor
 @JsonClassDescription(
-    "Encapsulates search filters used to discover spans. Filters are composed via an AND operation i.e. only spans which match all filters are returned.")
+    "Encapsulates search filters used to discover spans. Filters are composed via an AND operation i.e. only spans which match all filters are returned." +
+            "Not every filter needs to be set. When in doubt, set the minimum sure set of filters.")
+@Getter
+@NoArgsConstructor
+@ToString
 public class SpanQueryV2Request {
   @JsonPropertyDescription(
       "Filter to spans belonging to this exact trace ID. TraceIDs are hex-encoded byte strings.")
@@ -26,7 +28,7 @@ public class SpanQueryV2Request {
   String spanId;
 
   @JsonPropertyDescription(
-      "Span kind to filter by (e.g. CLIENT, SERVER, PRODUCER, CONSUMER, INTERNAL).")
+      "Span kind to filter. Usually the values are SPAN_KIND_SERVER or SPAN_KIND_CLIENT. If unsure, do not set.")
   String kind;
 
   @JsonPropertyDescription(

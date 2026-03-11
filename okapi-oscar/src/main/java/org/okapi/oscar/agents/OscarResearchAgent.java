@@ -1,6 +1,7 @@
 package org.okapi.oscar.agents;
 
 import org.okapi.oscar.spring.cfg.OkapiOscarCfg;
+import org.okapi.oscar.tools.DateTimeTools;
 import org.okapi.oscar.tools.MetricsTools;
 import org.okapi.oscar.tools.TracingTools;
 import org.springframework.ai.chat.client.ChatClient;
@@ -16,13 +17,15 @@ public class OscarResearchAgent {
   private final OkapiOscarCfg cfg;
   private final MetricsTools metricsTools;
   private final TracingTools tracingTools;
+  private final DateTimeTools dateTimeTools;
 
   public OscarResearchAgent(
       OpenAiChatModel chatModel,
       ChatMemory chatMemory,
       OkapiOscarCfg cfg,
       MetricsTools metricsTools,
-      TracingTools tracingTools) {
+      TracingTools tracingTools,
+      DateTimeTools dateTimeTools) {
     this.chatClient =
         ChatClient.builder(chatModel)
             .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
@@ -30,6 +33,7 @@ public class OscarResearchAgent {
     this.cfg = cfg;
     this.metricsTools = metricsTools;
     this.tracingTools = tracingTools;
+    this.dateTimeTools = dateTimeTools;
   }
 
   public String respond(String sessionId, String userMessage) {
@@ -37,7 +41,7 @@ public class OscarResearchAgent {
         .prompt()
         .system(cfg.getSystemPrompt())
         .user(userMessage)
-        .tools(metricsTools, tracingTools)
+        .tools(metricsTools, tracingTools, dateTimeTools)
         .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, sessionId))
         .call()
         .content();

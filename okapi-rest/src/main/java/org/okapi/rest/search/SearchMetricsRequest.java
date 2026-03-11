@@ -2,17 +2,16 @@ package org.okapi.rest.search;
 
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import lombok.*;
+
 import java.util.List;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Builder
 @JsonClassDescription("A SearchMetricsRequest object is used to encapsulate search parameters when searching for metrics.")
+@ToString
 public class SearchMetricsRequest {
   @JsonPropertyDescription(
       "Start time for time window. This should be linux epoch time. "

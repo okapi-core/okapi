@@ -11,6 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
+@ToString
 public class DbFilters {
   @JsonPropertyDescription(
       "Database system (e.g. postgresql, redis, mongodb). Maps to the db.system span attribute.")

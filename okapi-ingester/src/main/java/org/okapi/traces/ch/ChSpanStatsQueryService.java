@@ -6,8 +6,6 @@ package org.okapi.traces.ch;
 
 import com.clickhouse.client.api.Client;
 import com.clickhouse.client.api.query.GenericRecord;
-import java.util.*;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.okapi.ch.ChTemplateFiles;
 import org.okapi.collections.OkapiMaps;
@@ -18,6 +16,9 @@ import org.okapi.metrics.pojos.RES_TYPE;
 import org.okapi.rest.traces.*;
 import org.okapi.traces.ch.template.ChTraceTemplateEngine;
 import org.springframework.stereotype.Service;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -246,22 +247,6 @@ public class ChSpanStatsQueryService {
         .durationFilter(request.getDurationFilter())
         .stringFilters(buildStringFilters(request.getStringAttributesFilter()))
         .numberFilters(buildNumberFilters(request.getNumberAttributesFilter()))
-        .build();
-  }
-
-  private ChSpansStatsNumericTemplate buildNumericAggTemplate(
-      SpansQueryStatsRequest request, List<String> attributes, AGG_TYPE aggType, RES_TYPE resType) {
-    var aggClauses = new HashMap<String, String>();
-    for (var attr : attributes) {
-      aggClauses.put(attr, ChSpanStatsQueryBuilder.buildAggClause(aggType, attr));
-    }
-    return ChSpansStatsNumericTemplate.builder()
-        .table(ChConstants.TBL_SPANS_V1)
-        .attributes(attributes)
-        .bucketStartExpr(ChSpanStatsQueryBuilder.buildBucketStartExpr(resType))
-        .aggClauses(aggClauses)
-        .colFilters(buildColFilters(request))
-        .rawClauses(getTimeRangeAndDurationClauses(request))
         .build();
   }
 
