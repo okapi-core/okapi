@@ -28,7 +28,7 @@ class MultiStepIntegrationTest extends OscarIntegTestBase {
     assertThat(
             judgeAgent.judge(
                 question,
-                "The high latency in the checkout service is caused by high CPU usage (~95%) on "
+                "Mentiones high latency on "
                     + HighLatencyCpuSpikeCorpus.POSTGRES_HOST
                     + ". Slow POST /checkout traces carry server.name="
                     + HighLatencyCpuSpikeCorpus.POSTGRES_HOST

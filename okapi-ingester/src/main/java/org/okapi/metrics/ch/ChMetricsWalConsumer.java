@@ -103,6 +103,7 @@ public class ChMetricsWalConsumer {
         map.put("event_type", METRIC_TYPE.HISTO.name());
         map.put("metric", req.getMetricName());
         map.put("tags", req.getTags());
+        map.put("temporality", pt.getTemporality().name());
         map.put("ts_start", pt.getStart());
         map.put("ts_end", pt.getEnd());
         metaRows.add(gson.toJson(map));
@@ -136,6 +137,7 @@ public class ChMetricsWalConsumer {
         map.put("event_type", METRIC_TYPE.SUM.name());
         map.put("metric", req.getMetricName());
         map.put("tags", req.getTags());
+        map.put("temporality", req.getSum().getTemporality().name());
         map.put("ts_start", pt.getStart());
         map.put("ts_end", pt.getEnd());
         meta.add(gson.toJson(map));

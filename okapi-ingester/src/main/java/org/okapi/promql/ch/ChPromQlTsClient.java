@@ -107,7 +107,7 @@ public class ChPromQlTsClient implements TsClient {
             .table(ChConstants.TBL_SUM)
             .metric(metric)
             .tags(tags)
-            .histoType(type)
+            .sumsType(type)
             .ts(startMs)
             .te(endMs)
             .build(),

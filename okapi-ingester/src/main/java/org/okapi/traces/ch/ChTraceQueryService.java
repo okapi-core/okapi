@@ -38,7 +38,6 @@ public class ChTraceQueryService {
     var template = buildTemplate(requestV2);
     var query = StringUtils.normalizeSpace(templateEngine.render(ChTemplateFiles.GET_SPANS_V2, template));
     var records = client.queryAll(query);
-    log.info("querying with: {}", query);
     var rows = new ArrayList<SpanRowV2>(records.size());
     for (var record : records) {
       rows.add(toRow(record));

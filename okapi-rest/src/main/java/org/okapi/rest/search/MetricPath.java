@@ -22,6 +22,9 @@ public class MetricPath {
   @JsonPropertyDescription("The metric type: GAUGE, SUM, or HISTO.")
   METRIC_TYPE metricType;
 
+  @JsonPropertyDescription("Temporality for SUM or HISTO metrics; null for GAUGE.")
+  String temporality;
+
   @JsonPropertyDescription("Key-value label pairs that uniquely identify this metric series.")
   Map<String, String> labels;
 }

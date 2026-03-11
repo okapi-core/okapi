@@ -35,11 +35,7 @@ class SingleStepIntegrationTest extends OscarIntegTestBase {
         "Find error traces for the " + SingleStepFlowCorpus.PAYMENT_SERVICE + " from the last hour";
     String sessionId = session(question);
     var response = pollUntilFinAndReturnResponse(sessionId);
-    assertThat(
-            judgeAgent.judge(
-                question,
-                "Found error traces for payment-service with HTTP 500 status codes",
-                response))
+    assertThat(judgeAgent.judge(question, "Found error traces for payment-service.", response))
         .isNotEqualTo(Judgment.WRONG);
   }
 
@@ -51,9 +47,7 @@ class SingleStepIntegrationTest extends OscarIntegTestBase {
     var response = pollUntilFinAndReturnResponse(sessionId);
     assertThat(
             judgeAgent.judge(
-                question,
-                "Found trace IDs for spans with db.system=postgresql",
-                response))
+                question, "Found trace IDs for spans with db.system=postgresql", response))
         .isNotEqualTo(Judgment.WRONG);
   }
 

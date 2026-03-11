@@ -13,7 +13,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -50,102 +52,113 @@ Hint
 Use this tool when a span query returns zero matches; retry without any filter that yields a count of 0.
 """)
   public FilterContribution getFilterContributions(@ToolParam SpanQueryV2Request request) {
-    log.info("Calling with: {}", request);
     var contribBuilder = FilterContribution.builder();
     var builderMethods =
-        new java.util.ArrayList<Function<Long, FilterContribution.FilterContributionBuilder>>();
-    var queries = new java.util.ArrayList<Supplier<SpanQueryV2SummaryResponse>>();
+        new ArrayList<Function<Long, FilterContribution.FilterContributionBuilder>>();
+    var queries = new ArrayList<Supplier<SpanQueryV2SummaryResponse>>();
+
+    var baseRequest = copyRequest(request);
+    queries.add(() -> client.getResultsSummary(baseRequest));
+    builderMethods.add(contribBuilder::overallCount);
 
     if (request.getTraceId() != null) {
-      builderMethods.add(contribBuilder::traceIdFilterResultCount);
+      builderMethods.add(contribBuilder::traceIdRemovedCount);
       queries.add(
           () ->
               client.getResultsSummary(
-                  SpanQueryV2Request.builder().traceId(request.getTraceId()).build()));
+                  builderFrom(request).traceId(null).build()));
     }
     if (request.getSpanId() != null) {
-      builderMethods.add(contribBuilder::spanIdFilterResultCount);
+      builderMethods.add(contribBuilder::spanIdRemovedCount);
       queries.add(
           () ->
               client.getResultsSummary(
-                  SpanQueryV2Request.builder().spanId(request.getSpanId()).build()));
+                  builderFrom(request).spanId(null).build()));
     }
     if (request.getKind() != null) {
-      builderMethods.add(contribBuilder::kindFilterCount);
+      builderMethods.add(contribBuilder::kindRemovedCount);
       queries.add(
           () ->
               client.getResultsSummary(
-                  SpanQueryV2Request.builder().kind(request.getKind()).build()));
+                  builderFrom(request).kind(null).build()));
     }
     if (request.getDbFilters() != null) {
-      builderMethods.add(contribBuilder::dbFiltersCount);
+      builderMethods.add(contribBuilder::dbFiltersRemovedCount);
       queries.add(
           () ->
               client.getResultsSummary(
-                  SpanQueryV2Request.builder().dbFilters(request.getDbFilters()).build()));
+                  builderFrom(request).dbFilters(null).build()));
     }
     if (request.getDurationFilter() != null) {
-      builderMethods.add(contribBuilder::durationFilterCount);
+      builderMethods.add(contribBuilder::durationFilterRemovedCount);
       queries.add(
           () ->
               client.getResultsSummary(
-                  SpanQueryV2Request.builder()
-                      .durationFilter(request.getDurationFilter())
-                      .build()));
+                  builderFrom(request).durationFilter(null).build()));
     }
     if (request.getHttpFilters() != null) {
-      builderMethods.add(contribBuilder::httpFiltersCount);
+      builderMethods.add(contribBuilder::httpFiltersRemovedCount);
       queries.add(
           () ->
               client.getResultsSummary(
-                  SpanQueryV2Request.builder().httpFilters(request.getHttpFilters()).build()));
+                  builderFrom(request).httpFilters(null).build()));
     }
     if (request.getServiceFilter() != null) {
-      builderMethods.add(contribBuilder::serviceFilterCount);
+      builderMethods.add(contribBuilder::serviceFilterRemovedCount);
       queries.add(
           () ->
               client.getResultsSummary(
-                  SpanQueryV2Request.builder().serviceFilter(request.getServiceFilter()).build()));
+                  builderFrom(request).serviceFilter(null).build()));
     }
     if (request.getTimestampFilter() != null) {
-      builderMethods.add(contribBuilder::timestampFilterCount);
+      builderMethods.add(contribBuilder::timestampFilterRemovedCount);
       queries.add(
           () ->
               client.getResultsSummary(
-                  SpanQueryV2Request.builder()
-                      .timestampFilter(request.getTimestampFilter())
-                      .build()));
+                  builderFrom(request).timestampFilter(null).build()));
     }
 
     var stringAttributeCounts = new java.util.LinkedHashMap<String, Long>();
     if (request.getStringAttributesFilter() != null) {
-      for (var filter : request.getStringAttributesFilter()) {
+      var filters = request.getStringAttributesFilter();
+      for (int i = 0; i < filters.size(); i++) {
+        var filter = filters.get(i);
         if (filter == null || filter.getKey() == null) {
           continue;
         }
+        var trimmed = removeFilterAtIndex(filters, i);
+        var updated =
+            builderFrom(request)
+                .stringAttributesFilter(trimmed.isEmpty() ? null : trimmed)
+                .build();
         var summary =
-            client.getResultsSummary(
-                SpanQueryV2Request.builder().stringAttributesFilter(List.of(filter)).build());
+            client.getResultsSummary(updated);
         stringAttributeCounts.put(filter.getKey(), summary.getCount());
       }
       if (!stringAttributeCounts.isEmpty()) {
-        contribBuilder.stringAttributesFilterCount(stringAttributeCounts);
+        contribBuilder.stringAttributesRemovedCounts(stringAttributeCounts);
       }
     }
 
     var numberAttributeCounts = new java.util.LinkedHashMap<String, Long>();
     if (request.getNumberAttributesFilter() != null) {
-      for (var filter : request.getNumberAttributesFilter()) {
+      var filters = request.getNumberAttributesFilter();
+      for (int i = 0; i < filters.size(); i++) {
+        var filter = filters.get(i);
         if (filter == null || filter.getKey() == null) {
           continue;
         }
+        var trimmed = removeFilterAtIndex(filters, i);
+        var updated =
+            builderFrom(request)
+                .numberAttributesFilter(trimmed.isEmpty() ? null : trimmed)
+                .build();
         var summary =
-            client.getResultsSummary(
-                SpanQueryV2Request.builder().numberAttributesFilter(List.of(filter)).build());
+            client.getResultsSummary(updated);
         numberAttributeCounts.put(filter.getKey(), summary.getCount());
       }
       if (!numberAttributeCounts.isEmpty()) {
-        contribBuilder.numberAttributesFilterCount(numberAttributeCounts);
+        contribBuilder.numberAttributesRemovedCounts(numberAttributeCounts);
       }
     }
 
@@ -157,5 +170,39 @@ Use this tool when a span query returns zero matches; retry without any filter t
     var contributions = contribBuilder.build();
     log.info("Got contributions: {}", contributions);
     return contributions;
+  }
+
+  private static SpanQueryV2Request copyRequest(SpanQueryV2Request request) {
+    return builderFrom(request).build();
+  }
+
+  private static SpanQueryV2Request.SpanQueryV2RequestBuilder builderFrom(
+      SpanQueryV2Request request) {
+    return SpanQueryV2Request.builder()
+        .traceId(request.getTraceId())
+        .spanId(request.getSpanId())
+        .kind(request.getKind())
+        .dbFilters(request.getDbFilters())
+        .durationFilter(request.getDurationFilter())
+        .httpFilters(request.getHttpFilters())
+        .serviceFilter(request.getServiceFilter())
+        .timestampFilter(request.getTimestampFilter())
+        .stringAttributesFilter(
+            request.getStringAttributesFilter() == null
+                ? null
+                : new ArrayList<>(request.getStringAttributesFilter()))
+        .numberAttributesFilter(
+            request.getNumberAttributesFilter() == null
+                ? null
+                : new ArrayList<>(request.getNumberAttributesFilter()));
+  }
+
+  private static <T> List<T> removeFilterAtIndex(List<T> filters, int index) {
+    var filtered = new ArrayList<>(filters);
+    if (index >= 0 && index < filtered.size()) {
+      filtered.remove(index);
+    }
+    filtered.removeIf(Objects::isNull);
+    return filtered;
   }
 }

@@ -12,7 +12,7 @@ import org.okapi.rest.metrics.exemplar.GetExemplarsResponse;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
 import org.okapi.rest.search.*;
-import org.okapi.rest.search.SearchMetricsResponse;
+import org.okapi.rest.search.SearchMetricsV2Response;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -52,7 +52,7 @@ public class ChMetricsQueryController {
   }
 
   @PostMapping("/metrics/search")
-  public SearchMetricsResponse searchMetrics(@RequestBody SearchMetricsRequest request) {
+  public SearchMetricsV2Response searchMetrics(@RequestBody SearchMetricsRequest request) {
     return searchMetricsProcessor.searchMetricsResponse(request);
   }
 }

@@ -15,25 +15,25 @@ import lombok.*;
 public class DbFilters {
   @JsonPropertyDescription(
 """
-Database system (e.g. postgresql, redis, mongodb). Maps to the db.system span attribute. Note that wildcards such as '*' will match exactly, there's not wildcard matches for this field.
+Database system (e.g. postgresql, redis, mongodb). Maps to the db.system span attribute.
 """)
   String system;
 
   @JsonPropertyDescription(
 """
-Database collection or table name. Maps to the db.mongodb.collection or equivalent span attribute. Note that wildcards such as '*' will match exactly, there's not wildcard matches for this field.
+Database collection or table name. Maps to the db.mongodb.collection or equivalent span attribute.
 """)
   String collection;
 
   @JsonPropertyDescription(
 """
-Database namespace or schema. Maps to the db.name span attribute. Note that wildcards such as '*' will match exactly, there's not wildcard matches for this field.
+Database namespace or schema. Maps to the db.name span attribute.
 """)
   String namespace;
 
   @JsonPropertyDescription(
 """
-Database operation type (e.g. SELECT, INSERT, find). Maps to the db.operation span attribute. Note that wildcards such as '*' will match exactly, there's not wildcard matches for this field.
+Database operation type (e.g. SELECT, INSERT, find). Maps to the db.operation span attribute.
 """)
   String operation;
 }

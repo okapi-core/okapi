@@ -11,69 +11,75 @@ import java.util.Map;
 @Builder
 @JsonClassDescription(
 """
-Per-filter match counts for SpanQueryV2Request. A non-zero count means the filter alone matches some spans.
-A count of 0 means the filter alone matches no spans. A null count means the filter was not set in the request.
+SpanQueryV2Request match counts. overallCount is for the full request, and per-filter counts are computed
+with the specified filter removed. A null count means the filter was not set in the request.
 """)
 public class FilterContribution {
   @JsonPropertyDescription(
 """
-Count of spans matching SpanQueryV2Request.traceId. Non-zero means matches exist, 0 means no matches, null means traceId was not set.
+Count of spans matching the full SpanQueryV2Request (all filters applied).
 """)
-  Long traceIdFilterResultCount;
+  Long overallCount;
 
   @JsonPropertyDescription(
 """
-Count of spans matching SpanQueryV2Request.spanId. Non-zero means matches exist, 0 means no matches, null means spanId was not set.
+Count of spans matching the full request with SpanQueryV2Request.traceId removed. Null means traceId was not set.
 """)
-  Long spanIdFilterResultCount;
+  Long traceIdRemovedCount;
 
   @JsonPropertyDescription(
 """
-Count of spans matching SpanQueryV2Request.kind. Non-zero means matches exist, 0 means no matches, null means kind was not set.
+Count of spans matching the full request with SpanQueryV2Request.spanId removed. Null means spanId was not set.
 """)
-  Long kindFilterCount;
+  Long spanIdRemovedCount;
 
   @JsonPropertyDescription(
 """
-Count of spans matching SpanQueryV2Request.dbFilters. Non-zero means matches exist, 0 means no matches, null means dbFilters was not set.
+Count of spans matching the full request with SpanQueryV2Request.kind removed. Null means kind was not set.
 """)
-  Long dbFiltersCount;
+  Long kindRemovedCount;
 
   @JsonPropertyDescription(
 """
-Count of spans matching SpanQueryV2Request.durationFilter. Non-zero means matches exist, 0 means no matches, null means durationFilter was not set.
+Count of spans matching the full request with SpanQueryV2Request.dbFilters removed. Null means dbFilters was not set.
 """)
-  Long durationFilterCount;
+  Long dbFiltersRemovedCount;
 
   @JsonPropertyDescription(
 """
-Count of spans matching SpanQueryV2Request.httpFilters. Non-zero means matches exist, 0 means no matches, null means httpFilters was not set.
+Count of spans matching the full request with SpanQueryV2Request.durationFilter removed. Null means durationFilter was not set.
 """)
-  Long httpFiltersCount;
+  Long durationFilterRemovedCount;
 
   @JsonPropertyDescription(
 """
-Count of spans matching SpanQueryV2Request.serviceFilter. Non-zero means matches exist, 0 means no matches, null means serviceFilter was not set.
+Count of spans matching the full request with SpanQueryV2Request.httpFilters removed. Null means httpFilters was not set.
 """)
-  Long serviceFilterCount;
+  Long httpFiltersRemovedCount;
 
   @JsonPropertyDescription(
 """
-Count of spans matching SpanQueryV2Request.timestampFilter. Non-zero means matches exist, 0 means no matches, null means timestampFilter was not set.
+Count of spans matching the full request with SpanQueryV2Request.serviceFilter removed. Null means serviceFilter was not set.
 """)
-  Long timestampFilterCount;
+  Long serviceFilterRemovedCount;
 
   @JsonPropertyDescription(
 """
-Per-key counts for SpanQueryV2Request.stringAttributesFilter. Each entry maps a string attribute key to its count.
-Non-zero means matches exist, 0 means no matches, null means stringAttributesFilter was not set.
+Count of spans matching the full request with SpanQueryV2Request.timestampFilter removed. Null means timestampFilter was not set.
 """)
-  Map<String, Long> stringAttributesFilterCount;
+  Long timestampFilterRemovedCount;
 
   @JsonPropertyDescription(
 """
-Per-key counts for SpanQueryV2Request.numberAttributesFilter. Each entry maps a numeric attribute key to its count.
-Non-zero means matches exist, 0 means no matches, null means numberAttributesFilter was not set.
+Per-key counts for SpanQueryV2Request.stringAttributesFilter with each attribute filter removed in turn.
+Null means stringAttributesFilter was not set.
 """)
-  Map<String, Long> numberAttributesFilterCount;
+  Map<String, Long> stringAttributesRemovedCounts;
+
+  @JsonPropertyDescription(
+"""
+Per-key counts for SpanQueryV2Request.numberAttributesFilter with each attribute filter removed in turn.
+Null means numberAttributesFilter was not set.
+""")
+  Map<String, Long> numberAttributesRemovedCounts;
 }

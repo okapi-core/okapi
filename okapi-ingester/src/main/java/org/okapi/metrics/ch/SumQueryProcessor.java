@@ -8,20 +8,16 @@ import com.clickhouse.client.api.Client;
 import com.clickhouse.client.api.query.GenericRecord;
 import gg.jte.TemplateOutput;
 import gg.jte.output.StringOutput;
+import org.okapi.ch.ChTemplateFiles;
+import org.okapi.metrics.ch.template.ChGetSumQueryTemplate;
+import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
+import org.okapi.rest.metrics.query.*;
+import org.springframework.stereotype.Service;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import org.okapi.ch.ChTemplateFiles;
-import org.okapi.metrics.ch.template.ChGetSumQueryTemplate;
-import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
-import org.okapi.rest.metrics.query.CannedResponses;
-import org.okapi.rest.metrics.query.GetMetricsRequest;
-import org.okapi.rest.metrics.query.GetMetricsResponse;
-import org.okapi.rest.metrics.query.GetSumsQueryConfig;
-import org.okapi.rest.metrics.query.GetSumsResponse;
-import org.okapi.rest.metrics.query.Sum;
-import org.springframework.stereotype.Service;
 
 /** Handles sum query execution and aggregation. */
 @Service
@@ -58,10 +54,7 @@ public class SumQueryProcessor {
       case CUMULATIVE -> {
         var maxSample =
             samples.stream().max(Comparator.comparingLong(ChSumSample::value)).orElse(null);
-        if (maxSample == null) {
-          return CannedResponses.noMetricsResponse(metric, tags);
-        }
-        sums =
+          sums =
             List.of(
                 Sum.builder()
                     .ts(maxSample.tsStart())
@@ -105,7 +98,7 @@ public class SumQueryProcessor {
             .tags(tags)
             .ts(ts)
             .te(te)
-            .histoType(sumType.name())
+            .sumsType(sumType.name())
             .build();
     TemplateOutput output = new StringOutput();
     templateEngine.render(ChTemplateFiles.GET_SUM_SAMPLES, template, output);
@@ -130,7 +123,7 @@ public class SumQueryProcessor {
               record.getLong("ts_start_ms"),
               record.getLong("ts_end_ms"),
               record.getLong("value"),
-              CH_SUM_TYPE.valueOf(record.getString("histo_type")),
+              CH_SUM_TYPE.valueOf(record.getString("sums_type")),
               recordTags));
     }
     return samples;

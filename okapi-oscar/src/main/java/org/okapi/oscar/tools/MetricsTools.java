@@ -6,7 +6,7 @@ import org.okapi.ingester.client.IngesterClient;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
 import org.okapi.rest.search.SearchMetricsRequest;
-import org.okapi.rest.search.SearchMetricsResponse;
+import org.okapi.rest.search.SearchMetricsV2Response;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
@@ -33,7 +33,7 @@ public class MetricsTools {
               + " and value (e.g. label='host.name', value='my-host-42')."
               + " NOTE: anyMetricOrValueFilter.value performs an EXACT match — do NOT use it for"
               + " service name prefixes like 'checkout'; use metricNamePattern instead.")
-  public SearchMetricsResponse searchMetrics(@ToolParam SearchMetricsRequest request) {
+  public SearchMetricsV2Response searchMetrics(@ToolParam SearchMetricsRequest request) {
     log.info("req: {}", request);
     var response = client.searchMetrics(request);
     log.info("res: {}", response);

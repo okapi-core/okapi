@@ -329,6 +329,53 @@ public class ChTraceQueryServiceTests {
   }
 
   @Test
+  public void checkWildcardStringFilters() {
+    var queryService = injector.getInstance(ChTraceQueryService.class);
+    var tsFilter = TimestampFilter.builder().tsStartNanos(0).tsEndNanos(10_000_000_000L).build();
+
+    var baseline =
+        SpanQueryV2Request.builder()
+            .timestampFilter(tsFilter)
+            .build();
+    var respBaseline = queryService.getSpans(baseline);
+    assertEquals(4, respBaseline.getItems().size());
+
+    var wildcardTraceId =
+        SpanQueryV2Request.builder()
+            .traceId("*")
+            .timestampFilter(tsFilter)
+            .build();
+    var respWildcardTraceId = queryService.getSpans(wildcardTraceId);
+    assertEquals(4, respWildcardTraceId.getItems().size());
+
+    var wildcardPeer =
+        SpanQueryV2Request.builder()
+            .serviceFilter(ServiceFilter.builder().service("svc-http").peer("*").build())
+            .timestampFilter(tsFilter)
+            .build();
+    var respWildcardPeer = queryService.getSpans(wildcardPeer);
+    assertEquals(2, respWildcardPeer.getItems().size());
+
+    var wildcardCustomAttr =
+        SpanQueryV2Request.builder()
+            .serviceFilter(ServiceFilter.builder().service("svc-http").build())
+            .stringAttributesFilter(
+                List.of(StringAttributeFilter.builder().key("custom.string").value("*").build()))
+            .timestampFilter(tsFilter)
+            .build();
+    var respWildcardCustomAttr = queryService.getSpans(wildcardCustomAttr);
+    assertEquals(2, respWildcardCustomAttr.getItems().size());
+
+    var wildcardHttpMethod =
+        SpanQueryV2Request.builder()
+            .httpFilters(HttpFilters.builder().httpMethod("*").statusCode(200).build())
+            .timestampFilter(tsFilter)
+            .build();
+    var respWildcardHttpMethod = queryService.getSpans(wildcardHttpMethod);
+    assertEquals(1, respWildcardHttpMethod.getItems().size());
+  }
+
+  @Test
   public void checkSpanIdQuery() {
     var queryService = injector.getInstance(ChTraceQueryService.class);
     var tsFilter = TimestampFilter.builder().tsStartNanos(0).tsEndNanos(10_000_000_000L).build();

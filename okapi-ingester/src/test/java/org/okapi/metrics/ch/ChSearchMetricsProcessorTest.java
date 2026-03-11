@@ -8,11 +8,15 @@ import com.clickhouse.client.api.Client;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
+import io.opentelemetry.proto.metrics.v1.AggregationTemporality;
 import io.opentelemetry.proto.metrics.v1.Gauge;
+import io.opentelemetry.proto.metrics.v1.Histogram;
+import io.opentelemetry.proto.metrics.v1.HistogramDataPoint;
 import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
 import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
 import io.opentelemetry.proto.metrics.v1.ScopeMetrics;
+import io.opentelemetry.proto.metrics.v1.Sum;
 import io.opentelemetry.proto.resource.v1.Resource;
 import java.nio.file.Path;
 import java.util.List;
@@ -39,6 +43,8 @@ public class ChSearchMetricsProcessorTest {
 
   private Injector injector;
   private ChSearchMetricsProcessor searchProcessor;
+  private ChMetricsIngester ingester;
+  private ChMetricsWalConsumerDriver driver;
 
   // Corpus: 5 distinct metric paths
   // P1: cpu.usage  {env=prod, region=us-east, host=web-01}
@@ -63,8 +69,8 @@ public class ChSearchMetricsProcessorTest {
     CreateChTablesSpec.migrate(client);
     client.queryAll("TRUNCATE TABLE IF EXISTS " + ChConstants.TBL_METRIC_EVENTS_META);
 
-    var ingester = injector.getInstance(ChMetricsIngester.class);
-    var driver = injector.getInstance(ChMetricsWalConsumerDriver.class);
+    ingester = injector.getInstance(ChMetricsIngester.class);
+    driver = injector.getInstance(ChMetricsWalConsumerDriver.class);
 
     ingester.ingestOtelProtobuf(gauge("cpu.usage", TAGS_PROD_WEB_01));
     ingester.ingestOtelProtobuf(gauge("cpu.usage", TAGS_PROD_WEB_02));
@@ -164,6 +170,31 @@ public class ChSearchMetricsProcessorTest {
     assertEquals(5, resp.size());
   }
 
+  @Test
+  void searchIncludesTemporalityForHistoAndSum() throws Exception {
+    ingester.ingestOtelProtobuf(
+        histogram(
+            "latency.histo",
+            TAGS_PROD_WEB_01,
+            AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA));
+    ingester.ingestOtelProtobuf(
+        sum(
+            "requests.sum",
+            TAGS_PROD_WEB_01,
+            AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE));
+    driver.onTick();
+
+    var histoResp = search(req().metricName("latency.histo"));
+    assertTrue(
+        histoResp.contains(
+            path("latency.histo", METRIC_TYPE.HISTO, "DELTA", TAGS_PROD_WEB_01)));
+
+    var sumResp = search(req().metricName("requests.sum"));
+    assertTrue(
+        sumResp.contains(
+            path("requests.sum", METRIC_TYPE.SUM, "CUMULATIVE", TAGS_PROD_WEB_01)));
+  }
+
   // --- anyMetricOrValueFilter ---
 
   @Test
@@ -240,8 +271,18 @@ public class ChSearchMetricsProcessorTest {
     return SearchMetricsRequest.builder();
   }
 
+  private MetricPath path(
+      String metric, METRIC_TYPE type, String temporality, Map<String, String> labels) {
+    return MetricPath.builder()
+        .metric(metric)
+        .metricType(type)
+        .temporality(temporality)
+        .labels(labels)
+        .build();
+  }
+
   private MetricPath path(String metric, METRIC_TYPE type, Map<String, String> labels) {
-    return MetricPath.builder().metric(metric).metricType(type).labels(labels).build();
+    return path(metric, type, null, labels);
   }
 
   private LabelValueFilter labelFilter(String label, String value) {
@@ -268,6 +309,54 @@ public class ChSearchMetricsProcessorTest {
             .setName(metricName)
             .setGauge(Gauge.newBuilder().addDataPoints(point).build())
             .build();
+    var resourceMetrics =
+        ResourceMetrics.newBuilder()
+            .setResource(Resource.newBuilder().build())
+            .addScopeMetrics(ScopeMetrics.newBuilder().addMetrics(metric).build())
+            .build();
+    return ExportMetricsServiceRequest.newBuilder().addResourceMetrics(resourceMetrics).build();
+  }
+
+  private ExportMetricsServiceRequest histogram(
+      String metricName, Map<String, String> tags, AggregationTemporality temporality) {
+    var point =
+        HistogramDataPoint.newBuilder()
+            .setStartTimeUnixNano(1_000L * 1_000_000)
+            .setTimeUnixNano(2_000L * 1_000_000)
+            .addAllExplicitBounds(List.of(1.0, 2.0))
+            .addAllBucketCounts(List.of(3L, 4L, 5L))
+            .addAllAttributes(OtelShortHands.keyValues(tags))
+            .build();
+    var histo =
+        Histogram.newBuilder()
+            .setAggregationTemporality(temporality)
+            .addDataPoints(point)
+            .build();
+    var metric = Metric.newBuilder().setName(metricName).setHistogram(histo).build();
+    var resourceMetrics =
+        ResourceMetrics.newBuilder()
+            .setResource(Resource.newBuilder().build())
+            .addScopeMetrics(ScopeMetrics.newBuilder().addMetrics(metric).build())
+            .build();
+    return ExportMetricsServiceRequest.newBuilder().addResourceMetrics(resourceMetrics).build();
+  }
+
+  private ExportMetricsServiceRequest sum(
+      String metricName, Map<String, String> tags, AggregationTemporality temporality) {
+    var point =
+        NumberDataPoint.newBuilder()
+            .setStartTimeUnixNano(1_000L * 1_000_000)
+            .setTimeUnixNano(2_000L * 1_000_000)
+            .setAsDouble(42.0)
+            .addAllAttributes(OtelShortHands.keyValues(tags))
+            .build();
+    var sum =
+        Sum.newBuilder()
+            .setAggregationTemporality(temporality)
+            .setIsMonotonic(false)
+            .addDataPoints(point)
+            .build();
+    var metric = Metric.newBuilder().setName(metricName).setSum(sum).build();
     var resourceMetrics =
         ResourceMetrics.newBuilder()
             .setResource(Resource.newBuilder().build())

@@ -4,31 +4,27 @@
  */
 package org.okapi.metrics.ch;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 import com.clickhouse.client.api.Client;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
-import io.opentelemetry.proto.metrics.v1.AggregationTemporality;
-import io.opentelemetry.proto.metrics.v1.Metric;
-import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
-import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
-import io.opentelemetry.proto.metrics.v1.ScopeMetrics;
-import io.opentelemetry.proto.metrics.v1.Sum;
+import io.opentelemetry.proto.metrics.v1.*;
 import io.opentelemetry.proto.resource.v1.Resource;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.okapi.ch.CreateChTablesSpec;
+import org.okapi.chtest.ChTestOnlyUtils;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetSumsQueryConfig;
 import org.okapi.rest.metrics.query.METRIC_TYPE;
 import org.okapi.testmodules.guice.TestChMetricsModule;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ChSumTests {
   @TempDir java.nio.file.Path tempDir;
@@ -43,7 +39,8 @@ public class ChSumTests {
     injector = Guice.createInjector(new TestChMetricsModule(tempDir.resolve("wal"), 16));
     client = injector.getInstance(Client.class);
     CreateChTablesSpec.migrate(client);
-    client.queryAll("TRUNCATE TABLE IF EXISTS " + ChConstants.TBL_SUM);
+    ChTestOnlyUtils.truncateTable(client, ChConstants.TBL_SUM);
+    ChTestOnlyUtils.truncateTable(client, ChConstants.TBL_METRIC_EVENTS_META);
   }
 
   @Test
@@ -85,6 +82,79 @@ public class ChSumTests {
     var sums = resp.getSumsResponse().getSums();
     assertEquals(1, sums.size());
     assertEquals(7L, sums.get(0).getCount());
+
+    var cumulativeReq =
+        GetMetricsRequest.builder()
+            .metric(metric)
+            .tags(tags)
+            .start(0)
+            .end(5_000)
+            .metricType(METRIC_TYPE.SUM)
+            .sumsQueryConfig(
+                GetSumsQueryConfig.builder()
+                    .temporality(GetSumsQueryConfig.TEMPORALITY.CUMULATIVE)
+                    .build())
+            .build();
+    var cumulativeResp = qp.getMetricsResponse(cumulativeReq);
+    assertNull(cumulativeResp.getSumsResponse());
+  }
+
+  @Test
+  void cumulativeReturnsLatestValueAndDeltaAggregateReturnsNull() throws Exception {
+    var ingester = injector.getInstance(ChMetricsIngester.class);
+    var driver = injector.getInstance(ChMetricsWalConsumerDriver.class);
+    var qp = injector.getInstance(ChMetricsQueryProcessor.class);
+
+    var resource = "svc-sum-" + UUID.randomUUID();
+    var metric = "metric_sum_cumulative";
+    var tags = Map.of("env", "dev", "test-session", testSession);
+
+    var req =
+        buildSumRequest(
+            resource,
+            metric,
+            tags,
+            AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE,
+            List.of(
+                numberPoint(1_000L, 2_000L, 10.0),
+                numberPoint(2_000L, 3_000L, 15.0),
+                numberPoint(3_000L, 4_000L, 19.0)));
+
+    ingester.ingestOtelProtobuf(req);
+    driver.onTick();
+
+    var cumulativeReq =
+        GetMetricsRequest.builder()
+            .metric(metric)
+            .tags(tags)
+            .start(0)
+            .end(5_000)
+            .metricType(METRIC_TYPE.SUM)
+            .sumsQueryConfig(
+                GetSumsQueryConfig.builder()
+                    .temporality(GetSumsQueryConfig.TEMPORALITY.CUMULATIVE)
+                    .build())
+            .build();
+    var cumulativeResp = qp.getMetricsResponse(cumulativeReq);
+    assertNotNull(cumulativeResp.getSumsResponse());
+    var sums = cumulativeResp.getSumsResponse().getSums();
+    assertEquals(1, sums.size());
+    assertEquals(19L, sums.get(0).getCount());
+
+    var deltaReq =
+        GetMetricsRequest.builder()
+            .metric(metric)
+            .tags(tags)
+            .start(0)
+            .end(5_000)
+            .metricType(METRIC_TYPE.SUM)
+            .sumsQueryConfig(
+                GetSumsQueryConfig.builder()
+                    .temporality(GetSumsQueryConfig.TEMPORALITY.DELTA_AGGREGATE)
+                    .build())
+            .build();
+    var deltaResp = qp.getMetricsResponse(deltaReq);
+    assertNull(deltaResp.getSumsResponse());
   }
 
   private ExportMetricsServiceRequest buildSumRequest(
@@ -99,7 +169,7 @@ public class ChSumTests {
             .setIsMonotonic(false)
             .addAllDataPoints(points)
             .build();
-    Metric metric = Metric.newBuilder().setName(metricName).setSum(sum).build();
+    var metric = Metric.newBuilder().setName(metricName).setSum(sum).build();
     var scopeMetrics = ScopeMetrics.newBuilder().addMetrics(metric).build();
     var resource =
         Resource.newBuilder()

@@ -9,11 +9,13 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
 
 @AllArgsConstructor
 @Getter
 @Builder
 @JsonClassDescription("A counter value accumulated over a specific time interval.")
+@ToString
 public class Sum {
   @JsonPropertyDescription("Interval start time in milliseconds since Unix epoch.")
   long ts;

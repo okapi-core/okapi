@@ -5,11 +5,12 @@
 package org.okapi.metrics.ch;
 
 import com.google.gson.annotations.SerializedName;
-import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import org.okapi.ch.AbstractChRow;
+
+import java.util.Map;
 
 @AllArgsConstructor
 @Getter
@@ -28,6 +29,6 @@ public class ChSumSampleRow extends AbstractChRow {
 
   long value;
 
-  @SerializedName("sum_type")
+  @SerializedName("sums_type")
   CH_SUM_TYPE sumType;
 }

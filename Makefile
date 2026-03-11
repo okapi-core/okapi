@@ -29,15 +29,18 @@ OKAPI_CLUSTER_ENDPOINT ?= http://okapi-ingester.$(HELM_NS).svc.cluster.local:900
 HELM_CHART_REPO ?= oci://ghcr.io/okapi-core
 HELM_CHART_DIST ?= helm/dist
 POSTGRES_DB ?= okapi_oscar
-POSTGRES_USER ?= okapi
-POSTGRES_PASSWORD ?= okapi
+POSTGRES_USER ?= okapi_oscar_user
+POSTGRES_PASSWORD ?= okapi_oscar_password
 VAULT_ROOT_TOKEN ?= 0d94159a1b7e9c8f563e4e9e383185dc402ef70e
 
 fe-dist:
 	@python3 build-scripts/fe_dist_copy.py
 
-package:
+package: copy-ch-sql
 	mvn package -T 4 -DskipTests=true
+
+package-ops: copy-ch-sql
+	mvn -pl okapi-ops package -DskipTests=true
 
 TAG ?= latest
 
@@ -169,7 +172,7 @@ test-secret:
 	--region us-west-2
 
 
-migrate:
+migrate: package-ops
 	java -jar okapi-ops/target/okapi-ops-0.0.1-SNAPSHOT.jar ddb-migrate --region us-west-2 --endpoint http://localhost:4566
 	java -jar okapi-ops/target/okapi-ops-0.0.1-SNAPSHOT.jar ch-migrate --host localhost --port 8123 --user default --password okapi_testing_password
 
@@ -234,3 +237,6 @@ publish: publish-docker publish-okapi-cp
 publish-okapi-cp-test:
 	cd okapi-cp && poetry build
 	cd okapi-cp && poetry publish -r testpypi
+
+copy-ch-sql:
+	cp -r ./okapi-ingester/src/main/resources/ch/*.sql ./okapi-ops/src/main/resources/ch/

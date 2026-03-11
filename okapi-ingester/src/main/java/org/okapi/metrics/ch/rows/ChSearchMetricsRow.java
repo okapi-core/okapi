@@ -14,6 +14,7 @@ public class ChSearchMetricsRow {
   String name;
   Map<String, String> tags;
   METRIC_TYPE metricType;
+  String temporality;
 
   @Override
   public boolean equals(Object o) {
@@ -21,11 +22,12 @@ public class ChSearchMetricsRow {
     ChSearchMetricsRow that = (ChSearchMetricsRow) o;
     return Objects.equals(name, that.name)
         && Objects.equals(tags, that.tags)
-        && metricType == that.metricType;
+        && metricType == that.metricType
+        && Objects.equals(temporality, that.temporality);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, tags, metricType);
+    return Objects.hash(name, tags, metricType, temporality);
   }
 }

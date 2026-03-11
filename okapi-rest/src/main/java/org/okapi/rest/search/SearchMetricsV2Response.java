@@ -12,7 +12,7 @@ import java.util.List;
 @ToString
 @Builder
 @JsonClassDescription("The set of metric paths matching all supplied search filters.")
-public class SearchMetricsResponse {
+public class SearchMetricsV2Response {
   @JsonPropertyDescription("List of metric paths (name + label set) that matched all filters.")
   List<MetricPath> matchingPaths;
 }

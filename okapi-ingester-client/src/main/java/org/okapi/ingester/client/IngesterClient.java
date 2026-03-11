@@ -124,8 +124,8 @@ public class IngesterClient {
         "/api/v1/spans/attributes/values/hints", request, SpanAttributeValueHintsResponse.class);
   }
 
-  public SearchMetricsResponse searchMetrics(SearchMetricsRequest request) {
-    return postRequest("/api/v1/metrics/search", request, SearchMetricsResponse.class);
+  public SearchMetricsV2Response searchMetrics(SearchMetricsRequest request) {
+    return postRequest("/api/v1/metrics/search", request, SearchMetricsV2Response.class);
   }
 
   public void ingestOtelMetrics(ExportMetricsServiceRequest request) {

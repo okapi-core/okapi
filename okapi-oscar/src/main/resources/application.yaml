@@ -8,7 +8,6 @@ okapi:
       throttle-limit: 10
       duration-millis: 1000
 
-
     greetings:
       - "Hello! How can I help?"
       - "Hi there! What are you working on?"
@@ -47,8 +46,8 @@ spring:
       schema-locations: classpath:db/schema-postgresql.sql
   datasource:
     url: ${OSCAR_DB_URL:jdbc:postgresql://localhost:5432/okapi_oscar}
-    username: ${OSCAR_DB_USER:okapi}
-    password: ${OSCAR_DB_PASSWORD:okapi}
+    username: ${OSCAR_DB_USER:okapi_oscar_user}
+    password: ${OSCAR_DB_PASSWORD:okapi_oscar_password}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

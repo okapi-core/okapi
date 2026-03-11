@@ -4,10 +4,11 @@
  */
 package org.okapi.metrics.ch.template;
 
-import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+
+import java.util.Map;
 
 @AllArgsConstructor
 @Getter
@@ -16,7 +17,7 @@ public class ChGetSumQueryTemplate {
   String table;
   String metric;
   Map<String, String> tags;
-  String histoType;
+  String sumsType;
   long ts;
   long te;
 }

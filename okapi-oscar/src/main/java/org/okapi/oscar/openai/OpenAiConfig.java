@@ -16,8 +16,7 @@ import org.springframework.context.annotation.Configuration;
 public class OpenAiConfig {
   @Bean
   public ApiKeyProvider openAiApiKeyProvider(
-          OpenAiCfg config
-          , SecretsPathReader secretsPathReader) {
+      OpenAiCfg config, SecretsPathReader secretsPathReader) {
     return secretsPathReader.resolve(config.getApiKeyPath());
   }
 
