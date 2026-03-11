@@ -10,6 +10,8 @@ import org.okapi.rest.chat.payload.PlotMetricFollowUpPayload;
 import org.okapi.rest.chat.payload.PostPlanPayload;
 import org.okapi.rest.chat.payload.PostResponsePayload;
 import org.okapi.rest.chat.payload.PostThoughtPayload;
+import org.okapi.rest.chat.payload.PostToolCallRequestPayload;
+import org.okapi.rest.chat.payload.PostToolCallResponsePayload;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
@@ -61,11 +63,11 @@ You must always call this tool with a final response for the user as users alway
       @ToolParam(description = "The trace ID the user should investigate further.") String traceId,
       @ToolParam(
               description =
-                  "Linux epoch start time. Spans will be filtered within time window [start, end] with traceId=traceId")
+                  "Linux epoch start time in nanoseconds. Spans will be filtered within time window [start, end] with traceId=traceId")
           long start,
       @ToolParam(
               description =
-                  "Linux epoch end time. Spans will be filtered within time window [start, end] with traceId=traceId")
+                  "Linux epoch end time in nanoseconds. Spans will be filtered within time window [start, end] with traceId=traceId")
           long end) {
     persist(
         CHAT_RESPONSE_TYPE.GET_TRACE_FOLLOW_UP,
@@ -81,6 +83,18 @@ You must always call this tool with a final response for the user as users alway
     persist(
         CHAT_RESPONSE_TYPE.PLOT_METRIC_FOLLOW_UP,
         GSON.toJson(new PlotMetricFollowUpPayload(request)));
+  }
+
+  public void postToolCallRequest(String toolName, String requestJson, String summary) {
+    persist(
+        CHAT_RESPONSE_TYPE.TOOL_CALL_REQUEST,
+        GSON.toJson(new PostToolCallRequestPayload(toolName, requestJson, summary)));
+  }
+
+  public void postToolCallResponse(String toolName, String responseJson, String summary) {
+    persist(
+        CHAT_RESPONSE_TYPE.TOOL_CALL_RESPONSE,
+        GSON.toJson(new PostToolCallResponsePayload(toolName, responseJson, summary)));
   }
 
   private void persist(CHAT_RESPONSE_TYPE responseType, String contents) {

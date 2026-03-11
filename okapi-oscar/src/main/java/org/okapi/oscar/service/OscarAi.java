@@ -3,7 +3,7 @@ package org.okapi.oscar.service;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.okapi.exceptions.BadRequestException;
-import org.okapi.oscar.agents.OscarResearchAgent;
+import org.okapi.oscar.agents.SreResearchAgent;
 import org.okapi.oscar.chat.ChatMessageEntity;
 import org.okapi.oscar.chat.ChatMessageRepository;
 import org.okapi.oscar.inference.InferenceJob;
@@ -21,7 +21,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class OscarAi {
 
-  private final OscarResearchAgent researchAgent;
+  private final SreResearchAgent researchAgent;
   private final ChatMessageRepository chatMessageRepository;
   private final OscarInferenceJobPool jobPool;
   private final SessionMetaRepository sessionMetaRepository;

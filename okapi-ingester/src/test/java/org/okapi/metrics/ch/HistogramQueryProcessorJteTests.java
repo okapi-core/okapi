@@ -16,7 +16,9 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -82,10 +84,69 @@ public class HistogramQueryProcessorJteTests {
 
     var resp = processor.getHistoRes(req);
     assertNotNull(resp.getHistogramResponse());
-    var histos = resp.getHistogramResponse().getHistograms();
+    var series = resp.getHistogramResponse().getSeries();
+    assertNotNull(series);
+    assertEquals(1, series.size());
+    var histos = series.get(0).getHistograms();
     assertEquals(1, histos.size());
     assertEquals(List.of(1, 2, 3), histos.get(0).getCounts());
     assertEquals(List.of(10.0f, 20.0f), histos.get(0).getBuckets());
+  }
+
+  @Test
+  void fetchesMultipleSeriesForSubsetTags() throws Exception {
+    var writer = injector.getInstance(ChWriter.class);
+    var templateEngine = injector.getInstance(ChMetricTemplateEngine.class);
+    var processor = new HistogramQueryProcessor(client, templateEngine);
+
+    var metric = "metric_h_multi";
+    var tagsA = Map.of("env", "dev", "host", "a");
+    var tagsB = Map.of("env", "dev", "host", "b");
+
+    var buckets = new float[] {10.0f, 20.0f};
+    var counts = new int[] {1, 2, 3};
+
+    var rowA =
+        ChHistoSample.builder()
+            .metric(metric)
+            .tags(tagsA)
+            .tsStart(1_000)
+            .tsEnd(2_000)
+            .buckets(buckets)
+            .counts(counts)
+            .histoType(ChHistoSample.HISTO_TYPE.DELTA)
+            .build();
+    var rowB =
+        ChHistoSample.builder()
+            .metric(metric)
+            .tags(tagsB)
+            .tsStart(1_000)
+            .tsEnd(2_000)
+            .buckets(buckets)
+            .counts(counts)
+            .histoType(ChHistoSample.HISTO_TYPE.DELTA)
+            .build();
+    writer.writeHistoSamplesBinary(List.of(rowA, rowB)).get();
+
+    var req =
+        GetMetricsRequest.builder()
+            .metric(metric)
+            .tags(Map.of("env", "dev"))
+            .start(0)
+            .end(5_000)
+            .metricType(METRIC_TYPE.HISTO)
+            .histoQueryConfig(
+                HistoQueryConfig.builder().temporality(HistoQueryConfig.TEMPORALITY.DELTA).build())
+            .build();
+
+    var resp = processor.getHistoRes(req);
+    assertNotNull(resp.getHistogramResponse());
+    var series = resp.getHistogramResponse().getSeries();
+    assertNotNull(series);
+    assertEquals(2, series.size());
+    var tags =
+        series.stream().map(s -> s.getTags()).collect(Collectors.toSet());
+    assertEquals(Set.of(tagsA, tagsB), tags);
   }
 
   private static String formatTs(long epochMillis) {

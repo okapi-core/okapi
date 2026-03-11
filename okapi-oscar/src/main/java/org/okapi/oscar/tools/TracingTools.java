@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -22,6 +23,7 @@ import java.util.List;
 public class TracingTools {
 
   IngesterClient client;
+  ToolCallReporter toolCallReporter;
 
   @Tool(
       description =
@@ -37,7 +39,11 @@ public class TracingTools {
 """)
   public SpanQueryV2Response getSpans(@ToolParam SpanQueryV2Request request) {
     log.info("Calling {}", request);
+    toolCallReporter.reportRequest(
+        "getSpans", request, ToolCallSummaries.summarizeSpanQueryRequest(request));
     var response = client.querySpans(request);
+    toolCallReporter.reportResponse(
+        "getSpans", response, ToolCallSummaries.summarizeSpanQueryResponse(response));
     log.info("Response: {}", response);
     return response;
   }
@@ -49,7 +55,11 @@ public class TracingTools {
   The only input to this service si
   """)
   public ServiceRedResponse getServiceRedMetrics(@ToolParam ServiceRedRequest request) {
-    return client.getServiceReds(request);
+    toolCallReporter.reportRequest("getServiceRedMetrics", request, "Fetching service RED metrics.");
+    var response = client.getServiceReds(request);
+    toolCallReporter.reportResponse(
+        "getServiceRedMetrics", response, "Fetch service RED metrics results.");
+    return response;
   }
 
   @Tool(
@@ -66,14 +76,25 @@ discoverPeers("checkout-service", 1700000000000000000, 1700003600000000000)
       @ToolParam(description = "Service name to inspect.") String service,
       @ToolParam(description = "Start timestamp in nanoseconds since Unix epoch.") long startNs,
       @ToolParam(description = "End timestamp in nanoseconds since Unix epoch.") long endNs) {
+    toolCallReporter.reportRequest(
+        "discoverPeers",
+        Map.of("service", service, "startNs", startNs, "endNs", endNs),
+        ToolCallSummaries.summarizeDiscoverPeersRequest(service, startNs, endNs));
     var response = getServiceReds(service, startNs, endNs);
     if (response.getPeerReds() == null) {
-      return Collections.emptyList();
+      var empty = Collections.<String>emptyList();
+      toolCallReporter.reportResponse(
+          "discoverPeers", empty, ToolCallSummaries.summarizeDiscoverPeersResponse(empty));
+      return empty;
     }
-    return response.getPeerReds().stream()
+    var peers =
+        response.getPeerReds().stream()
         .map(peer -> peer == null ? null : peer.getPeerService())
         .filter(name -> name != null && !name.isBlank())
         .toList();
+    toolCallReporter.reportResponse(
+        "discoverPeers", peers, ToolCallSummaries.summarizeDiscoverPeersResponse(peers));
+    return peers;
   }
 
   private ServiceRedResponse getServiceReds(String service, long startNs, long endNs) {

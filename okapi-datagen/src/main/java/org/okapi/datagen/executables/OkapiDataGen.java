@@ -13,7 +13,7 @@ import picocli.CommandLine;
     description = "Okapi generator for testing.",
     synopsisSubcommandLabel = "COMMAND",
     usageHelpAutoWidth = true,
-    subcommands = {AstronomySpansGen.class, UserGenerator.class})
+    subcommands = {AstronomySpansGen.class, AstronomyMetricsGen.class, UserGenerator.class})
 public class OkapiDataGen implements Callable<Integer> {
 
   @CommandLine.Spec private CommandLine.Model.CommandSpec spec;

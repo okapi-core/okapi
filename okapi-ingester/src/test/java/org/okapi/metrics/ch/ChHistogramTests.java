@@ -82,7 +82,10 @@ public class ChHistogramTests {
 
     var resp = qp.getMetricsResponse(queryReq);
     assertNotNull(resp.getHistogramResponse());
-    var histos = resp.getHistogramResponse().getHistograms();
+    var series = resp.getHistogramResponse().getSeries();
+    assertNotNull(series);
+    assertEquals(1, series.size());
+    var histos = series.get(0).getHistograms();
     assertEquals(1, histos.size());
     assertEquals(List.of(1 + 4, 2 + 5, 3 + 6), histos.get(0).getCounts());
     assertEquals(List.of(10.0f, 20.0f), histos.get(0).getBuckets());

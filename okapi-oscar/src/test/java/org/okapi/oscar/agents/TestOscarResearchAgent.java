@@ -2,13 +2,7 @@ package org.okapi.oscar.agents;
 
 import org.okapi.oscar.agent.TestOscarAgent;
 import org.okapi.oscar.spring.cfg.OkapiOscarCfg;
-import org.okapi.oscar.tools.DateTimeTools;
-import org.okapi.oscar.tools.FilterContributionTool;
-import org.okapi.oscar.tools.GreetingTools;
-import org.okapi.oscar.tools.MetricsTools;
-import org.okapi.oscar.tools.StatefulToolFactory;
-import org.okapi.oscar.tools.StatefulTools;
-import org.okapi.oscar.tools.TracingTools;
+import org.okapi.oscar.tools.*;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.openai.OpenAiChatModel;
 
@@ -27,7 +21,8 @@ public class TestOscarResearchAgent extends OscarResearchAgent {
       DateTimeTools dateTimeTools,
       GreetingTools greetingTools,
       FilterContributionTool filterContributionTool,
-      StatefulToolFactory statefulToolFactory) {
+      StatefulToolFactory statefulToolFactory,
+      ToolCallReporter toolCallReporter) {
     super(
         chatModel,
         chatMemory,
@@ -37,7 +32,8 @@ public class TestOscarResearchAgent extends OscarResearchAgent {
         dateTimeTools,
         greetingTools,
         filterContributionTool,
-        statefulToolFactory);
+        statefulToolFactory,
+        toolCallReporter);
     this.statefulToolFactory = statefulToolFactory;
   }
 

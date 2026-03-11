@@ -208,7 +208,8 @@ public class MetricsIngestionIT {
                       .build();
               GetMetricsResponse histoResp = postQuery(histoReq);
               assertNotNull(histoResp.getHistogramResponse());
-              assertEquals(1, histoResp.getHistogramResponse().getHistograms().size());
+              assertNotNull(histoResp.getHistogramResponse().getSeries());
+              assertEquals(1, histoResp.getHistogramResponse().getSeries().size());
             });
 
     await()

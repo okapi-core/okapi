@@ -7,6 +7,7 @@ package org.okapi.metrics.service;
 import java.util.List;
 import org.okapi.primitives.ReadonlyHistogram;
 import org.okapi.rest.metrics.query.GetHistogramResponse;
+import org.okapi.rest.metrics.query.HistogramSeries;
 import org.okapi.rest.metrics.query.Histogram;
 
 public class HistoAggregator {
@@ -22,6 +23,7 @@ public class HistoAggregator {
                         .end(h.getEndTs())
                         .build())
             .toList();
-    return GetHistogramResponse.builder().histograms(histos).build();
+    var series = HistogramSeries.builder().tags(null).histograms(histos).build();
+    return GetHistogramResponse.builder().histograms(histos).series(List.of(series)).build();
   }
 }

@@ -6,6 +6,8 @@ package org.okapi.datagen.spans;
 
 import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.common.v1.KeyValue;
+import java.util.List;
+import java.util.Map;
 
 public final class OtelShorthand {
   private OtelShorthand() {}
@@ -29,5 +31,9 @@ public final class OtelShorthand {
         .setKey(key)
         .setValue(AnyValue.newBuilder().setDoubleValue(value).build())
         .build();
+  }
+
+  public static List<KeyValue> toKvList(Map<String, String> attrs) {
+    return attrs.entrySet().stream().map(e -> kv(e.getKey(), e.getValue())).toList();
   }
 }

@@ -7,11 +7,13 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class OscarResearchAgent {
+@Profile("!dummy")
+public class OscarResearchAgent implements SreResearchAgent {
 
   private final ChatClient chatClient;
   private final OkapiOscarCfg cfg;
@@ -21,6 +23,7 @@ public class OscarResearchAgent {
   private final GreetingTools greetingTools;
   private final FilterContributionTool filterContributionTool;
   private final StatefulToolFactory statefulToolFactory;
+  private final ToolCallReporter toolCallReporter;
 
   public OscarResearchAgent(
       OpenAiChatModel chatModel,
@@ -31,7 +34,8 @@ public class OscarResearchAgent {
       DateTimeTools dateTimeTools,
       GreetingTools greetingTools,
       FilterContributionTool filterContributionTool,
-      StatefulToolFactory statefulToolFactory) {
+      StatefulToolFactory statefulToolFactory,
+      ToolCallReporter toolCallReporter) {
     this.chatClient =
         ChatClient.builder(chatModel)
             .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
@@ -43,22 +47,27 @@ public class OscarResearchAgent {
     this.greetingTools = greetingTools;
     this.statefulToolFactory = statefulToolFactory;
     this.filterContributionTool = filterContributionTool;
+    this.toolCallReporter = toolCallReporter;
   }
 
+  @Override
   public void respond(String sessionId, long streamId, String userMessage) {
-    chatClient
-        .prompt()
-        .system(cfg.getSystemPrompt())
-        .user(userMessage)
-        .tools(
-            metricsTools,
-            tracingTools,
-            dateTimeTools,
-            greetingTools,
-            filterContributionTool,
-            statefulToolFactory.getTools(sessionId, streamId))
-        .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, sessionId))
-        .call()
-        .content();
+    var statefulTools = statefulToolFactory.getTools(sessionId, streamId);
+    try (var scope = toolCallReporter.withStatefulTools(statefulTools)) {
+      chatClient
+          .prompt()
+          .system(cfg.getSystemPrompt())
+          .user(userMessage)
+          .tools(
+              metricsTools,
+              tracingTools,
+              dateTimeTools,
+              greetingTools,
+              filterContributionTool,
+              statefulTools)
+          .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, sessionId))
+          .call()
+          .content();
+    }
   }
 }

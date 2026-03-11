@@ -4,42 +4,30 @@
  */
 package org.okapi.metrics.ch;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
 import com.clickhouse.client.api.Client;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
-import io.opentelemetry.proto.metrics.v1.AggregationTemporality;
-import io.opentelemetry.proto.metrics.v1.Gauge;
+import io.opentelemetry.proto.metrics.v1.*;
 import io.opentelemetry.proto.metrics.v1.Histogram;
-import io.opentelemetry.proto.metrics.v1.HistogramDataPoint;
-import io.opentelemetry.proto.metrics.v1.Metric;
-import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
-import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
-import io.opentelemetry.proto.metrics.v1.ScopeMetrics;
 import io.opentelemetry.proto.metrics.v1.Sum;
 import io.opentelemetry.proto.resource.v1.Resource;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.okapi.ch.CreateChTablesSpec;
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
-import org.okapi.rest.metrics.query.GaugeQueryConfig;
-import org.okapi.rest.metrics.query.GetMetricsRequest;
-import org.okapi.rest.metrics.query.GetSumsQueryConfig;
-import org.okapi.rest.metrics.query.HistoQueryConfig;
-import org.okapi.rest.metrics.query.METRIC_TYPE;
+import org.okapi.rest.metrics.query.*;
 import org.okapi.testmodules.guice.TestChMetricsModule;
 import org.okapi.traces.testutil.OtelShortHands;
+
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ChMetricsExactOnlyMatchTest {
   @TempDir Path tempDir;
@@ -151,7 +139,8 @@ public class ChMetricsExactOnlyMatchTest {
                     HistoQueryConfig.builder().temporality(HistoQueryConfig.TEMPORALITY.DELTA).build())
                 .build());
     assertNotNull(histoFull.getHistogramResponse());
-    assertFalse(histoFull.getHistogramResponse().getHistograms().isEmpty());
+    assertNotNull(histoFull.getHistogramResponse().getSeries());
+    assertFalse(histoFull.getHistogramResponse().getSeries().isEmpty());
 
     var histoPartial =
         qp.getMetricsResponse(
@@ -164,7 +153,9 @@ public class ChMetricsExactOnlyMatchTest {
                 .histoQueryConfig(
                     HistoQueryConfig.builder().temporality(HistoQueryConfig.TEMPORALITY.DELTA).build())
                 .build());
-    assertNull(histoPartial.getHistogramResponse());
+    assertNotNull(histoPartial.getHistogramResponse());
+    assertNotNull(histoPartial.getHistogramResponse().getSeries());
+    assertEquals(2, histoPartial.getHistogramResponse().getSeries().size());
 
     var sumFull =
         qp.getMetricsResponse(

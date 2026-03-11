@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 public class MetricsTools {
   IngesterClient client;
+  ToolCallReporter toolCallReporter;
 
   @Tool(
       description =
@@ -33,7 +34,11 @@ Example
 3) Find metrics with a specific tag: valueFilters=[{label="host.name", value="my-host-42"}]
 """)
   public SearchMetricsV2Response searchMetrics(@ToolParam SearchMetricsRequest request) {
+    toolCallReporter.reportRequest(
+        "searchMetrics", request, ToolCallSummaries.summarizeSearchMetricsRequest(request));
     var response = client.searchMetrics(request);
+    toolCallReporter.reportResponse(
+        "searchMetrics", response, ToolCallSummaries.summarizeSearchMetricsResponse(response));
     return response;
   }
 
@@ -50,7 +55,7 @@ discoverMetricsForHost("my-host-42")
   public SearchMetricsV2Response discoverMetricsForHost(
       @ToolParam(description = "Host value to match exactly.") String host) {
     log.info("Discovery metrics: {}", host);
-    var response = discoverMetricsFor(host);
+    var response = discoverMetricsFor("discoverMetricsForHost", host);
     log.info("Discovered metrics: {}", response);
     return response;
   }
@@ -67,7 +72,7 @@ discoverMetricsForHostPattern("web-.*")
 """)
   public SearchMetricsV2Response discoverMetricsForHostPattern(
       @ToolParam(description = "RE2 pattern to match host values.") String pattern) {
-    return discoverMetricsForPattern(pattern);
+    return discoverMetricsForPattern("discoverMetricsForHostPattern", pattern);
   }
 
   @Tool(
@@ -82,7 +87,7 @@ discoverMetricsForDb("orders-db")
 """)
   public SearchMetricsV2Response discoverMetricsForDb(
       @ToolParam(description = "Database value to match exactly.") String db) {
-    return discoverMetricsFor(db);
+    return discoverMetricsFor("discoverMetricsForDb", db);
   }
 
   @Tool(
@@ -97,33 +102,48 @@ discoverMetricsForDbPattern("orders-.*")
 """)
   public SearchMetricsV2Response discoverMetricsForDbPattern(
       @ToolParam(description = "RE2 pattern to match database values.") String dbNamePattern) {
-    return discoverMetricsForPattern(dbNamePattern);
+    return discoverMetricsForPattern("discoverMetricsForDbPattern", dbNamePattern);
   }
 
   @Tool(
       description =
           "Get metrics data. This method can return histograms, gauges and counters (or sums). Gauges have a specific resolution so its likely that we use this ")
   public GetMetricsResponse getMetrics(@ToolParam GetMetricsRequest request) {
-    return client.query(request);
+    toolCallReporter.reportRequest(
+        "getMetrics", request, ToolCallSummaries.summarizeGetMetricsRequest(request));
+    var response = client.query(request);
+    toolCallReporter.reportResponse(
+        "getMetrics", response, ToolCallSummaries.summarizeGetMetricsResponse(request, response));
+    return response;
   }
 
-  private SearchMetricsV2Response discoverMetricsFor(String value) {
+  private SearchMetricsV2Response discoverMetricsFor(String toolName, String value) {
     var request =
         SearchMetricsRequest.builder()
             .tsStartMillis(0)
             .tsEndMillis(System.currentTimeMillis())
             .anyMetricOrValueFilter(AnyMetricOrValueFilter.builder().value(value).build())
             .build();
-    return client.searchMetrics(request);
+    toolCallReporter.reportRequest(
+        toolName, request, ToolCallSummaries.summarizeSearchMetricsRequest(request));
+    var response = client.searchMetrics(request);
+    toolCallReporter.reportResponse(
+        toolName, response, ToolCallSummaries.summarizeSearchMetricsResponse(response));
+    return response;
   }
 
-  private SearchMetricsV2Response discoverMetricsForPattern(String pattern) {
+  private SearchMetricsV2Response discoverMetricsForPattern(String toolName, String pattern) {
     var request =
         SearchMetricsRequest.builder()
             .tsStartMillis(0)
             .tsEndMillis(System.currentTimeMillis())
             .anyMetricOrValueFilter(AnyMetricOrValueFilter.builder().pattern(pattern).build())
             .build();
-    return client.searchMetrics(request);
+    toolCallReporter.reportRequest(
+        toolName, request, ToolCallSummaries.summarizeSearchMetricsRequest(request));
+    var response = client.searchMetrics(request);
+    toolCallReporter.reportResponse(
+        toolName, response, ToolCallSummaries.summarizeSearchMetricsResponse(response));
+    return response;
   }
 }

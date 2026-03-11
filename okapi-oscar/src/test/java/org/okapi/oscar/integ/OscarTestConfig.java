@@ -9,6 +9,7 @@ import org.okapi.oscar.tools.FilterContributionTool;
 import org.okapi.oscar.tools.GreetingTools;
 import org.okapi.oscar.tools.MetricsTools;
 import org.okapi.oscar.tools.StatefulToolFactory;
+import org.okapi.oscar.tools.ToolCallReporter;
 import org.okapi.oscar.tools.TracingTools;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.openai.OpenAiChatModel;
@@ -31,6 +32,7 @@ public class OscarTestConfig {
         Mockito.mock(DateTimeTools.class),
         Mockito.mock(GreetingTools.class),
         Mockito.mock(FilterContributionTool.class),
-        statefulToolFactory);
+        statefulToolFactory,
+        Mockito.mock(ToolCallReporter.class));
   }
 }

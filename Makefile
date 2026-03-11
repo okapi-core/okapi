@@ -186,7 +186,10 @@ test-users:
 test-spans:
 	java -jar okapi-datagen/target/okapi-datagen-0.0.1-SNAPSHOT.jar astro-spans-gen --host http://localhost --port 9009
 
-test-data: test-users test-spans
+test-metrics:
+	java -jar okapi-datagen/target/okapi-datagen-0.0.1-SNAPSHOT.jar astro-metrics-gen --host http://localhost --port 9009 --file data-gen/astro-metrics-config.json
+
+test-data: test-users test-spans test-metrics
 
 promql-testdata:
 	scripts/promql/update-promqltestdata.sh
@@ -254,6 +257,13 @@ start-oscar-jar-env:
 	export OKAPI_INGESTER_HOST='localhost'
 	export OKAPI_INGESTER_PORT=9009
 	java -jar ./okapi-oscar/target/okapi-oscar-0.0.1-SNAPSHOT.jar \
+		--okapi.oscar.cluster-endpoint=http://${OKAPI_INGESTER_HOST}:${OKAPI_INGESTER_PORT} \
+		--okapi.oscar.vault.address='' \
+		--okapi.oscar.openai.api-key-path=env://OPENAI_API_KEY
+
+start-oscar-dummy: package
+	java -jar ./okapi-oscar/target/okapi-oscar-0.0.1-SNAPSHOT.jar \
+		--spring.profiles.active=dummy
 		--okapi.oscar.cluster-endpoint=http://${OKAPI_INGESTER_HOST}:${OKAPI_INGESTER_PORT} \
 		--okapi.oscar.vault.address='' \
 		--okapi.oscar.openai.api-key-path=env://OPENAI_API_KEY

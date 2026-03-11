@@ -11,9 +11,11 @@ import com.google.common.primitives.Ints;
 import gg.jte.TemplateOutput;
 import gg.jte.output.StringOutput;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 import org.okapi.ch.ChTemplateFiles;
 import org.okapi.ds.HistogramMerger;
 import org.okapi.ds.TwoAtATimeMerger;
@@ -25,6 +27,7 @@ import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
 import org.okapi.rest.metrics.query.HistoQueryConfig;
 import org.okapi.rest.metrics.query.Histogram;
+import org.okapi.rest.metrics.query.HistogramSeries;
 
 /** Handles histogram query execution and aggregation. */
 public class HistogramQueryProcessor {
@@ -47,84 +50,111 @@ public class HistogramQueryProcessor {
         };
     var readings =
         scanSamples(ts, te, query.getMetric(), query.getTags(), histoType);
-    if (query.getHistoQueryConfig().getTemporality() == HistoQueryConfig.TEMPORALITY.CUMULATIVE) {
-      var largestSampleSize = readings.stream().map(r -> r.count).max(Long::compare).orElse(0L);
-      var largestSample =
-          readings.stream().filter(f -> Objects.equals(f.count, largestSampleSize)).findFirst();
-      if (largestSample.isPresent()) {
-        var histo = getHistogramResponse(largestSample.get());
-        return GetMetricsResponse.builder()
-            .metric(query.getMetric())
-            .tags(query.getTags())
-            .histogramResponse(histo)
-            .build();
-      } else {
-        return CannedResponses.noMetricsResponse(query.getMetric(), query.getTags());
-      }
-    } else if (query.getHistoQueryConfig().getTemporality() == HistoQueryConfig.TEMPORALITY.DELTA
-        || query.getHistoQueryConfig().getTemporality() == HistoQueryConfig.TEMPORALITY.MERGED) {
-      var deltas =
-          readings.stream()
-              .filter(sample -> sample.histoType == ChHistoSample.HISTO_TYPE.DELTA)
-              .toList();
-      var merged =
-          TwoAtATimeMerger.merge(
-              deltas,
-              (a, b) -> {
-                var distA = new HistogramMerger.Distribution(a.getBuckets(), a.getCounts());
-                var disB = new HistogramMerger.Distribution(b.getBuckets(), b.getCounts());
-                var resampled = HistogramMerger.merge(distA, disB);
-                var sum = a.getSum() + b.getSum();
-                var count = a.getCount() + b.getCount();
-                var tsStart = Math.min(a.tsStart, b.tsStart);
-                var tsEnd = Math.max(a.tsEnd, b.tsEnd);
-                var min = Math.min(a.min, b.min);
-                var max = Math.max(a.max, b.max);
-                return ChHistoSample.builder()
-                    .metric(query.getMetric())
-                    .tags(query.getTags())
-                    .histoType(histoType)
-                    .sum(sum)
-                    .min(min)
-                    .max(max)
-                    .count(count)
-                    .tsStart(tsStart)
-                    .tsEnd(tsEnd)
-                    .counts(resampled.counts())
-                    .buckets(resampled.buckets())
-                    .build();
-              });
-      if (merged.isPresent()) {
-        var histo = getHistogramResponse(merged.get());
-        return GetMetricsResponse.builder()
-            .metric(query.getMetric())
-            .tags(query.getTags())
-            .histogramResponse(histo)
-            .build();
-      } else {
-        return CannedResponses.noMetricsResponse(query.getMetric(), query.getTags());
-      }
+    var series = buildSeries(readings, query, histoType);
+    if (series.isEmpty()) {
+      return CannedResponses.noMetricsResponse(query.getMetric(), query.getTags());
     }
-    return CannedResponses.noMetricsResponse(query.getMetric(), query.getTags());
+    var histo = toHistogramResponse(series);
+    return GetMetricsResponse.builder()
+        .metric(query.getMetric())
+        .tags(query.getTags())
+        .histogramResponse(histo)
+        .build();
   }
 
-  public GetHistogramResponse getHistogramResponse(ChHistoSample chHistoSample) {
-    var histogram =
-        Histogram.builder()
-            .start(chHistoSample.getTsStart())
-            .end(chHistoSample.getTsEnd())
-            .count(chHistoSample.getCount())
-            .sum(chHistoSample.getSum())
-            .counts(
-                chHistoSample.getCounts() == null
-                    ? List.of()
-                    : Ints.asList(chHistoSample.getCounts()))
-            .buckets(
-                chHistoSample.getBuckets() == null
-                    ? List.of()
-                    : Floats.asList(chHistoSample.getBuckets()))
-            .build();
-    return GetHistogramResponse.builder().histograms(List.of(histogram)).build();
+  public GetHistogramResponse toHistogramResponse(List<HistogramSeries> series) {
+    if (series.size() == 1) {
+      return GetHistogramResponse.builder()
+          .histograms(series.get(0).getHistograms())
+          .series(series)
+          .build();
+    }
+    return GetHistogramResponse.builder().series(series).build();
+  }
+
+  private List<HistogramSeries> buildSeries(
+      List<ChHistoSample> readings,
+      GetMetricsRequest query,
+      ChHistoSample.HISTO_TYPE histoType) {
+    var byTags = new LinkedHashMap<Map<String, String>, List<ChHistoSample>>();
+    for (var sample : readings) {
+      var tagsKey = sample.getTags() == null ? Map.<String, String>of() : new TreeMap<>(sample.getTags());
+      byTags.computeIfAbsent(tagsKey, key -> new ArrayList<>()).add(sample);
+    }
+    var series = new ArrayList<HistogramSeries>();
+    for (var entry : byTags.entrySet()) {
+      var tags = entry.getKey();
+      var samples = entry.getValue();
+      if (query.getHistoQueryConfig().getTemporality() == HistoQueryConfig.TEMPORALITY.CUMULATIVE) {
+        var largestSampleSize =
+            samples.stream().map(r -> r.count).max(Long::compare).orElse(0L);
+        var largestSample =
+            samples.stream().filter(f -> Objects.equals(f.count, largestSampleSize)).findFirst();
+        if (largestSample.isPresent()) {
+          series.add(
+              HistogramSeries.builder()
+                  .tags(tags)
+                  .histograms(List.of(toHistogram(largestSample.get())))
+                  .build());
+        }
+      } else if (query.getHistoQueryConfig().getTemporality() == HistoQueryConfig.TEMPORALITY.DELTA
+          || query.getHistoQueryConfig().getTemporality() == HistoQueryConfig.TEMPORALITY.MERGED) {
+        var deltas =
+            samples.stream()
+                .filter(sample -> sample.histoType == ChHistoSample.HISTO_TYPE.DELTA)
+                .toList();
+        var merged =
+            TwoAtATimeMerger.merge(
+                deltas,
+                (a, b) -> {
+                  var distA = new HistogramMerger.Distribution(a.getBuckets(), a.getCounts());
+                  var disB = new HistogramMerger.Distribution(b.getBuckets(), b.getCounts());
+                  var resampled = HistogramMerger.merge(distA, disB);
+                  var sum = a.getSum() + b.getSum();
+                  var count = a.getCount() + b.getCount();
+                  var tsStart = Math.min(a.tsStart, b.tsStart);
+                  var tsEnd = Math.max(a.tsEnd, b.tsEnd);
+                  var min = Math.min(a.min, b.min);
+                  var max = Math.max(a.max, b.max);
+                  return ChHistoSample.builder()
+                      .metric(query.getMetric())
+                      .tags(tags)
+                      .histoType(histoType)
+                      .sum(sum)
+                      .min(min)
+                      .max(max)
+                      .count(count)
+                      .tsStart(tsStart)
+                      .tsEnd(tsEnd)
+                      .counts(resampled.counts())
+                      .buckets(resampled.buckets())
+                      .build();
+                });
+        merged.ifPresent(
+            sample ->
+                series.add(
+                    HistogramSeries.builder()
+                        .tags(tags)
+                        .histograms(List.of(toHistogram(sample)))
+                        .build()));
+      }
+    }
+    return series;
+  }
+
+  private static Histogram toHistogram(ChHistoSample chHistoSample) {
+    return Histogram.builder()
+        .start(chHistoSample.getTsStart())
+        .end(chHistoSample.getTsEnd())
+        .count(chHistoSample.getCount())
+        .sum(chHistoSample.getSum())
+        .counts(
+            chHistoSample.getCounts() == null ? List.of() : Ints.asList(chHistoSample.getCounts()))
+        .buckets(
+            chHistoSample.getBuckets() == null
+                ? List.of()
+                : Floats.asList(chHistoSample.getBuckets()))
+        .build();
   }
 
   public List<ChHistoSample> scanSamples(
