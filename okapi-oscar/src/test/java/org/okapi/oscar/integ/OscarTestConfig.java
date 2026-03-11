@@ -4,13 +4,7 @@ import org.mockito.Mockito;
 import org.okapi.oscar.agents.OscarResearchAgent;
 import org.okapi.oscar.agents.TestOscarResearchAgent;
 import org.okapi.oscar.spring.cfg.OkapiOscarCfg;
-import org.okapi.oscar.tools.DateTimeTools;
-import org.okapi.oscar.tools.FilterContributionTool;
-import org.okapi.oscar.tools.GreetingTools;
-import org.okapi.oscar.tools.MetricsTools;
-import org.okapi.oscar.tools.StatefulToolFactory;
-import org.okapi.oscar.tools.ToolCallReporter;
-import org.okapi.oscar.tools.TracingTools;
+import org.okapi.oscar.tools.*;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -27,12 +21,9 @@ public class OscarTestConfig {
         Mockito.mock(OpenAiChatModel.class),
         Mockito.mock(ChatMemory.class),
         Mockito.mock(OkapiOscarCfg.class),
-        Mockito.mock(MetricsTools.class),
-        Mockito.mock(TracingTools.class),
         Mockito.mock(DateTimeTools.class),
         Mockito.mock(GreetingTools.class),
         Mockito.mock(FilterContributionTool.class),
-        statefulToolFactory,
-        Mockito.mock(ToolCallReporter.class));
+        statefulToolFactory);
   }
 }

@@ -53,32 +53,23 @@ public class DummyOscarResearchAgent implements SreResearchAgent {
   private static final String KEY_TRACE_TIME_RANGE_NANOS = "traceTimeRangeNanos";
   private static final String KEY_SPAN_RESPONSE = "spanResponse";
 
-  private final MetricsTools metricsTools;
-  private final TracingTools tracingTools;
   private final DateTimeTools dateTimeTools;
   private final GreetingTools greetingTools;
   private final FilterContributionTool filterContributionTool;
   private final StatefulToolFactory statefulToolFactory;
-  private final ToolCallReporter toolCallReporter;
 
   private final List<SequenceMatcher> matchers;
   private final CannedToolCallSequence fallbackSequence;
 
   public DummyOscarResearchAgent(
-      MetricsTools metricsTools,
-      TracingTools tracingTools,
       DateTimeTools dateTimeTools,
       GreetingTools greetingTools,
       FilterContributionTool filterContributionTool,
-      StatefulToolFactory statefulToolFactory,
-      ToolCallReporter toolCallReporter) {
-    this.metricsTools = metricsTools;
-    this.tracingTools = tracingTools;
+      StatefulToolFactory statefulToolFactory) {
     this.dateTimeTools = dateTimeTools;
     this.greetingTools = greetingTools;
     this.filterContributionTool = filterContributionTool;
     this.statefulToolFactory = statefulToolFactory;
-    this.toolCallReporter = toolCallReporter;
     this.matchers =
         List.of(
             new SequenceMatcher(GREETING_PATTERN, buildGreetingSequence(), null),
@@ -96,32 +87,30 @@ public class DummyOscarResearchAgent implements SreResearchAgent {
 
   @Override
   public void respond(String sessionId, long streamId, String userMessage) {
-    var statefulTools = statefulToolFactory.getTools(sessionId, streamId);
+    var toolContext = statefulToolFactory.getTools(sessionId, streamId);
     var context =
         new CannedToolCallSequence.Context(
             sessionId,
             streamId,
             userMessage,
-            metricsTools,
-            tracingTools,
+            toolContext.getMetricsTools(),
+            toolContext.getTracingTools(),
             dateTimeTools,
             greetingTools,
             filterContributionTool,
-            statefulTools);
-    try (var scope = toolCallReporter.withStatefulTools(statefulTools)) {
-      for (var matcher : matchers) {
-        var match = matcher.pattern().matcher(userMessage);
-        if (!match.matches()) {
-          continue;
-        }
-        if (matcher.initializer() != null) {
-          matcher.initializer().accept(match, context);
-        }
-        matcher.sequence().runBlocking(context);
-        return;
+            toolContext.getStatefulTools());
+    for (var matcher : matchers) {
+      var match = matcher.pattern().matcher(userMessage);
+      if (!match.matches()) {
+        continue;
       }
-      fallbackSequence.runBlocking(context);
+      if (matcher.initializer() != null) {
+        matcher.initializer().accept(match, context);
+      }
+      matcher.sequence().runBlocking(context);
+      return;
     }
+    fallbackSequence.runBlocking(context);
   }
 
   private CannedToolCallSequence buildGreetingSequence() {

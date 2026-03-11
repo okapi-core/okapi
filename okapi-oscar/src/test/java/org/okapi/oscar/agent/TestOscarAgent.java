@@ -34,7 +34,7 @@ public class TestOscarAgent {
 
   private void runChunk(String sessionId, long streamId, ToolWriter writer) {
     try {
-      var tools = statefulToolFactory.getTools(sessionId, streamId);
+      var tools = statefulToolFactory.getTools(sessionId, streamId).getStatefulTools();
       writer.write(tools);
       streamMetaRepository.updateState(streamId, STREAM_STATE.FIN);
     } catch (InterruptedException e) {

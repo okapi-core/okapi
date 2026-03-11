@@ -16,30 +16,24 @@ public class TestOscarResearchAgent extends OscarResearchAgent {
       OpenAiChatModel chatModel,
       ChatMemory chatMemory,
       OkapiOscarCfg cfg,
-      MetricsTools metricsTools,
-      TracingTools tracingTools,
       DateTimeTools dateTimeTools,
       GreetingTools greetingTools,
       FilterContributionTool filterContributionTool,
-      StatefulToolFactory statefulToolFactory,
-      ToolCallReporter toolCallReporter) {
+      StatefulToolFactory statefulToolFactory) {
     super(
         chatModel,
         chatMemory,
         cfg,
-        metricsTools,
-        tracingTools,
         dateTimeTools,
         greetingTools,
         filterContributionTool,
-        statefulToolFactory,
-        toolCallReporter);
+        statefulToolFactory);
     this.statefulToolFactory = statefulToolFactory;
   }
 
   @Override
   public void respond(String sessionId, long streamId, String userMessage) {
-    var tools = statefulToolFactory.getTools(sessionId, streamId);
+    var tools = statefulToolFactory.getTools(sessionId, streamId).getStatefulTools();
     CompletableFuture.runAsync(() -> writeResponse(tools, userMessage)).join();
   }
 

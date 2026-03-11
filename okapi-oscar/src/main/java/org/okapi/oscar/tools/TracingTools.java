@@ -1,6 +1,5 @@
 package org.okapi.oscar.tools;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.okapi.ingester.client.IngesterClient;
 import org.okapi.metrics.pojos.RES_TYPE;
@@ -11,19 +10,21 @@ import org.okapi.rest.traces.red.ServiceRedRequest;
 import org.okapi.rest.traces.red.ServiceRedResponse;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
-@Component
-@AllArgsConstructor
 public class TracingTools {
 
-  IngesterClient client;
-  ToolCallReporter toolCallReporter;
+  private final IngesterClient client;
+  private final ToolCallReporter toolCallReporter;
+
+  public TracingTools(IngesterClient client, ToolCallReporter toolCallReporter) {
+    this.client = client;
+    this.toolCallReporter = toolCallReporter;
+  }
 
   @Tool(
       description =
@@ -42,8 +43,8 @@ public class TracingTools {
     toolCallReporter.reportRequest(
         "getSpans", request, ToolCallSummaries.summarizeSpanQueryRequest(request));
     var response = client.querySpans(request);
-    toolCallReporter.reportResponse(
-        "getSpans", response, ToolCallSummaries.summarizeSpanQueryResponse(response));
+    toolCallReporter.reportResponseSummaryOnly(
+        "getSpans", ToolCallSummaries.summarizeSpanQueryResponse(response));
     log.info("Response: {}", response);
     return response;
   }
@@ -58,7 +59,7 @@ public class TracingTools {
     toolCallReporter.reportRequest("getServiceRedMetrics", request, "Fetching service RED metrics.");
     var response = client.getServiceReds(request);
     toolCallReporter.reportResponse(
-        "getServiceRedMetrics", response, "Fetch service RED metrics results.");
+        "getServiceRedMetrics",  "Fetch service RED metrics results.");
     return response;
   }
 
@@ -84,7 +85,7 @@ discoverPeers("checkout-service", 1700000000000000000, 1700003600000000000)
     if (response.getPeerReds() == null) {
       var empty = Collections.<String>emptyList();
       toolCallReporter.reportResponse(
-          "discoverPeers", empty, ToolCallSummaries.summarizeDiscoverPeersResponse(empty));
+          "discoverPeers", ToolCallSummaries.summarizeDiscoverPeersResponse(empty));
       return empty;
     }
     var peers =
@@ -93,7 +94,7 @@ discoverPeers("checkout-service", 1700000000000000000, 1700003600000000000)
         .filter(name -> name != null && !name.isBlank())
         .toList();
     toolCallReporter.reportResponse(
-        "discoverPeers", peers, ToolCallSummaries.summarizeDiscoverPeersResponse(peers));
+        "discoverPeers", ToolCallSummaries.summarizeDiscoverPeersResponse(peers));
     return peers;
   }
 

@@ -9,6 +9,5 @@ import org.okapi.rest.annotations.TsResponseType;
 @TsResponseType
 public class PostToolCallResponsePayload {
   private final String toolName;
-  private final String responseJson;
   private final String summary;
 }

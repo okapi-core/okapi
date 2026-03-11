@@ -1,6 +1,5 @@
 package org.okapi.oscar.tools;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.okapi.ingester.client.IngesterClient;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
@@ -10,14 +9,16 @@ import org.okapi.rest.search.SearchMetricsRequest;
 import org.okapi.rest.search.SearchMetricsV2Response;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component
-@AllArgsConstructor
 public class MetricsTools {
-  IngesterClient client;
-  ToolCallReporter toolCallReporter;
+  private final IngesterClient client;
+  private final ToolCallReporter toolCallReporter;
+
+  public MetricsTools(IngesterClient client, ToolCallReporter toolCallReporter) {
+    this.client = client;
+    this.toolCallReporter = toolCallReporter;
+  }
 
   @Tool(
       description =
@@ -38,7 +39,7 @@ Example
         "searchMetrics", request, ToolCallSummaries.summarizeSearchMetricsRequest(request));
     var response = client.searchMetrics(request);
     toolCallReporter.reportResponse(
-        "searchMetrics", response, ToolCallSummaries.summarizeSearchMetricsResponse(response));
+        "searchMetrics", ToolCallSummaries.summarizeSearchMetricsResponse(response));
     return response;
   }
 
@@ -113,7 +114,7 @@ discoverMetricsForDbPattern("orders-.*")
         "getMetrics", request, ToolCallSummaries.summarizeGetMetricsRequest(request));
     var response = client.query(request);
     toolCallReporter.reportResponse(
-        "getMetrics", response, ToolCallSummaries.summarizeGetMetricsResponse(request, response));
+        "getMetrics", ToolCallSummaries.summarizeGetMetricsResponse(request, response));
     return response;
   }
 
@@ -128,7 +129,7 @@ discoverMetricsForDbPattern("orders-.*")
         toolName, request, ToolCallSummaries.summarizeSearchMetricsRequest(request));
     var response = client.searchMetrics(request);
     toolCallReporter.reportResponse(
-        toolName, response, ToolCallSummaries.summarizeSearchMetricsResponse(response));
+        toolName, ToolCallSummaries.summarizeSearchMetricsResponse(response));
     return response;
   }
 
@@ -143,7 +144,7 @@ discoverMetricsForDbPattern("orders-.*")
         toolName, request, ToolCallSummaries.summarizeSearchMetricsRequest(request));
     var response = client.searchMetrics(request);
     toolCallReporter.reportResponse(
-        toolName, response, ToolCallSummaries.summarizeSearchMetricsResponse(response));
+        toolName, ToolCallSummaries.summarizeSearchMetricsResponse(response));
     return response;
   }
 }

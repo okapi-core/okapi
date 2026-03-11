@@ -91,10 +91,10 @@ You must always call this tool with a final response for the user as users alway
         GSON.toJson(new PostToolCallRequestPayload(toolName, requestJson, summary)));
   }
 
-  public void postToolCallResponse(String toolName, String responseJson, String summary) {
+  public void postToolCallResponse(String toolName, String summary) {
     persist(
         CHAT_RESPONSE_TYPE.TOOL_CALL_RESPONSE,
-        GSON.toJson(new PostToolCallResponsePayload(toolName, responseJson, summary)));
+        GSON.toJson(new PostToolCallResponsePayload(toolName, summary)));
   }
 
   private void persist(CHAT_RESPONSE_TYPE responseType, String contents) {
