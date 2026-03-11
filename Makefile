@@ -29,7 +29,7 @@ OKAPI_CLUSTER_ENDPOINT ?= http://okapi-ingester.$(HELM_NS).svc.cluster.local:900
 HELM_CHART_REPO ?= oci://ghcr.io/okapi-core
 HELM_CHART_DIST ?= helm/dist
 POSTGRES_DB ?= okapi_oscar
-POSTGRES_USER ?= okapi_oscar_user
+POSTGRES_USER ?= okapi_oscar_user_admin
 POSTGRES_PASSWORD ?= okapi_oscar_password
 VAULT_ROOT_TOKEN ?= 0d94159a1b7e9c8f563e4e9e383185dc402ef70e
 
@@ -149,6 +149,7 @@ postgres: testnetwork
 	-e POSTGRES_DB=$(POSTGRES_DB) \
 	-e POSTGRES_USER=$(POSTGRES_USER) \
 	-e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) \
+	-v ./postgres-init/init.sql:/docker-entrypoint-initdb.d/init.sql \
 	postgres:16
 
 oscar-vault-dev:
@@ -243,3 +244,16 @@ publish-okapi-cp-test:
 
 copy-ch-sql:
 	cp -r ./okapi-ingester/src/main/resources/ch/*.sql ./okapi-ops/src/main/resources/ch/
+
+start-oscar-jar-env:
+	export POSTGRES_HOST=localhost
+	export POSTGRES_PORT=5432
+	export OSCAR_DB_URL='jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/okapi_oscar'
+	export OSCAR_DB_USER=okapi_oscar_user
+	export OSCAR_DB_PASSWORD=okapi_oscar_password
+	export OKAPI_INGESTER_HOST='localhost'
+	export OKAPI_INGESTER_PORT=9009
+	java -jar ./okapi-oscar/target/okapi-oscar-0.0.1-SNAPSHOT.jar \
+		--okapi.oscar.cluster-endpoint=http://${OKAPI_INGESTER_HOST}:${OKAPI_INGESTER_PORT} \
+		--okapi.oscar.vault.address='' \
+		--okapi.oscar.openai.api-key-path=env://OPENAI_API_KEY

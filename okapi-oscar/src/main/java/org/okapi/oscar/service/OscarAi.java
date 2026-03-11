@@ -74,7 +74,6 @@ public class OscarAi {
         () -> {
           streamMetaRepository.updateState(streamId, STREAM_STATE.OPEN);
           try {
-            log.info("Req: {}", request.getMessage());
             researchAgent.respond(sessionId, streamId, request.getMessage());
           } catch (Exception e) {
             log.error("Responding failed with: ", e);
