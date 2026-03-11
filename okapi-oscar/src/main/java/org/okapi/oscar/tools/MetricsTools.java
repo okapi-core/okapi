@@ -19,8 +19,20 @@ public class MetricsTools {
 
   @Tool(
       description =
-          "Search metrics which match provided filters. Use this tool to find metrics which match a pattern that have been emitted in the provided time window." +
-                  "Use this to find all tags related to a specific metric. The tags can be used to refine search if a query returns no response.")
+          "Search for metric paths (name + tag combinations) that were emitted in a time window."
+              + " Use this to discover which metrics exist, find all tag combinations for a metric,"
+              + " or check if a metric is being emitted at all."
+              + " tsStartMillis and tsEndMillis MUST be in MILLISECONDS since Unix epoch —"
+              + " use timeRange() not timeRangeNanos() to populate them."
+              + " Example 1 — find all metrics for a service: set metricNamePattern to a RE2 regex"
+              + " (e.g. 'checkout\\..*') to match all metrics whose names start with that prefix."
+              + " Example 2 — find metrics for a specific host: set anyMetricOrValueFilter.value to"
+              + " the exact host name tag value (e.g. 'my-host-42') to match any metric whose"
+              + " name or any tag value equals that string exactly."
+              + " Example 3 — find metrics with a specific tag: set valueFilters with the label"
+              + " and value (e.g. label='host.name', value='my-host-42')."
+              + " NOTE: anyMetricOrValueFilter.value performs an EXACT match — do NOT use it for"
+              + " service name prefixes like 'checkout'; use metricNamePattern instead.")
   public SearchMetricsResponse searchMetrics(@ToolParam SearchMetricsRequest request) {
     log.info("req: {}", request);
     var response = client.searchMetrics(request);

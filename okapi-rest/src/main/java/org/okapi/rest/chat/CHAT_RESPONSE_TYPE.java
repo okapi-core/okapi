@@ -3,5 +3,10 @@ package org.okapi.rest.chat;
 public enum CHAT_RESPONSE_TYPE {
   MARKDOWN_TEXT,
   PLOT_CMD,
-  GET_TRACES_CMD
+  GET_TRACES_CMD,
+  THOUGHT,
+  PLAN,
+  RESPONSE,
+  GET_TRACE_FOLLOW_UP,
+  PLOT_METRIC_FOLLOW_UP
 }

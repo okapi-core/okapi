@@ -39,26 +39,59 @@ public class SingleStepFlowCorpus implements Corpus {
 
   private void seedMetrics() {
     long nowNs = System.currentTimeMillis() * 1_000_000L;
-    for (String metricName : METRIC_PATHS) {
-      var dataPoint =
-          NumberDataPoint.newBuilder()
-              .setTimeUnixNano(nowNs)
-              .addAttributes(kv("env", "prod"))
-              .setAsDouble(42.0)
-              .build();
-      var metric =
-          Metric.newBuilder()
-              .setName(metricName)
-              .setGauge(Gauge.newBuilder().addDataPoints(dataPoint).build())
-              .build();
-      var resourceMetrics =
-          ResourceMetrics.newBuilder()
-              .setResource(serviceResource(CHECKOUT_SERVICE))
-              .addScopeMetrics(ScopeMetrics.newBuilder().addMetrics(metric).build())
-              .build();
-      ingesterClient.ingestOtelMetrics(
-          ExportMetricsServiceRequest.newBuilder().addResourceMetrics(resourceMetrics).build());
+
+    // checkout.http.requests is a counter (Sum), not a Gauge
+    seedSumMetric("checkout.http.requests", nowNs, 1200.0);
+
+    // JVM heap and CPU are gauges
+    for (String metricName : List.of("checkout.jvm.heap", "checkout.cpu.usage")) {
+      seedGaugeMetric(metricName, nowNs, 42.0);
     }
+  }
+
+  private void seedGaugeMetric(String metricName, long nowNs, double value) {
+    var dataPoint =
+        NumberDataPoint.newBuilder()
+            .setTimeUnixNano(nowNs)
+            .addAttributes(kv("env", "prod"))
+            .setAsDouble(value)
+            .build();
+    var metric =
+        Metric.newBuilder()
+            .setName(metricName)
+            .setGauge(Gauge.newBuilder().addDataPoints(dataPoint).build())
+            .build();
+    ingest(metric);
+  }
+
+  private void seedSumMetric(String metricName, long nowNs, double value) {
+    var dataPoint =
+        NumberDataPoint.newBuilder()
+            .setTimeUnixNano(nowNs)
+            .addAttributes(kv("env", "prod"))
+            .setAsDouble(value)
+            .build();
+    var metric =
+        Metric.newBuilder()
+            .setName(metricName)
+            .setSum(
+                Sum.newBuilder()
+                    .addDataPoints(dataPoint)
+                    .setAggregationTemporality(
+                        AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE)
+                    .build())
+            .build();
+    ingest(metric);
+  }
+
+  private void ingest(Metric metric) {
+    var resourceMetrics =
+        ResourceMetrics.newBuilder()
+            .setResource(serviceResource(CHECKOUT_SERVICE))
+            .addScopeMetrics(ScopeMetrics.newBuilder().addMetrics(metric).build())
+            .build();
+    ingesterClient.ingestOtelMetrics(
+        ExportMetricsServiceRequest.newBuilder().addResourceMetrics(resourceMetrics).build());
   }
 
   private void seedErrorTraces() {

@@ -6,16 +6,19 @@ package org.okapi.rest.metrics.query;
 
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import java.util.List;
-import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
+
+import java.util.List;
+import java.util.Map;
 
 @AllArgsConstructor
 @Builder
 @Getter
 @JsonClassDescription("A single gauge time-series for one unique set of tags.")
+@ToString
 public class GaugeSeries {
   @JsonPropertyDescription("Label key-value pairs identifying this series.")
   Map<String, String> tags;

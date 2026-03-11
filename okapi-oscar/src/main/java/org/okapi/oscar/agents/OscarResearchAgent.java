@@ -3,6 +3,7 @@ package org.okapi.oscar.agents;
 import org.okapi.oscar.spring.cfg.OkapiOscarCfg;
 import org.okapi.oscar.tools.DateTimeTools;
 import org.okapi.oscar.tools.MetricsTools;
+import org.okapi.oscar.tools.StatefulToolFactory;
 import org.okapi.oscar.tools.TracingTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -18,6 +19,7 @@ public class OscarResearchAgent {
   private final MetricsTools metricsTools;
   private final TracingTools tracingTools;
   private final DateTimeTools dateTimeTools;
+  private final StatefulToolFactory statefulToolFactory;
 
   public OscarResearchAgent(
       OpenAiChatModel chatModel,
@@ -25,7 +27,8 @@ public class OscarResearchAgent {
       OkapiOscarCfg cfg,
       MetricsTools metricsTools,
       TracingTools tracingTools,
-      DateTimeTools dateTimeTools) {
+      DateTimeTools dateTimeTools,
+      StatefulToolFactory statefulToolFactory) {
     this.chatClient =
         ChatClient.builder(chatModel)
             .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
@@ -34,14 +37,15 @@ public class OscarResearchAgent {
     this.metricsTools = metricsTools;
     this.tracingTools = tracingTools;
     this.dateTimeTools = dateTimeTools;
+    this.statefulToolFactory = statefulToolFactory;
   }
 
-  public String respond(String sessionId, String userMessage) {
-    return chatClient
+  public void respond(String sessionId, String userMessage) {
+    chatClient
         .prompt()
         .system(cfg.getSystemPrompt())
         .user(userMessage)
-        .tools(metricsTools, tracingTools, dateTimeTools)
+        .tools(metricsTools, tracingTools, dateTimeTools, statefulToolFactory.getTools(sessionId))
         .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, sessionId))
         .call()
         .content();

@@ -30,23 +30,11 @@ public class OscarAi {
             .tsMillis(System.currentTimeMillis())
             .build());
 
-    String aiResponse = researchAgent.respond(sessionId, request.getMessage());
-
-    long ts = System.currentTimeMillis();
-    chatMessageRepository.save(
-        ChatMessageEntity.builder()
-            .sessionId(sessionId)
-            .userId(request.getUserId())
-            .role(CHAT_ROLE.ASSISTANT)
-            .contents(aiResponse)
-            .responseType(CHAT_RESPONSE_TYPE.MARKDOWN_TEXT)
-            .tsMillis(ts)
-            .build());
+    researchAgent.respond(sessionId, request.getMessage());
 
     return ChatResponse.builder()
-        .timestamp(String.valueOf(ts))
-        .contents(aiResponse)
-        .responseType(CHAT_RESPONSE_TYPE.MARKDOWN_TEXT)
+        .timestamp(String.valueOf(System.currentTimeMillis()))
+        .responseType(CHAT_RESPONSE_TYPE.RESPONSE)
         .role(CHAT_ROLE.ASSISTANT)
         .build();
   }

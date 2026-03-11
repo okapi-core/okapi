@@ -11,12 +11,20 @@ import org.springframework.stereotype.Component;
 @Component
 public class DateTimeTools {
 
-  @Tool(description = "Returns the current time as milliseconds since Unix epoch.")
+  @Tool(
+      description =
+          "Returns the current time in MILLISECONDS since Unix epoch."
+              + " Use the result for fields named tsStartMillis, tsEndMillis, startMs, endMs, or"
+              + " any field that expects millisecond timestamps.")
   public long currentTime() {
     return System.currentTimeMillis();
   }
 
-  @Tool(description = "Returns the current time as nanoseconds since Unix epoch.")
+  @Tool(
+      description =
+          "Returns the current time in NANOSECONDS since Unix epoch."
+              + " Use the result for fields named tsStartNanos, tsEndNanos, startNanos, endNanos,"
+              + " or any field that expects nanosecond timestamps.")
   public long currentTimeNanos() {
     Instant now = Instant.now();
     return now.getEpochSecond() * 1_000_000_000L + now.getNano();
@@ -24,8 +32,11 @@ public class DateTimeTools {
 
   @Tool(
       description =
-          "Returns a time range [startMs, endMs] ending at now and spanning the given duration."
-              + " Use this to compute query windows like 'last 1 hour' or 'last 30 minutes'.")
+          "Returns a time range ending at now and spanning the given duration."
+              + " Output fields startMs and endMs are in MILLISECONDS since Unix epoch."
+              + " Use for fields named tsStartMillis, tsEndMillis, startMs, endMs, or any field"
+              + " that expects millisecond timestamps."
+              + " Example: timeRange(1, HOURS) gives the last 1 hour as millisecond timestamps.")
   public TimeRange timeRange(
       @ToolParam(description = "Duration value, e.g. 1 for 1 hour or 30 for 30 minutes.")
           int duration,
@@ -40,9 +51,12 @@ public class DateTimeTools {
 
   @Tool(
       description =
-          "Returns a time range [startNanos, endNanos] ending at now and spanning the given"
-              + " duration, expressed in nanoseconds since Unix epoch. Use this for trace queries"
-              + " which require nanosecond timestamps.")
+          "Returns a time range ending at now and spanning the given duration."
+              + " Output fields startNanos and endNanos are in NANOSECONDS since Unix epoch."
+              + " Use for fields named tsStartNanos, tsEndNanos, startNanos, endNanos, or any"
+              + " field that expects nanosecond timestamps. Do NOT use for millisecond fields."
+              + " Example: timeRangeNanos(1, HOURS) gives the last 1 hour as nanosecond"
+              + " timestamps, suitable for trace queries.")
   public TimeRangeNanos timeRangeNanos(
       @ToolParam(description = "Duration value, e.g. 1 for 1 hour or 30 for 30 minutes.")
           int duration,
