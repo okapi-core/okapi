@@ -5,12 +5,10 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import org.okapi.ingester.client.ProxyResponseTranslator;
-import org.okapi.rest.chat.ChatHistoryResponse;
-import org.okapi.rest.chat.ChatMessageUpdatesResponse;
-import org.okapi.rest.chat.ChatResponse;
-import org.okapi.rest.chat.GetHistoryRequest;
-import org.okapi.rest.chat.PostMessageRequest;
+import org.okapi.rest.chat.*;
 import org.okapi.rest.session.CreateSessionRequest;
+import org.okapi.rest.session.ListSessionsRequest;
+import org.okapi.rest.session.ListSessionsResponse;
 import org.okapi.rest.session.SessionMetaResponse;
 
 import java.io.IOException;
@@ -57,11 +55,7 @@ public class OscarClient {
   }
 
   private <T> T getRequest(String path, Class<T> clazz) {
-    Request request =
-        new Request.Builder()
-            .url(safeUrlConcat(endpoint, path))
-            .get()
-            .build();
+    Request request = new Request.Builder().url(safeUrlConcat(endpoint, path)).get().build();
     try (var response = client.newCall(request).execute()) {
       return translator.translateResponse(response, clazz);
     } catch (IOException e) {
@@ -101,6 +95,10 @@ public class OscarClient {
 
   public SessionMetaResponse createSession(CreateSessionRequest request) {
     return postRequest("/api/v1/sessions", request, SessionMetaResponse.class);
+  }
+
+  public ListSessionsResponse listSessions(ListSessionsRequest request) {
+    return postRequest("/api/v1/sessions/list", request, ListSessionsResponse.class);
   }
 
   public SessionMetaResponse getSessionMeta(String sessionId) {

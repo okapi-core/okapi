@@ -6,6 +6,7 @@ package org.okapi.traces;
 
 import org.okapi.rest.traces.SpanQueryV2Request;
 import org.okapi.rest.traces.SpanQueryV2Response;
+import org.okapi.rest.traces.SpanQueryV2SummaryResponse;
 import org.okapi.traces.ch.ChTraceQueryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,5 +23,10 @@ public class ChTracesQueryController {
   @PostMapping("/spans/query")
   public SpanQueryV2Response getSpans(@RequestBody SpanQueryV2Request requestV2) {
     return traceQueryService.getSpans(requestV2);
+  }
+
+  @PostMapping("/spans/query/summary")
+  public SpanQueryV2SummaryResponse getSpansSummary(@RequestBody SpanQueryV2Request requestV2) {
+    return traceQueryService.getSpansSummary(requestV2);
   }
 }

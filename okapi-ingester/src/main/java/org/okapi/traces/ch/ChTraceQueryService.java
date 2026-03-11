@@ -6,14 +6,15 @@ package org.okapi.traces.ch;
 
 import com.clickhouse.client.api.Client;
 import com.clickhouse.client.api.query.GenericRecord;
-import gg.jte.TemplateOutput;
-import gg.jte.output.StringOutput;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.okapi.ch.ChTemplateFiles;
+import org.okapi.exceptions.DataFailureException;
 import org.okapi.metrics.ch.ChConstants;
 import org.okapi.rest.traces.*;
 import org.okapi.timeutils.TimeUtils;
 import org.okapi.traces.ch.template.ChTraceTemplateEngine;
+import org.okapi.validation.OkapiChecks;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -26,6 +27,7 @@ import java.util.Map;
 public class ChTraceQueryService {
   private final Client client;
   private final ChTraceTemplateEngine templateEngine;
+  private static final long OPERATION_TIMEOUT_MS = 1000;
 
   public ChTraceQueryService(Client client, ChTraceTemplateEngine templateEngine) {
     this.client = client;
@@ -34,14 +36,22 @@ public class ChTraceQueryService {
 
   public SpanQueryV2Response getSpans(SpanQueryV2Request requestV2) {
     var template = buildTemplate(requestV2);
-    var query = renderQuery(template);
-    log.info("Running query {}", query);
+    var query = templateEngine.render(ChTemplateFiles.GET_SPANS_V2, template);
     var records = client.queryAll(query);
     var rows = new ArrayList<SpanRowV2>(records.size());
     for (var record : records) {
       rows.add(toRow(record));
     }
     return SpanQueryV2Response.builder().items(rows).build();
+  }
+
+  public SpanQueryV2SummaryResponse getSpansSummary(SpanQueryV2Request requestV2) {
+    var template = buildTemplate(requestV2);
+    var query = templateEngine.render(ChTemplateFiles.GET_SPANS_SUMMARY_V2, template);
+    var records = client.queryAll(StringUtils.normalizeSpace(query));
+    OkapiChecks.checkArgument(!records.isEmpty(), DataFailureException::new);
+    var count = records.getFirst().getLong("result_count");
+    return SpanQueryV2SummaryResponse.builder().count(count).build();
   }
 
   private ChSpansQueryTemplate buildTemplate(SpanQueryV2Request requestV2) {
@@ -87,12 +97,6 @@ public class ChTraceQueryService {
         .stringAttributeFilters(buildStringAttributeFilters(requestV2.getStringAttributesFilter()))
         .numberAttributeFilters(buildNumberAttributeFilters(requestV2.getNumberAttributesFilter()));
     return builder.limit(ChConstants.TRACE_QUERY_LIMIT).build();
-  }
-
-  private String renderQuery(ChSpansQueryTemplate template) {
-    TemplateOutput output = new StringOutput();
-    templateEngine.render(ChTemplateFiles.GET_SPANS_V2, template, output);
-    return output.toString();
   }
 
   private SpanRowV2 toRow(GenericRecord record) {

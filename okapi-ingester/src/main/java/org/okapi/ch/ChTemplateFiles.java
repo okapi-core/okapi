@@ -18,6 +18,7 @@ public final class ChTemplateFiles {
   public static final String GET_TAG_HINTS = "get_tag_hints.jte";
   public static final String GET_TAG_VALUE_HINTS = "get_tag_value_hints.jte";
   public static final String GET_SPANS_V2 = "get_spans_v2.jte";
+  public static final String GET_SPANS_SUMMARY_V2 = "get_spans_summary_v2.jte";
   public static final String GET_SPANS_STATS_COUNT = "get_spans_stats_count.jte";
   public static final String GET_SPANS_STATS_DISTRIBUTION = "get_spans_stats_distribution.jte";
   public static final String GET_SPANS_ATTRIBUTE_TYPES = "get_spans_attribute_types.jte";

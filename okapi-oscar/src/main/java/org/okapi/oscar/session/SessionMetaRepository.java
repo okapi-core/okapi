@@ -1,5 +1,6 @@
 package org.okapi.oscar.session;
 
+import java.util.List;
 import org.okapi.rest.session.SESSION_STATE;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -22,4 +23,7 @@ public interface SessionMetaRepository extends JpaRepository<SessionMetaEntity, 
   @Transactional
   @Query("UPDATE SessionMetaEntity s SET s.state = :state WHERE s.sessionId = :sessionId")
   void updateState(String sessionId, SESSION_STATE state);
+
+  List<SessionMetaEntity> findByOwnerIdAndStartTimeBetweenOrderByStartTimeDesc(
+      String ownerId, long startTime, long endTime);
 }

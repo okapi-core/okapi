@@ -9,6 +9,9 @@ import org.okapi.oscar.client.OscarClient;
 import org.okapi.rest.chat.*;
 import org.okapi.rest.session.CreateSessionBlindRequest;
 import org.okapi.rest.session.CreateSessionRequest;
+import org.okapi.rest.session.ListSessionsBlindRequest;
+import org.okapi.rest.session.ListSessionsRequest;
+import org.okapi.rest.session.ListSessionsResponse;
 import org.okapi.rest.session.SessionMetaResponse;
 import org.okapi.web.service.access.OrgMemberChecker;
 import org.springframework.stereotype.Service;
@@ -41,6 +44,18 @@ public class OscarService {
     var createSessionRequest =
         CreateSessionRequest.builder().ownerId(userId).initialMsg(request.getInitialMsg()).build();
     return oscarClient.createSession(createSessionRequest);
+  }
+
+  public ListSessionsResponse listSessions(String token, ListSessionsBlindRequest request) {
+    var ctx = orgMemberChecker.checkUserIsOrgMember(token);
+    var userId = ctx.getUserId();
+    var listRequest =
+        ListSessionsRequest.builder()
+            .userId(userId)
+            .from(request.getFrom())
+            .to(request.getTo())
+            .build();
+    return oscarClient.listSessions(listRequest);
   }
 
   public SessionMetaResponse getSessionMeta(String token, String sessionId) {

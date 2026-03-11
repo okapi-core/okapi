@@ -1,12 +1,13 @@
 package org.okapi.oscar.tools;
 
-import java.time.Instant;
-import java.util.concurrent.TimeUnit;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
+
+import java.time.Instant;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class DateTimeTools {
@@ -51,12 +52,14 @@ public class DateTimeTools {
 
   @Tool(
       description =
-          "Returns a time range ending at now and spanning the given duration."
-              + " Output fields startNanos and endNanos are in NANOSECONDS since Unix epoch."
-              + " Use for fields named tsStartNanos, tsEndNanos, startNanos, endNanos, or any"
-              + " field that expects nanosecond timestamps. Do NOT use for millisecond fields."
-              + " Example: timeRangeNanos(1, HOURS) gives the last 1 hour as nanosecond"
-              + " timestamps, suitable for trace queries.")
+"""
+Returns a time range ending at now and spanning the given duration.
+Output fields startNanos and endNanos are in NANOSECONDS since Unix epoch.
+Use for fields named tsStartNanos, tsEndNanos, startNanos, endNanos, or any
+field that expects nanosecond timestamps. Do NOT use for millisecond fields.
+Example: timeRangeNanos(1, HOURS) gives the last 1 hour as nanosecond
+timestamps, suitable for trace queries.
+""")
   public TimeRangeNanos timeRangeNanos(
       @ToolParam(description = "Duration value, e.g. 1 for 1 hour or 30 for 30 minutes.")
           int duration,

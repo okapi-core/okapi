@@ -2,7 +2,6 @@ package org.okapi.oscar.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
 import org.okapi.exceptions.BadRequestException;
 import org.okapi.oscar.agents.OscarResearchAgent;
 import org.okapi.oscar.chat.ChatMessageEntity;
@@ -111,7 +110,23 @@ public class OscarAi {
   }
 
   public ListSessionsResponse listSessions(ListSessionsRequest request) {
-    throw new NotImplementedException();
+    if (request.getFrom() > request.getTo()) {
+      throw new BadRequestException("Invalid time range: from is after to");
+    }
+    var sessions =
+        sessionMetaRepository.findByOwnerIdAndStartTimeBetweenOrderByStartTimeDesc(
+            request.getUserId(), request.getFrom(), request.getTo());
+    var responses =
+        sessions.stream()
+            .map(
+                session ->
+                    GetSessionResponse.builder()
+                        .timestamp(session.getStartTime())
+                        .title(session.getSessionTitle())
+                            .state(session.getOngoingStream().getState())
+                        .build())
+            .toList();
+    return ListSessionsResponse.builder().sessions(responses).build();
   }
 
   public SessionMetaResponse createSession(CreateSessionRequest request) {

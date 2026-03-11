@@ -61,4 +61,5 @@ public class SpanQueryV2Request {
   @JsonPropertyDescription(
       "List of span attribute filters where each entry matches a string attribute key to an exact numeric value.")
   List<NumberAttributeFilter> numberAttributesFilter;
+
 }

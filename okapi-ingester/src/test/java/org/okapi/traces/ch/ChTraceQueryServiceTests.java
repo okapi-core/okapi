@@ -4,10 +4,6 @@
  */
 package org.okapi.traces.ch;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.okapi.traces.testutil.OtelShortHands.keyValue;
-import static org.okapi.traces.testutil.OtelShortHands.utf8Bytes;
-
 import com.clickhouse.client.api.Client;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -18,8 +14,6 @@ import io.opentelemetry.proto.trace.v1.ResourceSpans;
 import io.opentelemetry.proto.trace.v1.ScopeSpans;
 import io.opentelemetry.proto.trace.v1.Span;
 import io.opentelemetry.proto.trace.v1.Status;
-import java.nio.file.Path;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -29,6 +23,14 @@ import org.okapi.rest.traces.*;
 import org.okapi.rest.traces.SpanStatus;
 import org.okapi.testmodules.guice.TestChTracesModule;
 import org.okapi.traces.testutil.OtelShortHands;
+
+import java.nio.file.Path;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.okapi.traces.testutil.OtelShortHands.keyValue;
+import static org.okapi.traces.testutil.OtelShortHands.utf8Bytes;
 
 public class ChTraceQueryServiceTests {
 
@@ -338,6 +340,25 @@ public class ChTraceQueryServiceTests {
             .build();
     var respMatching = queryService.getSpans(matching);
     assertEquals(1, respMatching.getItems().size());
+  }
+
+  @Test
+  public void checkSummaryStats() {
+    var queryService = injector.getInstance(ChTraceQueryService.class);
+    var svcFilter = ServiceFilter.builder().service("svc-http").build();
+    var summary =
+        queryService.getSpansSummary(SpanQueryV2Request.builder().serviceFilter(svcFilter).build());
+    assertEquals(2, summary.getCount());
+
+    var dbFilter = ServiceFilter.builder().service("svc-db").build();
+    var dbSummary =
+            queryService.getSpansSummary(SpanQueryV2Request.builder().serviceFilter(dbFilter).build());
+    assertEquals(1, dbSummary.getCount());
+
+    var methodFilter = HttpFilters.builder().httpMethod("GET").build();
+    var methodSummary = queryService.getSpansSummary(SpanQueryV2Request.builder().httpFilters(methodFilter).build());
+    assertEquals(1, methodSummary.getCount());
+
   }
 
   private void truncateTable() {
