@@ -47,7 +47,10 @@ public class StatefulTools {
 
   @Tool(
       description =
-          "Send a response to the user. This is the only way to communicate findings to the user. Call this instead of returning free text.")
+"""
+Send a response to the user. This is the only way to communicate answers to the user.
+You must always call this tool with a final response for the user as users always expect a response.
+""")
   public void postResponse(
       @ToolParam(description = "The response to send to the user.") String response) {
     persist(CHAT_RESPONSE_TYPE.RESPONSE, GSON.toJson(new PostResponsePayload(response)));
@@ -55,10 +58,18 @@ public class StatefulTools {
 
   @Tool(description = "Recommend a trace follow-up action to the user for a specific trace ID.")
   public void postGetTraceFollowUp(
-      @ToolParam(description = "The trace ID the user should investigate further.")
-          String traceId) {
+      @ToolParam(description = "The trace ID the user should investigate further.") String traceId,
+      @ToolParam(
+              description =
+                  "Linux epoch start time. Spans will be filtered within time window [start, end] with traceId=traceId")
+          long start,
+      @ToolParam(
+              description =
+                  "Linux epoch end time. Spans will be filtered within time window [start, end] with traceId=traceId")
+          long end) {
     persist(
-        CHAT_RESPONSE_TYPE.GET_TRACE_FOLLOW_UP, GSON.toJson(new GetTraceFollowUpPayload(traceId)));
+        CHAT_RESPONSE_TYPE.GET_TRACE_FOLLOW_UP,
+        GSON.toJson(new GetTraceFollowUpPayload(traceId, start, end)));
   }
 
   @Tool(

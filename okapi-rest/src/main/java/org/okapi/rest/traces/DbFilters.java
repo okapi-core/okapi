@@ -21,8 +21,7 @@ public class DbFilters {
       "Database collection or table name. Maps to the db.mongodb.collection or equivalent span attribute.")
   String collection;
 
-  @JsonPropertyDescription(
-      "Database namespace or schema. Maps to the db.name span attribute.")
+  @JsonPropertyDescription("Database namespace or schema. Maps to the db.name span attribute.")
   String namespace;
 
   @JsonPropertyDescription(

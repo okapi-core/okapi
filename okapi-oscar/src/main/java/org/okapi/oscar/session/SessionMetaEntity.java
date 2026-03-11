@@ -19,6 +19,9 @@ public class SessionMetaEntity {
   @Column(name = "session_id", nullable = false)
   String sessionId;
 
+  @Column(name = "session_title", nullable = false)
+  String sessionTitle;
+
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   SESSION_STATE state;
@@ -28,6 +31,9 @@ public class SessionMetaEntity {
 
   @Column(name = "last_recorded_ping", nullable = false)
   long lastRecordedPing;
+
+  @Column(name = "owner_id", nullable = false)
+  String ownerId;
 
   @OneToOne(optional = true)
   @JoinColumn(name = "ongoing_stream_id")

@@ -11,6 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
+@ToString
 public class StringAttributeFilter {
   @JsonPropertyDescription("Span attribute key to match.")
   String key;

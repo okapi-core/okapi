@@ -1,14 +1,12 @@
 package org.okapi.rest.session;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
+@ToString
 public class SessionMetaResponse {
   String sessionId;
   Long ongoingStreamId;

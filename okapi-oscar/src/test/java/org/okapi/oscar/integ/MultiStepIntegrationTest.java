@@ -1,11 +1,11 @@
 package org.okapi.oscar.integ;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.okapi.oscar.integ.corpus.HighLatencyCpuSpikeCorpus;
 import org.okapi.oscar.integ.judge.Judgment;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class MultiStepIntegrationTest extends OscarIntegTestBase {
 
@@ -16,7 +16,6 @@ class MultiStepIntegrationTest extends OscarIntegTestBase {
 
   @Test
   void debugHighLatencyDueToCpuSpike() {
-    String session = session();
     String question =
         "The "
             + HighLatencyCpuSpikeCorpus.CHECKOUT_SERVICE
@@ -24,7 +23,8 @@ class MultiStepIntegrationTest extends OscarIntegTestBase {
             + "The postgres database runs on host "
             + HighLatencyCpuSpikeCorpus.POSTGRES_HOST
             + ". Check recent slow traces and correlate with host metrics.";
-    oscarAi.postMessage(session, msg(question));
+    String session = session(question);
+    var contents = pollUntilFinAndReturnResponse(session);
     assertThat(
             judgeAgent.judge(
                 question,
@@ -35,7 +35,7 @@ class MultiStepIntegrationTest extends OscarIntegTestBase {
                     + ", and container.cpu.percent on that host is at "
                     + HighLatencyCpuSpikeCorpus.HIGH_CPU_VALUE
                     + "%, indicating the postgres instance is CPU-saturated.",
-                getLatest(session)))
+                contents))
         .isNotEqualTo(Judgment.WRONG);
   }
 }

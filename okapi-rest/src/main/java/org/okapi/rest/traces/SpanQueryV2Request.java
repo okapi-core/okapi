@@ -13,8 +13,8 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @JsonClassDescription(
-    "Encapsulates search filters used to discover spans. Filters are composed via an AND operation i.e. only spans which match all filters are returned." +
-            "Not every filter needs to be set. When in doubt, set the minimum sure set of filters.")
+    "Encapsulates search filters used to discover spans. Filters are composed via an AND operation i.e. only spans which match all filters are returned."
+        + "Not every filter needs to be set. When in doubt, set the minimum sure set of filters.")
 @Getter
 @NoArgsConstructor
 @ToString
@@ -28,11 +28,17 @@ public class SpanQueryV2Request {
   String spanId;
 
   @JsonPropertyDescription(
-      "Span kind to filter. Usually the values are SPAN_KIND_SERVER or SPAN_KIND_CLIENT. If unsure, do not set.")
+      """
+  Span kind to filter. Usually the values are SPAN_KIND_SERVER or SPAN_KIND_CLIENT.
+  If spans are not found, its likely this field wasn't set in the spans submitted by an application.
+  Its a good idea to not set this filter in case no spans are found.
+  """)
   String kind;
 
   @JsonPropertyDescription(
-      "Filters scoped to database spans: system, collection, namespace, and operation.")
+      """
+  Filters scoped to database spans: system, collection, namespace, and operation.
+  """)
   DbFilters dbFilters;
 
   @JsonPropertyDescription(

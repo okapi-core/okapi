@@ -2,10 +2,7 @@ package org.okapi.rest.traces.red;
 
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.okapi.metrics.pojos.RES_TYPE;
 import org.okapi.rest.traces.TimestampFilter;
 
@@ -13,19 +10,31 @@ import org.okapi.rest.traces.TimestampFilter;
 @NoArgsConstructor
 @Getter
 @Builder
+@ToString
 public class ServiceRedRequest {
   // RED for that specific service
   // RED for each operation
   // edge-RED for each of this service.
   @JsonPropertyDescription(
-      "Time window for the RED metrics query, in nanoseconds since Unix epoch.")
-  @NotNull(message = "time window must be provided") TimestampFilter timestampFilter;
+"""
+Time window for the RED metrics query, in nanoseconds since Unix epoch.
+Use `timeRangeNanos` tool with the appropriate duration to get a range that starts at the current time.
+""")
+  @NotNull(message = "time window must be provided")
+  TimestampFilter timestampFilter;
 
   @JsonPropertyDescription(
-      "Name of the service for which to compute RED metrics (rate, error rate, duration).")
-  @NotNull(message = "service must be specified") String service;
+      """
+  Name of the service for which to compute RED metrics (rate, error rate, duration).
+  """)
+  @NotNull(message = "service must be specified")
+  String service;
 
   @JsonPropertyDescription(
-      "Time bucket resolution for the returned time series: SECONDLY, MINUTELY, or HOURLY.")
-  @NotNull(message = "resolution must be provided") RES_TYPE resType;
+      """
+  Time bucket resolution at which the RED metrics are calculated: SECONDLY, MINUTELY, or HOURLY.
+  RED metrics are returned as a Gauge hence the resolution should be specified.
+  """)
+  @NotNull(message = "resolution must be provided")
+  RES_TYPE resType;
 }

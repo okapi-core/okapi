@@ -1,6 +1,8 @@
 package org.okapi.oscar.service;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 import org.okapi.exceptions.BadRequestException;
 import org.okapi.oscar.agents.OscarResearchAgent;
 import org.okapi.oscar.chat.ChatMessageEntity;
@@ -9,14 +11,13 @@ import org.okapi.oscar.inference.InferenceJob;
 import org.okapi.oscar.inference.OscarInferenceJobPool;
 import org.okapi.oscar.session.*;
 import org.okapi.rest.chat.*;
-import org.okapi.rest.session.SESSION_STATE;
-import org.okapi.rest.session.STREAM_STATE;
-import org.okapi.rest.session.SessionMetaResponse;
+import org.okapi.rest.session.*;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class OscarAi {
@@ -72,7 +73,13 @@ public class OscarAi {
     return new InferenceJob(
         sessionId,
         () -> {
-          researchAgent.respond(sessionId, streamId, request.getMessage());
+          streamMetaRepository.updateState(streamId, STREAM_STATE.OPEN);
+          try {
+            log.info("Req: {}", request.getMessage());
+            researchAgent.respond(sessionId, streamId, request.getMessage());
+          } catch (Exception e) {
+            log.error("Responding failed with: ", e);
+          }
           streamMetaRepository.updateState(streamId, STREAM_STATE.FIN);
           return null;
         },
@@ -103,16 +110,29 @@ public class OscarAi {
         .build();
   }
 
-  public SessionMetaResponse createSession() {
+  public ListSessionsResponse listSessions(ListSessionsRequest request) {
+    throw new NotImplementedException();
+  }
+
+  public SessionMetaResponse createSession(CreateSessionRequest request) {
     long now = System.currentTimeMillis();
+    var sessionId = UUID.randomUUID().toString();
     var entity =
         SessionMetaEntity.builder()
-            .sessionId(UUID.randomUUID().toString())
+            .sessionId(sessionId)
+            .sessionTitle(request.getInitialMsg())
             .state(SESSION_STATE.OPEN)
             .startTime(now)
+            .ownerId(request.getOwnerId())
             .lastRecordedPing(now)
             .build();
     var saved = sessionMetaRepository.save(entity);
+    var msg =
+        PostMessageRequest.builder()
+            .message(request.getInitialMsg())
+            .userId(request.getOwnerId())
+            .build();
+    postMessage(sessionId, msg);
     return toSessionMetaResponse(saved);
   }
 

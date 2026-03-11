@@ -47,3 +47,6 @@ spring:
         repository:
           jdbc:
             initialize-schema: always
+    options:
+      temperature: 0.5
+

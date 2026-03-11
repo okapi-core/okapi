@@ -11,6 +11,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 public class GetHistoryRequest {
+  static final GetHistoryRequest START_OF_TIME = GetHistoryRequest.builder().from(0L).build();
   @NotNull Long from;
   Long to;
+
+  public static GetHistoryRequest fromStart(){
+    return START_OF_TIME;
+  }
 }

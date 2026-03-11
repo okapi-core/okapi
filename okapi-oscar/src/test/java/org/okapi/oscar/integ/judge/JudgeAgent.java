@@ -1,8 +1,10 @@
 package org.okapi.oscar.integ.judge;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class JudgeAgent {
 
@@ -35,10 +37,12 @@ public class JudgeAgent {
         """
             .formatted(question, expectedAnswer, actualAnswer);
 
-    String raw = chatClient.prompt().user(prompt).call().content().trim().toUpperCase();
-    for (Judgment j : Judgment.values()) {
-      if (raw.contains(j.name())) return j;
+    var raw =
+        Judgment.valueOf(chatClient.prompt().user(prompt).call().content().trim().toUpperCase());
+    if (raw == Judgment.WRONG) {
+      log.info("expected: {}", expectedAnswer);
+      log.info("actual: {}", actualAnswer);
     }
-    return Judgment.WRONG;
+    return raw;
   }
 }

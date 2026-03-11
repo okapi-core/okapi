@@ -24,5 +24,7 @@ CREATE TABLE IF NOT EXISTS oscar_session_meta (
     state               VARCHAR(10)  NOT NULL,
     start_time          BIGINT       NOT NULL,
     last_recorded_ping  BIGINT       NOT NULL,
+    owner_id            VARCHAR(36)  NOT NULL,
+    session_title       TEXT         NOT NULL,
     ongoing_stream_id   BIGINT       REFERENCES oscar_stream_meta(stream_id)
 );

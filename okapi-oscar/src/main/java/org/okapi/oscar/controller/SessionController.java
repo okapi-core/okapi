@@ -1,6 +1,7 @@
 package org.okapi.oscar.controller;
 
 import org.okapi.oscar.service.OscarAi;
+import org.okapi.rest.session.CreateSessionRequest;
 import org.okapi.rest.session.SessionMetaResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -12,8 +13,8 @@ public class SessionController {
   @Autowired OscarAi oscarAi;
 
   @PostMapping
-  public SessionMetaResponse createSession() {
-    return oscarAi.createSession();
+  public SessionMetaResponse createSession(@RequestBody CreateSessionRequest request) {
+    return oscarAi.createSession(request);
   }
 
   @GetMapping("/{sessionId}/meta")

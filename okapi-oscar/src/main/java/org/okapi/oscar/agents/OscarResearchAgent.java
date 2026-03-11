@@ -1,5 +1,6 @@
 package org.okapi.oscar.agents;
 
+import lombok.extern.slf4j.Slf4j;
 import org.okapi.oscar.spring.cfg.OkapiOscarCfg;
 import org.okapi.oscar.tools.DateTimeTools;
 import org.okapi.oscar.tools.MetricsTools;
@@ -11,6 +12,7 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class OscarResearchAgent {
 
@@ -41,17 +43,17 @@ public class OscarResearchAgent {
   }
 
   public void respond(String sessionId, long streamId, String userMessage) {
-    chatClient
-        .prompt()
-        .system(cfg.getSystemPrompt())
-        .user(userMessage)
-        .tools(
-            metricsTools,
-            tracingTools,
-            dateTimeTools,
-            statefulToolFactory.getTools(sessionId, streamId))
-        .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, sessionId))
-        .call()
-        .content();
+        chatClient
+            .prompt()
+            .system(cfg.getSystemPrompt())
+            .user(userMessage)
+            .tools(
+                metricsTools,
+                tracingTools,
+                dateTimeTools,
+                statefulToolFactory.getTools(sessionId, streamId))
+            .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, sessionId))
+            .call()
+            .content();
   }
 }

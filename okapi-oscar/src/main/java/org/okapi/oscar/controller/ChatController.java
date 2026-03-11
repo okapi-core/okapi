@@ -2,7 +2,6 @@ package org.okapi.oscar.controller;
 
 import org.okapi.oscar.service.OscarAi;
 import org.okapi.rest.chat.*;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;

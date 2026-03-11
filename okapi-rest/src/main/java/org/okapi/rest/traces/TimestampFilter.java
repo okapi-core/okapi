@@ -13,11 +13,9 @@ import lombok.*;
 @Getter
 @ToString
 public class TimestampFilter {
-  @JsonPropertyDescription(
-      "Query window start time, in nanoseconds since Unix epoch (inclusive).")
+  @JsonPropertyDescription("Query window start time, in nanoseconds since Unix epoch (inclusive).")
   long tsStartNanos;
 
-  @JsonPropertyDescription(
-      "Query window end time, in nanoseconds since Unix epoch (exclusive).")
+  @JsonPropertyDescription("Query window end time, in nanoseconds since Unix epoch (exclusive).")
   long tsEndNanos;
 }
