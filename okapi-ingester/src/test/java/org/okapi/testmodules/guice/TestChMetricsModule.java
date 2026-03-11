@@ -18,6 +18,7 @@ import org.okapi.metrics.ch.ChMetricsIngester;
 import org.okapi.metrics.ch.ChMetricsQueryProcessor;
 import org.okapi.metrics.ch.ChMetricsWalConsumer;
 import org.okapi.metrics.ch.ChMetricsWalConsumerDriver;
+import org.okapi.metrics.ch.ChSearchMetricsProcessor;
 import org.okapi.metrics.ch.ChWalResources;
 import org.okapi.metrics.ch.ChWriter;
 import org.okapi.metrics.ch.SumQueryProcessor;
@@ -95,6 +96,13 @@ public class TestChMetricsModule extends AbstractModule {
   @Singleton
   SumQueryProcessor provideSumQueryProcessor(Client client, ChMetricTemplateEngine templateEngine) {
     return new SumQueryProcessor(client, templateEngine);
+  }
+
+  @Provides
+  @Singleton
+  ChSearchMetricsProcessor provideChSearchMetricsProcessor(
+      Client client, ChMetricTemplateEngine templateEngine) {
+    return new ChSearchMetricsProcessor(client, templateEngine);
   }
 
   @Provides

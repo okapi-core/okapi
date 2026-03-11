@@ -4,6 +4,7 @@
  */
 package org.okapi.rest.metrics.query;
 
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,6 +15,11 @@ import org.okapi.metrics.pojos.RES_TYPE;
 @NoArgsConstructor
 @Getter
 public class GaugeQueryConfig {
+  @JsonPropertyDescription(
+      "Time bucket size for grouping gauge samples: SECONDLY, MINUTELY, or HOURLY.")
   RES_TYPE resolution;
+
+  @JsonPropertyDescription(
+      "Aggregation function applied within each time bucket (e.g. AVG, SUM, MAX).")
   AGG_TYPE aggregation;
 }

@@ -4,6 +4,7 @@
  */
 package org.okapi.rest.traces;
 
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.*;
 
 @Builder
@@ -11,6 +12,9 @@ import lombok.*;
 @NoArgsConstructor
 @Getter
 public class StringAttributeFilter {
+  @JsonPropertyDescription("Span attribute key to match.")
   String key;
+
+  @JsonPropertyDescription("Exact string value the attribute must equal.")
   String value;
 }

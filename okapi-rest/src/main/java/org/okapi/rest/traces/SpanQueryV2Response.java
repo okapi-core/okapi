@@ -4,6 +4,8 @@
  */
 package org.okapi.rest.traces;
 
+import com.fasterxml.jackson.annotation.JsonClassDescription;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import java.util.List;
 import lombok.*;
 
@@ -11,6 +13,8 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
+@JsonClassDescription("Result of a span search query, containing matched spans.")
 public class SpanQueryV2Response {
+  @JsonPropertyDescription("List of spans matching all supplied query filters.")
   List<SpanRowV2> items;
 }

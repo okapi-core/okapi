@@ -1,5 +1,7 @@
 package org.okapi.rest.search;
 
+import com.fasterxml.jackson.annotation.JsonClassDescription;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.*;
 
 import java.util.Map;
@@ -8,8 +10,14 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @ToString
+@EqualsAndHashCode
 @Builder
+@JsonClassDescription(
+    "A unique metric series, identified by its name and the set of labels associated with it.")
 public class MetricPath {
-    String metric;
-    Map<String, String> labels;
+  @JsonPropertyDescription("The metric name (e.g. http.server.duration).")
+  String metric;
+
+  @JsonPropertyDescription("Key-value label pairs that uniquely identify this metric series.")
+  Map<String, String> labels;
 }

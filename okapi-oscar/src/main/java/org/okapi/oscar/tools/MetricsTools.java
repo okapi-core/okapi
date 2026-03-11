@@ -1,26 +1,29 @@
 package org.okapi.oscar.tools;
 
-import org.apache.commons.lang3.NotImplementedException;
+import org.okapi.ingester.client.IngesterClient;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
 import org.okapi.rest.search.SearchMetricsRequest;
 import org.okapi.rest.search.SearchMetricsResponse;
-import org.okapi.rest.traces.SpanQueryV2Request;
-import org.okapi.rest.traces.SpanQueryV2Response;
+import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.stereotype.Component;
 
+@Component
 public class MetricsTools {
+  IngesterClient client;
+
+  @Tool(
+      description =
+          "Search metrics which match provided filters. Use this tool to find metrics which match a pattern that have been emitted in the provided time window.")
   public SearchMetricsResponse searchMetrics(@ToolParam SearchMetricsRequest request) {
-    throw new NotImplementedException();
+    return client.searchMetrics(request);
   }
 
+  @Tool(
+      description =
+          "Get metrics data. This method can return histograms, gauges and counters (or sums). Gauges have a specific resolution so its likely that we use this ")
   public GetMetricsResponse getMetrics(@ToolParam GetMetricsRequest request) {
-
-    throw new NotImplementedException();
-  }
-
-  public SpanQueryV2Response getSpans(@ToolParam SpanQueryV2Request request) {
-
-    throw new NotImplementedException();
+    return client.query(request);
   }
 }

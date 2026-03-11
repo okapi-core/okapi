@@ -29,6 +29,7 @@ import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.okapi.data.dao.RelationGraphDao;
 import org.okapi.data.dao.UsersDao;
+import org.okapi.ingester.client.IngesterClient;
 import org.okapi.web.auth.AbstractIT;
 import org.okapi.web.auth.OrgManager;
 import org.okapi.web.auth.TokenManager;
@@ -38,7 +39,6 @@ import org.okapi.web.dtos.auth.SignInRequest;
 import org.okapi.web.dtos.constraints.TimeConstraint;
 import org.okapi.web.dtos.dashboards.vars.DASH_VAR_TYPE;
 import org.okapi.web.dtos.dashboards.vars.GetVarHintsRequest;
-import org.okapi.web.service.client.IngesterClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -55,7 +55,8 @@ public class VariableHintsServiceIT extends AbstractIT {
   @Autowired RelationGraphDao relationGraphDao;
   @Autowired UsersDao usersDao;
   @Autowired VariableHintsService variableHintsService;
-  @Autowired IngesterClient ingesterClient;
+  @Autowired
+  IngesterClient ingesterClient;
 
   String adminEmail;
   String adminLogin;

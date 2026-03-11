@@ -15,10 +15,7 @@ import org.okapi.rest.metrics.exemplar.GetExemplarsRequest;
 import org.okapi.rest.metrics.exemplar.GetExemplarsResponse;
 import org.okapi.rest.metrics.query.GetMetricsRequest;
 import org.okapi.rest.metrics.query.GetMetricsResponse;
-import org.okapi.rest.search.GetMetricNameHints;
-import org.okapi.rest.search.GetMetricsHintsResponse;
-import org.okapi.rest.search.GetTagHintsRequest;
-import org.okapi.rest.search.GetTagValueHintsRequest;
+import org.okapi.rest.search.*;
 import org.okapi.rest.traces.SpanAttributeHintsRequest;
 import org.okapi.rest.traces.SpanAttributeHintsResponse;
 import org.okapi.rest.traces.SpanAttributeValueHintsRequest;
@@ -128,6 +125,10 @@ public class IngesterClient {
       SpanAttributeValueHintsRequest request) {
     return postRequest(
         "/api/v1/spans/attributes/values/hints", request, SpanAttributeValueHintsResponse.class);
+  }
+
+  public SearchMetricsResponse searchMetrics(SearchMetricsRequest request) {
+    return postRequest("/api/v1/metrics/search", request, SearchMetricsResponse.class);
   }
 
   public void ingestOtelMetrics(ExportMetricsServiceRequest request) {

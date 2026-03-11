@@ -1,5 +1,7 @@
 package org.okapi.rest.traces.red;
 
+import com.fasterxml.jackson.annotation.JsonClassDescription;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Objects;
@@ -12,13 +14,28 @@ import lombok.NoArgsConstructor;
 @Getter
 @Builder
 @NoArgsConstructor
+@JsonClassDescription(
+    "Time-series RED metrics: request rate, error rate, and duration percentiles, all aligned to the same time buckets.")
 public class RedMetrics {
+  @JsonPropertyDescription("Bucket start timestamps in milliseconds since Unix epoch.")
   @NotNull List<Long> ts;
+
+  @JsonPropertyDescription("Request count per bucket, index-aligned with ts.")
   @NotNull List<Long> counts;
+
+  @JsonPropertyDescription("P50 (median) request duration in milliseconds per bucket, index-aligned with ts.")
   @NotNull List<Double> durationsP50;
+
+  @JsonPropertyDescription("P75 request duration in milliseconds per bucket, index-aligned with ts.")
   @NotNull List<Double> durationsP75;
+
+  @JsonPropertyDescription("P90 request duration in milliseconds per bucket, index-aligned with ts.")
   @NotNull List<Double> durationsP90;
+
+  @JsonPropertyDescription("P99 request duration in milliseconds per bucket, index-aligned with ts.")
   @NotNull List<Double> durationsP99;
+
+  @JsonPropertyDescription("Error count per bucket, index-aligned with ts.")
   @NotNull List<Long> errors;
 
   public static RedMetrics of(

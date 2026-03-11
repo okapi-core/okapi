@@ -1,9 +1,7 @@
-/*
- * Copyright The OkapiCore Authors
- * SPDX-License-Identifier: Apache-2.0
- */
 package org.okapi.rest.search;
 
+import com.fasterxml.jackson.annotation.JsonClassDescription;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.*;
 
 import java.util.List;
@@ -13,6 +11,8 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 @Builder
+@JsonClassDescription("The set of metric paths matching all supplied search filters.")
 public class SearchMetricsResponse {
+  @JsonPropertyDescription("List of metric paths (name + label set) that matched all filters.")
   List<MetricPath> matchingPaths;
 }

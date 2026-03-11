@@ -4,6 +4,7 @@
  */
 package org.okapi.rest.metrics.query;
 
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,5 +20,7 @@ public class GetSumsQueryConfig {
     CUMULATIVE
   }
 
+  @JsonPropertyDescription(
+      "Sum temporality: DELTA_AGGREGATE (sum of deltas over the window) or CUMULATIVE (latest cumulative value).")
   TEMPORALITY temporality;
 }

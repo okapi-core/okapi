@@ -4,6 +4,7 @@
  */
 package org.okapi.rest.traces;
 
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -12,6 +13,9 @@ import lombok.*;
 @NoArgsConstructor
 @Getter
 public class DurationFilter {
+  @JsonPropertyDescription("Minimum span duration in milliseconds (inclusive).")
   @NotNull long durMinMillis;
+
+  @JsonPropertyDescription("Maximum span duration in milliseconds (inclusive).")
   @NotNull long durMaxMillis;
 }

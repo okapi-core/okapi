@@ -26,6 +26,7 @@ import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.okapi.data.dao.RelationGraphDao;
 import org.okapi.data.dao.UsersDao;
+import org.okapi.ingester.client.IngesterClient;
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
 import org.okapi.rest.traces.HttpFilters;
@@ -47,7 +48,6 @@ import org.okapi.web.auth.TokenManager;
 import org.okapi.web.auth.UserManager;
 import org.okapi.web.dtos.auth.CreateUserRequest;
 import org.okapi.web.dtos.auth.SignInRequest;
-import org.okapi.web.service.client.IngesterClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -63,7 +63,8 @@ public class SpansQueryIT extends AbstractIT {
   @Autowired TokenManager tokenManager;
   @Autowired RelationGraphDao relationGraphDao;
   @Autowired UsersDao usersDao;
-  @Autowired IngesterClient ingesterClient;
+  @Autowired
+  IngesterClient ingesterClient;
   @Autowired SpansQueryController spansQueryController;
 
   String adminEmail;

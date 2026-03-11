@@ -13,7 +13,10 @@ okapi:
       address: ${VAULT_ADDR:http://127.0.0.1:8200}
       token: ${VAULT_TOKEN:0d94159a1b7e9c8f563e4e9e383185dc402ef70e}
     memory:
+      enabled: true
       max-messages: 20
+    cluster:
+      endpoint: http://localhost:9009
 
 spring:
   sql:
@@ -25,3 +28,12 @@ spring:
     username: ${OSCAR_DB_USER:okapi}
     password: ${OSCAR_DB_PASSWORD:okapi}
     driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+  ai:
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always
