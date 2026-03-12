@@ -4,8 +4,8 @@
  */
 package org.okapi.rest.traces;
 
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.*;
+import org.springframework.ai.tool.annotation.ToolParam;
 
 @Builder
 @AllArgsConstructor
@@ -13,15 +13,20 @@ import lombok.*;
 @Getter
 @ToString
 public class ServiceFilter {
-  @JsonPropertyDescription("""
-  Name of the service that emitted the span.
-  Use this to find traces related to a specific service.
-  """)
+  @ToolParam(
+      description =
+"""
+Name of the service that emitted the span. Use this to find spans emitted from inside the service `service`.
+""",
+      required = false)
   String service;
 
-  @JsonPropertyDescription("""
-  Name of the downstream peer service called by the span.
-  This need NOT always be set. This field can be set when trying to find spans for communication between two services.
-  """)
+  @ToolParam(
+      description =
+"""
+Name of the downstream. Setting this filter means trying to find spans which for requests which are made TO this `peer`.
+Setting both `peer` and `service` will return spans related to code paths where there's communication between `service` and `peer`.
+""",
+      required = false)
   String peer;
 }

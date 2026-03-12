@@ -5,8 +5,8 @@
 package org.okapi.rest.traces;
 
 import com.fasterxml.jackson.annotation.JsonClassDescription;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.*;
+import org.springframework.ai.tool.annotation.ToolParam;
 
 import java.util.List;
 
@@ -21,46 +21,84 @@ Not every filter needs to be set. When in doubt, set the minimum sure set of fil
 @NoArgsConstructor
 @ToString
 public class SpanQueryV2Request {
-  @JsonPropertyDescription(
-      "Filter to spans belonging to this exact trace ID. TraceIDs are hex-encoded byte strings.")
+  @ToolParam(
+      description =
+"""
+Filter to spans belonging to this exact trace ID. This parameter is optional.
+""",
+      required = false)
   String traceId;
 
-  @JsonPropertyDescription(
-      "Filter to the span with this exact span ID. SpanIds are hex-encoded byte strings.")
+  @ToolParam(
+      description =
+"""
+Filter to the span with this exact span ID. SpanIds are hex-encoded byte strings. This parameter is optional.
+""",
+      required = false)
   String spanId;
 
-  @JsonPropertyDescription(
-      """
-  Span kind to filter. Usually the values are SPAN_KIND_SERVER or SPAN_KIND_CLIENT.
-  If spans are not found, its likely this field wasn't set in the spans submitted by an application.
-  Its a good idea to not set this filter in case no spans are found.
-  """)
+  @ToolParam(
+      description =
+"""
+Span kind to filter. Usually the values are SPAN_KIND_SERVER or SPAN_KIND_CLIENT.
+If spans are not found, its likely this field wasn't set in the spans submitted by an application.
+Its a good idea to not set this filter in case no spans are found. This parameter is optional.
+""",
+      required = false)
   String kind;
 
-  @JsonPropertyDescription(
-      """
-  Filters scoped to database spans: system, collection, namespace, and operation.
-  """)
+  @ToolParam(
+      description =
+"""
+Filters scoped to database spans: system, collection, namespace, and operation. This parameter is optional.
+""",
+      required = false)
   DbFilters dbFilters;
 
-  @JsonPropertyDescription(
-      "Restricts results to spans whose duration falls within the given millisecond range.")
+  @ToolParam(
+      description =
+"""
+Restricts results to spans whose duration falls within the given millisecond range.  This parameter is optional.
+""",
+      required = false)
   DurationFilter durationFilter;
 
-  @JsonPropertyDescription("Filters scoped to HTTP spans: method, status code, origin, and host.")
+  @ToolParam(
+      description =
+"""
+Filters scoped to HTTP spans: method, status code, origin, and host.
+""",
+      required = false)
   HttpFilters httpFilters;
 
-  @JsonPropertyDescription("Filters by originating service name and/or downstream peer service.")
+  @ToolParam(
+      description =
+"""
+Filters by originating service name and/or downstream peer service.
+""",
+      required = false)
   ServiceFilter serviceFilter;
 
-  @JsonPropertyDescription("Time window for the query, expressed in nanoseconds since Unix epoch.")
+  @ToolParam(
+      description =
+"""
+  Time window for the query, expressed in nanoseconds since Unix epoch.
+""")
   TimestampFilter timestampFilter;
 
-  @JsonPropertyDescription(
-      "List of span attribute filters where each entry matches a string attribute key to an exact string value.")
+  @ToolParam(
+      description =
+"""
+List of span attribute filters where each entry matches a string attribute key to an exact string value.
+""",
+      required = false)
   List<StringAttributeFilter> stringAttributesFilter;
 
-  @JsonPropertyDescription(
-      "List of span attribute filters where each entry matches a string attribute key to an exact numeric value.")
+  @ToolParam(
+      description =
+"""
+List of span attribute filters where each entry matches a string attribute key to an exact numeric value.
+""",
+      required = false)
   List<NumberAttributeFilter> numberAttributesFilter;
 }

@@ -1,10 +1,8 @@
 package org.okapi.metrics.ch;
 
 import com.clickhouse.client.api.Client;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.okapi.ch.ChTemplateFiles;
 import org.okapi.metrics.ch.rows.ChSearchMetricsRow;
 import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
@@ -15,6 +13,11 @@ import org.okapi.rest.search.SearchMetricsRequest;
 import org.okapi.rest.search.SearchMetricsV2Response;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+@Slf4j
 @AllArgsConstructor
 @Component
 public class ChSearchMetricsProcessor {
@@ -52,21 +55,26 @@ public class ChSearchMetricsProcessor {
             .endMs(tsEndMillis)
             .build();
     var query = templateEngine.render(ChTemplateFiles.GET_METRIC_PATHS_IN_RANGE, template);
-    var records = client.queryAll(query);
-    var rows = new HashSet<ChSearchMetricsRow>();
-    for (var record : records) {
-      @SuppressWarnings("unchecked")
-      var tags = (Map<String, String>) record.getObject("tags");
-      var metricType = METRIC_TYPE.valueOf(record.getString("event_type"));
-      var temporality = record.getString("temporality");
-      rows.add(
-          ChSearchMetricsRow.builder()
-              .name(record.getString("metric"))
-              .tags(tags)
-              .metricType(metricType)
-              .temporality(temporality)
-              .build());
+    try {
+      var records = client.queryAll(query);
+      var rows = new HashSet<ChSearchMetricsRow>();
+      for (var record : records) {
+        @SuppressWarnings("unchecked")
+        var tags = (Map<String, String>) record.getObject("tags");
+        var metricType = METRIC_TYPE.valueOf(record.getString("event_type"));
+        var temporality = record.getString("temporality");
+        rows.add(
+            ChSearchMetricsRow.builder()
+                .name(record.getString("metric"))
+                .tags(tags)
+                .metricType(metricType)
+                .temporality(temporality)
+                .build());
+      }
+      return rows;
+    } catch (Exception e) {
+      log.error("Exception {}\n query: {}", e, query);
+      throw new RuntimeException(e);
     }
-    return rows;
   }
 }

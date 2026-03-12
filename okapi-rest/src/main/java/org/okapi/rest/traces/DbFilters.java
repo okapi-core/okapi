@@ -4,8 +4,8 @@
  */
 package org.okapi.rest.traces;
 
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.*;
+import org.springframework.ai.tool.annotation.ToolParam;
 
 @Builder
 @AllArgsConstructor
@@ -13,27 +13,31 @@ import lombok.*;
 @Getter
 @ToString
 public class DbFilters {
-  @JsonPropertyDescription(
+  @ToolParam(
+      description =
 """
 Database system (e.g. postgresql, redis, mongodb). Maps to the db.system span attribute.
-""")
+""", required = false)
   String system;
 
-  @JsonPropertyDescription(
+  @ToolParam(
+      description =
 """
 Database collection or table name. Maps to the db.mongodb.collection or equivalent span attribute.
-""")
+""", required = false)
   String collection;
 
-  @JsonPropertyDescription(
+  @ToolParam(
+      description =
 """
 Database namespace or schema. Maps to the db.name span attribute.
-""")
+""", required = false)
   String namespace;
 
-  @JsonPropertyDescription(
+  @ToolParam(
+      description =
 """
 Database operation type (e.g. SELECT, INSERT, find). Maps to the db.operation span attribute.
-""")
+""", required = false)
   String operation;
 }

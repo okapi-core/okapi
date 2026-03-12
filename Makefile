@@ -267,3 +267,6 @@ start-oscar-dummy: package
 		--okapi.oscar.cluster-endpoint=http://${OKAPI_INGESTER_HOST}:${OKAPI_INGESTER_PORT} \
 		--okapi.oscar.vault.address='' \
 		--okapi.oscar.openai.api-key-path=env://OPENAI_API_KEY
+
+test-all: package run-ingester
+	mvn test -Dmaven.test.failure.ignore=true

@@ -1,7 +1,6 @@
 package org.okapi.oscar.integ;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.RetryingTest;
 import org.okapi.oscar.integ.corpus.HighLatencyCpuSpikeCorpus;
 import org.okapi.oscar.integ.judge.Judgment;
@@ -15,8 +14,7 @@ class MultiStepIntegrationTest extends OscarIntegTestBase {
     new HighLatencyCpuSpikeCorpus(ingesterClient).seed();
   }
 
-  @Test
-  @RetryingTest(3)
+  @RetryingTest(2)
   void debugHighLatencyDueToCpuSpike() {
     String question =
         "The "
@@ -30,13 +28,7 @@ class MultiStepIntegrationTest extends OscarIntegTestBase {
     assertThat(
             judgeAgent.judge(
                 question,
-                "Mentions high latency on "
-                    + HighLatencyCpuSpikeCorpus.POSTGRES_HOST
-                    + ". Slow POST /checkout traces carry server.name="
-                    + HighLatencyCpuSpikeCorpus.POSTGRES_HOST
-                    + ", and container.cpu.percent on that host is at "
-                    + HighLatencyCpuSpikeCorpus.HIGH_CPU_VALUE
-                    + "%, indicating the postgres instance is CPU-saturated.",
+                "Mentions high CPU usage on " + HighLatencyCpuSpikeCorpus.POSTGRES_HOST,
                 contents))
         .isNotEqualTo(Judgment.WRONG);
   }

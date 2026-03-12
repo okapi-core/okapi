@@ -29,14 +29,10 @@ public class TracingTools {
   @Tool(
       description =
 """
-  Use this tool to search for spans. When in doubt set the minimum set of filters necessary.
-  Timestampfilter is always required without which the call will fail. To set timestamp filter, use the following guidelines:
-  1. If the user has specified a time-interval for the investigation use that time interval.
-  2. Usually a time interval of 1 hr is enough. You can use timeRange tool with the appropriate duration to get a time range that can be used to populate this filter.
-  For example:
-  - to find spans related to a specific service: set the ServiceFilter.service with the specific service to get spans related to a specific service.
-  Refer to the descriptions of the filters to construct an appropriate set.
-  If no spans are found, it is a good idea to unset a few filters i.e. relax the search criteria.
+Use this tool to search for spans. When in doubt set the minimum set of filters necessary.
+Timestampfilter is always required without which the call will fail. To set timestamp filter, use the following guidelines:
+1. If the user has specified a time-interval for the investigation use that time interval.
+2. Usually a time interval of 1 hr is enough. You can use timeRange tool with the appropriate duration to get a time range that can be used to populate this filter.
 """)
   public SpanQueryV2Response getSpans(@ToolParam SpanQueryV2Request request) {
     log.info("Calling {}", request);
@@ -51,27 +47,23 @@ public class TracingTools {
 
   @Tool(
       description =
-          """
-  Get RED metrics (Rate, Error rate, Duration) for a service. Returns aggregate RED metrics for the service, per-operation breakdowns, and per-peer-edge breakdowns.
-  The only input to this service si
-  """)
+"""
+Get RED metrics (Rate, Error rate, Duration) for a service. Returns aggregate RED metrics for the service, per-operation breakdowns, and per-peer-edge breakdowns.
+""")
   public ServiceRedResponse getServiceRedMetrics(@ToolParam ServiceRedRequest request) {
-    toolCallReporter.reportRequest("getServiceRedMetrics", request, "Fetching service RED metrics.");
+    toolCallReporter.reportRequest(
+        "getServiceRedMetrics", request, "Fetching service RED metrics.");
     var response = client.getServiceReds(request);
-    toolCallReporter.reportResponse(
-        "getServiceRedMetrics",  "Fetch service RED metrics results.");
+    toolCallReporter.reportResponse("getServiceRedMetrics", "Fetch service RED metrics results.");
     return response;
   }
 
   @Tool(
       description =
 """
-Purpose
 Discover downstream peer services for a given service over a time window.
-Hint
-Uses this to set `peer` when setting a service filter to get spans.
-Example
-discoverPeers("checkout-service", 1700000000000000000, 1700003600000000000)
+This tool is used to get dependencies of a specific service.
+If no dependencies are sent, it might be a missing instrumentation problem. Other signals should be consulted.
 """)
   public List<String> discoverPeers(
       @ToolParam(description = "Service name to inspect.") String service,
@@ -90,9 +82,9 @@ discoverPeers("checkout-service", 1700000000000000000, 1700003600000000000)
     }
     var peers =
         response.getPeerReds().stream()
-        .map(peer -> peer == null ? null : peer.getPeerService())
-        .filter(name -> name != null && !name.isBlank())
-        .toList();
+            .map(peer -> peer == null ? null : peer.getPeerService())
+            .filter(name -> name != null && !name.isBlank())
+            .toList();
     toolCallReporter.reportResponse(
         "discoverPeers", ToolCallSummaries.summarizeDiscoverPeersResponse(peers));
     return peers;

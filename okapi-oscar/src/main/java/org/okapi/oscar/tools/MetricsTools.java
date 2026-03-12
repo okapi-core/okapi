@@ -23,53 +23,44 @@ public class MetricsTools {
   @Tool(
       description =
 """
-Purpose
 Search for metric paths (name + tag combinations) emitted in a time window to discover available
 metrics, tag sets, or whether a metric exists at all.
-Hint
-tsStartMillis and tsEndMillis MUST be in MILLISECONDS since Unix epoch; use timeRange() not
-timeRangeNanos().
-Example
-1) Find all metrics for a service: metricNamePattern="checkout\\..*"
-2) Find metrics for a specific host: anyMetricOrValueFilter.value="my-host-42"
-3) Find metrics with a specific tag: valueFilters=[{label="host.name", value="my-host-42"}]
+tsStartMillis and tsEndMillis MUST be in MILLISECONDS since Unix epoch.
 """)
   public SearchMetricsV2Response searchMetrics(@ToolParam SearchMetricsRequest request) {
+    log.debug("searchMetrics req: {}", request);
     toolCallReporter.reportRequest(
         "searchMetrics", request, ToolCallSummaries.summarizeSearchMetricsRequest(request));
     var response = client.searchMetrics(request);
     toolCallReporter.reportResponse(
         "searchMetrics", ToolCallSummaries.summarizeSearchMetricsResponse(response));
+    log.debug("searchMetrics res: {}", response);
     return response;
   }
 
   @Tool(
       description =
 """
-Purpose
-Discover metric paths for a specific host value.
-Hint
-This uses an exact value match across metric names and tags.
-Example
-discoverMetricsForHost("my-host-42")
+Discover metric paths for a specific host. Multiple metrics related to the specific host will be returned.
 """)
   public SearchMetricsV2Response discoverMetricsForHost(
-      @ToolParam(description = "Host value to match exactly.") String host) {
-    log.info("Discovery metrics: {}", host);
+      @ToolParam(
+              description =
+"""
+Name of the host for which to search metrics. Host value will match exactly.
+RE2 patterns should not be used here.
+""")
+          String host) {
+    log.debug("Discovery metrics: {}", host);
     var response = discoverMetricsFor("discoverMetricsForHost", host);
-    log.info("Discovered metrics: {}", response);
+    log.debug("Discovered metrics: {}", response);
     return response;
   }
 
   @Tool(
       description =
 """
-Purpose
-Discover metric paths for host values matching a pattern.
-Hint
-This uses an RE2 pattern match across metric names and tags.
-Example
-discoverMetricsForHostPattern("web-.*")
+Discover metric paths for hosts matching a pattern.
 """)
   public SearchMetricsV2Response discoverMetricsForHostPattern(
       @ToolParam(description = "RE2 pattern to match host values.") String pattern) {
@@ -79,12 +70,7 @@ discoverMetricsForHostPattern("web-.*")
   @Tool(
       description =
 """
-Purpose
-Discover metric paths for a specific database value.
-Hint
-This uses an exact value match across metric names and tags.
-Example
-discoverMetricsForDb("orders-db")
+Discover metric paths for a specific database value. Note - This uses an exact value match across metric names and tags.
 """)
   public SearchMetricsV2Response discoverMetricsForDb(
       @ToolParam(description = "Database value to match exactly.") String db) {
@@ -94,12 +80,8 @@ discoverMetricsForDb("orders-db")
   @Tool(
       description =
 """
-Purpose
 Discover metric paths for database values matching a pattern.
-Hint
-This uses an RE2 pattern match across metric names and tags.
-Example
-discoverMetricsForDbPattern("orders-.*")
+e.g. This uses an RE2 pattern match across metric names and tags.
 """)
   public SearchMetricsV2Response discoverMetricsForDbPattern(
       @ToolParam(description = "RE2 pattern to match database values.") String dbNamePattern) {
@@ -108,13 +90,22 @@ discoverMetricsForDbPattern("orders-.*")
 
   @Tool(
       description =
-          "Get metrics data. This method can return histograms, gauges and counters (or sums). Gauges have a specific resolution so its likely that we use this ")
+"""
+Get metrics data. This method can return histograms, gauges and counters (or sums).
+Gauges have a specific resolution and gaugeQueryConfig should be set when a doing queries for a gauge metric.
+Histograms have a specific temporality either DELTA, CUMULATIVE or MERGED. When histograms are queried, histogramQueryConfig should be specified.
+Sums also have a specific temporality also either DELTA or CUMULATIVE. When sums are queried, sumsQueryConfig should be specified.
+When querying histograms or sums temporality should be specified.
+
+""")
   public GetMetricsResponse getMetrics(@ToolParam GetMetricsRequest request) {
+    log.debug("req: {}", request);
     toolCallReporter.reportRequest(
         "getMetrics", request, ToolCallSummaries.summarizeGetMetricsRequest(request));
     var response = client.query(request);
     toolCallReporter.reportResponse(
         "getMetrics", ToolCallSummaries.summarizeGetMetricsResponse(request, response));
+    log.debug("res: {}", response);
     return response;
   }
 

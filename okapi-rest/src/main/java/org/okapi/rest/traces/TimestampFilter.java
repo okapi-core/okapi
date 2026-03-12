@@ -4,8 +4,8 @@
  */
 package org.okapi.rest.traces;
 
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.*;
+import org.springframework.ai.tool.annotation.ToolParam;
 
 @Builder
 @AllArgsConstructor
@@ -13,9 +13,9 @@ import lombok.*;
 @Getter
 @ToString
 public class TimestampFilter {
-  @JsonPropertyDescription("Query window start time, in nanoseconds since Unix epoch (inclusive).")
+  @ToolParam(description = "Query window start time, in nanoseconds since Unix epoch (inclusive).")
   long tsStartNanos;
 
-  @JsonPropertyDescription("Query window end time, in nanoseconds since Unix epoch (exclusive).")
+  @ToolParam(description = "Query window end time, in nanoseconds since Unix epoch (exclusive).")
   long tsEndNanos;
 }
