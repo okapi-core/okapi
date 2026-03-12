@@ -16,9 +16,10 @@ Please refer to the Quickstart for options on how deploy Okapi.
 ---
 
 ## (Quicker) Very fast quickstart
-The fastest way to try out Okapi is with Okapi's fork of the Otel Demo.
+The fastest way to try out Okapi is with Okapi's fork of the Otel Demo. An OpenAI API key is needed to run Oscar.
 
 ```shell
+export OPENAI_API_KEY=<your-openai-api-key>
 git clone https://github.com/okapi-core/opentelemetry-demo.git
 cd opentelemetry-demo
 make start-minimal
