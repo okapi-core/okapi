@@ -32,36 +32,20 @@ public class MetricsDataGenerator {
     long startMs = endMs - config.getTimeWindowMs();
     var out = new ArrayList<ExportMetricsServiceRequest>();
 
-    out.add(buildHostMetrics(startMs, endMs));
-    out.add(buildKafkaMetrics(startMs, endMs));
-    out.add(buildSpanMetrics(startMs, endMs));
+    out.add(buildMetrics(config.getHostMetrics(), startMs, endMs));
+    out.add(buildMetrics(config.getKafkaMetrics(), startMs, endMs));
+    out.add(buildMetrics(config.getSpanMetrics(), startMs, endMs));
 
     return out;
   }
 
-  private ExportMetricsServiceRequest buildHostMetrics(long startMs, long endMs) {
+  private ExportMetricsServiceRequest buildMetrics(
+      List<MetricSpec> specs, long startMs, long endMs) {
     var metrics = new ArrayList<Metric>();
-    for (MetricSpec spec : config.getHostMetrics()) {
+    for (MetricSpec spec : specs) {
       metrics.add(buildMetric(spec, startMs, endMs));
     }
-    return wrapMetrics(Map.of("service.name", "host-metrics"), metrics);
-  }
-
-  private ExportMetricsServiceRequest buildKafkaMetrics(long startMs, long endMs) {
-    var metrics = new ArrayList<Metric>();
-    for (MetricSpec spec : config.getKafkaMetrics()) {
-      metrics.add(buildMetric(spec, startMs, endMs));
-    }
-    return wrapMetrics(
-        Map.of("service.name", "kafka", "kafka.cluster", config.getKafkaCluster()), metrics);
-  }
-
-  private ExportMetricsServiceRequest buildSpanMetrics(long startMs, long endMs) {
-    var metrics = new ArrayList<Metric>();
-    for (MetricSpec spec : config.getSpanMetrics()) {
-      metrics.add(buildMetric(spec, startMs, endMs));
-    }
-    return wrapMetrics(Map.of("service.name", "spanmetrics"), metrics);
+    return wrapMetrics(metrics);
   }
 
   private Metric buildMetric(MetricSpec spec, long startMs, long endMs) {
@@ -79,7 +63,7 @@ public class MetricsDataGenerator {
   private Gauge buildGauge(MetricSpec spec, long startMs, long endMs) {
     long intervalMs = gaugeIntervalMs();
     var points = new ArrayList<NumberDataPoint>();
-    var sampler = samplerFor(spec.getDistribution(), spec.getName().hashCode());
+    var sampler = samplerFor(spec.getDistribution());
     for (long ts = startMs; ts <= endMs; ts += intervalMs) {
       points.add(numberPoint(ts, sampler.sample(), spec.getTags()));
     }
@@ -89,7 +73,7 @@ public class MetricsDataGenerator {
   private Sum buildSum(MetricSpec spec, long startMs, long endMs) {
     long intervalMs = config.getSumHistogramIntervalMs();
     var points = new ArrayList<NumberDataPoint>();
-    var sampler = samplerFor(spec.getDistribution(), spec.getName().hashCode());
+    var sampler = samplerFor(spec.getDistribution());
     for (long intervalStart = startMs; intervalStart < endMs; intervalStart += intervalMs) {
       long intervalEnd = Math.min(intervalStart + intervalMs, endMs);
       points.add(sumPoint(intervalStart, intervalEnd, sampler.sample(), spec.getTags()));
@@ -110,7 +94,8 @@ public class MetricsDataGenerator {
             : spec.getHistogramBounds();
     var rng = new MersenneTwister(config.getSeed() + spec.getName().hashCode());
     var dist =
-        new LogNormalDistribution(rng, spec.getDistribution().getMu(), spec.getDistribution().getSigma());
+        new LogNormalDistribution(
+            rng, spec.getDistribution().getMu(), spec.getDistribution().getSigma());
     int countMean =
         spec.getHistogramCountMean() == null
             ? 50
@@ -128,10 +113,9 @@ public class MetricsDataGenerator {
         .build();
   }
 
-  private ExportMetricsServiceRequest wrapMetrics(
-      Map<String, String> resourceAttributes, List<Metric> metrics) {
+  private ExportMetricsServiceRequest wrapMetrics(List<Metric> metrics) {
     var scopeMetrics = ScopeMetrics.newBuilder().addAllMetrics(metrics).build();
-    var resource = Resource.newBuilder().addAllAttributes(OtelShorthand.toKvList(resourceAttributes)).build();
+    var resource = Resource.newBuilder().build();
     var resourceMetrics =
         ResourceMetrics.newBuilder().setResource(resource).addScopeMetrics(scopeMetrics).build();
     return ExportMetricsServiceRequest.newBuilder().addResourceMetrics(resourceMetrics).build();
@@ -203,11 +187,12 @@ public class MetricsDataGenerator {
     return Math.max(1L, intervalMs);
   }
 
-  private Sampler samplerFor(DistributionSpec spec, long seedOffset) {
-    var rng = new MersenneTwister(config.getSeed() + seedOffset);
+  private Sampler samplerFor(DistributionSpec spec) {
+    var rng = new MersenneTwister(System.currentTimeMillis());
     return switch (spec.getType()) {
       case BETA -> new Sampler(new BetaDistribution(rng, spec.getAlpha(), spec.getBeta()), spec);
-      case LOG_NORMAL -> new Sampler(new LogNormalDistribution(rng, spec.getMu(), spec.getSigma()), spec);
+      case LOG_NORMAL ->
+          new Sampler(new LogNormalDistribution(rng, spec.getMu(), spec.getSigma()), spec);
       case POISSON ->
           new Sampler(new PoissonDistribution(rng, spec.getMean(), 1e-12, 100000), spec);
       case BERNOULLI -> new Sampler(spec, rng);

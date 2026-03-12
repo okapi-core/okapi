@@ -7,6 +7,8 @@ package org.okapi.datagen.spans;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -159,76 +161,90 @@ public class MetricsDataGenConfig {
   }
 
   private static List<MetricSpec> defaultKafkaMetrics() {
-    return List.of(
-        MetricSpec.builder()
-            .name("kafka.consumer.lag")
-            .type(MetricType.GAUGE)
-            .unit("records")
-            .distribution(
-                DistributionSpec.builder()
-                    .type(DistributionType.LOG_NORMAL)
-                    .mu(4.0)
-                    .sigma(1.1)
-                    .min(0.0)
-                    .max(1_000_000.0)
-                    .build())
-            .build(),
-        MetricSpec.builder()
-            .name("kafka.controller.active_count")
-            .type(MetricType.GAUGE)
-            .unit("1")
-            .distribution(
-                DistributionSpec.builder().type(DistributionType.BERNOULLI).p(0.98).build())
-            .build(),
-        MetricSpec.builder()
-            .name("kafka.partition.offline")
-            .type(MetricType.GAUGE)
-            .unit("partitions")
-            .distribution(
-                DistributionSpec.builder().type(DistributionType.POISSON).mean(0.05).build())
-            .build(),
-        MetricSpec.builder()
-            .name("kafka.request.count")
-            .type(MetricType.SUM)
-            .unit("requests")
-            .distribution(
-                DistributionSpec.builder().type(DistributionType.POISSON).mean(120.0).build())
-            .build(),
-        MetricSpec.builder()
-            .name("kafka.message.bytes")
-            .type(MetricType.SUM)
-            .unit("By")
-            .distribution(
-                DistributionSpec.builder()
-                    .type(DistributionType.LOGNORMAL_X_POISSON)
-                    .mu(16.0)
-                    .sigma(0.9)
-                    .mean(80.0)
-                    .build())
-            .build(),
-        MetricSpec.builder()
-            .name("kafka.network.io")
-            .type(MetricType.SUM)
-            .unit("By")
-            .distribution(
-                DistributionSpec.builder()
-                    .type(DistributionType.LOG_NORMAL)
-                    .mu(16.5)
-                    .sigma(0.9)
-                    .build())
-            .build(),
-        MetricSpec.builder()
-            .name("kafka.request.latency")
-            .type(MetricType.HISTO)
-            .unit("ms")
-            .histogramCountMean(60.0)
-            .distribution(
-                DistributionSpec.builder()
-                    .type(DistributionType.LOG_NORMAL)
-                    .mu(3.6)
-                    .sigma(0.55)
-                    .build())
-            .build());
+    var list =
+        List.of(
+            MetricSpec.builder()
+                .name("kafka.consumer.lag")
+                .type(MetricType.GAUGE)
+                .unit("records")
+                .distribution(
+                    DistributionSpec.builder()
+                        .type(DistributionType.LOG_NORMAL)
+                        .mu(4.0)
+                        .sigma(1.1)
+                        .min(0.0)
+                        .max(1_000_000.0)
+                        .build())
+                .build(),
+            MetricSpec.builder()
+                .name("kafka.controller.active_count")
+                .type(MetricType.GAUGE)
+                .unit("1")
+                .distribution(
+                    DistributionSpec.builder().type(DistributionType.BERNOULLI).p(0.98).build())
+                .build(),
+            MetricSpec.builder()
+                .name("kafka.partition.offline")
+                .type(MetricType.GAUGE)
+                .unit("partitions")
+                .distribution(
+                    DistributionSpec.builder().type(DistributionType.POISSON).mean(0.05).build())
+                .build(),
+            MetricSpec.builder()
+                .name("kafka.request.count")
+                .type(MetricType.SUM)
+                .unit("requests")
+                .distribution(
+                    DistributionSpec.builder().type(DistributionType.POISSON).mean(120.0).build())
+                .build(),
+            MetricSpec.builder()
+                .name("kafka.message.bytes")
+                .type(MetricType.SUM)
+                .unit("By")
+                .distribution(
+                    DistributionSpec.builder()
+                        .type(DistributionType.LOGNORMAL_X_POISSON)
+                        .mu(16.0)
+                        .sigma(0.9)
+                        .mean(80.0)
+                        .build())
+                .build(),
+            MetricSpec.builder()
+                .name("kafka.network.io")
+                .type(MetricType.SUM)
+                .unit("By")
+                .distribution(
+                    DistributionSpec.builder()
+                        .type(DistributionType.LOG_NORMAL)
+                        .mu(16.5)
+                        .sigma(0.9)
+                        .build())
+                .build());
+    var partitions = List.of(0, 1, 2);
+    var paritionMetrics = new ArrayList<MetricSpec>();
+    for (var part : partitions) {
+      paritionMetrics.add(
+          MetricSpec.builder()
+              .name("kafka.request.latency")
+              .type(MetricType.HISTO)
+              .tags(Map.of("partition", "part-" + part))
+              .unit("ms")
+              .histogramCountMean(60.0)
+              .distribution(
+                  DistributionSpec.builder()
+                      .type(DistributionType.LOG_NORMAL)
+                      .mu(3.6)
+                      .sigma(0.55)
+                      .build())
+              .build());
+    }
+    return Collections.unmodifiableList(
+        new ArrayList<>() {
+          {
+            addAll(paritionMetrics);
+            addAll(list);
+          }
+        });
   }
 
   private static List<MetricSpec> defaultSpanMetrics() {

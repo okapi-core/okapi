@@ -10,24 +10,14 @@ import com.google.common.primitives.Floats;
 import com.google.common.primitives.Ints;
 import gg.jte.TemplateOutput;
 import gg.jte.output.StringOutput;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.TreeMap;
 import org.okapi.ch.ChTemplateFiles;
 import org.okapi.ds.HistogramMerger;
 import org.okapi.ds.TwoAtATimeMerger;
 import org.okapi.metrics.ch.template.ChGetHistoQueryTemplate;
 import org.okapi.metrics.ch.template.ChMetricTemplateEngine;
-import org.okapi.rest.metrics.query.CannedResponses;
-import org.okapi.rest.metrics.query.GetHistogramResponse;
-import org.okapi.rest.metrics.query.GetMetricsRequest;
-import org.okapi.rest.metrics.query.GetMetricsResponse;
-import org.okapi.rest.metrics.query.HistoQueryConfig;
-import org.okapi.rest.metrics.query.Histogram;
-import org.okapi.rest.metrics.query.HistogramSeries;
+import org.okapi.rest.metrics.query.*;
+
+import java.util.*;
 
 /** Handles histogram query execution and aggregation. */
 public class HistogramQueryProcessor {
@@ -48,13 +38,12 @@ public class HistogramQueryProcessor {
           case CUMULATIVE -> ChHistoSample.HISTO_TYPE.CUMULATIVE;
           case MERGED -> ChHistoSample.HISTO_TYPE.DELTA;
         };
-    var readings =
-        scanSamples(ts, te, query.getMetric(), query.getTags(), histoType);
+    var readings = scanSamples(ts, te, query.getMetric(), query.getTags(), histoType);
     var series = buildSeries(readings, query, histoType);
     if (series.isEmpty()) {
       return CannedResponses.noMetricsResponse(query.getMetric(), query.getTags());
     }
-    var histo = toHistogramResponse(series);
+    var histo = GetHistogramResponse.builder().series(series).build();
     return GetMetricsResponse.builder()
         .metric(query.getMetric())
         .tags(query.getTags())
@@ -62,23 +51,12 @@ public class HistogramQueryProcessor {
         .build();
   }
 
-  public GetHistogramResponse toHistogramResponse(List<HistogramSeries> series) {
-    if (series.size() == 1) {
-      return GetHistogramResponse.builder()
-          .histograms(series.get(0).getHistograms())
-          .series(series)
-          .build();
-    }
-    return GetHistogramResponse.builder().series(series).build();
-  }
-
   private List<HistogramSeries> buildSeries(
-      List<ChHistoSample> readings,
-      GetMetricsRequest query,
-      ChHistoSample.HISTO_TYPE histoType) {
+      List<ChHistoSample> readings, GetMetricsRequest query, ChHistoSample.HISTO_TYPE histoType) {
     var byTags = new LinkedHashMap<Map<String, String>, List<ChHistoSample>>();
     for (var sample : readings) {
-      var tagsKey = sample.getTags() == null ? Map.<String, String>of() : new TreeMap<>(sample.getTags());
+      var tagsKey =
+          sample.getTags() == null ? Map.<String, String>of() : new TreeMap<>(sample.getTags());
       byTags.computeIfAbsent(tagsKey, key -> new ArrayList<>()).add(sample);
     }
     var series = new ArrayList<HistogramSeries>();
@@ -86,8 +64,7 @@ public class HistogramQueryProcessor {
       var tags = entry.getKey();
       var samples = entry.getValue();
       if (query.getHistoQueryConfig().getTemporality() == HistoQueryConfig.TEMPORALITY.CUMULATIVE) {
-        var largestSampleSize =
-            samples.stream().map(r -> r.count).max(Long::compare).orElse(0L);
+        var largestSampleSize = samples.stream().map(r -> r.count).max(Long::compare).orElse(0L);
         var largestSample =
             samples.stream().filter(f -> Objects.equals(f.count, largestSampleSize)).findFirst();
         if (largestSample.isPresent()) {

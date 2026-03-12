@@ -248,7 +248,7 @@ publish-okapi-cp-test:
 copy-ch-sql:
 	cp -r ./okapi-ingester/src/main/resources/ch/*.sql ./okapi-ops/src/main/resources/ch/
 
-start-oscar-jar-env:
+start-oscar:
 	export POSTGRES_HOST=localhost
 	export POSTGRES_PORT=5432
 	export OSCAR_DB_URL='jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/okapi_oscar'
@@ -259,14 +259,22 @@ start-oscar-jar-env:
 	java -jar ./okapi-oscar/target/okapi-oscar-0.0.1-SNAPSHOT.jar \
 		--okapi.oscar.cluster-endpoint=http://${OKAPI_INGESTER_HOST}:${OKAPI_INGESTER_PORT} \
 		--okapi.oscar.vault.address='' \
-		--okapi.oscar.openai.api-key-path=env://OPENAI_API_KEY
+		--okapi.oscar.openai.api-key-path=env://OPENAI_API_KEY &
 
 start-oscar-dummy: package
 	java -jar ./okapi-oscar/target/okapi-oscar-0.0.1-SNAPSHOT.jar \
 		--spring.profiles.active=dummy
 		--okapi.oscar.cluster-endpoint=http://${OKAPI_INGESTER_HOST}:${OKAPI_INGESTER_PORT} \
 		--okapi.oscar.vault.address='' \
-		--okapi.oscar.openai.api-key-path=env://OPENAI_API_KEY
+		--okapi.oscar.openai.api-key-path=env://OPENAI_API_KEY &
 
 test-all: package run-ingester
 	mvn test -Dmaven.test.failure.ignore=true
+
+start-okapi-web: package
+	java -jar ./okapi-web/target/okapi-web-0.0.1-SNAPSHOT.jar &
+
+start-okapi-ingester: package
+	java -jar ./okapi-ingester/target/okapi-ingester-0.0.1-SNAPSHOT.jar &
+
+test-env: package test-infra start-okapi-ingester start-oscar start-okapi-web test-data

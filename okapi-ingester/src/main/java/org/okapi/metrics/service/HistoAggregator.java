@@ -4,11 +4,12 @@
  */
 package org.okapi.metrics.service;
 
-import java.util.List;
 import org.okapi.primitives.ReadonlyHistogram;
 import org.okapi.rest.metrics.query.GetHistogramResponse;
-import org.okapi.rest.metrics.query.HistogramSeries;
 import org.okapi.rest.metrics.query.Histogram;
+import org.okapi.rest.metrics.query.HistogramSeries;
+
+import java.util.List;
 
 public class HistoAggregator {
   public static final GetHistogramResponse aggregateHistograms(List<ReadonlyHistogram> histograms) {
@@ -24,6 +25,6 @@ public class HistoAggregator {
                         .build())
             .toList();
     var series = HistogramSeries.builder().tags(null).histograms(histos).build();
-    return GetHistogramResponse.builder().histograms(histos).series(List.of(series)).build();
+    return GetHistogramResponse.builder().series(List.of(series)).build();
   }
 }

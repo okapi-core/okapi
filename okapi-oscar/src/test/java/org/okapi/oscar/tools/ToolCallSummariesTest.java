@@ -3,25 +3,10 @@ package org.okapi.oscar.tools;
 import org.junit.jupiter.api.Test;
 import org.okapi.metrics.pojos.AGG_TYPE;
 import org.okapi.metrics.pojos.RES_TYPE;
-import org.okapi.rest.metrics.query.GaugeQueryConfig;
-import org.okapi.rest.metrics.query.GetMetricsRequest;
-import org.okapi.rest.metrics.query.GetMetricsResponse;
-import org.okapi.rest.metrics.query.GetHistogramResponse;
-import org.okapi.rest.metrics.query.GaugeSeries;
-import org.okapi.rest.metrics.query.HistoQueryConfig;
-import org.okapi.rest.metrics.query.Histogram;
-import org.okapi.rest.metrics.query.METRIC_TYPE;
+import org.okapi.rest.metrics.query.*;
 import org.okapi.rest.search.MetricPath;
 import org.okapi.rest.search.SearchMetricsV2Response;
-import org.okapi.rest.traces.DbFilters;
-import org.okapi.rest.traces.HttpFilters;
-import org.okapi.rest.traces.NumberAttributeFilter;
-import org.okapi.rest.traces.ServiceFilter;
-import org.okapi.rest.traces.SpanQueryV2Request;
-import org.okapi.rest.traces.SpanQueryV2Response;
-import org.okapi.rest.traces.SpanRowV2;
-import org.okapi.rest.traces.StringAttributeFilter;
-import org.okapi.rest.traces.TimestampFilter;
+import org.okapi.rest.traces.*;
 
 import java.util.List;
 import java.util.Map;
@@ -121,7 +106,8 @@ public class ToolCallSummariesTest {
             .start(10L)
             .end(40L)
             .metricType(METRIC_TYPE.HISTO)
-            .histoQueryConfig(HistoQueryConfig.builder().temporality(HistoQueryConfig.TEMPORALITY.DELTA).build())
+            .histoQueryConfig(
+                HistoQueryConfig.builder().temporality(HistoQueryConfig.TEMPORALITY.DELTA).build())
             .build();
     var response =
         GetMetricsResponse.builder()
@@ -129,10 +115,14 @@ public class ToolCallSummariesTest {
             .tags(Map.of("route", "/"))
             .histogramResponse(
                 GetHistogramResponse.builder()
-                    .histograms(
+                    .series(
                         List.of(
-                            Histogram.builder().start(10L).end(20L).build(),
-                            Histogram.builder().start(30L).end(40L).build()))
+                            HistogramSeries.builder()
+                                .histograms(
+                                    List.of(
+                                        Histogram.builder().start(10L).end(20L).build(),
+                                        Histogram.builder().start(30L).end(40L).build()))
+                                .build()))
                     .build())
             .build();
 

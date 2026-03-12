@@ -1,18 +1,8 @@
 package org.okapi.oscar.tools;
 
-import org.okapi.rest.metrics.query.GetMetricsRequest;
-import org.okapi.rest.metrics.query.GetMetricsResponse;
-import org.okapi.rest.metrics.query.GetSumsResponse;
-import org.okapi.rest.metrics.query.GetGaugeResponse;
-import org.okapi.rest.metrics.query.GetHistogramResponse;
-import org.okapi.rest.metrics.query.HistogramSeries;
-import org.okapi.rest.metrics.query.GaugeSeries;
-import org.okapi.rest.metrics.query.HistoQueryConfig;
-import org.okapi.rest.metrics.query.GetSumsQueryConfig;
-import org.okapi.rest.metrics.query.METRIC_TYPE;
-import org.okapi.rest.metrics.query.Sum;
-import org.okapi.rest.search.SearchMetricsV2Response;
+import org.okapi.rest.metrics.query.*;
 import org.okapi.rest.search.SearchMetricsRequest;
+import org.okapi.rest.search.SearchMetricsV2Response;
 import org.okapi.rest.traces.SpanQueryV2Request;
 import org.okapi.rest.traces.SpanQueryV2Response;
 
@@ -53,9 +43,13 @@ public final class ToolCallSummaries {
       builder.append(" dbFilters=").append(dbCount);
     }
     int stringAttrs =
-        request.getStringAttributesFilter() == null ? 0 : request.getStringAttributesFilter().size();
+        request.getStringAttributesFilter() == null
+            ? 0
+            : request.getStringAttributesFilter().size();
     int numberAttrs =
-        request.getNumberAttributesFilter() == null ? 0 : request.getNumberAttributesFilter().size();
+        request.getNumberAttributesFilter() == null
+            ? 0
+            : request.getNumberAttributesFilter().size();
     if (stringAttrs > 0 || numberAttrs > 0) {
       builder.append(" stringAttrs=").append(stringAttrs);
       builder.append(" numberAttrs=").append(numberAttrs);
@@ -92,7 +86,8 @@ public final class ToolCallSummaries {
       appendIfPresent(builder, " anyPattern=", request.getAnyMetricOrValueFilter().getPattern());
     }
     int valueFilters = request.getValueFilters() == null ? 0 : request.getValueFilters().size();
-    int patternFilters = request.getPatternFilters() == null ? 0 : request.getPatternFilters().size();
+    int patternFilters =
+        request.getPatternFilters() == null ? 0 : request.getPatternFilters().size();
     if (valueFilters > 0 || patternFilters > 0) {
       builder.append(" valueFilters=").append(valueFilters);
       builder.append(" patternFilters=").append(patternFilters);
@@ -154,8 +149,7 @@ public final class ToolCallSummaries {
     } else if (request.getMetricType() == METRIC_TYPE.HISTO
         && request.getHistoQueryConfig() != null) {
       builder.append(" temporality=").append(request.getHistoQueryConfig().getTemporality());
-    } else if (request.getMetricType() == METRIC_TYPE.SUM
-        && request.getSumsQueryConfig() != null) {
+    } else if (request.getMetricType() == METRIC_TYPE.SUM && request.getSumsQueryConfig() != null) {
       builder.append(" temporality=").append(request.getSumsQueryConfig().getTemporality());
     }
     return builder.toString();
@@ -287,19 +281,6 @@ public final class ToolCallSummaries {
       }
       return new long[] {min, max};
     }
-    if (response.getHistograms() != null) {
-      long min = Long.MAX_VALUE;
-      long max = Long.MIN_VALUE;
-      for (var hist : response.getHistograms()) {
-        if (hist == null) {
-          continue;
-        }
-        min = Math.min(min, hist.getStart());
-        long end = hist.getEnd() == null ? hist.getStart() : hist.getEnd();
-        max = Math.max(max, end);
-      }
-      return new long[] {min, max};
-    }
     return null;
   }
 
@@ -317,8 +298,11 @@ public final class ToolCallSummaries {
       }
       return total;
     }
-    if (response.getHistograms() != null) {
-      return response.getHistograms().size();
+    if (response.getSeries() != null) {
+      return response.getSeries().stream()
+          .map(hist -> hist.getHistograms().size())
+          .reduce(Integer::sum)
+          .orElse(0);
     }
     return 0;
   }

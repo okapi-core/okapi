@@ -6,11 +6,12 @@ package org.okapi.rest.metrics.query;
 
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @AllArgsConstructor
 @Getter
@@ -18,9 +19,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonClassDescription("Histogram query results, grouped by tag set.")
 public class GetHistogramResponse {
-  @JsonPropertyDescription("List of histogram distributions covering the queried time range.")
-  List<Histogram> histograms;
-
   @JsonPropertyDescription("List of histogram series, one per unique tag set.")
   List<HistogramSeries> series;
 }
+
