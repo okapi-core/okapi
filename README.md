@@ -15,6 +15,15 @@ Please refer to the Quickstart for options on how deploy Okapi.
 
 ---
 
+## (Quicker) Very fast quickstart
+The fastest way to try out Okapi is with Okapi's fork of the Otel Demo.
+
+```shell
+git clone https://github.com/okapi-core/opentelemetry-demo.git
+cd opentelemetry-demo
+make start-minimal
+```
+
 ## Why and when to use Okapi ?
 
 Existing observability are usually bursting at the seams, there's either too much data or too many dollars involved.
@@ -22,23 +31,23 @@ Okapi is built to augment existing observability deployments with additional cap
 This is why "play-nice" is an explicit goal so teams can start using Okapi with minimal disruption and onboarding.
 
 ## Feature list
-
+- 🪄**Oscar an AI SRE agent** : Okapi has a research agent called Oscar. Its aim is to remove grunt work associated with data collection while debugging production issues. Oscar can either do simple tasks such as finding metrics, error traces, summarizing service or do multistep debugging (upto a point) such as correlating host specific metrics with slow database queries. The best way to test it capabilities is to run Oscar on the Otel demo.
 - 🔌 **OpenTelemetry native** : Okapi is compatible with OTLP meaning any collector that emits metrics as OTel or submits
   spans via OTel can leverage Okapi as a storage and analysis layer.
 - 📈 **PromQl** : Okapi has its own implementation of PromQl. Metrics stored in Okapi can be
   visualized using existing solutions such as Grafana and Perses.
 - 🧩 **Dashboard designer** : Okapi has its own dashboard designer should you choose to just use our own UI.
 - 🧱 **Dashboards as code and templates** : Dashboards can be expressed as intuitive YAML. Refer to templates for examples
-  on
-  how to monitor Clickhouse, Postgres, Kafka.
+  on how to monitor Clickhouse, Postgres, Kafka.
 - 🔍 **Spans Browser and Visualizer** : Okapi comes with its own browser for Spans. Users can search spans, visualize span attributes, view attributes of a span.
 - ✨ **Autocomplete almost everywhere** : Nearly every form field in the Okapi UI has autocomplete minimizing the
   need for copy-paste.
 - 🧷 **Support for arbitrary span fields** : Traces forwarded to Okapi can contain spans with arbitrary attributes.
 - 🩺 **Out of box service healths** : Get golden metrics in one place with Service health boards.
-- 🎯 **Granular REDs** : Okapi calculates golden signals for the aggregate service, all its service-peer paths and all associated operations.
+- 🎯 **Granular REDs** : Okapi calculates golden signals not just for the aggregate service, all its service-peer paths and all associated operations. This data is picked up automatically from spans submitted to Okapi.
 
-## Quickstart
+
+## (Slower) Quickstart
 
 ### Deploy on local machine (for testing)
 
@@ -51,6 +60,7 @@ pip install okapi-cp
 Local deployment (testing):
 
 ```sh
+# note these keys will need to be changed for a production deployment.
 okapi-cp deploy local --hmac-key 5e1a04d3 --api-key a2991d99
 ```
 
